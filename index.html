@@ -11,94 +11,81 @@
     --gold:#C9A84C;
     --black:#1A1A1A;
     --bg:#FFFFFF;
-    --bg-2:#F4F1EA;
+    --bg-2:#F5F2EB;
     --bg-3:#ECE7DB;
     --text:#1A1A1A;
     --hint:#6B6660;
     --sep:rgba(26,26,26,.10);
+    --tabbar-h:64px;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{background:var(--bg);}
   body{
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    color:var(--text);line-height:1.5;
-    padding-bottom:calc(env(safe-area-inset-bottom) + 92px);
-    overflow-x:hidden;
+    color:var(--text);line-height:1.5;overflow-x:hidden;
+    padding-bottom:calc(env(safe-area-inset-bottom) + var(--tabbar-h) + 8px);
   }
+  svg{display:block;}
+  .ic{width:22px;height:22px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+  .ic.fill{fill:currentColor;stroke:none;}
 
-  /* ── НАВИГАЦИЯ (разделы) ── */
-  .topnav{
-    position:sticky;top:0;z-index:30;
-    display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
-    padding:12px 16px;background:rgba(255,255,255,.92);
-    backdrop-filter:saturate(180%) blur(12px);
-    border-bottom:1px solid var(--sep);
-  }
-  .topnav::-webkit-scrollbar{display:none;}
-  .nav-btn{
-    flex:none;border:1px solid var(--sep);border-radius:999px;
-    padding:9px 15px;font-size:13.5px;font-weight:600;
-    background:var(--bg-2);color:var(--hint);cursor:pointer;
-    font-family:inherit;white-space:nowrap;transition:all .2s ease;
-  }
-  .nav-btn.active{background:var(--black);color:#fff;border-color:var(--black);}
-
-  /* ── СТРАНИЦЫ ── */
+  /* ── ВИДЫ ── */
   .view{display:none;}
-  .view.active{display:block;animation:fadeIn .35s ease;}
+  .view.active{display:block;animation:fadeIn .32s ease;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 
-  /* ── ШАПКА ГЛАВНОЙ ── */
-  .hero{position:relative;height:230px;display:flex;align-items:flex-end;overflow:hidden;background:var(--bg-3);}
+  /* ── ШАПКА ── */
+  .hero{position:relative;height:220px;display:flex;align-items:flex-end;overflow:hidden;background:var(--bg-3);}
   .hero video,.hero .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
-  .hero .poster{background:radial-gradient(120% 90% at 78% 8%, rgba(227,6,19,.18), transparent 55%),linear-gradient(165deg,#EFE9DC,#F4F1EA);transition:opacity .6s ease;}
-  .hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to top, var(--bg) 3%, rgba(255,255,255,.25) 45%, transparent 100%);}
+  .hero .poster{background:radial-gradient(120% 90% at 78% 8%, rgba(227,6,19,.16), transparent 55%),linear-gradient(165deg,#EFE9DC,#F5F2EB);transition:opacity .6s ease;}
+  .hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to top, var(--bg) 4%, rgba(255,255,255,.2) 45%, transparent 100%);}
   .hero-inner{position:relative;z-index:2;padding:22px;width:100%;}
-  .eyebrow{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:8px;}
-  .hero h1{font-size:34px;line-height:1.02;font-weight:800;letter-spacing:-.02em;color:var(--black);}
-  .hero .tagline{margin-top:8px;font-size:14.5px;color:var(--hint);max-width:34ch;}
+  .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:8px;}
+  .hero h1{font-size:32px;line-height:1.03;font-weight:800;letter-spacing:-.02em;color:var(--black);}
+  .hero .tagline{margin-top:8px;font-size:14px;color:var(--hint);max-width:34ch;}
 
   /* ── СЕКЦИИ ── */
-  section{padding:24px 22px 4px;}
-  .label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
-  .label::before{content:"";width:18px;height:2px;background:var(--red);}
+  section{padding:22px 20px 4px;}
+  .label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+  .label .ic{width:15px;height:15px;color:var(--red);}
 
-  .stats{display:flex;gap:8px;padding:18px 22px 0;}
-  .stat{flex:1;border:1px solid var(--sep);border-radius:14px;padding:12px;background:var(--bg-2);text-align:center;}
-  .stat b{display:block;font-size:21px;font-weight:800;color:var(--black);line-height:1.1;}
+  .stats{display:flex;gap:8px;padding:16px 20px 0;}
+  .stat{flex:1;border:1px solid var(--sep);border-radius:14px;padding:11px;background:var(--bg-2);text-align:center;}
+  .stat b{display:block;font-size:20px;font-weight:800;color:var(--black);line-height:1.1;}
   .stat span{font-size:10px;color:var(--hint);}
 
-  /* плитки направлений на главной */
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .dir-tile{
-    border:1px solid var(--sep);border-radius:16px;padding:16px;
-    background:var(--bg-2);cursor:pointer;text-align:left;font-family:inherit;
-    transition:transform .12s ease,border-color .2s ease;
+  /* ── КАРУСЕЛЬ НАПРАВЛЕНИЙ ── */
+  .carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 20px 6px;margin:0 -20px;scrollbar-width:none;}
+  .carousel::-webkit-scrollbar{display:none;}
+  .dir-card{
+    scroll-snap-align:start;flex:0 0 140px;height:140px;
+    border:1px solid var(--sep);border-radius:18px;padding:16px;
+    background:var(--bg-2);cursor:pointer;display:flex;flex-direction:column;
+    justify-content:space-between;transition:transform .12s ease,border-color .2s ease;
   }
-  .dir-tile:active{transform:scale(.97);border-color:var(--gold);}
-  .dir-tile .ico{font-size:26px;display:block;margin-bottom:8px;}
-  .dir-tile b{font-size:15px;font-weight:700;color:var(--text);display:block;}
-  .dir-tile span{font-size:11.5px;color:var(--hint);}
+  .dir-card:active{transform:scale(.96);border-color:var(--gold);}
+  .dir-card .ic{width:30px;height:30px;color:var(--red);}
+  .dir-card b{font-size:15px;font-weight:700;display:block;}
+  .dir-card span{font-size:11px;color:var(--hint);}
 
-  /* строки-ссылки */
+  /* ── СТРОКИ-ССЫЛКИ ── */
   .row-link{
-    width:100%;display:flex;align-items:center;gap:14px;
-    border:1px solid var(--sep);border-radius:14px;padding:15px 16px;margin-bottom:10px;
+    width:100%;display:flex;align-items:center;gap:13px;
+    border:1px solid var(--sep);border-radius:14px;padding:14px 15px;margin-bottom:9px;
     background:var(--bg-2);cursor:pointer;font-family:inherit;text-align:left;
-    color:var(--text);font-size:15px;font-weight:600;
+    color:var(--text);font-size:14.5px;font-weight:600;
     transition:transform .12s ease,border-color .2s ease;
   }
   .row-link:active{transform:scale(.98);border-color:var(--gold);}
-  .row-link .ico{font-size:20px;flex:none;}
-  .row-link .arrow{margin-left:auto;color:var(--hint);font-size:20px;}
-  .row-link.accent{background:var(--red);color:#fff;border-color:var(--red);}
-  .row-link.accent .arrow{color:rgba(255,255,255,.8);}
+  .row-link .ic{flex:none;color:var(--red);}
+  .row-link .arrow{margin-left:auto;color:var(--hint);}
+  .row-link .arrow .ic{width:18px;height:18px;color:var(--hint);}
 
   /* ── АККОРДЕОН ── */
   .acc-item{border-bottom:1px solid var(--sep);}
-  .acc-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 2px;color:var(--text);font-size:15.5px;font-weight:600;text-align:left;font-family:inherit;}
-  .acc-head .chev{flex:none;width:22px;height:22px;position:relative;transition:transform .35s cubic-bezier(.4,0,.2,1);}
-  .acc-head .chev::before,.acc-head .chev::after{content:"";position:absolute;top:50%;width:11px;height:2px;border-radius:2px;background:var(--gold);}
+  .acc-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 2px;color:var(--text);font-size:15px;font-weight:600;text-align:left;font-family:inherit;}
+  .acc-head .chev{flex:none;width:20px;height:20px;position:relative;transition:transform .35s cubic-bezier(.4,0,.2,1);}
+  .acc-head .chev::before,.acc-head .chev::after{content:"";position:absolute;top:50%;width:10px;height:2px;border-radius:2px;background:var(--gold);}
   .acc-head .chev::before{left:1px;transform:rotate(45deg);}
   .acc-head .chev::after{right:1px;transform:rotate(-45deg);}
   .acc-item.open .chev{transform:rotate(180deg);}
@@ -108,65 +95,134 @@
   .acc-body p{padding:0 2px 18px;color:var(--hint);font-size:14px;}
 
   /* ── ПЕДАГОГ ── */
-  .teacher{display:flex;align-items:center;gap:16px;background:var(--bg-2);border:1px solid var(--sep);border-radius:18px;padding:18px;}
-  .teacher img,.teacher .ph{flex:none;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
-  .teacher .ph{display:grid;place-items:center;font-size:28px;}
+  .teacher{display:flex;align-items:center;gap:15px;background:var(--bg-2);border:1px solid var(--sep);border-radius:18px;padding:17px;}
+  .teacher img,.teacher .ph{flex:none;width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
+  .teacher .ph{display:grid;place-items:center;}
+  .teacher .ph .ic{width:30px;height:30px;color:var(--gold);}
   .teacher h3{font-size:16px;font-weight:800;margin-bottom:3px;}
   .teacher .role{font-size:12px;color:var(--red);margin-bottom:6px;font-weight:600;}
   .teacher .bio{font-size:12.5px;color:var(--hint);}
 
   .teacher-grid{display:grid;gap:10px;}
-  .tcard{display:flex;align-items:center;gap:14px;cursor:pointer;background:var(--bg-2);border:1px solid var(--sep);border-radius:16px;padding:14px;transition:transform .12s ease,border-color .2s ease;}
+  .tcard{display:flex;align-items:center;gap:14px;cursor:pointer;background:var(--bg-2);border:1px solid var(--sep);border-radius:16px;padding:13px;transition:transform .12s ease,border-color .2s ease;}
   .tcard:active{transform:scale(.98);border-color:var(--gold);}
-  .tcard img,.tcard .ph{flex:none;width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
-  .tcard .ph{display:grid;place-items:center;font-size:22px;}
+  .tcard img,.tcard .ph{flex:none;width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
+  .tcard .ph{display:grid;place-items:center;}
+  .tcard .ph .ic{width:22px;height:22px;color:var(--gold);}
   .tcard h3{font-size:14.5px;font-weight:700;}
   .tcard .role{font-size:11.5px;color:var(--hint);}
-  .tcard .arrow{margin-left:auto;color:var(--hint);font-size:22px;}
+  .tcard .arrow .ic{width:18px;height:18px;color:var(--hint);}
+  .tcard .arrow{margin-left:auto;}
 
   /* ── ГАЛЕРЕЯ ── */
   .gallery{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
   .gallery .cell{position:relative;border-radius:14px;overflow:hidden;background:var(--bg-3);aspect-ratio:1;cursor:pointer;}
   .gallery .cell img,.gallery .cell video{width:100%;height:100%;object-fit:cover;display:block;}
   .gallery .cell.wide{grid-column:span 2;aspect-ratio:16/9;}
-  .gallery .play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.25);color:#fff;font-size:34px;pointer-events:none;}
+  .gallery .play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.22);color:#fff;pointer-events:none;}
+  .gallery .play .ic{width:34px;height:34px;color:#fff;}
 
   /* ── ЦЕНА ── */
   .price{border:1px solid var(--gold);border-radius:18px;padding:20px;text-align:center;background:rgba(201,168,76,.10);}
-  .price .free{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#9a7f2e;font-weight:800;}
-  .price .big{font-size:32px;font-weight:800;margin:6px 0;color:var(--black);}
-  .price .sub{font-size:12.5px;color:var(--hint);}
-  .price-row{display:flex;justify-content:space-between;padding:13px 2px;border-bottom:1px solid var(--sep);font-size:14.5px;}
+  .price .free{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#9a7f2e;font-weight:800;}
+  .price .big{font-size:30px;font-weight:800;margin:6px 0;color:var(--black);}
+  .price .sub{font-size:12px;color:var(--hint);}
+  .price-row{display:flex;justify-content:space-between;align-items:center;padding:13px 2px;border-bottom:1px solid var(--sep);font-size:14.5px;}
   .price-row b{font-weight:700;}
 
-  /* инфо-карточки */
-  .info-card{background:var(--bg-2);border:1px solid var(--sep);border-radius:16px;padding:18px;margin-bottom:12px;}
+  .info-card{background:var(--bg-2);border:1px solid var(--sep);border-radius:16px;padding:17px;margin-bottom:11px;}
   .info-card h3{font-size:15px;font-weight:800;margin-bottom:6px;}
   .info-card p{font-size:13.5px;color:var(--hint);}
 
-  /* ── ПАНЕЛЬ (педагог / детали) ── */
-  .sheet{position:fixed;inset:0;z-index:50;background:var(--bg);transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:24px 22px calc(env(safe-area-inset-bottom) + 24px);}
+  /* ── ФОРМА ЗАПИСИ ── */
+  .field{margin-bottom:16px;}
+  .field > label{display:block;font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:8px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{border:1px solid var(--sep);border-radius:999px;padding:9px 14px;font-size:13.5px;font-weight:600;background:var(--bg-2);color:var(--hint);cursor:pointer;font-family:inherit;transition:all .18s ease;}
+  .chip.on{background:var(--red);color:#fff;border-color:var(--red);}
+  .seg{display:flex;gap:8px;}
+  .seg .chip{flex:1;text-align:center;}
+  input.inp,select.inp{
+    width:100%;border:1px solid var(--sep);border-radius:13px;padding:14px;
+    font-size:15px;font-family:inherit;background:var(--bg-2);color:var(--text);
+    appearance:none;-webkit-appearance:none;
+  }
+  input.inp:focus,select.inp:focus{outline:none;border-color:var(--gold);}
+  .hint-sm{font-size:12px;color:var(--hint);margin-top:6px;}
+  .err{color:var(--red);font-size:12.5px;margin-top:6px;display:none;}
+  .err.show{display:block;}
+
+  /* ── ПАНЕЛЬ ── */
+  .sheet{position:fixed;inset:0;z-index:60;background:var(--bg);transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:24px 20px calc(env(safe-area-inset-bottom) + 24px);}
   .sheet.show{transform:none;}
-  .sheet .back{background:none;border:none;color:var(--red);font-size:15px;font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:18px;font-family:inherit;}
-  .sheet .big-photo,.sheet .ph-big{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);background:var(--bg-3);margin-bottom:16px;}
-  .sheet .ph-big{display:grid;place-items:center;font-size:48px;}
+  .sheet .back{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--red);font-size:15px;font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:18px;font-family:inherit;}
+  .sheet .back .ic{width:18px;height:18px;color:var(--red);}
+  .sheet .big-photo,.sheet .ph-big{width:118px;height:118px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);background:var(--bg-3);margin-bottom:16px;}
+  .sheet .ph-big{display:grid;place-items:center;}
+  .sheet .ph-big .ic{width:50px;height:50px;color:var(--gold);}
   .sheet h2{font-size:23px;font-weight:800;margin-bottom:4px;}
   .sheet .role{color:var(--red);font-size:13.5px;margin-bottom:16px;font-weight:600;}
   .sheet .bio{color:var(--hint);font-size:14.5px;line-height:1.6;}
 
-  /* ── STICKY КНОПКА ── */
-  .cta-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:12px 18px calc(env(safe-area-inset-bottom) + 12px);background:linear-gradient(to top, var(--bg) 72%, transparent);}
-  .cta{width:100%;border:none;border-radius:15px;padding:16px;font-size:16px;font-weight:800;background:var(--red);color:#fff;cursor:pointer;font-family:inherit;transition:transform .12s ease,opacity .12s ease;}
-  .cta:active{transform:scale(.98);opacity:.92;}
+  /* ── ВНУТРЕННЯЯ КНОПКА ── */
+  .btn-primary{width:100%;border:none;border-radius:15px;padding:16px;font-size:16px;font-weight:800;background:var(--red);color:#fff;cursor:pointer;font-family:inherit;transition:transform .12s ease,opacity .12s ease;margin-top:6px;}
+  .btn-primary:active{transform:scale(.98);opacity:.92;}
 
-  .muted-link{color:var(--red);font-weight:600;text-decoration:none;}
+  /* ── НИЖНИЙ TAB BAR ── */
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    height:calc(env(safe-area-inset-bottom) + var(--tabbar-h));
+    padding-bottom:env(safe-area-inset-bottom);
+    display:flex;align-items:stretch;
+    background:rgba(255,255,255,.94);backdrop-filter:saturate(180%) blur(14px);
+    border-top:1px solid var(--sep);
+  }
+  .tabbar button{
+    flex:1;background:none;border:none;cursor:pointer;font-family:inherit;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    color:var(--hint);font-size:10.5px;font-weight:600;transition:color .2s ease;
+  }
+  .tabbar button .ic{width:23px;height:23px;}
+  .tabbar button.active{color:var(--red);}
+  /* центральная кнопка «Записаться» — акцент */
+  .tabbar .center{position:relative;}
+  .tabbar .center .bump{
+    width:52px;height:52px;border-radius:50%;background:var(--red);
+    display:grid;place-items:center;margin-top:-22px;margin-bottom:2px;
+    box-shadow:0 6px 18px rgba(227,6,19,.4);
+  }
+  .tabbar .center .bump .ic{width:26px;height:26px;color:#fff;}
+  .tabbar .center{color:var(--red);}
 
   @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
 </style>
 </head>
 <body>
 
-  <nav class="topnav" id="topnav"></nav>
+<!-- иконки (symbol-определения) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v9a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1v-9"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-price" viewBox="0 0 24 24"><path d="M20 12l-8 8-9-9V4h7z"/><circle cx="7.5" cy="7.5" r="1.4" class="fill"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6" class="fill"/><circle cx="12" cy="12" r="1.6" class="fill"/><circle cx="19" cy="12" r="1.6" class="fill"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5L5 20"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-2h5L16 7"/><circle cx="12" cy="13.5" r="3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" class="fill"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 20h20"/></symbol>
+  <!-- направления -->
+  <symbol id="d-guitar" viewBox="0 0 24 24"><circle cx="9" cy="15" r="5"/><circle cx="9" cy="15" r="1.6"/><path d="M12.5 11.5l6-6M17 4l3 3"/></symbol>
+  <symbol id="d-acting" viewBox="0 0 24 24"><path d="M4 5h7v5a3.5 3.5 0 0 1-7 0z"/><path d="M13 9h7v5a3.5 3.5 0 0 1-7 0z"/><path d="M6 7.5h.01M9 7.5h.01M15 11h.01M18 11h.01"/></symbol>
+  <symbol id="d-vocals" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/></symbol>
+  <symbol id="d-dance" viewBox="0 0 24 24"><circle cx="13" cy="4.5" r="2"/><path d="M13 7l-2 5 4 2-1 5M11 12l-4 1M15 9l4 2"/></symbol>
+  <symbol id="d-painting" viewBox="0 0 24 24"><path d="M3 21c2 0 3-1.5 3-3.5C6 16 5 15 5 15l9-9 4 4-9 9s-1-1-2.5-1C4.5 18 4 19 3 21z"/><path d="M14 6l4 4"/></symbol>
+</svg>
 
   <!-- ===== ГЛАВНАЯ ===== -->
   <div class="view active" data-view="home">
@@ -185,17 +241,15 @@
       <div class="stat"><b>9,7</b><span>NPS родителей</span></div>
     </div>
     <section>
-      <div class="label">Направления</div>
-      <div class="grid2" id="homeDirs"></div>
+      <div class="label"><svg class="ic"><use href="#d-guitar"/></svg>Направления</div>
+      <div class="carousel" id="homeDirs"></div>
     </section>
     <section>
-      <div class="label">Быстрые разделы</div>
-      <button class="row-link accent" data-go="formats"><span class="ico">📝</span>Записаться на занятие<span class="arrow">›</span></button>
-      <button class="row-link" data-go="schedule"><span class="ico">📅</span>Расписание<span class="arrow">›</span></button>
-      <button class="row-link" data-go="prices"><span class="ico">💰</span>Цены<span class="arrow">›</span></button>
-      <button class="row-link" data-go="teachers"><span class="ico">👨‍🏫</span>Преподаватели<span class="arrow">›</span></button>
-      <button class="row-link" data-go="gallery"><span class="ico">📸</span>Выступления<span class="arrow">›</span></button>
-      <button class="row-link" data-go="about"><span class="ico">ℹ️</span>О студии и контакты<span class="arrow">›</span></button>
+      <div class="label"><svg class="ic"><use href="#i-more"/></svg>Разделы</div>
+      <button class="row-link" data-go="teachers"><svg class="ic"><use href="#i-person"/></svg>Преподаватели<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" data-go="gallery"><svg class="ic"><use href="#i-image"/></svg>Выступления и работы<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" data-go="online"><svg class="ic"><use href="#i-laptop"/></svg>Онлайн-курсы<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" data-go="about"><svg class="ic"><use href="#i-info"/></svg>О студии и контакты<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
     </section>
   </div>
 
@@ -211,91 +265,132 @@
       </div>
     </header>
     <section>
-      <div class="label">О курсе</div>
+      <div class="label"><svg class="ic"><use href="#i-info"/></svg>О курсе</div>
       <div id="dirAccordion"></div>
     </section>
     <section>
-      <div class="label" id="dirTeacherLabel">Педагог</div>
+      <div class="label" id="dirTeacherLabel"><svg class="ic"><use href="#i-person"/></svg>Педагог</div>
       <div id="dirTeacherZone"></div>
     </section>
     <section>
-      <div class="label">Стоимость</div>
+      <div class="label"><svg class="ic"><use href="#i-price"/></svg>Стоимость</div>
       <div class="price">
         <div class="free">Пробное занятие — бесплатно</div>
         <div class="big" id="dirPriceBig">—</div>
         <div class="sub" id="dirPriceSub"></div>
       </div>
-    </section>
-  </div>
-
-  <!-- ===== ФОРМАТЫ (онлайн/оффлайн) ===== -->
-  <div class="view" data-view="formats">
-    <section style="padding-top:26px;">
-      <div class="label">Как заниматься</div>
-      <div class="info-card"><h3>🏫 Очно в студии</h3><p>Группы и индивидуальные занятия по адресу студии. Пробное — бесплатно.</p></div>
-      <button class="row-link accent" data-go="formats-trial"><span class="ico">📝</span>Записаться на пробное<span class="arrow">›</span></button>
-      <div style="height:18px"></div>
-      <div class="info-card"><h3>💻 Онлайн-курсы</h3><p>Ораторское искусство, живопись и гитара — из дома, с разбором работ педагогом.</p></div>
-      <div id="onlineList"></div>
+      <button class="btn-primary" id="dirEnroll" style="margin-top:16px;">Записаться на это направление</button>
     </section>
   </div>
 
   <!-- ===== РАСПИСАНИЕ ===== -->
   <div class="view" data-view="schedule">
-    <section style="padding-top:26px;">
-      <div class="label">Расписание</div>
+    <section style="padding-top:24px;">
+      <div class="label"><svg class="ic"><use href="#i-cal"/></svg>Расписание</div>
       <div id="scheduleList"></div>
     </section>
   </div>
 
   <!-- ===== ЦЕНЫ ===== -->
   <div class="view" data-view="prices">
-    <section style="padding-top:26px;">
-      <div class="label">Цены по направлениям</div>
+    <section style="padding-top:24px;">
+      <div class="label"><svg class="ic"><use href="#i-price"/></svg>Цены по направлениям</div>
       <div id="pricesList"></div>
+    </section>
+  </div>
+
+  <!-- ===== ЗАПИСЬ (ФОРМА) ===== -->
+  <div class="view" data-view="book">
+    <section style="padding-top:24px;">
+      <div class="label"><svg class="ic"><use href="#i-book"/></svg>Запись на пробное занятие</div>
+      <div class="field">
+        <label>Направление</label>
+        <div class="chips" id="bookDirs"></div>
+      </div>
+      <div class="field">
+        <label>Кто будет заниматься</label>
+        <div class="seg">
+          <button class="chip on" data-ptype="child">Ребёнок</button>
+          <button class="chip" data-ptype="adult">Взрослый</button>
+        </div>
+      </div>
+      <div class="field" id="fldChild">
+        <label id="lblChild">ФИО ребёнка</label>
+        <input class="inp" id="inChild" placeholder="Например: Иванов Иван">
+        <div class="err" id="errChild">Введите фамилию и имя</div>
+      </div>
+      <div class="field" id="fldParent">
+        <label>ФИО родителя</label>
+        <input class="inp" id="inParent" placeholder="Кто приведёт ребёнка">
+        <div class="err" id="errParent">Введите фамилию и имя</div>
+      </div>
+      <div class="field">
+        <label>Контактный телефон</label>
+        <input class="inp" id="inPhone" type="tel" inputmode="tel" placeholder="+7 ...">
+        <div class="err" id="errPhone">Введите номер телефона</div>
+      </div>
+      <div class="field">
+        <label>Дата и время</label>
+        <select class="inp" id="inSlot"></select>
+        <div class="hint-sm">Свободные слоты по расписанию направления</div>
+      </div>
+      <button class="btn-primary" id="bookSubmit">Отправить заявку</button>
+      <div class="hint-sm" style="text-align:center;margin-top:10px;">Первое занятие — бесплатно. Мы перезвоним и подтвердим.</div>
     </section>
   </div>
 
   <!-- ===== ПЕДАГОГИ ===== -->
   <div class="view" data-view="teachers">
-    <section style="padding-top:26px;">
-      <div class="label">Преподаватели</div>
+    <section style="padding-top:24px;">
+      <div class="label"><svg class="ic"><use href="#i-person"/></svg>Преподаватели</div>
       <div class="teacher-grid" id="allTeachers"></div>
     </section>
   </div>
 
   <!-- ===== ГАЛЕРЕЯ ===== -->
   <div class="view" data-view="gallery">
-    <section style="padding-top:26px;">
-      <div class="label">Выступления и работы</div>
+    <section style="padding-top:24px;">
+      <div class="label"><svg class="ic"><use href="#i-image"/></svg>Выступления и работы</div>
       <div class="gallery" id="galleryGrid"></div>
+    </section>
+  </div>
+
+  <!-- ===== ОНЛАЙН ===== -->
+  <div class="view" data-view="online">
+    <section style="padding-top:24px;">
+      <div class="label"><svg class="ic"><use href="#i-laptop"/></svg>Онлайн-курсы</div>
+      <div id="onlineList"></div>
     </section>
   </div>
 
   <!-- ===== О СТУДИИ ===== -->
   <div class="view" data-view="about">
-    <section style="padding-top:26px;">
-      <div class="label">О студии</div>
-      <div class="info-card"><p>Творческая студия Shpigotskiy Art Space — 160+ учеников, пять направлений. Наши дети выступают на сцене областного театра, снимаются в кино и ставят свои спектакли. Главное для нас — раскрыть в ребёнке уверенность.</p></div>
-      <div class="label" style="margin-top:24px;">Контакты</div>
-      <button class="row-link" id="addrBtn"><span class="ico">📍</span><span id="addrText">Адрес</span><span class="arrow">›</span></button>
-      <button class="row-link" id="waBtn"><span class="ico">💬</span>WhatsApp<span class="arrow">›</span></button>
-      <button class="row-link" id="igBtn"><span class="ico">📸</span>Instagram<span class="arrow">›</span></button>
+    <section style="padding-top:24px;">
+      <div class="label"><svg class="ic"><use href="#i-info"/></svg>О студии</div>
+      <div class="info-card"><p>Творческая студия Shpigotskiy Art Space — 160+ учеников, пять направлений. Наши дети выступают на сцене областного театра, снимаются в кино и ставят собственные спектакли. Главное для нас — раскрыть в ребёнке уверенность.</p></div>
+      <div class="label" style="margin-top:22px;"><svg class="ic"><use href="#i-chat"/></svg>Контакты</div>
+      <button class="row-link" id="addrBtn"><svg class="ic"><use href="#i-pin"/></svg><span id="addrText">Адрес</span><span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" id="waBtn"><svg class="ic"><use href="#i-chat"/></svg>WhatsApp<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" id="igBtn"><svg class="ic"><use href="#i-cam"/></svg>Instagram<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
     </section>
   </div>
 
   <!-- панель педагога -->
   <div class="sheet" id="sheet">
-    <button class="back" id="sheetBack">← Назад</button>
+    <button class="back" id="sheetBack"><svg class="ic"><use href="#i-left"/></svg>Назад</button>
     <div id="sheetBody"></div>
   </div>
 
-  <div class="cta-bar">
-    <button class="cta" id="enroll">Записаться на бесплатное занятие</button>
-  </div>
+  <!-- ===== НИЖНИЙ TAB BAR ===== -->
+  <nav class="tabbar" id="tabbar">
+    <button data-nav="home" class="active"><svg class="ic"><use href="#i-home"/></svg>Главная</button>
+    <button data-nav="schedule"><svg class="ic"><use href="#i-cal"/></svg>Расписание</button>
+    <button data-nav="book" class="center"><span class="bump"><svg class="ic"><use href="#i-book"/></svg></span>Записаться</button>
+    <button data-nav="prices"><svg class="ic"><use href="#i-price"/></svg>Цены</button>
+    <button data-nav="about"><svg class="ic"><use href="#i-more"/></svg>Ещё</button>
+  </nav>
 
 <script>
-/* ====== КОНТАКТЫ СТУДИИ ====== */
 const STUDIO = {
   address:"г. Петропавловск, ул. Интернациональная, 63, 5 этаж",
   whatsapp:"https://wa.me/+77086366351",
@@ -303,10 +398,6 @@ const STUDIO = {
   map:"https://go.2gis.com/AuVfc",
 };
 
-/* ====== ГАЛЕРЕЯ ======
-   Положи файлы рядом с index.html в папку media/gallery/.
-   type: "img" или "video". wide:true — широкая ячейка.
-   Если файла нет — ячейка просто не покажет картинку. */
 const GALLERY = [
   {type:"img",   src:"media/gallery/1.jpg", wide:true},
   {type:"img",   src:"media/gallery/2.jpg"},
@@ -314,20 +405,17 @@ const GALLERY = [
   {type:"video", src:"media/gallery/v1.mp4"},
   {type:"img",   src:"media/gallery/4.jpg"},
   {type:"img",   src:"media/gallery/5.jpg", wide:true},
-  {type:"img",   src:"media/gallery/6.jpg"},
 ];
 
-/* ====== ОНЛАЙН-КУРСЫ ====== */
 const ONLINE = [
-  {emoji:"🎤", title:"Ораторское искусство", desc:"Уверенная речь и выступления."},
-  {emoji:"🎨", title:"Живопись", desc:"Акварель и гуашь с разбором работ."},
-  {emoji:"🎸", title:"Гитара", desc:"От нуля до первых песен."},
+  {emoji:"oratory", title:"Ораторское искусство", desc:"Уверенная речь и выступления."},
+  {emoji:"painting", title:"Живопись", desc:"Акварель и гуашь с разбором работ."},
+  {emoji:"guitar", title:"Гитара", desc:"От нуля до первых песен."},
 ];
 
-/* ====== НАПРАВЛЕНИЯ ====== */
 const DATA = {
   guitar: {
-    tab:"🎸 Гитара", title:"Гитара", short:"с 8 лет",
+    title:"Гитара", short:"с 8 лет", icon:"d-guitar",
     tagline:"От первого аккорда до песни, которую ребёнок сыграет родителям.",
     video:"media/guitar.mp4",
     accordion:[
@@ -336,15 +424,15 @@ const DATA = {
       ["Результат","Ребёнок играет песни и выступает на сцене студии — без страха перед публикой."],
     ],
     teachers:[
-      {name:"Жуков Виталий Александрович",role:"Преподаватель гитары и укулеле",emoji:"🎸",
+      {name:"Жуков Виталий Александрович",role:"Преподаватель гитары и укулеле",icon:"d-guitar",
        photo:"media/teachers/zhukov.jpg",
        bio:"Играет на всех существующих музыкальных инструментах, пишет музыку и преподаёт. С ним ребёнок берёт инструмент в руки с первого занятия."},
     ],
     price:["20 000 ₸","абонемент на 12 занятий"],
-    schedule:["Понедельник: 15:00 / 17:00","Среда: 15:00 / 17:00","Пятница: 16:00"],
+    slots:[[1,"15:00"],[1,"17:00"],[3,"15:00"],[5,"16:00"]],
   },
   acting: {
-    tab:"🎭 Актёрское", title:"Актёрское", short:"4–17 лет",
+    title:"Актёрское", short:"4–17 лет", icon:"d-acting",
     tagline:"Сцена настоящего театра — не школьный актовый зал.",
     video:"media/acting.mp4",
     accordion:[
@@ -353,14 +441,14 @@ const DATA = {
       ["Результат","Наши дети играют на сцене театра им. Погодина, снимаются в кино, ставят свои спектакли. И учатся в школе лучше — это закономерность."],
     ],
     teachers:[
-      {name:"Имя Фамилия",role:"Преподаватель актёрского мастерства",emoji:"🎭",
+      {name:"Имя Фамилия",role:"Преподаватель актёрского мастерства",icon:"d-acting",
        photo:"media/teachers/acting.jpg",bio:"Актёр, режиссёр. Опыт работы с детьми — 20 лет."},
     ],
     price:["17 000 ₸","абонемент на 8 занятий"],
-    schedule:["Вторник: 16:00 / 18:00","Четверг: 16:00","Суббота: 10:00 / 12:00"],
+    slots:[[2,"16:00"],[4,"16:00"],[6,"10:00"],[6,"12:00"]],
   },
   vocals: {
-    tab:"🎤 Вокал", title:"Вокал", short:"с 6 лет",
+    title:"Вокал", short:"с 6 лет", icon:"d-vocals",
     tagline:"Ставим голос и готовим к выступлениям.",
     video:"media/vocals.mp4",
     accordion:[
@@ -369,14 +457,14 @@ const DATA = {
       ["Результат","Чистый сильный голос и уверенность на сцене."],
     ],
     teachers:[
-      {name:"Имя Фамилия",role:"Преподаватель вокала",emoji:"🎤",
+      {name:"Имя Фамилия",role:"Преподаватель вокала",icon:"d-vocals",
        photo:"media/teachers/vocals.jpg",bio:"Вокалист, педагог."},
     ],
     price:["—","уточняйте на пробном"],
-    schedule:["Вторник: 15:00","Четверг: 15:00 / 17:00","Суббота: 11:00"],
+    slots:[[2,"15:00"],[4,"15:00"],[6,"11:00"]],
   },
   dance: {
-    tab:"💃 Танцы", title:"Танцы", short:"с 4 лет",
+    title:"Танцы", short:"с 4 лет", icon:"d-dance",
     tagline:"Пластика, ритм и уверенность в движении.",
     video:"media/dance.mp4",
     accordion:[
@@ -385,14 +473,14 @@ const DATA = {
       ["Результат","Свобода в теле и яркие номера на сцене."],
     ],
     teachers:[
-      {name:"Имя Фамилия",role:"Хореограф",emoji:"💃",
+      {name:"Имя Фамилия",role:"Хореограф",icon:"d-dance",
        photo:"media/teachers/dance.jpg",bio:"Хореограф с многолетним опытом."},
     ],
     price:["—","уточняйте на пробном"],
-    schedule:["Понедельник: 16:00 / 18:00","Среда: 16:00","Пятница: 17:00"],
+    slots:[[1,"16:00"],[3,"16:00"],[5,"17:00"]],
   },
   painting: {
-    tab:"🎨 Живопись", title:"Живопись", short:"с 5 лет",
+    title:"Живопись", short:"с 5 лет", icon:"d-painting",
     tagline:"Акварель, гуашь и раскрытие творческого потенциала.",
     video:"media/painting.mp4",
     accordion:[
@@ -401,68 +489,76 @@ const DATA = {
       ["Результат","Свои законченные работы и уверенность в творчестве."],
     ],
     teachers:[
-      {name:"Имя Фамилия",role:"Преподаватель живописи",emoji:"🎨",
+      {name:"Имя Фамилия",role:"Преподаватель живописи",icon:"d-painting",
        photo:"media/teachers/painting.jpg",bio:"Художник, педагог."},
     ],
     price:["—","уточняйте на пробном"],
-    schedule:["Среда: 14:00 / 16:00","Пятница: 14:00","Суббота: 13:00"],
+    slots:[[3,"14:00"],[5,"14:00"],[6,"13:00"]],
   },
 };
 const ORDER = ["guitar","acting","vocals","dance","painting"];
+const DAYS = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
+const MON = ["янв","фев","мар","апр","мая","июн","июл","авг","сен","окт","ноя","дек"];
 
 const tg = window.Telegram?.WebApp;
 if (tg){ tg.ready(); tg.expand(); }
 
-let activeDir = "guitar";   // выбранное направление для кнопки записи
+let activeDir = "guitar";
+let bookDir = "guitar";
+let bookPtype = "child";
 let currentView = "home";
 
-/* ── верхняя навигация ── */
-const NAV = [
-  ["home","🏠 Главная"],
-  ["formats","📝 Записаться"],
-  ["schedule","📅 Расписание"],
-  ["prices","💰 Цены"],
-  ["teachers","👨‍🏫 Педагоги"],
-  ["gallery","📸 Выступления"],
-  ["about","ℹ️ О студии"],
-];
-const topnav = document.getElementById("topnav");
-NAV.forEach(([key,label]) => {
-  const b = document.createElement("button");
-  b.className = "nav-btn" + (key==="home"?" active":"");
-  b.textContent = label; b.dataset.nav = key;
-  b.addEventListener("click", () => showView(key));
-  topnav.appendChild(b);
-});
+/* ── вычисление ближайших дат по расписанию ── */
+function computeSlots(slots){
+  const now = new Date();
+  const res = [];
+  slots.forEach(([wd, hm]) => {
+    const [h,m] = hm.split(":").map(Number);
+    let add = (wd - now.getDay() + 7) % 7;
+    if (add === 0){ // сегодня — проверим не прошло ли время
+      if (now.getHours()*60+now.getMinutes() >= h*60+m) add = 7;
+    }
+    [0,7].forEach(extra => {
+      const d = new Date(now); d.setDate(now.getDate()+add+extra); d.setHours(h,m,0,0);
+      const Y=d.getFullYear(), Mo=d.getMonth()+1, Da=d.getDate();
+      const pad=n=>String(n).padStart(2,"0");
+      const iso = `${Y}-${pad(Mo)}-${pad(Da)}T${pad(h)}:${pad(m)}:00+05:00`;
+      const display = `${DAYS[d.getDay()]}, ${Da} ${MON[d.getMonth()]} ${Y}, ${pad(h)}:${pad(m)}`;
+      res.push({iso, display, sort:d.getTime()});
+    });
+  });
+  res.sort((a,b)=>a.sort-b.sort);
+  return res;
+}
 
+/* ── навигация (нижний таб-бар) ── */
 function showView(key){
   currentView = key;
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.dataset.view===key));
-  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.nav===key));
+  document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("active", b.dataset.nav===key));
   window.scrollTo({top:0, behavior:"smooth"});
 }
+document.querySelectorAll(".tabbar button").forEach(b => {
+  b.addEventListener("click", () => showView(b.dataset.nav));
+});
+document.querySelectorAll("[data-go]").forEach(b => {
+  b.addEventListener("click", () => showView(b.dataset.go));
+});
 
-/* ── главная: плитки направлений ── */
+/* ── иконка-хелпер ── */
+function svgUse(id, cls){ return '<svg class="ic'+(cls?' '+cls:'')+'"><use href="#'+id+'"/></svg>'; }
+
+/* ── главная: карусель направлений ── */
 const homeDirs = document.getElementById("homeDirs");
 ORDER.forEach(key => {
   const D = DATA[key];
   const b = document.createElement("button");
-  b.className = "dir-tile";
-  b.innerHTML = '<span class="ico">'+D.tab.split(" ")[0]+'</span><b>'+D.title+'</b><span>'+D.short+'</span>';
+  b.className = "dir-card";
+  b.innerHTML = svgUse(D.icon)+'<div><b>'+D.title+'</b><span>'+D.short+'</span></div>';
   b.addEventListener("click", () => openDirection(key));
   homeDirs.appendChild(b);
 });
 
-/* быстрые разделы на главной */
-document.querySelectorAll("[data-go]").forEach(b => {
-  b.addEventListener("click", () => {
-    const go = b.dataset.go;
-    if (go === "formats-trial"){ showView("formats"); return; }
-    showView(go);
-  });
-});
-
-/* ── видео на главной ── */
 (function(){
   const v = document.getElementById("homeVideo");
   v.src = "media/intro.mp4";
@@ -470,10 +566,10 @@ document.querySelectorAll("[data-go]").forEach(b => {
 })();
 
 /* ── открыть направление ── */
-function avatarSimple(t){
+function teacherAvatar(t){
   return t.photo
-    ? '<img src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph&quot;>'+(t.emoji||"👤")+'</div>\'">'
-    : '<div class="ph">'+(t.emoji||"👤")+'</div>';
+    ? '<img src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph&quot;>'+svgUse(t.icon||"i-person")+'</div>\'">'
+    : '<div class="ph">'+svgUse(t.icon||"i-person")+'</div>';
 }
 function openDirection(key){
   activeDir = key;
@@ -499,35 +595,30 @@ function openDirection(key){
   const zone=document.getElementById("dirTeacherZone");
   const lbl=document.getElementById("dirTeacherLabel"); zone.innerHTML="";
   const ts=D.teachers||[];
-  if(ts.length===1){lbl.textContent="Педагог";const t=ts[0];
-    zone.innerHTML='<div class="teacher">'+avatarSimple(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div></div></div>';}
-  else if(ts.length>1){lbl.textContent="Педагоги";const g=document.createElement("div");g.className="teacher-grid";
+  if(ts.length===1){lbl.innerHTML=svgUse("i-person")+"Педагог";const t=ts[0];
+    zone.innerHTML='<div class="teacher">'+teacherAvatar(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div></div></div>';}
+  else if(ts.length>1){lbl.innerHTML=svgUse("i-person")+"Педагоги";const g=document.createElement("div");g.className="teacher-grid";
     ts.forEach(t=>{const c=document.createElement("div");c.className="tcard";
-      c.innerHTML=avatarSimple(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div></div><div class="arrow">›</div>';
+      c.innerHTML=teacherAvatar(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div></div><div class="arrow">'+svgUse("i-chev")+'</div>';
       c.addEventListener("click",()=>openSheet(t));g.appendChild(c);});zone.appendChild(g);}
 
   document.getElementById("dirPriceBig").textContent=D.price[0];
   document.getElementById("dirPriceSub").textContent=D.price[1];
-
   showView("direction");
 }
-
-/* ── форматы: онлайн-курсы ── */
-const onlineList=document.getElementById("onlineList");
-ONLINE.forEach(c=>{
-  const b=document.createElement("button");
-  b.className="row-link";
-  b.innerHTML='<span class="ico">'+c.emoji+'</span><div style="text-align:left"><div>'+c.title+'</div><div style="font-size:11.5px;color:var(--hint);font-weight:400">'+c.desc+'</div></div><span class="arrow">›</span>';
-  b.addEventListener("click",()=>{ if(tg){tg.sendData(JSON.stringify({action:"online",title:c.title}));tg.close();} });
-  onlineList.appendChild(b);
+document.getElementById("dirEnroll").addEventListener("click", () => {
+  setBookDir(activeDir); showView("book");
 });
 
 /* ── расписание ── */
 const schedList=document.getElementById("scheduleList");
 ORDER.forEach(key=>{
   const D=DATA[key];
+  const byDay={};
+  D.slots.forEach(([wd,hm])=>{(byDay[wd]=byDay[wd]||[]).push(hm);});
+  const lines=Object.keys(byDay).sort().map(wd=>'• '+DAYS[wd]+': '+byDay[wd].join(" / "));
   const card=document.createElement("div");card.className="info-card";
-  card.innerHTML='<h3>'+D.tab+'</h3>'+D.schedule.map(s=>'<p style="margin-top:4px">• '+s+'</p>').join("");
+  card.innerHTML='<h3>'+D.title+'</h3>'+lines.map(s=>'<p style="margin-top:4px">'+s+'</p>').join("");
   schedList.appendChild(card);
 });
 
@@ -536,7 +627,7 @@ const pricesList=document.getElementById("pricesList");
 ORDER.forEach(key=>{
   const D=DATA[key];
   const row=document.createElement("div");row.className="price-row";
-  row.innerHTML='<span>'+D.tab+'</span><b>'+(D.price[0]==="—"?"по запросу":D.price[0])+'</b>';
+  row.innerHTML='<span>'+D.title+'</span><b>'+(D.price[0]==="—"?"по запросу":D.price[0])+'</b>';
   pricesList.appendChild(row);
 });
 const note=document.createElement("p");
@@ -544,13 +635,13 @@ note.style.cssText="font-size:12.5px;color:var(--hint);margin-top:14px;text-alig
 note.textContent="Пробное занятие по любому направлению — бесплатно";
 pricesList.appendChild(note);
 
-/* ── все педагоги ── */
+/* ── педагоги ── */
 const allT=document.getElementById("allTeachers");
 const seen=new Set();
 ORDER.forEach(key=>{(DATA[key].teachers||[]).forEach(t=>{
   if(seen.has(t.name))return; seen.add(t.name);
   const c=document.createElement("div");c.className="tcard";
-  c.innerHTML=avatarSimple(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div></div><div class="arrow">›</div>';
+  c.innerHTML=teacherAvatar(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div></div><div class="arrow">'+svgUse("i-chev")+'</div>';
   c.addEventListener("click",()=>openSheet(t));allT.appendChild(c);
 });});
 
@@ -560,47 +651,111 @@ GALLERY.forEach(item=>{
   const cell=document.createElement("div");
   cell.className="cell"+(item.wide?" wide":"");
   if(item.type==="video"){
-    cell.innerHTML='<video src="'+item.src+'" muted loop playsinline onmouseover="this.play()" onerror="this.parentNode.style.display=\'none\'"></video><div class="play">▶</div>';
-    cell.addEventListener("click",()=>{const v=cell.querySelector("video");if(v.paused)v.play();else v.pause();});
+    cell.innerHTML='<video src="'+item.src+'" muted loop playsinline onerror="this.parentNode.style.display=\'none\'"></video><div class="play">'+svgUse("i-play")+'</div>';
+    cell.addEventListener("click",()=>{const v=cell.querySelector("video");if(v.paused){v.play();cell.querySelector(".play").style.display="none";}else v.pause();});
   } else {
     cell.innerHTML='<img src="'+item.src+'" onerror="this.parentNode.style.display=\'none\'">';
   }
   gg.appendChild(cell);
 });
 
+/* ── онлайн ── */
+const onlineList=document.getElementById("onlineList");
+ONLINE.forEach(c=>{
+  const b=document.createElement("button");
+  b.className="row-link";
+  b.innerHTML=svgUse("i-laptop")+'<div style="text-align:left"><div>'+c.title+'</div><div style="font-size:11.5px;color:var(--hint);font-weight:400">'+c.desc+'</div></div><span class="arrow">'+svgUse("i-chev")+'</span>';
+  b.addEventListener("click",()=>{ if(tg){tg.sendData(JSON.stringify({action:"online",title:c.title}));tg.close();} });
+  onlineList.appendChild(b);
+});
+
 /* ── о студии: контакты ── */
 document.getElementById("addrText").textContent = STUDIO.address;
-document.getElementById("addrBtn").addEventListener("click",()=>{ if(tg)tg.openLink(STUDIO.map); else window.open(STUDIO.map); });
-document.getElementById("waBtn").addEventListener("click",()=>{ if(tg)tg.openLink(STUDIO.whatsapp); else window.open(STUDIO.whatsapp); });
-document.getElementById("igBtn").addEventListener("click",()=>{ if(tg)tg.openLink(STUDIO.instagram); else window.open(STUDIO.instagram); });
+const openL = url => { if(tg) tg.openLink(url); else window.open(url); };
+document.getElementById("addrBtn").addEventListener("click",()=>openL(STUDIO.map));
+document.getElementById("waBtn").addEventListener("click",()=>openL(STUDIO.whatsapp));
+document.getElementById("igBtn").addEventListener("click",()=>openL(STUDIO.instagram));
 
 /* ── панель педагога ── */
 const sheet=document.getElementById("sheet");
 const sheetBody=document.getElementById("sheetBody");
 function openSheet(t){
   const pic=t.photo
-    ? '<img class="big-photo" src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph-big&quot;>'+(t.emoji||"👤")+'</div>\'">'
-    : '<div class="ph-big">'+(t.emoji||"👤")+'</div>';
+    ? '<img class="big-photo" src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph-big&quot;>'+svgUse(t.icon||"i-person")+'</div>\'">'
+    : '<div class="ph-big">'+svgUse(t.icon||"i-person")+'</div>';
   sheetBody.innerHTML=pic+'<h2>'+t.name+'</h2><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div>';
   sheet.classList.add("show");
 }
 document.getElementById("sheetBack").addEventListener("click",()=>sheet.classList.remove("show"));
 
-/* ── КНОПКА ЗАПИСИ ── */
-document.getElementById("enroll").addEventListener("click",()=>{
-  // если открыт экран направления — пишем на него, иначе общий сигнал
-  const dir = currentView==="direction" ? activeDir : "";
-  if(tg){
-    tg.sendData(JSON.stringify({action:"enroll", direction:dir}));
-    tg.close();
-  } else {
-    alert("Откройте приложение внутри Telegram, чтобы записаться.");
-  }
+/* ═══════════ ФОРМА ЗАПИСИ ═══════════ */
+const bookDirs = document.getElementById("bookDirs");
+ORDER.forEach(key=>{
+  const b=document.createElement("button");
+  b.className="chip"+(key===bookDir?" on":"");
+  b.textContent=DATA[key].title; b.dataset.dir=key;
+  b.addEventListener("click",()=>setBookDir(key));
+  bookDirs.appendChild(b);
 });
+function setBookDir(key){
+  bookDir=key;
+  document.querySelectorAll("#bookDirs .chip").forEach(c=>c.classList.toggle("on",c.dataset.dir===key));
+  fillSlots();
+}
+document.querySelectorAll("[data-ptype]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    bookPtype=b.dataset.ptype;
+    document.querySelectorAll("[data-ptype]").forEach(x=>x.classList.toggle("on",x===b));
+    const child=document.getElementById("fldChild");
+    const parent=document.getElementById("fldParent");
+    const lbl=document.getElementById("lblChild");
+    if(bookPtype==="child"){ parent.style.display=""; lbl.textContent="ФИО ребёнка"; document.getElementById("inChild").placeholder="Например: Иванов Иван"; }
+    else { parent.style.display="none"; lbl.textContent="Ваше ФИО"; document.getElementById("inChild").placeholder="Например: Иванова Мария"; }
+  });
+});
+function fillSlots(){
+  const sel=document.getElementById("inSlot");
+  const slots=computeSlots(DATA[bookDir].slots);
+  sel.innerHTML = slots.map((s,i)=>'<option value="'+i+'" data-iso="'+s.iso+'">'+s.display+'</option>').join("");
+  sel._slots = slots;
+}
+function showErr(id,on){ document.getElementById(id).classList.toggle("show",on); }
+
+document.getElementById("bookSubmit").addEventListener("click",()=>{
+  const child=document.getElementById("inChild").value.trim();
+  const parent=document.getElementById("inParent").value.trim();
+  const phone=document.getElementById("inPhone").value.trim();
+  const sel=document.getElementById("inSlot");
+  const slot=sel._slots ? sel._slots[sel.value] : null;
+
+  let ok=true;
+  showErr("errChild", child.split(/\s+/).length<2); if(child.split(/\s+/).length<2) ok=false;
+  if(bookPtype==="child"){ const bad=parent.split(/\s+/).length<2; showErr("errParent",bad); if(bad) ok=false; }
+  else showErr("errParent",false);
+  const badPhone=phone.replace(/\D/g,"").length<7; showErr("errPhone",badPhone); if(badPhone) ok=false;
+  if(!ok || !slot) return;
+
+  const payload={
+    action:"book",
+    direction:bookDir,
+    ptype:bookPtype,
+    child:child,
+    parent:bookPtype==="child"?parent:"",
+    phone:phone,
+    slot_display:slot.display,
+    slot_iso:slot.iso,
+  };
+  if(tg){ tg.sendData(JSON.stringify(payload)); tg.close(); }
+  else alert("Откройте приложение внутри Telegram, чтобы отправить заявку.");
+});
+
+/* инициализация формы */
+setBookDir("guitar");
+fillSlots();
 
 /* стартовое направление из ?dir= */
 const p=new URLSearchParams(location.search);
-if(p.get("dir") && DATA[p.get("dir")]) openDirection(p.get("dir"));
+if(p.get("dir") && DATA[p.get("dir")]){ openDirection(p.get("dir")); setBookDir(p.get("dir")); }
 </script>
 </body>
 </html>
