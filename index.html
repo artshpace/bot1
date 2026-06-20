@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Shpigotskiy Art Space</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --red:#E30613;
+    --gold:#C9A84C;
+    --black:#1A1A1A;
+    --bg:#FFFFFF;
+    --bg-2:#F4F1EA;
+    --bg-3:#ECE7DB;
+    --text:#1A1A1A;
+    --hint:#6B6660;
+    --sep:rgba(26,26,26,.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{background:var(--bg);}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    color:var(--text);line-height:1.5;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 92px);
+    overflow-x:hidden;
+  }
+
+  /* ── НАВИГАЦИЯ (разделы) ── */
+  .topnav{
+    position:sticky;top:0;z-index:30;
+    display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+    padding:12px 16px;background:rgba(255,255,255,.92);
+    backdrop-filter:saturate(180%) blur(12px);
+    border-bottom:1px solid var(--sep);
+  }
+  .topnav::-webkit-scrollbar{display:none;}
+  .nav-btn{
+    flex:none;border:1px solid var(--sep);border-radius:999px;
+    padding:9px 15px;font-size:13.5px;font-weight:600;
+    background:var(--bg-2);color:var(--hint);cursor:pointer;
+    font-family:inherit;white-space:nowrap;transition:all .2s ease;
+  }
+  .nav-btn.active{background:var(--black);color:#fff;border-color:var(--black);}
+
+  /* ── СТРАНИЦЫ ── */
+  .view{display:none;}
+  .view.active{display:block;animation:fadeIn .35s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  /* ── ШАПКА ГЛАВНОЙ ── */
+  .hero{position:relative;height:230px;display:flex;align-items:flex-end;overflow:hidden;background:var(--bg-3);}
+  .hero video,.hero .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+  .hero .poster{background:radial-gradient(120% 90% at 78% 8%, rgba(227,6,19,.18), transparent 55%),linear-gradient(165deg,#EFE9DC,#F4F1EA);transition:opacity .6s ease;}
+  .hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to top, var(--bg) 3%, rgba(255,255,255,.25) 45%, transparent 100%);}
+  .hero-inner{position:relative;z-index:2;padding:22px;width:100%;}
+  .eyebrow{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:8px;}
+  .hero h1{font-size:34px;line-height:1.02;font-weight:800;letter-spacing:-.02em;color:var(--black);}
+  .hero .tagline{margin-top:8px;font-size:14.5px;color:var(--hint);max-width:34ch;}
+
+  /* ── СЕКЦИИ ── */
+  section{padding:24px 22px 4px;}
+  .label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+  .label::before{content:"";width:18px;height:2px;background:var(--red);}
+
+  .stats{display:flex;gap:8px;padding:18px 22px 0;}
+  .stat{flex:1;border:1px solid var(--sep);border-radius:14px;padding:12px;background:var(--bg-2);text-align:center;}
+  .stat b{display:block;font-size:21px;font-weight:800;color:var(--black);line-height:1.1;}
+  .stat span{font-size:10px;color:var(--hint);}
+
+  /* плитки направлений на главной */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .dir-tile{
+    border:1px solid var(--sep);border-radius:16px;padding:16px;
+    background:var(--bg-2);cursor:pointer;text-align:left;font-family:inherit;
+    transition:transform .12s ease,border-color .2s ease;
+  }
+  .dir-tile:active{transform:scale(.97);border-color:var(--gold);}
+  .dir-tile .ico{font-size:26px;display:block;margin-bottom:8px;}
+  .dir-tile b{font-size:15px;font-weight:700;color:var(--text);display:block;}
+  .dir-tile span{font-size:11.5px;color:var(--hint);}
+
+  /* строки-ссылки */
+  .row-link{
+    width:100%;display:flex;align-items:center;gap:14px;
+    border:1px solid var(--sep);border-radius:14px;padding:15px 16px;margin-bottom:10px;
+    background:var(--bg-2);cursor:pointer;font-family:inherit;text-align:left;
+    color:var(--text);font-size:15px;font-weight:600;
+    transition:transform .12s ease,border-color .2s ease;
+  }
+  .row-link:active{transform:scale(.98);border-color:var(--gold);}
+  .row-link .ico{font-size:20px;flex:none;}
+  .row-link .arrow{margin-left:auto;color:var(--hint);font-size:20px;}
+  .row-link.accent{background:var(--red);color:#fff;border-color:var(--red);}
+  .row-link.accent .arrow{color:rgba(255,255,255,.8);}
+
+  /* ── АККОРДЕОН ── */
+  .acc-item{border-bottom:1px solid var(--sep);}
+  .acc-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 2px;color:var(--text);font-size:15.5px;font-weight:600;text-align:left;font-family:inherit;}
+  .acc-head .chev{flex:none;width:22px;height:22px;position:relative;transition:transform .35s cubic-bezier(.4,0,.2,1);}
+  .acc-head .chev::before,.acc-head .chev::after{content:"";position:absolute;top:50%;width:11px;height:2px;border-radius:2px;background:var(--gold);}
+  .acc-head .chev::before{left:1px;transform:rotate(45deg);}
+  .acc-head .chev::after{right:1px;transform:rotate(-45deg);}
+  .acc-item.open .chev{transform:rotate(180deg);}
+  .acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s cubic-bezier(.4,0,.2,1);}
+  .acc-item.open .acc-body{grid-template-rows:1fr;}
+  .acc-body > div{overflow:hidden;}
+  .acc-body p{padding:0 2px 18px;color:var(--hint);font-size:14px;}
+
+  /* ── ПЕДАГОГ ── */
+  .teacher{display:flex;align-items:center;gap:16px;background:var(--bg-2);border:1px solid var(--sep);border-radius:18px;padding:18px;}
+  .teacher img,.teacher .ph{flex:none;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
+  .teacher .ph{display:grid;place-items:center;font-size:28px;}
+  .teacher h3{font-size:16px;font-weight:800;margin-bottom:3px;}
+  .teacher .role{font-size:12px;color:var(--red);margin-bottom:6px;font-weight:600;}
+  .teacher .bio{font-size:12.5px;color:var(--hint);}
+
+  .teacher-grid{display:grid;gap:10px;}
+  .tcard{display:flex;align-items:center;gap:14px;cursor:pointer;background:var(--bg-2);border:1px solid var(--sep);border-radius:16px;padding:14px;transition:transform .12s ease,border-color .2s ease;}
+  .tcard:active{transform:scale(.98);border-color:var(--gold);}
+  .tcard img,.tcard .ph{flex:none;width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
+  .tcard .ph{display:grid;place-items:center;font-size:22px;}
+  .tcard h3{font-size:14.5px;font-weight:700;}
+  .tcard .role{font-size:11.5px;color:var(--hint);}
+  .tcard .arrow{margin-left:auto;color:var(--hint);font-size:22px;}
+
+  /* ── ГАЛЕРЕЯ ── */
+  .gallery{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .gallery .cell{position:relative;border-radius:14px;overflow:hidden;background:var(--bg-3);aspect-ratio:1;cursor:pointer;}
+  .gallery .cell img,.gallery .cell video{width:100%;height:100%;object-fit:cover;display:block;}
+  .gallery .cell.wide{grid-column:span 2;aspect-ratio:16/9;}
+  .gallery .play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.25);color:#fff;font-size:34px;pointer-events:none;}
+
+  /* ── ЦЕНА ── */
+  .price{border:1px solid var(--gold);border-radius:18px;padding:20px;text-align:center;background:rgba(201,168,76,.10);}
+  .price .free{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#9a7f2e;font-weight:800;}
+  .price .big{font-size:32px;font-weight:800;margin:6px 0;color:var(--black);}
+  .price .sub{font-size:12.5px;color:var(--hint);}
+  .price-row{display:flex;justify-content:space-between;padding:13px 2px;border-bottom:1px solid var(--sep);font-size:14.5px;}
+  .price-row b{font-weight:700;}
+
+  /* инфо-карточки */
+  .info-card{background:var(--bg-2);border:1px solid var(--sep);border-radius:16px;padding:18px;margin-bottom:12px;}
+  .info-card h3{font-size:15px;font-weight:800;margin-bottom:6px;}
+  .info-card p{font-size:13.5px;color:var(--hint);}
+
+  /* ── ПАНЕЛЬ (педагог / детали) ── */
+  .sheet{position:fixed;inset:0;z-index:50;background:var(--bg);transform:translateX(100%);transition:transform .32s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:24px 22px calc(env(safe-area-inset-bottom) + 24px);}
+  .sheet.show{transform:none;}
+  .sheet .back{background:none;border:none;color:var(--red);font-size:15px;font-weight:700;cursor:pointer;padding:6px 0;margin-bottom:18px;font-family:inherit;}
+  .sheet .big-photo,.sheet .ph-big{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);background:var(--bg-3);margin-bottom:16px;}
+  .sheet .ph-big{display:grid;place-items:center;font-size:48px;}
+  .sheet h2{font-size:23px;font-weight:800;margin-bottom:4px;}
+  .sheet .role{color:var(--red);font-size:13.5px;margin-bottom:16px;font-weight:600;}
+  .sheet .bio{color:var(--hint);font-size:14.5px;line-height:1.6;}
+
+  /* ── STICKY КНОПКА ── */
+  .cta-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:12px 18px calc(env(safe-area-inset-bottom) + 12px);background:linear-gradient(to top, var(--bg) 72%, transparent);}
+  .cta{width:100%;border:none;border-radius:15px;padding:16px;font-size:16px;font-weight:800;background:var(--red);color:#fff;cursor:pointer;font-family:inherit;transition:transform .12s ease,opacity .12s ease;}
+  .cta:active{transform:scale(.98);opacity:.92;}
+
+  .muted-link{color:var(--red);font-weight:600;text-decoration:none;}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+
+  <nav class="topnav" id="topnav"></nav>
+
+  <!-- ===== ГЛАВНАЯ ===== -->
+  <div class="view active" data-view="home">
+    <header class="hero">
+      <video id="homeVideo" autoplay muted loop playsinline></video>
+      <div class="poster"></div>
+      <div class="hero-inner">
+        <div class="eyebrow">Shpigotskiy Art Space</div>
+        <h1>Творческая студия<br>для детей и взрослых</h1>
+        <div class="tagline">Гитара · актёрское · вокал · танцы · живопись в Петропавловске</div>
+      </div>
+    </header>
+    <div class="stats">
+      <div class="stat"><b>160+</b><span>учеников</span></div>
+      <div class="stat"><b>87%</b><span>сами просятся</span></div>
+      <div class="stat"><b>9,7</b><span>NPS родителей</span></div>
+    </div>
+    <section>
+      <div class="label">Направления</div>
+      <div class="grid2" id="homeDirs"></div>
+    </section>
+    <section>
+      <div class="label">Быстрые разделы</div>
+      <button class="row-link accent" data-go="formats"><span class="ico">📝</span>Записаться на занятие<span class="arrow">›</span></button>
+      <button class="row-link" data-go="schedule"><span class="ico">📅</span>Расписание<span class="arrow">›</span></button>
+      <button class="row-link" data-go="prices"><span class="ico">💰</span>Цены<span class="arrow">›</span></button>
+      <button class="row-link" data-go="teachers"><span class="ico">👨‍🏫</span>Преподаватели<span class="arrow">›</span></button>
+      <button class="row-link" data-go="gallery"><span class="ico">📸</span>Выступления<span class="arrow">›</span></button>
+      <button class="row-link" data-go="about"><span class="ico">ℹ️</span>О студии и контакты<span class="arrow">›</span></button>
+    </section>
+  </div>
+
+  <!-- ===== НАПРАВЛЕНИЕ ===== -->
+  <div class="view" data-view="direction">
+    <header class="hero">
+      <video id="dirVideo" autoplay muted loop playsinline></video>
+      <div class="poster" id="dirPoster"></div>
+      <div class="hero-inner">
+        <div class="eyebrow">Направление</div>
+        <h1 id="dirTitle">—</h1>
+        <div class="tagline" id="dirTagline"></div>
+      </div>
+    </header>
+    <section>
+      <div class="label">О курсе</div>
+      <div id="dirAccordion"></div>
+    </section>
+    <section>
+      <div class="label" id="dirTeacherLabel">Педагог</div>
+      <div id="dirTeacherZone"></div>
+    </section>
+    <section>
+      <div class="label">Стоимость</div>
+      <div class="price">
+        <div class="free">Пробное занятие — бесплатно</div>
+        <div class="big" id="dirPriceBig">—</div>
+        <div class="sub" id="dirPriceSub"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ===== ФОРМАТЫ (онлайн/оффлайн) ===== -->
+  <div class="view" data-view="formats">
+    <section style="padding-top:26px;">
+      <div class="label">Как заниматься</div>
+      <div class="info-card"><h3>🏫 Очно в студии</h3><p>Группы и индивидуальные занятия по адресу студии. Пробное — бесплатно.</p></div>
+      <button class="row-link accent" data-go="formats-trial"><span class="ico">📝</span>Записаться на пробное<span class="arrow">›</span></button>
+      <div style="height:18px"></div>
+      <div class="info-card"><h3>💻 Онлайн-курсы</h3><p>Ораторское искусство, живопись и гитара — из дома, с разбором работ педагогом.</p></div>
+      <div id="onlineList"></div>
+    </section>
+  </div>
+
+  <!-- ===== РАСПИСАНИЕ ===== -->
+  <div class="view" data-view="schedule">
+    <section style="padding-top:26px;">
+      <div class="label">Расписание</div>
+      <div id="scheduleList"></div>
+    </section>
+  </div>
+
+  <!-- ===== ЦЕНЫ ===== -->
+  <div class="view" data-view="prices">
+    <section style="padding-top:26px;">
+      <div class="label">Цены по направлениям</div>
+      <div id="pricesList"></div>
+    </section>
+  </div>
+
+  <!-- ===== ПЕДАГОГИ ===== -->
+  <div class="view" data-view="teachers">
+    <section style="padding-top:26px;">
+      <div class="label">Преподаватели</div>
+      <div class="teacher-grid" id="allTeachers"></div>
+    </section>
+  </div>
+
+  <!-- ===== ГАЛЕРЕЯ ===== -->
+  <div class="view" data-view="gallery">
+    <section style="padding-top:26px;">
+      <div class="label">Выступления и работы</div>
+      <div class="gallery" id="galleryGrid"></div>
+    </section>
+  </div>
+
+  <!-- ===== О СТУДИИ ===== -->
+  <div class="view" data-view="about">
+    <section style="padding-top:26px;">
+      <div class="label">О студии</div>
+      <div class="info-card"><p>Творческая студия Shpigotskiy Art Space — 160+ учеников, пять направлений. Наши дети выступают на сцене областного театра, снимаются в кино и ставят свои спектакли. Главное для нас — раскрыть в ребёнке уверенность.</p></div>
+      <div class="label" style="margin-top:24px;">Контакты</div>
+      <button class="row-link" id="addrBtn"><span class="ico">📍</span><span id="addrText">Адрес</span><span class="arrow">›</span></button>
+      <button class="row-link" id="waBtn"><span class="ico">💬</span>WhatsApp<span class="arrow">›</span></button>
+      <button class="row-link" id="igBtn"><span class="ico">📸</span>Instagram<span class="arrow">›</span></button>
+    </section>
+  </div>
+
+  <!-- панель педагога -->
+  <div class="sheet" id="sheet">
+    <button class="back" id="sheetBack">← Назад</button>
+    <div id="sheetBody"></div>
+  </div>
+
+  <div class="cta-bar">
+    <button class="cta" id="enroll">Записаться на бесплатное занятие</button>
+  </div>
+
+<script>
+/* ====== КОНТАКТЫ СТУДИИ ====== */
+const STUDIO = {
+  address:"г. Петропавловск, ул. Интернациональная, 63, 5 этаж",
+  whatsapp:"https://wa.me/+77086366351",
+  instagram:"https://www.instagram.com/artshpace",
+  map:"https://go.2gis.com/AuVfc",
+};
+
+/* ====== ГАЛЕРЕЯ ======
+   Положи файлы рядом с index.html в папку media/gallery/.
+   type: "img" или "video". wide:true — широкая ячейка.
+   Если файла нет — ячейка просто не покажет картинку. */
+const GALLERY = [
+  {type:"img",   src:"media/gallery/1.jpg", wide:true},
+  {type:"img",   src:"media/gallery/2.jpg"},
+  {type:"img",   src:"media/gallery/3.jpg"},
+  {type:"video", src:"media/gallery/v1.mp4"},
+  {type:"img",   src:"media/gallery/4.jpg"},
+  {type:"img",   src:"media/gallery/5.jpg", wide:true},
+  {type:"img",   src:"media/gallery/6.jpg"},
+];
+
+/* ====== ОНЛАЙН-КУРСЫ ====== */
+const ONLINE = [
+  {emoji:"🎤", title:"Ораторское искусство", desc:"Уверенная речь и выступления."},
+  {emoji:"🎨", title:"Живопись", desc:"Акварель и гуашь с разбором работ."},
+  {emoji:"🎸", title:"Гитара", desc:"От нуля до первых песен."},
+];
+
+/* ====== НАПРАВЛЕНИЯ ====== */
+const DATA = {
+  guitar: {
+    tab:"🎸 Гитара", title:"Гитара", short:"с 8 лет",
+    tagline:"От первого аккорда до песни, которую ребёнок сыграет родителям.",
+    video:"media/guitar.mp4",
+    accordion:[
+      ["Что осваиваем","Первые аккорды и бой уже на пробном. Дальше — любимые песни ребёнка, чувство ритма и уверенная игра."],
+      ["Для кого","Укулеле с 8 лет, гитара с 10 лет. Групповые занятия в небольших группах."],
+      ["Результат","Ребёнок играет песни и выступает на сцене студии — без страха перед публикой."],
+    ],
+    teachers:[
+      {name:"Жуков Виталий Александрович",role:"Преподаватель гитары и укулеле",emoji:"🎸",
+       photo:"media/teachers/zhukov.jpg",
+       bio:"Играет на всех существующих музыкальных инструментах, пишет музыку и преподаёт. С ним ребёнок берёт инструмент в руки с первого занятия."},
+    ],
+    price:["20 000 ₸","абонемент на 12 занятий"],
+    schedule:["Понедельник: 15:00 / 17:00","Среда: 15:00 / 17:00","Пятница: 16:00"],
+  },
+  acting: {
+    tab:"🎭 Актёрское", title:"Актёрское", short:"4–17 лет",
+    tagline:"Сцена настоящего театра — не школьный актовый зал.",
+    video:"media/acting.mp4",
+    accordion:[
+      ["Что осваиваем","Голос и речь, сценическая пластика, этюды и импровизация, умение существовать в образе изнутри."],
+      ["Для кого","Группы 4–6, 7–11 и 12–17 лет."],
+      ["Результат","Наши дети играют на сцене театра им. Погодина, снимаются в кино, ставят свои спектакли. И учатся в школе лучше — это закономерность."],
+    ],
+    teachers:[
+      {name:"Имя Фамилия",role:"Преподаватель актёрского мастерства",emoji:"🎭",
+       photo:"media/teachers/acting.jpg",bio:"Актёр, режиссёр. Опыт работы с детьми — 20 лет."},
+    ],
+    price:["17 000 ₸","абонемент на 8 занятий"],
+    schedule:["Вторник: 16:00 / 18:00","Четверг: 16:00","Суббота: 10:00 / 12:00"],
+  },
+  vocals: {
+    tab:"🎤 Вокал", title:"Вокал", short:"с 6 лет",
+    tagline:"Ставим голос и готовим к выступлениям.",
+    video:"media/vocals.mp4",
+    accordion:[
+      ["Что осваиваем","Постановка голоса, работа с дыханием, подготовка к выступлениям."],
+      ["Для кого","Индивидуальные занятия с 6 лет."],
+      ["Результат","Чистый сильный голос и уверенность на сцене."],
+    ],
+    teachers:[
+      {name:"Имя Фамилия",role:"Преподаватель вокала",emoji:"🎤",
+       photo:"media/teachers/vocals.jpg",bio:"Вокалист, педагог."},
+    ],
+    price:["—","уточняйте на пробном"],
+    schedule:["Вторник: 15:00","Четверг: 15:00 / 17:00","Суббота: 11:00"],
+  },
+  dance: {
+    tab:"💃 Танцы", title:"Танцы", short:"с 4 лет",
+    tagline:"Пластика, ритм и уверенность в движении.",
+    video:"media/dance.mp4",
+    accordion:[
+      ["Что осваиваем","Хореография, чувство ритма, координация и сценическая подача."],
+      ["Для кого","Групповые занятия с 4 лет."],
+      ["Результат","Свобода в теле и яркие номера на сцене."],
+    ],
+    teachers:[
+      {name:"Имя Фамилия",role:"Хореограф",emoji:"💃",
+       photo:"media/teachers/dance.jpg",bio:"Хореограф с многолетним опытом."},
+    ],
+    price:["—","уточняйте на пробном"],
+    schedule:["Понедельник: 16:00 / 18:00","Среда: 16:00","Пятница: 17:00"],
+  },
+  painting: {
+    tab:"🎨 Живопись", title:"Живопись", short:"с 5 лет",
+    tagline:"Акварель, гуашь и раскрытие творческого потенциала.",
+    video:"media/painting.mp4",
+    accordion:[
+      ["Что осваиваем","Акварель, гуашь, смешанные техники, основы композиции и цвета."],
+      ["Для кого","Групповые занятия с 5 лет."],
+      ["Результат","Свои законченные работы и уверенность в творчестве."],
+    ],
+    teachers:[
+      {name:"Имя Фамилия",role:"Преподаватель живописи",emoji:"🎨",
+       photo:"media/teachers/painting.jpg",bio:"Художник, педагог."},
+    ],
+    price:["—","уточняйте на пробном"],
+    schedule:["Среда: 14:00 / 16:00","Пятница: 14:00","Суббота: 13:00"],
+  },
+};
+const ORDER = ["guitar","acting","vocals","dance","painting"];
+
+const tg = window.Telegram?.WebApp;
+if (tg){ tg.ready(); tg.expand(); }
+
+let activeDir = "guitar";   // выбранное направление для кнопки записи
+let currentView = "home";
+
+/* ── верхняя навигация ── */
+const NAV = [
+  ["home","🏠 Главная"],
+  ["formats","📝 Записаться"],
+  ["schedule","📅 Расписание"],
+  ["prices","💰 Цены"],
+  ["teachers","👨‍🏫 Педагоги"],
+  ["gallery","📸 Выступления"],
+  ["about","ℹ️ О студии"],
+];
+const topnav = document.getElementById("topnav");
+NAV.forEach(([key,label]) => {
+  const b = document.createElement("button");
+  b.className = "nav-btn" + (key==="home"?" active":"");
+  b.textContent = label; b.dataset.nav = key;
+  b.addEventListener("click", () => showView(key));
+  topnav.appendChild(b);
+});
+
+function showView(key){
+  currentView = key;
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.dataset.view===key));
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.nav===key));
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ── главная: плитки направлений ── */
+const homeDirs = document.getElementById("homeDirs");
+ORDER.forEach(key => {
+  const D = DATA[key];
+  const b = document.createElement("button");
+  b.className = "dir-tile";
+  b.innerHTML = '<span class="ico">'+D.tab.split(" ")[0]+'</span><b>'+D.title+'</b><span>'+D.short+'</span>';
+  b.addEventListener("click", () => openDirection(key));
+  homeDirs.appendChild(b);
+});
+
+/* быстрые разделы на главной */
+document.querySelectorAll("[data-go]").forEach(b => {
+  b.addEventListener("click", () => {
+    const go = b.dataset.go;
+    if (go === "formats-trial"){ showView("formats"); return; }
+    showView(go);
+  });
+});
+
+/* ── видео на главной ── */
+(function(){
+  const v = document.getElementById("homeVideo");
+  v.src = "media/intro.mp4";
+  v.onerror = () => { v.style.display="none"; };
+})();
+
+/* ── открыть направление ── */
+function avatarSimple(t){
+  return t.photo
+    ? '<img src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph&quot;>'+(t.emoji||"👤")+'</div>\'">'
+    : '<div class="ph">'+(t.emoji||"👤")+'</div>';
+}
+function openDirection(key){
+  activeDir = key;
+  const D = DATA[key];
+  document.getElementById("dirTitle").textContent   = D.title;
+  document.getElementById("dirTagline").textContent = D.tagline;
+
+  const vid = document.getElementById("dirVideo");
+  const poster = document.getElementById("dirPoster");
+  poster.style.opacity = 1; vid.style.display="";
+  if (D.video){ vid.src=D.video; vid.onerror=()=>{vid.style.display="none";}; vid.onloadeddata=()=>{poster.style.opacity=0;}; }
+  else vid.style.display="none";
+
+  const acc = document.getElementById("dirAccordion"); acc.innerHTML="";
+  D.accordion.forEach(([h,b],i)=>{
+    const it=document.createElement("div");
+    it.className="acc-item"+(i===0?" open":"");
+    it.innerHTML='<button class="acc-head">'+h+'<span class="chev"></span></button><div class="acc-body"><div><p>'+b+'</p></div></div>';
+    it.querySelector(".acc-head").addEventListener("click",()=>it.classList.toggle("open"));
+    acc.appendChild(it);
+  });
+
+  const zone=document.getElementById("dirTeacherZone");
+  const lbl=document.getElementById("dirTeacherLabel"); zone.innerHTML="";
+  const ts=D.teachers||[];
+  if(ts.length===1){lbl.textContent="Педагог";const t=ts[0];
+    zone.innerHTML='<div class="teacher">'+avatarSimple(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div></div></div>';}
+  else if(ts.length>1){lbl.textContent="Педагоги";const g=document.createElement("div");g.className="teacher-grid";
+    ts.forEach(t=>{const c=document.createElement("div");c.className="tcard";
+      c.innerHTML=avatarSimple(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div></div><div class="arrow">›</div>';
+      c.addEventListener("click",()=>openSheet(t));g.appendChild(c);});zone.appendChild(g);}
+
+  document.getElementById("dirPriceBig").textContent=D.price[0];
+  document.getElementById("dirPriceSub").textContent=D.price[1];
+
+  showView("direction");
+}
+
+/* ── форматы: онлайн-курсы ── */
+const onlineList=document.getElementById("onlineList");
+ONLINE.forEach(c=>{
+  const b=document.createElement("button");
+  b.className="row-link";
+  b.innerHTML='<span class="ico">'+c.emoji+'</span><div style="text-align:left"><div>'+c.title+'</div><div style="font-size:11.5px;color:var(--hint);font-weight:400">'+c.desc+'</div></div><span class="arrow">›</span>';
+  b.addEventListener("click",()=>{ if(tg){tg.sendData(JSON.stringify({action:"online",title:c.title}));tg.close();} });
+  onlineList.appendChild(b);
+});
+
+/* ── расписание ── */
+const schedList=document.getElementById("scheduleList");
+ORDER.forEach(key=>{
+  const D=DATA[key];
+  const card=document.createElement("div");card.className="info-card";
+  card.innerHTML='<h3>'+D.tab+'</h3>'+D.schedule.map(s=>'<p style="margin-top:4px">• '+s+'</p>').join("");
+  schedList.appendChild(card);
+});
+
+/* ── цены ── */
+const pricesList=document.getElementById("pricesList");
+ORDER.forEach(key=>{
+  const D=DATA[key];
+  const row=document.createElement("div");row.className="price-row";
+  row.innerHTML='<span>'+D.tab+'</span><b>'+(D.price[0]==="—"?"по запросу":D.price[0])+'</b>';
+  pricesList.appendChild(row);
+});
+const note=document.createElement("p");
+note.style.cssText="font-size:12.5px;color:var(--hint);margin-top:14px;text-align:center";
+note.textContent="Пробное занятие по любому направлению — бесплатно";
+pricesList.appendChild(note);
+
+/* ── все педагоги ── */
+const allT=document.getElementById("allTeachers");
+const seen=new Set();
+ORDER.forEach(key=>{(DATA[key].teachers||[]).forEach(t=>{
+  if(seen.has(t.name))return; seen.add(t.name);
+  const c=document.createElement("div");c.className="tcard";
+  c.innerHTML=avatarSimple(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div></div><div class="arrow">›</div>';
+  c.addEventListener("click",()=>openSheet(t));allT.appendChild(c);
+});});
+
+/* ── галерея ── */
+const gg=document.getElementById("galleryGrid");
+GALLERY.forEach(item=>{
+  const cell=document.createElement("div");
+  cell.className="cell"+(item.wide?" wide":"");
+  if(item.type==="video"){
+    cell.innerHTML='<video src="'+item.src+'" muted loop playsinline onmouseover="this.play()" onerror="this.parentNode.style.display=\'none\'"></video><div class="play">▶</div>';
+    cell.addEventListener("click",()=>{const v=cell.querySelector("video");if(v.paused)v.play();else v.pause();});
+  } else {
+    cell.innerHTML='<img src="'+item.src+'" onerror="this.parentNode.style.display=\'none\'">';
+  }
+  gg.appendChild(cell);
+});
+
+/* ── о студии: контакты ── */
+document.getElementById("addrText").textContent = STUDIO.address;
+document.getElementById("addrBtn").addEventListener("click",()=>{ if(tg)tg.openLink(STUDIO.map); else window.open(STUDIO.map); });
+document.getElementById("waBtn").addEventListener("click",()=>{ if(tg)tg.openLink(STUDIO.whatsapp); else window.open(STUDIO.whatsapp); });
+document.getElementById("igBtn").addEventListener("click",()=>{ if(tg)tg.openLink(STUDIO.instagram); else window.open(STUDIO.instagram); });
+
+/* ── панель педагога ── */
+const sheet=document.getElementById("sheet");
+const sheetBody=document.getElementById("sheetBody");
+function openSheet(t){
+  const pic=t.photo
+    ? '<img class="big-photo" src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph-big&quot;>'+(t.emoji||"👤")+'</div>\'">'
+    : '<div class="ph-big">'+(t.emoji||"👤")+'</div>';
+  sheetBody.innerHTML=pic+'<h2>'+t.name+'</h2><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div>';
+  sheet.classList.add("show");
+}
+document.getElementById("sheetBack").addEventListener("click",()=>sheet.classList.remove("show"));
+
+/* ── КНОПКА ЗАПИСИ ── */
+document.getElementById("enroll").addEventListener("click",()=>{
+  // если открыт экран направления — пишем на него, иначе общий сигнал
+  const dir = currentView==="direction" ? activeDir : "";
+  if(tg){
+    tg.sendData(JSON.stringify({action:"enroll", direction:dir}));
+    tg.close();
+  } else {
+    alert("Откройте приложение внутри Telegram, чтобы записаться.");
+  }
+});
+
+/* стартовое направление из ?dir= */
+const p=new URLSearchParams(location.search);
+if(p.get("dir") && DATA[p.get("dir")]) openDirection(p.get("dir"));
+</script>
+</body>
+</html>
