@@ -132,6 +132,22 @@
   .gallery .play{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.22);color:#fff;pointer-events:none;}
   .gallery .play .ic{width:34px;height:34px;color:#fff;}
 
+
+  /* ── РАСПИСАНИЕ: группы ── */
+  .grp{display:flex;flex-direction:column;gap:0;border:1px solid var(--hair);border-radius:14px;background:var(--bg-2);padding:14px 15px;margin-bottom:10px;position:relative;overflow:hidden;}
+  .grp::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gc,var(--red));}
+  .grp .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;}
+  .grp .age{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;}
+  .grp .age i{font-style:normal;display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--gc,var(--red));margin-right:8px;vertical-align:middle;}
+  .grp .time{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--black);white-space:nowrap;}
+  .grp .gnum{font-size:11px;color:var(--hint);margin-top:1px;}
+  .grp .week{display:flex;gap:5px;margin-top:11px;}
+  .grp .d{flex:1;text-align:center;font-size:11px;font-weight:600;padding:5px 0;border-radius:7px;background:var(--bg-3);color:var(--hint);}
+  .grp .d.on{background:var(--gc,var(--red));color:#fff;}
+  .sched-legend{display:flex;flex-wrap:wrap;gap:12px;margin:2px 2px 16px;}
+  .sched-legend span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--hint);}
+  .sched-legend i{width:10px;height:10px;border-radius:50%;}
+
   /* ── ЦЕНА ── */
   .price{position:relative;border:1px solid var(--hair);border-radius:4px;padding:24px;text-align:center;background:var(--paper);}
   .price::before,.price::after{content:"";position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:var(--bg);transform:translateY(-50%);}
@@ -531,6 +547,16 @@ const DATA = {
     ],
     price:["17 000 ₸","абонемент на 8 занятий в месяц"],
     slots:[[2,"16:00"],[4,"16:00"],[6,"10:00"],[6,"12:00"]],
+    groups:[
+      {n:1, age:"11–15", days:[1,3], time:"9:00–10:00"},
+      {n:7, age:"7–10",  days:[1,3], time:"15:00–16:00"},
+      {n:2, age:"11–15", days:[1,3], time:"16:00–17:00"},
+      {n:8, age:"7–10",  days:[2,4], time:"9:30–10:30"},
+      {n:6, age:"11–15", days:[6,0], time:"9:00–10:30"},
+      {n:3, age:"14–17", days:[6,0], time:"14:30–16:00"},
+      {n:4, age:"7–10",  days:[6,0], time:"14:45–15:45"},
+      {n:5, age:"4–6",   days:[6,0], time:"15:45–16:45"},
+    ],
   },
   vocals: {
     title:"Вокал", short:"с 6 лет", icon:"d-vocals",
@@ -727,14 +753,43 @@ document.getElementById("dirEnroll").addEventListener("click", () => {
 
 /* ── расписание ── */
 const schedList=document.getElementById("scheduleList");
+const DAY_SHORT=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"]; // index = getDay()
+const WEEK_ORDER=[1,2,3,4,5,6,0];                       // Пн..Вс
+const AGE_COLOR={"4–6":"#C9A84C","7–10":"#E30613","11–15":"#1A1A1A","14–17":"#9a7f2e"};
+
+function renderGroups(D){
+  // легенда возрастов (только встречающиеся)
+  const ages=[...new Set(D.groups.map(g=>g.age))];
+  const legend='<div class="sched-legend">'+ages.map(a=>
+    '<span><i style="background:'+(AGE_COLOR[a]||"#E30613")+'"></i>'+a+' лет</span>').join("")+'</div>';
+  const cards=D.groups.map(g=>{
+    const col=AGE_COLOR[g.age]||"#E30613";
+    const week=WEEK_ORDER.map(wd=>
+      '<div class="d'+(g.days.includes(wd)?" on":"")+'">'+DAY_SHORT[wd]+'</div>').join("");
+    return '<div class="grp" style="--gc:'+col+'">'+
+      '<div class="top"><div class="age"><i></i>'+g.age+' лет</div>'+
+      '<div class="time">'+g.time+'</div></div>'+
+      '<div class="gnum">Группа '+g.n+'</div>'+
+      '<div class="week">'+week+'</div></div>';
+  }).join("");
+  return legend+cards;
+}
+
 ORDER.forEach(key=>{
   const D=DATA[key];
-  const byDay={};
-  D.slots.forEach(([wd,hm])=>{(byDay[wd]=byDay[wd]||[]).push(hm);});
-  const lines=Object.keys(byDay).sort().map(wd=>'• '+DAYS[wd]+': '+byDay[wd].join(" / "));
-  const card=document.createElement("div");card.className="info-card";
-  card.innerHTML='<h3>'+D.title+'</h3>'+lines.map(s=>'<p style="margin-top:4px">'+s+'</p>').join("");
-  schedList.appendChild(card);
+  const head='<div class="label" style="margin-top:6px"><svg class="ic"><use href="#i-cal"/></svg>'+D.title+'</div>';
+  if(D.groups){
+    const wrap=document.createElement("div");
+    wrap.innerHTML=head+renderGroups(D);
+    schedList.appendChild(wrap);
+  } else {
+    const byDay={};
+    D.slots.forEach(([wd,hm])=>{(byDay[wd]=byDay[wd]||[]).push(hm);});
+    const lines=Object.keys(byDay).sort().map(wd=>'• '+DAYS[wd]+': '+byDay[wd].join(" / "));
+    const card=document.createElement("div");card.className="info-card";
+    card.innerHTML='<h3>'+D.title+'</h3>'+lines.map(s=>'<p style="margin-top:4px">'+s+'</p>').join("");
+    schedList.appendChild(card);
+  }
 });
 
 /* ── цены ── */
