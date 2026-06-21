@@ -244,6 +244,12 @@
   .backbtn .ic{width:20px;height:20px;color:var(--red);}
   .backbtn:active{transform:scale(.94);}
 
+
+  .backbtn.bottom{top:auto;bottom:calc(env(safe-area-inset-bottom) + var(--tabbar-h) + 14px);}
+  .chip.disabled{opacity:.4;pointer-events:none;}
+  .video-frame{aspect-ratio:16/9;border:2px dashed var(--hair);border-radius:14px;display:grid;place-items:center;color:var(--hint);font-size:13px;text-align:center;background:var(--bg-2);margin:6px 0 16px;padding:16px;}
+  .video-frame svg{width:42px;height:42px;color:var(--gold);margin-bottom:8px;}
+
   /* ── НИЖНИЙ TAB BAR ── */
   .tabbar{
     position:fixed;left:0;right:0;bottom:0;z-index:50;
@@ -478,6 +484,21 @@
       </div>
       <button class="btn-primary" id="onlineSubmit">Оставить заявку</button>
       <div class="hint-sm" style="text-align:center;margin-top:10px;">Мы свяжемся, расскажем детали и оформим доступ.</div>
+    </section>
+  </div>
+
+  <!-- ===== ПРИВЕТСТВЕННОЕ ВИДЕО (после заявки на онлайн) ===== -->
+  <div class="view" data-view="welcome">
+    <section style="padding-top:64px;">
+      <div class="label"><svg class="ic"><use href="#i-laptop"/></svg>Заявка принята</div>
+      <div class="info-card"><p id="welcomeText">Спасибо! Мы свяжемся с вами и оформим доступ. А пока — короткое приветственное видео.</p></div>
+      <div class="video-frame">
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z" fill="currentColor" stroke="none"/></svg>
+          Здесь будет приветственное видео
+        </div>
+      </div>
+      <button class="btn-primary" id="welcomeDone">Готово</button>
     </section>
   </div>
 
@@ -733,9 +754,18 @@ function setView(key){
   currentView = key;
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.dataset.view===key));
   document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("active", b.dataset.nav===key));
-  // кнопка "Назад" на всех разделах, кроме главной
   backbtn.style.display = (key === "home") ? "none" : "flex";
+  positionBack(key);
   window.scrollTo({top:0, behavior:"auto"});
+}
+function positionBack(key){
+  // в галерее и онлайне — кнопка внизу (на свободном месте, под палец)
+  let bottom = (key === "gallery" || key === "online");
+  // в расписании: закрыто — внизу, открыта любая плашка — наверху
+  if (key === "schedule"){
+    bottom = !document.querySelector("#scheduleList .sacc.open");
+  }
+  backbtn.classList.toggle("bottom", bottom);
 }
 // переход вглубь — из ссылок, направлений
 function navTo(key){ history.push(currentView); setView(key); }
@@ -877,7 +907,7 @@ ORDER.forEach((key,idx)=>{
     '<button class="sacc-head"><svg class="tic"><use href="#'+D.icon+'"/></svg>'+D.title+
     '<svg class="chev"><use href="#i-chevd"/></svg></button>'+
     '<div class="sacc-body"><div><div class="sacc-inner">'+body+'</div></div></div>';
-  acc.querySelector(".sacc-head").addEventListener("click",()=>acc.classList.toggle("open"));
+  acc.querySelector(".sacc-head").addEventListener("click",()=>{acc.classList.toggle("open");positionBack("schedule");});
   schedList.appendChild(acc);
 });
 
@@ -922,7 +952,7 @@ ORDER.forEach((key,idx)=>{
   const acc=document.createElement("div");
   acc.className="sacc"+(idx===0?" open":"");
   acc.innerHTML=
-    '<button class="sacc-head"><svg class="tic"><use href="#i-image"/></svg>'+DATA[key].title+
+    '<button class="sacc-head"><svg class="tic"><use href="#'+DATA[key].icon+'"/></svg>'+DATA[key].title+
     '<svg class="chev"><use href="#i-chevd"/></svg></button>'+
     '<div class="sacc-body"><div><div class="sacc-inner"><div class="gallery"></div></div></div></div>';
   const grid=acc.querySelector(".gallery");
@@ -951,9 +981,13 @@ document.getElementById("onlineSubmit").addEventListener("click",()=>{
   const badName=name.length<2; document.getElementById("errOnName").classList.toggle("show",badName); if(badName)ok=false;
   const badPhone=phone.replace(/\D/g,"").length<7; document.getElementById("errOnPhone").classList.toggle("show",badPhone); if(badPhone)ok=false;
   if(!ok)return;
-  const payload={action:"book_online",title:onlineCourse,name:name,phone:phone};
-  if(tg){ tg.sendData(JSON.stringify(payload)); tg.close(); }
-  else alert("Откройте приложение внутри Telegram, чтобы отправить заявку.");
+  pendingOnline={action:"book_online",title:onlineCourse,name:name,phone:phone};
+  navTo("welcome");   // остаёмся в приложении, показываем видео-страницу
+});
+let pendingOnline=null;
+document.getElementById("welcomeDone").addEventListener("click",()=>{
+  if(tg && pendingOnline){ tg.sendData(JSON.stringify(pendingOnline)); tg.close(); }
+  else { showView("home"); }
 });
 
 /* ── о студии: контакты ── */
@@ -1003,6 +1037,16 @@ ORDER.forEach(key=>{
 function setBookDir(key){
   bookDir=key;
   document.querySelectorAll("#bookDirs .chip").forEach(c=>c.classList.toggle("on",c.dataset.dir===key));
+  // Взрослый доступен только на гитаре; на остальных — некликабельно
+  const adultBtn=document.querySelector('[data-ptype="adult"]');
+  const childBtn=document.querySelector('[data-ptype="child"]');
+  if(key==="guitar"){
+    adultBtn.classList.remove("disabled");
+  } else {
+    adultBtn.classList.add("disabled");
+    // если был выбран взрослый — переключаем на ребёнка
+    if(bookPtype==="adult"){ childBtn.click(); }
+  }
   fillSlots();
 }
 document.querySelectorAll("[data-ptype]").forEach(b=>{
