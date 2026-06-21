@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Shpigotskiy Art Space</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root{
@@ -16,16 +19,19 @@
     --text:#1A1A1A;
     --hint:#6B6660;
     --sep:rgba(26,26,26,.10);
+    --hair:rgba(201,168,76,.55);
+    --paper:#FBF9F4;
     --tabbar-h:64px;
   }
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{background:var(--bg);}
   body{
-    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    color:var(--text);line-height:1.5;overflow-x:hidden;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    color:var(--text);line-height:1.55;overflow-x:hidden;
     padding-bottom:calc(env(safe-area-inset-bottom) + var(--tabbar-h) + 8px);
   }
   svg{display:block;}
+  .serif{font-family:'Playfair Display',Georgia,serif;}
   .ic{width:22px;height:22px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;}
   .ic.fill{fill:currentColor;stroke:none;}
 
@@ -35,24 +41,28 @@
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 
   /* ── ШАПКА ── */
-  .hero{position:relative;height:220px;display:flex;align-items:flex-end;overflow:hidden;background:var(--bg-3);}
+  .hero{position:relative;height:300px;display:flex;align-items:flex-end;overflow:hidden;background:var(--black);}
   .hero video,.hero .poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
-  .hero .poster{background:radial-gradient(120% 90% at 78% 8%, rgba(227,6,19,.16), transparent 55%),linear-gradient(165deg,#EFE9DC,#F5F2EB);transition:opacity .6s ease;}
-  .hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to top, var(--bg) 4%, rgba(255,255,255,.2) 45%, transparent 100%);}
+  .hero .poster{background:radial-gradient(80% 60% at 72% 18%, rgba(227,6,19,.5), transparent 60%),radial-gradient(60% 50% at 18% 92%, rgba(201,168,76,.22), transparent 60%),linear-gradient(160deg,#241c14,#0e0d0c);transition:opacity .6s ease;}
+  /* тёмный скрим внизу — белый текст всегда читается; вверху прозрачно */
+  .hero::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to top, rgba(14,13,12,.92) 0%, rgba(14,13,12,.5) 32%, transparent 72%);}
   .hero-inner{position:relative;z-index:2;padding:22px;width:100%;}
-  .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:8px;}
-  .hero h1{font-size:32px;line-height:1.03;font-weight:800;letter-spacing:-.02em;color:var(--black);}
-  .hero .tagline{margin-top:8px;font-size:14px;color:var(--hint);max-width:34ch;}
+  .eyebrow{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:12px;}
+  .eyebrow::before{content:"";width:24px;height:1px;background:var(--gold);}
+  .hero h1{font-family:'Playfair Display',serif;font-size:42px;line-height:.98;font-weight:800;letter-spacing:-.01em;color:#fff;}
+  .hero .tagline{margin-top:12px;font-size:15px;color:rgba(255,255,255,.82);max-width:32ch;}
 
   /* ── СЕКЦИИ ── */
   section{padding:22px 20px 4px;}
-  .label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+  .label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
   .label .ic{width:15px;height:15px;color:var(--red);}
+  .label::after{content:"";flex:1;height:1px;background:var(--hair);}
 
-  .stats{display:flex;gap:8px;padding:16px 20px 0;}
-  .stat{flex:1;border:1px solid var(--sep);border-radius:14px;padding:11px;background:var(--bg-2);text-align:center;}
-  .stat b{display:block;font-size:20px;font-weight:800;color:var(--black);line-height:1.1;}
-  .stat span{font-size:10px;color:var(--hint);}
+  .stats{display:flex;align-items:stretch;padding:18px 22px;}
+  .stat{flex:1;text-align:center;}
+  .stat + .stat{border-left:1px solid var(--hair);}
+  .stat b{font-family:'Playfair Display',serif;display:block;font-size:24px;font-weight:700;color:var(--black);line-height:1;}
+  .stat span{font-size:10.5px;color:var(--hint);letter-spacing:.03em;}
 
   /* ── КАРУСЕЛЬ НАПРАВЛЕНИЙ ── */
   .carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 20px 6px;margin:0 -20px;scrollbar-width:none;}
@@ -82,8 +92,8 @@
   .row-link .arrow .ic{width:18px;height:18px;color:var(--hint);}
 
   /* ── АККОРДЕОН ── */
-  .acc-item{border-bottom:1px solid var(--sep);}
-  .acc-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 2px;color:var(--text);font-size:15px;font-weight:600;text-align:left;font-family:inherit;}
+  .acc-item{border-bottom:1px solid var(--hair);}
+  .acc-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 2px;color:var(--text);font-family:'Playfair Display',serif;font-size:17px;font-weight:700;text-align:left;}
   .acc-head .chev{flex:none;width:20px;height:20px;position:relative;transition:transform .35s cubic-bezier(.4,0,.2,1);}
   .acc-head .chev::before,.acc-head .chev::after{content:"";position:absolute;top:50%;width:10px;height:2px;border-radius:2px;background:var(--gold);}
   .acc-head .chev::before{left:1px;transform:rotate(45deg);}
@@ -96,10 +106,10 @@
 
   /* ── ПЕДАГОГ ── */
   .teacher{display:flex;align-items:center;gap:15px;background:var(--bg-2);border:1px solid var(--sep);border-radius:18px;padding:17px;}
-  .teacher img,.teacher .ph{flex:none;width:70px;height:70px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
+  .teacher img,.teacher .ph{flex:none;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
   .teacher .ph{display:grid;place-items:center;}
   .teacher .ph .ic{width:30px;height:30px;color:var(--gold);}
-  .teacher h3{font-size:16px;font-weight:800;margin-bottom:3px;}
+  .teacher h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:3px;}
   .teacher .role{font-size:12px;color:var(--red);margin-bottom:6px;font-weight:600;}
   .teacher .bio{font-size:12.5px;color:var(--hint);}
 
@@ -109,7 +119,7 @@
   .tcard img,.tcard .ph{flex:none;width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
   .tcard .ph{display:grid;place-items:center;}
   .tcard .ph .ic{width:22px;height:22px;color:var(--gold);}
-  .tcard h3{font-size:14.5px;font-weight:700;}
+  .tcard h3{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;}
   .tcard .role{font-size:11.5px;color:var(--hint);}
   .tcard .arrow .ic{width:18px;height:18px;color:var(--hint);}
   .tcard .arrow{margin-left:auto;}
@@ -123,15 +133,18 @@
   .gallery .play .ic{width:34px;height:34px;color:#fff;}
 
   /* ── ЦЕНА ── */
-  .price{border:1px solid var(--gold);border-radius:18px;padding:20px;text-align:center;background:rgba(201,168,76,.10);}
-  .price .free{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#9a7f2e;font-weight:800;}
-  .price .big{font-size:30px;font-weight:800;margin:6px 0;color:var(--black);}
-  .price .sub{font-size:12px;color:var(--hint);}
-  .price-row{display:flex;justify-content:space-between;align-items:center;padding:13px 2px;border-bottom:1px solid var(--sep);font-size:14.5px;}
-  .price-row b{font-weight:700;}
+  .price{position:relative;border:1px solid var(--hair);border-radius:4px;padding:24px;text-align:center;background:var(--paper);}
+  .price::before,.price::after{content:"";position:absolute;top:50%;width:18px;height:18px;border-radius:50%;background:var(--bg);transform:translateY(-50%);}
+  .price::before{left:-9px;}
+  .price::after{right:-9px;}
+  .price .free{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9a7f2e;font-weight:700;}
+  .price .big{font-family:'Playfair Display',serif;font-size:38px;font-weight:800;margin:8px 0 2px;color:var(--black);}
+  .price .sub{font-size:12.5px;color:var(--hint);}
+  .price-row{display:flex;justify-content:space-between;align-items:center;padding:15px 2px;border-bottom:1px solid var(--hair);font-size:15px;}
+  .price-row b{font-family:'Playfair Display',serif;font-weight:700;font-size:17px;}
 
   .info-card{background:var(--bg-2);border:1px solid var(--sep);border-radius:16px;padding:17px;margin-bottom:11px;}
-  .info-card h3{font-size:15px;font-weight:800;margin-bottom:6px;}
+  .info-card h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:6px;}
   .info-card p{font-size:13.5px;color:var(--hint);}
 
   /* ── ФОРМА ЗАПИСИ ── */
@@ -160,13 +173,48 @@
   .sheet .big-photo,.sheet .ph-big{width:118px;height:118px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);background:var(--bg-3);margin-bottom:16px;}
   .sheet .ph-big{display:grid;place-items:center;}
   .sheet .ph-big .ic{width:50px;height:50px;color:var(--gold);}
-  .sheet h2{font-size:23px;font-weight:800;margin-bottom:4px;}
+  .sheet h2{font-family:'Playfair Display',serif;font-size:26px;font-weight:800;margin-bottom:4px;}
   .sheet .role{color:var(--red);font-size:13.5px;margin-bottom:16px;font-weight:600;}
   .sheet .bio{color:var(--hint);font-size:14.5px;line-height:1.6;}
 
   /* ── ВНУТРЕННЯЯ КНОПКА ── */
   .btn-primary{width:100%;border:none;border-radius:15px;padding:16px;font-size:16px;font-weight:800;background:var(--red);color:#fff;cursor:pointer;font-family:inherit;transition:transform .12s ease,opacity .12s ease;margin-top:6px;}
   .btn-primary:active{transform:scale(.98);opacity:.92;}
+
+
+  /* ── ШТОРКА ВЫБОРА НАПРАВЛЕНИЯ ── */
+  .backdrop{position:fixed;inset:0;z-index:55;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .3s ease;}
+  .backdrop.show{opacity:1;pointer-events:auto;}
+  .dirsheet{
+    position:fixed;left:0;right:0;
+    bottom:calc(env(safe-area-inset-bottom) + var(--tabbar-h));
+    z-index:56;background:var(--bg);border-radius:22px 22px 0 0;
+    padding:8px 18px 18px;transform:translateY(120%);
+    transition:transform .34s cubic-bezier(.4,0,.2,1);
+    box-shadow:0 -12px 40px rgba(0,0,0,.16);
+  }
+  .dirsheet.show{transform:none;}
+  .dirsheet .grabber{width:40px;height:4px;border-radius:2px;background:var(--sep);margin:8px auto 14px;}
+  .dirsheet h4{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);font-weight:800;margin-bottom:14px;text-align:center;}
+  .dsheet-item{width:100%;display:flex;align-items:center;gap:14px;border:1px solid var(--sep);border-radius:14px;padding:14px 15px;margin-bottom:9px;background:var(--bg-2);cursor:pointer;font-family:inherit;text-align:left;transition:transform .12s ease,border-color .2s ease;}
+  .dsheet-item:active{transform:scale(.98);border-color:var(--gold);}
+  .dsheet-item .ic{width:28px;height:28px;color:var(--red);flex:none;}
+  .dsheet-item b{font-size:15px;display:block;color:var(--text);}
+  .dsheet-item span{font-size:11.5px;color:var(--hint);}
+  .dsheet-item .arrow{margin-left:auto;}
+  .dsheet-item .arrow .ic{width:18px;height:18px;color:var(--hint);}
+
+
+  /* ── КНОПКА НАЗАД ── */
+  .backbtn{
+    position:fixed;left:14px;top:calc(env(safe-area-inset-top) + 12px);z-index:45;
+    width:40px;height:40px;border-radius:50%;display:none;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(10px);
+    border:1px solid var(--hair);cursor:pointer;
+    box-shadow:0 2px 10px rgba(0,0,0,.12);
+  }
+  .backbtn .ic{width:20px;height:20px;color:var(--red);}
+  .backbtn:active{transform:scale(.94);}
 
   /* ── НИЖНИЙ TAB BAR ── */
   .tabbar{
@@ -241,11 +289,9 @@
       <div class="stat"><b>9,7</b><span>NPS родителей</span></div>
     </div>
     <section>
-      <div class="label"><svg class="ic"><use href="#d-guitar"/></svg>Направления</div>
-      <div class="carousel" id="homeDirs"></div>
-    </section>
-    <section>
-      <div class="label"><svg class="ic"><use href="#i-more"/></svg>Разделы</div>
+      <div class="label"><svg class="ic"><use href="#i-more"/></svg>Куда дальше</div>
+      <button class="row-link" id="openDirsRow"><svg class="ic"><use href="#d-guitar"/></svg>Выбрать направление<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" data-go="prices"><svg class="ic"><use href="#i-price"/></svg>Цены<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
       <button class="row-link" data-go="teachers"><svg class="ic"><use href="#i-person"/></svg>Преподаватели<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
       <button class="row-link" data-go="gallery"><svg class="ic"><use href="#i-image"/></svg>Выступления и работы<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
       <button class="row-link" data-go="online"><svg class="ic"><use href="#i-laptop"/></svg>Онлайн-курсы<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
@@ -397,12 +443,22 @@
     <div id="sheetBody"></div>
   </div>
 
+  <!-- шторка выбора направления -->
+  <div class="backdrop" id="backdrop"></div>
+  <div class="dirsheet" id="dirSheet">
+    <div class="grabber"></div>
+    <h4>Выберите направление</h4>
+    <div id="dirSheetList"></div>
+  </div>
+
+  <button class="backbtn" id="backbtn" aria-label="Назад"><svg class="ic"><use href="#i-left"/></svg></button>
+
   <!-- ===== НИЖНИЙ TAB BAR ===== -->
   <nav class="tabbar" id="tabbar">
     <button data-nav="home" class="active"><svg class="ic"><use href="#i-home"/></svg>Главная</button>
     <button data-nav="schedule"><svg class="ic"><use href="#i-cal"/></svg>Расписание</button>
     <button data-nav="book" class="center"><span class="bump"><svg class="ic"><use href="#i-book"/></svg></span>Записаться</button>
-    <button data-nav="prices"><svg class="ic"><use href="#i-price"/></svg>Цены</button>
+    <button data-nav="dirsheet" id="tabDirs"><svg class="ic"><use href="#d-guitar"/></svg>Направления</button>
     <button data-nav="about"><svg class="ic"><use href="#i-more"/></svg>Ещё</button>
   </nav>
 
@@ -560,33 +616,61 @@ function computeSlots(slots){
   return res;
 }
 
-/* ── навигация (нижний таб-бар) ── */
-function showView(key){
+/* ── навигация с историей ── */
+let navStack = [];
+const backbtn = document.getElementById("backbtn");
+const ROOT_TABS = ["home","schedule","book","prices","about"];
+
+function setView(key){
   currentView = key;
   document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.dataset.view===key));
   document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("active", b.dataset.nav===key));
+  backbtn.style.display = navStack.length ? "flex" : "none";
   window.scrollTo({top:0, behavior:"smooth"});
 }
+// переход вглубь (из ссылок, направлений) — запоминаем откуда пришли
+function navTo(key){ navStack.push(currentView); setView(key); }
+// переход на корневую вкладку (нижнее меню) — сбрасываем историю
+function showView(key){ navStack = []; setView(key); }
+// назад
+function goBack(){
+  if (navStack.length){ setView(navStack.pop()); }
+  else { showView("home"); }
+}
+backbtn.addEventListener("click", goBack);
+
 document.querySelectorAll(".tabbar button").forEach(b => {
-  b.addEventListener("click", () => showView(b.dataset.nav));
+  b.addEventListener("click", () => {
+    if (b.dataset.nav === "dirsheet"){ openDirSheet(); return; }
+    showView(b.dataset.nav);   // корневая вкладка
+  });
 });
 document.querySelectorAll("[data-go]").forEach(b => {
-  b.addEventListener("click", () => showView(b.dataset.go));
+  b.addEventListener("click", () => navTo(b.dataset.go));   // вглубь — с историей
 });
 
 /* ── иконка-хелпер ── */
 function svgUse(id, cls){ return '<svg class="ic'+(cls?' '+cls:'')+'"><use href="#'+id+'"/></svg>'; }
 
-/* ── главная: карусель направлений ── */
-const homeDirs = document.getElementById("homeDirs");
+/* ── шторка выбора направления (снизу, под большой палец) ── */
+const dirSheet = document.getElementById("dirSheet");
+const backdrop = document.getElementById("backdrop");
+const dirSheetList = document.getElementById("dirSheetList");
 ORDER.forEach(key => {
   const D = DATA[key];
   const b = document.createElement("button");
-  b.className = "dir-card";
-  b.innerHTML = svgUse(D.icon)+'<div><b>'+D.title+'</b><span>'+D.short+'</span></div>';
-  b.addEventListener("click", () => openDirection(key));
-  homeDirs.appendChild(b);
+  b.className = "dsheet-item";
+  b.innerHTML = svgUse(D.icon)+'<div><b>'+D.title+'</b><span>'+D.short+'</span></div>'+
+    '<span class="arrow">'+svgUse("i-chev")+'</span>';
+  b.addEventListener("click", () => { closeDirSheet(); openDirection(key); });
+  dirSheetList.appendChild(b);
 });
+function openDirSheet(){ backdrop.classList.add("show"); dirSheet.classList.add("show"); }
+function closeDirSheet(){ backdrop.classList.remove("show"); dirSheet.classList.remove("show"); }
+backdrop.addEventListener("click", closeDirSheet);
+// кнопка на главной тоже открывает шторку
+const openDirsRow = document.getElementById("openDirsRow");
+if (openDirsRow) openDirsRow.addEventListener("click", openDirSheet);
 
 (function(){
   const v = document.getElementById("homeVideo");
@@ -635,10 +719,10 @@ function openDirection(key){
 
   document.getElementById("dirPriceBig").textContent=D.price[0];
   document.getElementById("dirPriceSub").textContent=D.price[1];
-  showView("direction");
+  navTo("direction");
 }
 document.getElementById("dirEnroll").addEventListener("click", () => {
-  setBookDir(activeDir); showView("book");
+  setBookDir(activeDir); navTo("book");
 });
 
 /* ── расписание ── */
