@@ -143,10 +143,22 @@
   .grp .gnum{font-size:11px;color:var(--hint);margin-top:1px;}
   .grp .week{display:flex;gap:5px;margin-top:11px;}
   .grp .d{flex:1;text-align:center;font-size:11px;font-weight:600;padding:5px 0;border-radius:7px;background:var(--bg-3);color:var(--hint);}
-  .grp .d.on{background:var(--gc,var(--red));color:#fff;}
+  .grp .d.on{background:#2BA84A;color:#fff;}
   .sched-legend{display:flex;flex-wrap:wrap;gap:12px;margin:2px 2px 16px;}
   .sched-legend span{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--hint);}
   .sched-legend i{width:10px;height:10px;border-radius:50%;}
+
+
+  /* ── РАСПИСАНИЕ: выпадающие по направлениям ── */
+  .sacc{border:1px solid var(--hair);border-radius:14px;background:var(--bg-2);margin-bottom:10px;overflow:hidden;}
+  .sacc-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:16px;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--text);text-align:left;}
+  .sacc-head .tic{width:18px;height:18px;color:var(--red);flex:none;}
+  .sacc-head .chev{margin-left:auto;width:18px;height:18px;color:var(--gold);transition:transform .34s cubic-bezier(.4,0,.2,1);}
+  .sacc.open .sacc-head .chev{transform:rotate(180deg);}
+  .sacc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .36s cubic-bezier(.4,0,.2,1);}
+  .sacc.open .sacc-body{grid-template-rows:1fr;}
+  .sacc-body>div{overflow:hidden;}
+  .sacc-inner{padding:0 14px 14px;}
 
   /* ── ЦЕНА ── */
   .price{position:relative;border:1px solid var(--hair);border-radius:4px;padding:24px;text-align:center;background:var(--paper);}
@@ -278,8 +290,11 @@
   <symbol id="i-cam" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-2h5L16 7"/><circle cx="12" cy="13.5" r="3"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" class="fill"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-chevd" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
   <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
   <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 20h20"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7.5l9 6 9-6"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.6-1.2A9 9 0 1 0 12 3z"/><path d="M8.6 8.4c.2-.4.4-.4.6-.4h.5c.2 0 .4 0 .6.4l.7 1.6c.1.2.1.3 0 .5l-.5.7c-.1.2-.2.3 0 .5.6 1 1.4 1.6 2.4 2 .2.1.3.1.5-.1l.6-.7c.2-.2.3-.2.5-.1l1.6.8c.2.1.3.2.3.4 0 .5-.2 1.2-.5 1.4-.3.2-1 .5-1.6.4-1.8-.3-3.4-1.2-4.6-2.6-.8-.9-1.4-2-1.5-2.8-.1-.6.1-1.2.4-1.7z"/></symbol>
   <!-- направления -->
   <symbol id="d-guitar" viewBox="0 0 24 24"><circle cx="9" cy="15" r="5"/><circle cx="9" cy="15" r="1.6"/><path d="M12.5 11.5l6-6M17 4l3 3"/></symbol>
   <symbol id="d-acting" viewBox="0 0 24 24"><path d="M4 5h7v5a3.5 3.5 0 0 1-7 0z"/><path d="M13 9h7v5a3.5 3.5 0 0 1-7 0z"/><path d="M6 7.5h.01M9 7.5h.01M15 11h.01M18 11h.01"/></symbol>
@@ -413,7 +428,7 @@
   <div class="view" data-view="gallery">
     <section style="padding-top:24px;">
       <div class="label"><svg class="ic"><use href="#i-image"/></svg>Выступления и работы</div>
-      <div class="gallery" id="galleryGrid"></div>
+      <div id="galleryGrid"></div>
     </section>
   </div>
 
@@ -447,9 +462,9 @@
       <div class="info-card"><p>Творческая студия Shpigotskiy Art Space — 160+ учеников, пять направлений. Наши дети выступают на сцене областного театра, снимаются в кино и ставят собственные спектакли. Главное для нас — раскрыть в ребёнке уверенность.</p></div>
       <div class="label" style="margin-top:22px;"><svg class="ic"><use href="#i-chat"/></svg>Контакты</div>
       <button class="row-link" id="addrBtn"><svg class="ic"><use href="#i-pin"/></svg><span id="addrText">Адрес</span><span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
-      <button class="row-link" id="waBtn"><svg class="ic"><use href="#i-chat"/></svg>WhatsApp<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" id="waBtn"><svg class="ic" style="color:#25D366"><use href="#i-wa"/></svg>WhatsApp<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
       <button class="row-link" id="igBtn"><svg class="ic"><use href="#i-cam"/></svg>Instagram<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
-      <button class="row-link" id="emailBtn"><svg class="ic"><use href="#i-chat"/></svg><span id="emailText">E-mail</span><span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" id="emailBtn"><svg class="ic"><use href="#i-mail"/></svg><span id="emailText">E-mail</span><span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
     </section>
   </div>
 
@@ -487,14 +502,37 @@ const STUDIO = {
   map:"https://go.2gis.com/AuVfc",
 };
 
-const GALLERY = [
-  {type:"img",   src:"media/gallery/1.jpg", wide:true},
-  {type:"img",   src:"media/gallery/2.jpg"},
-  {type:"img",   src:"media/gallery/3.jpg"},
-  {type:"video", src:"media/gallery/v1.mp4"},
-  {type:"img",   src:"media/gallery/4.jpg"},
-  {type:"img",   src:"media/gallery/5.jpg", wide:true},
-];
+// Галерея по направлениям. Файлы клади в media/gallery/<направление>/
+// Если файла нет — ячейка скрывается. Меняй/добавляй пути под свои фото и видео.
+const GALLERY = {
+  guitar:[
+    {type:"img",   src:"media/gallery/guitar/1.jpg", wide:true},
+    {type:"img",   src:"media/gallery/guitar/2.jpg"},
+    {type:"img",   src:"media/gallery/guitar/3.jpg"},
+    {type:"video", src:"media/gallery/guitar/v1.mp4"},
+  ],
+  acting:[
+    {type:"img",   src:"media/gallery/acting/1.jpg", wide:true},
+    {type:"img",   src:"media/gallery/acting/2.jpg"},
+    {type:"img",   src:"media/gallery/acting/3.jpg"},
+    {type:"video", src:"media/gallery/acting/v1.mp4"},
+  ],
+  vocals:[
+    {type:"img",   src:"media/gallery/vocals/1.jpg", wide:true},
+    {type:"img",   src:"media/gallery/vocals/2.jpg"},
+    {type:"img",   src:"media/gallery/vocals/3.jpg"},
+  ],
+  dance:[
+    {type:"img",   src:"media/gallery/dance/1.jpg", wide:true},
+    {type:"img",   src:"media/gallery/dance/2.jpg"},
+    {type:"img",   src:"media/gallery/dance/3.jpg"},
+  ],
+  painting:[
+    {type:"img",   src:"media/gallery/painting/1.jpg", wide:true},
+    {type:"img",   src:"media/gallery/painting/2.jpg"},
+    {type:"img",   src:"media/gallery/painting/3.jpg"},
+  ],
+};
 
 const ONLINE = [
   {emoji:"oratory", title:"Ораторское искусство", desc:"Уверенная речь и выступления."},
@@ -524,6 +562,11 @@ const DATA = {
     ],
     price:["20 000 ₸","абонемент на 12 занятий"],
     slots:[[1,"15:00"],[1,"17:00"],[3,"15:00"],[5,"16:00"]],
+    groups:[
+      {n:1, age:"8+",  days:[1,3], time:"15:00–16:00"},
+      {n:2, age:"8+",  days:[1,3], time:"17:00–18:00"},
+      {n:3, age:"10+", days:[5],   time:"16:00–17:00"},
+    ],
   },
   acting: {
     title:"Актёрское", short:"4–17 лет", icon:"d-acting",
@@ -573,6 +616,10 @@ const DATA = {
     ],
     price:["15 000 ₸","абонемент на 8 занятий"],
     slots:[[2,"15:00"],[4,"15:00"],[6,"11:00"]],
+    groups:[
+      {n:1, age:"6+",  days:[2,4], time:"15:00–16:00"},
+      {n:2, age:"10+", days:[6],   time:"11:00–12:00"},
+    ],
   },
   dance: {
     title:"Танцы", short:"с 4 лет", icon:"d-dance",
@@ -589,6 +636,10 @@ const DATA = {
     ],
     price:["14 000 ₸","абонемент"],
     slots:[[1,"16:00"],[3,"16:00"],[5,"17:00"]],
+    groups:[
+      {n:1, age:"4+", days:[1,3], time:"16:00–17:00"},
+      {n:2, age:"7+", days:[5],   time:"17:00–18:00"},
+    ],
   },
   painting: {
     title:"Живопись", short:"с 5 лет", icon:"d-painting",
@@ -605,6 +656,10 @@ const DATA = {
     ],
     price:["—","уточняйте на пробном"],
     slots:[[3,"14:00"],[5,"14:00"],[6,"13:00"]],
+    groups:[
+      {n:1, age:"5+", days:[3,5], time:"14:00–15:00"},
+      {n:2, age:"8+", days:[6],   time:"13:00–14:00"},
+    ],
   },
 };
 const ORDER = ["guitar","acting","vocals","dance","painting"];
@@ -775,21 +830,23 @@ function renderGroups(D){
   return legend+cards;
 }
 
-ORDER.forEach(key=>{
+ORDER.forEach((key,idx)=>{
   const D=DATA[key];
-  const head='<div class="label" style="margin-top:6px"><svg class="ic"><use href="#i-cal"/></svg>'+D.title+'</div>';
-  if(D.groups){
-    const wrap=document.createElement("div");
-    wrap.innerHTML=head+renderGroups(D);
-    schedList.appendChild(wrap);
-  } else {
+  let body;
+  if(D.groups){ body=renderGroups(D); }
+  else {
     const byDay={};
     D.slots.forEach(([wd,hm])=>{(byDay[wd]=byDay[wd]||[]).push(hm);});
-    const lines=Object.keys(byDay).sort().map(wd=>'• '+DAYS[wd]+': '+byDay[wd].join(" / "));
-    const card=document.createElement("div");card.className="info-card";
-    card.innerHTML='<h3>'+D.title+'</h3>'+lines.map(s=>'<p style="margin-top:4px">'+s+'</p>').join("");
-    schedList.appendChild(card);
+    body=Object.keys(byDay).sort().map(wd=>'<p style="margin-top:4px;color:var(--hint);font-size:14px">• '+DAYS[wd]+': '+byDay[wd].join(" / ")+'</p>').join("");
   }
+  const acc=document.createElement("div");
+  acc.className="sacc"+(idx===0?" open":"");   // первое направление раскрыто
+  acc.innerHTML=
+    '<button class="sacc-head"><svg class="tic"><use href="#i-cal"/></svg>'+D.title+
+    '<svg class="chev"><use href="#i-chevd"/></svg></button>'+
+    '<div class="sacc-body"><div><div class="sacc-inner">'+body+'</div></div></div>';
+  acc.querySelector(".sacc-head").addEventListener("click",()=>acc.classList.toggle("open"));
+  schedList.appendChild(acc);
 });
 
 /* ── цены ── */
@@ -817,7 +874,7 @@ ORDER.forEach(key=>{(DATA[key].teachers||[]).forEach(t=>{
 
 /* ── галерея ── */
 const gg=document.getElementById("galleryGrid");
-GALLERY.forEach(item=>{
+function buildCell(item){
   const cell=document.createElement("div");
   cell.className="cell"+(item.wide?" wide":"");
   if(item.type==="video"){
@@ -826,7 +883,20 @@ GALLERY.forEach(item=>{
   } else {
     cell.innerHTML='<img src="'+item.src+'" onerror="this.parentNode.style.display=\'none\'">';
   }
-  gg.appendChild(cell);
+  return cell;
+}
+ORDER.forEach((key,idx)=>{
+  const items=GALLERY[key]||[];
+  const acc=document.createElement("div");
+  acc.className="sacc"+(idx===0?" open":"");
+  acc.innerHTML=
+    '<button class="sacc-head"><svg class="tic"><use href="#i-image"/></svg>'+DATA[key].title+
+    '<svg class="chev"><use href="#i-chevd"/></svg></button>'+
+    '<div class="sacc-body"><div><div class="sacc-inner"><div class="gallery"></div></div></div></div>';
+  const grid=acc.querySelector(".gallery");
+  items.forEach(it=>grid.appendChild(buildCell(it)));
+  acc.querySelector(".sacc-head").addEventListener("click",()=>acc.classList.toggle("open"));
+  gg.appendChild(acc);
 });
 
 /* ── онлайн-курсы: форма заявки ── */
