@@ -359,7 +359,22 @@
   <div class="view" data-view="online">
     <section style="padding-top:24px;">
       <div class="label"><svg class="ic"><use href="#i-laptop"/></svg>Онлайн-курсы</div>
-      <div id="onlineList"></div>
+      <div class="field">
+        <label>Выберите курс</label>
+        <div class="chips" id="onlineCourses"></div>
+      </div>
+      <div class="field">
+        <label>Ваше имя</label>
+        <input class="inp" id="onName" placeholder="Как к вам обращаться">
+        <div class="err" id="errOnName">Введите имя</div>
+      </div>
+      <div class="field">
+        <label>Контактный телефон</label>
+        <input class="inp" id="onPhone" type="tel" inputmode="tel" placeholder="+7 ...">
+        <div class="err" id="errOnPhone">Введите номер телефона</div>
+      </div>
+      <button class="btn-primary" id="onlineSubmit">Оставить заявку</button>
+      <div class="hint-sm" style="text-align:center;margin-top:10px;">Мы свяжемся, расскажем детали и оформим доступ.</div>
     </section>
   </div>
 
@@ -372,6 +387,7 @@
       <button class="row-link" id="addrBtn"><svg class="ic"><use href="#i-pin"/></svg><span id="addrText">Адрес</span><span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
       <button class="row-link" id="waBtn"><svg class="ic"><use href="#i-chat"/></svg>WhatsApp<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
       <button class="row-link" id="igBtn"><svg class="ic"><use href="#i-cam"/></svg>Instagram<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" id="emailBtn"><svg class="ic"><use href="#i-chat"/></svg><span id="emailText">E-mail</span><span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
     </section>
   </div>
 
@@ -393,6 +409,7 @@
 <script>
 const STUDIO = {
   address:"г. Петропавловск, ул. Интернациональная, 63, 5 этаж",
+  email:"artshpace@gmail.com",
   whatsapp:"https://wa.me/+77086366351",
   instagram:"https://www.instagram.com/artshpace",
   map:"https://go.2gis.com/AuVfc",
@@ -424,9 +441,14 @@ const DATA = {
       ["Результат","Ребёнок играет песни и выступает на сцене студии — без страха перед публикой."],
     ],
     teachers:[
-      {name:"Жуков Виталий Александрович",role:"Преподаватель гитары и укулеле",icon:"d-guitar",
+      {name:"Жуков Виталий Александрович",role:"Гитара, укулеле",icon:"d-guitar",
        photo:"media/teachers/zhukov.jpg",
+       photos:["media/teachers/zhukov.jpg"],
+       video:"media/teachers/guitar/welcome/vecna.mp4",
        bio:"Играет на всех существующих музыкальных инструментах, пишет музыку и преподаёт. С ним ребёнок берёт инструмент в руки с первого занятия."},
+      {name:"Захаров Георгий Дмитриевич",role:"Гитара, укулеле, домбра",icon:"d-guitar",
+       photo:"media/teachers/zakharov.jpg",
+       bio:"Преподаватель струнных инструментов. Обучает игре на гитаре, укулеле и домбре."},
     ],
     price:["20 000 ₸","абонемент на 12 занятий"],
     slots:[[1,"15:00"],[1,"17:00"],[3,"15:00"],[5,"16:00"]],
@@ -441,10 +463,17 @@ const DATA = {
       ["Результат","Наши дети играют на сцене театра им. Погодина, снимаются в кино, ставят свои спектакли. И учатся в школе лучше — это закономерность."],
     ],
     teachers:[
-      {name:"Имя Фамилия",role:"Преподаватель актёрского мастерства",icon:"d-acting",
-       photo:"media/teachers/acting.jpg",bio:"Актёр, режиссёр. Опыт работы с детьми — 20 лет."},
+      {name:"Шпигоцкий Антон Александрович",role:"Актёрское мастерство, ораторское искусство",icon:"d-acting",
+       photo:"media/teachers/shpigotskiy.jpg",
+       bio:"Руководитель студии, преподаватель актёрского мастерства и ораторского искусства."},
+      {name:"Черняк Марина Николаевна",role:"Актёрское мастерство",icon:"d-acting",
+       photo:"media/teachers/chernyak.jpg",
+       bio:"Преподаватель актёрского мастерства."},
+      {name:"Розанова Оксана Олеговна",role:"Актёрское мастерство",icon:"d-acting",
+       photo:"media/teachers/rozanova.jpg",
+       bio:"Преподаватель актёрского мастерства."},
     ],
-    price:["17 000 ₸","абонемент на 8 занятий"],
+    price:["17 000 ₸","абонемент на 8 занятий в месяц"],
     slots:[[2,"16:00"],[4,"16:00"],[6,"10:00"],[6,"12:00"]],
   },
   vocals: {
@@ -453,14 +482,14 @@ const DATA = {
     video:"media/vocals.mp4",
     accordion:[
       ["Что осваиваем","Постановка голоса, работа с дыханием, подготовка к выступлениям."],
-      ["Для кого","Индивидуальные занятия с 6 лет."],
+      ["Для кого","Эстрадный вокал, индивидуальные занятия."],
       ["Результат","Чистый сильный голос и уверенность на сцене."],
     ],
     teachers:[
-      {name:"Имя Фамилия",role:"Преподаватель вокала",icon:"d-vocals",
-       photo:"media/teachers/vocals.jpg",bio:"Вокалист, педагог."},
+      {name:"Ерзакова Наталья Николаевна",role:"Эстрадный вокал",icon:"d-vocals",
+       photo:"media/teachers/erzakova.jpg",bio:"Преподаватель эстрадного вокала."},
     ],
-    price:["—","уточняйте на пробном"],
+    price:["15 000 ₸","абонемент на 8 занятий"],
     slots:[[2,"15:00"],[4,"15:00"],[6,"11:00"]],
   },
   dance: {
@@ -468,15 +497,15 @@ const DATA = {
     tagline:"Пластика, ритм и уверенность в движении.",
     video:"media/dance.mp4",
     accordion:[
-      ["Что осваиваем","Хореография, чувство ритма, координация и сценическая подача."],
-      ["Для кого","Групповые занятия с 4 лет."],
+      ["Что осваиваем","Современный танец: хореография, чувство ритма, координация и сценическая подача."],
+      ["Для кого","Групповые занятия."],
       ["Результат","Свобода в теле и яркие номера на сцене."],
     ],
     teachers:[
-      {name:"Имя Фамилия",role:"Хореограф",icon:"d-dance",
-       photo:"media/teachers/dance.jpg",bio:"Хореограф с многолетним опытом."},
+      {name:"Клюк Дарья Витальевна",role:"Современный танец",icon:"d-dance",
+       photo:"media/teachers/klyuk.jpg",bio:"Преподаватель современного танца."},
     ],
-    price:["—","уточняйте на пробном"],
+    price:["14 000 ₸","абонемент"],
     slots:[[1,"16:00"],[3,"16:00"],[5,"17:00"]],
   },
   painting: {
@@ -489,7 +518,7 @@ const DATA = {
       ["Результат","Свои законченные работы и уверенность в творчестве."],
     ],
     teachers:[
-      {name:"Имя Фамилия",role:"Преподаватель живописи",icon:"d-painting",
+      {name:"Педагог уточняется",role:"Преподаватель живописи",icon:"d-painting",
        photo:"media/teachers/painting.jpg",bio:"Художник, педагог."},
     ],
     price:["—","уточняйте на пробном"],
@@ -596,7 +625,9 @@ function openDirection(key){
   const lbl=document.getElementById("dirTeacherLabel"); zone.innerHTML="";
   const ts=D.teachers||[];
   if(ts.length===1){lbl.innerHTML=svgUse("i-person")+"Педагог";const t=ts[0];
-    zone.innerHTML='<div class="teacher">'+teacherAvatar(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div></div></div>';}
+    const card=document.createElement("div");card.className="teacher";card.style.cursor="pointer";
+    card.innerHTML=teacherAvatar(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div></div>';
+    card.addEventListener("click",()=>openSheet(t));zone.appendChild(card);}
   else if(ts.length>1){lbl.innerHTML=svgUse("i-person")+"Педагоги";const g=document.createElement("div");g.className="teacher-grid";
     ts.forEach(t=>{const c=document.createElement("div");c.className="tcard";
       c.innerHTML=teacherAvatar(t)+'<div><h3>'+t.name+'</h3><div class="role">'+t.role+'</div></div><div class="arrow">'+svgUse("i-chev")+'</div>';
@@ -659,14 +690,29 @@ GALLERY.forEach(item=>{
   gg.appendChild(cell);
 });
 
-/* ── онлайн ── */
-const onlineList=document.getElementById("onlineList");
-ONLINE.forEach(c=>{
+/* ── онлайн-курсы: форма заявки ── */
+let onlineCourse = ONLINE[0].title;
+const onlineCoursesBox = document.getElementById("onlineCourses");
+ONLINE.forEach((c,i)=>{
   const b=document.createElement("button");
-  b.className="row-link";
-  b.innerHTML=svgUse("i-laptop")+'<div style="text-align:left"><div>'+c.title+'</div><div style="font-size:11.5px;color:var(--hint);font-weight:400">'+c.desc+'</div></div><span class="arrow">'+svgUse("i-chev")+'</span>';
-  b.addEventListener("click",()=>{ if(tg){tg.sendData(JSON.stringify({action:"online",title:c.title}));tg.close();} });
-  onlineList.appendChild(b);
+  b.className="chip"+(i===0?" on":"");
+  b.textContent=c.title; b.dataset.course=c.title;
+  b.addEventListener("click",()=>{
+    onlineCourse=c.title;
+    document.querySelectorAll("#onlineCourses .chip").forEach(x=>x.classList.toggle("on",x===b));
+  });
+  onlineCoursesBox.appendChild(b);
+});
+document.getElementById("onlineSubmit").addEventListener("click",()=>{
+  const name=document.getElementById("onName").value.trim();
+  const phone=document.getElementById("onPhone").value.trim();
+  let ok=true;
+  const badName=name.length<2; document.getElementById("errOnName").classList.toggle("show",badName); if(badName)ok=false;
+  const badPhone=phone.replace(/\D/g,"").length<7; document.getElementById("errOnPhone").classList.toggle("show",badPhone); if(badPhone)ok=false;
+  if(!ok)return;
+  const payload={action:"book_online",title:onlineCourse,name:name,phone:phone};
+  if(tg){ tg.sendData(JSON.stringify(payload)); tg.close(); }
+  else alert("Откройте приложение внутри Telegram, чтобы отправить заявку.");
 });
 
 /* ── о студии: контакты ── */
@@ -675,6 +721,8 @@ const openL = url => { if(tg) tg.openLink(url); else window.open(url); };
 document.getElementById("addrBtn").addEventListener("click",()=>openL(STUDIO.map));
 document.getElementById("waBtn").addEventListener("click",()=>openL(STUDIO.whatsapp));
 document.getElementById("igBtn").addEventListener("click",()=>openL(STUDIO.instagram));
+document.getElementById("emailText").textContent = STUDIO.email;
+document.getElementById("emailBtn").addEventListener("click",()=>openL("mailto:"+STUDIO.email));
 
 /* ── панель педагога ── */
 const sheet=document.getElementById("sheet");
@@ -683,7 +731,21 @@ function openSheet(t){
   const pic=t.photo
     ? '<img class="big-photo" src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph-big&quot;>'+svgUse(t.icon||"i-person")+'</div>\'">'
     : '<div class="ph-big">'+svgUse(t.icon||"i-person")+'</div>';
-  sheetBody.innerHTML=pic+'<h2>'+t.name+'</h2><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div>';
+  let extra = '';
+  // видео педагога
+  if (t.video){
+    extra += '<div style="margin-top:18px;border-radius:14px;overflow:hidden;background:var(--bg-3)">'+
+      '<video src="'+t.video+'" controls playsinline style="width:100%;display:block" '+
+      'onerror="this.parentNode.style.display=\'none\'"></video></div>';
+  }
+  // дополнительные фото
+  const photos = (t.photos||[]).filter(p=>p!==t.photo);
+  if (photos.length){
+    extra += '<div class="gallery" style="margin-top:14px">'+
+      photos.map(p=>'<div class="cell"><img src="'+p+'" onerror="this.parentNode.style.display=\'none\'"></div>').join("")+
+      '</div>';
+  }
+  sheetBody.innerHTML=pic+'<h2>'+t.name+'</h2><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div>'+extra;
   sheet.classList.add("show");
 }
 document.getElementById("sheetBack").addEventListener("click",()=>sheet.classList.remove("show"));
