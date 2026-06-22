@@ -1031,13 +1031,41 @@ document.getElementById("addrBtn").addEventListener("click",()=>openL(STUDIO.map
 document.getElementById("waBtn").addEventListener("click",()=>openL(STUDIO.whatsapp));
 document.getElementById("igBtn").addEventListener("click",()=>openL(STUDIO.instagram));
 document.getElementById("emailText").textContent = STUDIO.email;
+function copyEmail(){
+  const email=STUDIO.email;
+  const ok=()=>{ if(tg&&tg.showPopup){tg.showPopup({title:"E-mail",message:"Адрес скопирован:\n"+email,buttons:[{type:"ok"}]});} else {alert("Адрес скопирован: "+email);} };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(email).then(ok).catch(()=>{fallbackCopy(email);ok();});
+  } else {fallbackCopy(email);ok();}
+}
+function fallbackCopy(t){
+  const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand("copy");}catch(e){}
+  ta.remove();
+}
+function openGmailCompose(){
+  // Gmail compose как обычная https-ссылка — открывается без ошибки
+  const url="https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(STUDIO.email);
+  if(tg&&tg.openLink) tg.openLink(url); else window.open(url,"_blank");
+}
 document.getElementById("emailBtn").addEventListener("click",()=>{
-  const mail="mailto:"+STUDIO.email;
-  // tg.openLink не открывает mailto — используем обычную ссылку
-  const a=document.createElement("a"); a.href=mail; a.target="_blank";
-  document.body.appendChild(a); a.click(); a.remove();
-  // запасной вариант
-  try{ window.location.href=mail; }catch(e){}
+  if(tg&&tg.showPopup){
+    tg.showPopup({
+      title:"Написать на почту",
+      message:STUDIO.email,
+      buttons:[
+        {id:"gmail",type:"default",text:"Открыть Gmail"},
+        {id:"copy",type:"default",text:"Скопировать адрес"},
+        {type:"cancel"}
+      ]
+    },(id)=>{
+      if(id==="gmail") openGmailCompose();
+      else if(id==="copy") copyEmail();
+    });
+  } else {
+    openGmailCompose();
+  }
 });
 
 /* ── панель педагога ── */
