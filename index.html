@@ -108,6 +108,11 @@
   .teacher{display:flex;align-items:center;gap:15px;background:var(--bg-2);border:1px solid var(--sep);border-radius:18px;padding:17px;}
   .teacher img,.teacher .ph{flex:none;width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:var(--bg-3);}
   .teacher .ph{display:grid;place-items:center;}
+  .ph{position:relative;overflow:hidden;}
+  .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;}
+  .ph-big{position:relative;overflow:hidden;}
+  .ph-big img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;}
+
   .teacher .ph .ic{width:30px;height:30px;color:var(--gold);}
   .teacher h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:3px;}
   .teacher .role{font-size:12px;color:var(--red);margin-bottom:6px;font-weight:600;}
@@ -602,7 +607,7 @@ const DATA = {
     ],
     teachers:[
       {name:"Жуков Виталий Александрович",role:"Гитара, укулеле",icon:"d-guitar",
-       photo:"media/teachers/photos/zhukov.jpg",
+       photo:"media/teachers/zhukov.jpg",
        photos:["media/teachers/zhukov.jpg"],
        video:"media/teachers/guitar/welcome/vecna.mp4",
        bio:"Играет на всех существующих музыкальных инструментах, пишет музыку и преподаёт. С ним ребёнок берёт инструмент в руки с первого занятия."},
@@ -632,21 +637,8 @@ const DATA = {
     "name": "Шпигоцкий Антон Александрович",
     "role": "Актёрское мастерство, ораторское искусство",
     "icon": "d-acting",
-    "photo": "media/teachers/photos/shpigotskiy.jpg",
-    "bio": (
-        "В 2015 г. закончил подготовительные курсы по актёрскому мастерству в СПбГАТИ. " +
-        "В 2016–2017 проходил обучение в Lyskov Acting Studio в г. Москве. " +
-        "В 2017–2021 обучался по специальности «Артист драматического театра и кино» " +
-        "в Высшем театральном училище им. М.С. Щепкина, г. Москва. " +
-        "С 2018 по 2021 проходил учебную практику в Государственном академическом Малом театре, г. Москва. " +
-        "С 2021 по 2022 принимал участие в формировании студии и театра «ВнеТеатр», г. Москва. " +
-        "С 2022 по настоящее время — актёр Областного русского драматического театра им. Николая Погодина, " +
-        "г. Петропавловск. " +
-        "В 2025 г. прошёл повышение квалификации в летней театральной школе Союза театральных деятелей РФ " +
-        "под руководством М.Н. Чумаченко. " +
-        "В 2025 г. прошёл повышение квалификации в летней театральной школе русских театров СНГ " +
-        "в г. Санкт-Петербурге."
-    )
+    "photo": "media/teachers/shpigotskiy.jpg",
+    "bio": ["В 2015 г. закончил подготовительные курсы по актёрскому мастерству в СПбГАТИ.","В 2016–2017 проходил обучение в Lyskov Acting Studio в г. Москве.","В 2017–2021 обучался по специальности «Артист драматического театра и кино» в Высшем театральном училище им. М.С. Щепкина, г. Москва.","С 2018 по 2021 проходил учебную практику в Государственном академическом Малом театре, г. Москва.","С 2021 по 2022 принимал участие в формировании студии и театра «ВнеТеатр», г. Москва.","С 2022 по настоящее время — актёр Областного русского драматического театра им. Николая Погодина, г. Петропавловск.","В 2025 г. прошёл повышение квалификации в летней театральной школе Союза театральных деятелей РФ под руководством М.Н. Чумаченко.","В 2025 г. прошёл повышение квалификации в летней театральной школе русских театров СНГ в г. Санкт-Петербурге."]
 },
       {name:"Черняк Марина Николаевна",role:"Актёрское мастерство",icon:"d-acting",
        photo:"media/teachers/chernyak.jpg",
@@ -699,21 +691,7 @@ const DATA = {
     ],
     teachers:[
       {name:"Клюк Дарья Витальевна",role:"Современный танец",icon:"d-dance",
-       photo:"media/teachers/klyuk.jpg",bio: ( 
-"Педагог-хореограф в области современного танца по направлению Contemporary." +
-"Общий танцевальный стаж — 14 лет, включая 3 года учёбы в секции современного танца при школе №12" +
-"8 лет выступлений в образцовом ансамбле танца «Арабеск»." +
-"Прошла обучение в колледже искусств имени Ермека Серкебаева;" +
-"В настоящее время продолжает обучение в институте имени Ф.М. Достоевского." +
-"Является участницей городских, областных и республиканских конкурсов и фестивалей." +
-"Педагогический стаж — 1 год." +
-"Специализируется на работе с детьми различных возрастных групп" +
-"В процессе занятий развивает чувство ритма, координацию движений, артистизм и интерес к танцу." +
-"Международный конкурс фестиваль «Штаб квартира» 1 место, гран-при 2024, 2025" +
-"Международный конкурс фестиваль «Звездная нить» Гран-при 2021" +
-"Международный конкурс фестиваль «Фестиваль КЗ» Гран-при 2022, 2023" +
-"Международный конкурс фестиваль «Зажги свою звезду» Гран-при 2023" +
-"Обладает навыками индивидуального подхода к обучающимся и способностью создавать комфортную и доброжелательную атмосферу на занятиях." )
+       photo:"media/teachers/klyuk.jpg",bio: ["Педагог-хореограф в области современного танца по направлению Contemporary.","Общий танцевальный стаж — 14 лет, включая 3 года учёбы в секции современного танца при школе №12 и 8 лет выступлений в образцовом ансамбле танца «Арабеск».","Прошла обучение в колледже искусств имени Ермека Серкебаева; в настоящее время продолжает обучение в институте имени Ф.М. Достоевского.","Является участницей городских, областных и республиканских конкурсов и фестивалей.","Педагогический стаж — 1 год.","Специализируется на работе с детьми различных возрастных групп.","В процессе занятий развивает чувство ритма, координацию движений, артистизм и интерес к танцу.","Международный конкурс-фестиваль «Штаб-квартира» — 1 место, Гран-при 2024, 2025.","Международный конкурс-фестиваль «Звёздная нить» — Гран-при 2021.","Международный конкурс-фестиваль «Фестиваль КЗ» — Гран-при 2022, 2023.","Международный конкурс-фестиваль «Зажги свою звезду» — Гран-при 2023.","Обладает навыками индивидуального подхода к обучающимся и способностью создавать комфортную и доброжелательную атмосферу на занятиях."]
 
 },
     ],
@@ -828,6 +806,8 @@ document.querySelectorAll("[data-go]").forEach(b => {
 
 /* ── иконка-хелпер ── */
 function svgUse(id, cls){ return '<svg class="ic'+(cls?' '+cls:'')+'"><use href="#'+id+'"/></svg>'; }
+function bioHTML(b){ return Array.isArray(b) ? b.map(function(s){return '<p style="margin-bottom:9px">'+s+'</p>';}).join('') : '<p>'+(b||'')+'</p>'; }
+function bioPlain(b){ return Array.isArray(b) ? b.join(' ') : (b||''); }
 
 /* ── шторка выбора направления (снизу, под большой палец) ── */
 const dirSheet = document.getElementById("dirSheet");
@@ -857,9 +837,11 @@ if (openDirsRow) openDirsRow.addEventListener("click", openDirSheet);
 
 /* ── открыть направление ── */
 function teacherAvatar(t){
-  return t.photo
-    ? '<img src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph&quot;>'+svgUse(t.icon||"i-person")+'</div>\'">'
-    : '<div class="ph">'+svgUse(t.icon||"i-person")+'</div>';
+  const icon = svgUse(t.icon||"i-person");
+  if(t.photo){
+    return '<div class="ph"><img src="'+t.photo+'" onerror="this.remove()">'+icon+'</div>';
+  }
+  return '<div class="ph">'+icon+'</div>';
 }
 function openDirection(key){
   activeDir = key;
@@ -1073,9 +1055,10 @@ document.getElementById("emailBtn").addEventListener("click",()=>{
 const sheet=document.getElementById("sheet");
 const sheetBody=document.getElementById("sheetBody");
 function openSheet(t){
-  const pic=t.photo
-    ? '<img class="big-photo" src="'+t.photo+'" onerror="this.outerHTML=\'<div class=&quot;ph-big&quot;>'+svgUse(t.icon||"i-person")+'</div>\'">'
-    : '<div class="ph-big">'+svgUse(t.icon||"i-person")+'</div>';
+  const sicon = svgUse(t.icon||"i-person");
+  const pic = t.photo
+    ? '<div class="ph-big"><img src="'+t.photo+'" onerror="this.remove()">'+sicon+'</div>'
+    : '<div class="ph-big">'+sicon+'</div>';
   let extra = '';
   // видео педагога
   if (t.video){
@@ -1090,7 +1073,7 @@ function openSheet(t){
       photos.map(p=>'<div class="cell"><img src="'+p+'" onerror="this.parentNode.style.display=\'none\'"></div>').join("")+
       '</div>';
   }
-  sheetBody.innerHTML=pic+'<h2>'+t.name+'</h2><div class="role">'+t.role+'</div><div class="bio">'+t.bio+'</div>'+extra;
+  sheetBody.innerHTML=pic+'<h2>'+t.name+'</h2><div class="role">'+t.role+'</div><div class="bio">'+bioHTML(t.bio)+'</div>'+extra;
   sheet.classList.add("show");
 }
 document.getElementById("sheetBack").addEventListener("click",()=>sheet.classList.remove("show"));
