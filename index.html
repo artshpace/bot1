@@ -477,6 +477,7 @@
         <div class="hint-sm">Свободные слоты по расписанию направления</div>
       </div>
       <button class="btn-primary" id="bookSubmit">Отправить заявку</button>
+      <button class="row-link" id="askWaBook" style="margin-top:12px"><svg class="ic" style="color:#25D366"><use href="#i-wa"/></svg>Задать вопрос в WhatsApp<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
       <div class="hint-sm" style="text-align:center;margin-top:10px;">Первое занятие — бесплатно. Мы перезвоним и подтвердим.</div>
     </section>
   </div>
@@ -551,6 +552,34 @@
       <div class="info-card"><p id="lessonHw"></p></div>
       <button class="btn-primary" id="lessonDone">Выполнено</button>
       <div class="hint-sm" id="lessonDoneHint" style="text-align:center;margin-top:10px;"></div>
+    </section>
+  </div>
+
+  <!-- ===== ЧТО ДАЛЬШЕ (после записи на пробное) ===== -->
+  <div class="view" data-view="booked">
+    <section style="padding-top:64px;">
+      <div class="label"><svg class="ic"><use href="#i-check"/></svg>Вы записаны!</div>
+      <div class="info-card" style="border-color:var(--gold)">
+        <h3 id="bookedWhat" style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:6px;"></h3>
+        <p id="bookedWhen" style="font-size:14px;"></p>
+      </div>
+
+      <div class="label" style="margin-top:22px;"><svg class="ic"><use href="#i-info"/></svg>Что дальше</div>
+      <div class="info-card"><p id="bookedNext"></p></div>
+
+      <div class="label" style="margin-top:22px;"><svg class="ic"><use href="#i-pin"/></svg>Как нас найти</div>
+      <div class="info-card" style="margin-bottom:10px"><p id="bookedAddr"></p></div>
+      <div class="video-embed" id="findVideo" style="margin-bottom:10px"></div>
+      <button class="row-link" id="bookedMap"><svg class="ic"><use href="#i-pin"/></svg>Открыть карту (2ГИС)<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+
+      <div class="label" style="margin-top:22px;"><svg class="ic"><use href="#i-doc"/></svg>Что взять с собой</div>
+      <div class="info-card"><p>Ничего особенного — всё необходимое есть в студии. Приходите за 5–10 минут до начала. Если что-то нужно подготовить, педагог подскажет.</p></div>
+
+      <button class="row-link" id="bookedCal" style="margin-top:16px"><svg class="ic"><use href="#i-cal"/></svg>Добавить в календарь<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+      <button class="row-link" id="bookedWa"><svg class="ic" style="color:#25D366"><use href="#i-wa"/></svg>Задать вопрос в WhatsApp<span class="arrow"><svg class="ic"><use href="#i-chev"/></svg></span></button>
+
+      <button class="btn-primary" id="bookedDone" style="margin-top:16px">Готово</button>
+      <div class="hint-sm" style="text-align:center;margin-top:10px;">Нажмите «Готово», чтобы отправить заявку — мы свяжемся и подтвердим запись.</div>
     </section>
   </div>
 
@@ -1217,7 +1246,7 @@ document.getElementById("bookSubmit").addEventListener("click",()=>{
   const badPhone=phone.replace(/\D/g,"").length<7; showErr("errPhone",badPhone); if(badPhone) ok=false;
   if(!ok || !slot) return;
 
-  const payload={
+  pendingBooking={
     action:"book",
     direction:bookDir,
     ptype:bookPtype,
@@ -1227,8 +1256,52 @@ document.getElementById("bookSubmit").addEventListener("click",()=>{
     slot_display:slot.display,
     slot_iso:slot.iso,
   };
-  if(tg){ tg.sendData(JSON.stringify(payload)); tg.close(); }
-  else alert("Откройте приложение внутри Telegram, чтобы отправить заявку.");
+  showBooked(pendingBooking);   // экран "Что дальше", приложение остаётся открытым
+});
+
+let pendingBooking=null;
+
+function gcalLink(title, isoStart){
+  const start=new Date(isoStart);
+  const end=new Date(start.getTime()+60*60*1000);
+  const fmt=d=>d.toISOString().replace(/[-:]/g,"").replace(/\.\d{3}/,"");
+  const dates=fmt(start)+"/"+fmt(end);
+  return "https://calendar.google.com/calendar/render?action=TEMPLATE"+
+    "&text="+encodeURIComponent(title)+
+    "&dates="+dates+
+    "&details="+encodeURIComponent("Пробное занятие в Shpigotskiy Art Space")+
+    "&location="+encodeURIComponent(STUDIO.address);
+}
+
+function showBooked(b){
+  document.getElementById("bookedWhat").textContent = DATA[b.direction].title+" — пробное занятие";
+  document.getElementById("bookedWhen").textContent = b.slot_display;
+  document.getElementById("bookedNext").textContent =
+    "Мы позвоним по номеру "+b.phone+", подтвердим запись и ответим на вопросы. Если удобнее — напишите нам сами в WhatsApp.";
+  document.getElementById("bookedAddr").textContent = STUDIO.address;
+  // видео "как нас найти"
+  const fv=document.getElementById("findVideo");
+  fv.innerHTML = '<video src="media/how-to-find.mp4" controls playsinline '+
+    'onerror="this.parentNode.innerHTML=\'<div class=&quot;ph-vid&quot;>Видео «как нас найти» появится здесь</div>\'"></video>';
+  navTo("booked");
+}
+
+document.getElementById("bookedMap").addEventListener("click",()=>openL(STUDIO.map));
+document.getElementById("bookedWa").addEventListener("click",()=>{
+  const txt = pendingBooking ? ("Здравствуйте! Я записался на пробное: "+DATA[pendingBooking.direction].title+", "+pendingBooking.slot_display) : "Здравствуйте! У меня вопрос по записи.";
+  openL(STUDIO.whatsapp+"?text="+encodeURIComponent(txt));
+});
+document.getElementById("bookedCal").addEventListener("click",()=>{
+  if(!pendingBooking) return;
+  openL(gcalLink(DATA[pendingBooking.direction].title+" — пробное (Shpigotskiy Art Space)", pendingBooking.slot_iso));
+});
+document.getElementById("bookedDone").addEventListener("click",()=>{
+  if(tg && pendingBooking){ tg.sendData(JSON.stringify(pendingBooking)); tg.close(); }
+  else { showView("home"); }
+});
+// "Задать вопрос" на самой форме записи
+document.getElementById("askWaBook").addEventListener("click",()=>{
+  openL(STUDIO.whatsapp+"?text="+encodeURIComponent("Здравствуйте! У меня вопрос по записи на пробное занятие."));
 });
 
 /* инициализация формы */
