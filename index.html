@@ -1031,7 +1031,14 @@ document.getElementById("addrBtn").addEventListener("click",()=>openL(STUDIO.map
 document.getElementById("waBtn").addEventListener("click",()=>openL(STUDIO.whatsapp));
 document.getElementById("igBtn").addEventListener("click",()=>openL(STUDIO.instagram));
 document.getElementById("emailText").textContent = STUDIO.email;
-document.getElementById("emailBtn").addEventListener("click",()=>openL("mailto:"+STUDIO.email));
+document.getElementById("emailBtn").addEventListener("click",()=>{
+  const mail="mailto:"+STUDIO.email;
+  // tg.openLink не открывает mailto — используем обычную ссылку
+  const a=document.createElement("a"); a.href=mail; a.target="_blank";
+  document.body.appendChild(a); a.click(); a.remove();
+  // запасной вариант
+  try{ window.location.href=mail; }catch(e){}
+});
 
 /* ── панель педагога ── */
 const sheet=document.getElementById("sheet");
