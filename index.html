@@ -506,9 +506,9 @@
         <div class="chips" id="onlineCourses"></div>
       </div>
       <div class="field">
-        <label>Ваше имя</label>
-        <input class="inp" id="onName" placeholder="Как к вам обращаться">
-        <div class="err" id="errOnName">Введите имя</div>
+        <label>ФИО</label>
+        <input class="inp" id="onName" placeholder="Фамилия Имя Отчество">
+        <div class="err" id="errOnName">Введите фамилию и имя</div>
       </div>
       <div class="field">
         <label>Контактный телефон</label>
@@ -544,7 +544,10 @@
     <section style="padding-top:64px;">
       <div class="label"><svg class="ic"><use href="#i-play"/></svg><span id="lessonTitle">Урок</span></div>
       <div class="video-embed" id="lessonVideo"></div>
-      <div class="label" style="margin-top:20px;"><svg class="ic"><use href="#i-doc"/></svg>Домашнее задание</div>
+      <p id="lessonDesc" style="font-size:14px;color:var(--hint);margin:14px 2px 0;"></p>
+      <div class="label" style="margin-top:20px;"><svg class="ic"><use href="#i-info"/></svg>Теория</div>
+      <div class="info-card"><p id="lessonTheory"></p></div>
+      <div class="label" style="margin-top:20px;"><svg class="ic"><use href="#i-doc"/></svg>Практика и домашнее задание</div>
       <div class="info-card"><p id="lessonHw"></p></div>
       <button class="btn-primary" id="lessonDone">Выполнено</button>
       <div class="hint-sm" id="lessonDoneHint" style="text-align:center;margin-top:10px;"></div>
@@ -754,8 +757,8 @@ const DATA = {
     price:["15 000 ₸","абонемент на 8 занятий"],
     slots:[[2,"15:00"],[4,"15:00"],[6,"11:00"]],
     groups:[
-      {n:1, age:"6+",  days:[2,4], time:"15:00–16:00"},
-      {n:2, age:"10+", days:[6],   time:"11:00–12:00"},
+      {n:1, age:"7–9",   days:[6,0], time:"12:00–13:00"},
+      {n:2, age:"10–12", days:[6,0], time:"13:00–14:00"},
     ],
   },
   dance: {
@@ -776,8 +779,9 @@ const DATA = {
     price:["14 000 ₸","абонемент"],
     slots:[[1,"16:00"],[3,"16:00"],[5,"17:00"]],
     groups:[
-      {n:1, age:"4+", days:[1,3], time:"16:00–17:00"},
-      {n:2, age:"7+", days:[5],   time:"17:00–18:00"},
+      {n:1, age:"4–6",   days:[1,3,5], time:"18:30–19:30"},
+      {n:2, age:"7–10",  days:[6,0],   time:"11:30–13:00"},
+      {n:3, age:"11–15", days:[6,0],   time:"13:00–14:30"},
     ],
   },
   painting: {
@@ -966,7 +970,7 @@ document.getElementById("dirEnroll").addEventListener("click", () => {
 const schedList=document.getElementById("scheduleList");
 const DAY_SHORT=["Вс","Пн","Вт","Ср","Чт","Пт","Сб"]; // index = getDay()
 const WEEK_ORDER=[1,2,3,4,5,6,0];                       // Пн..Вс
-const AGE_COLOR={"4–6":"#C9A84C","7–10":"#E30613","11–15":"#1A1A1A","14–17":"#9a7f2e"};
+const AGE_COLOR={"4–6":"#C9A84C","7–9":"#C9A84C","7–10":"#E30613","10–12":"#E30613","11–15":"#1A1A1A","14–17":"#9a7f2e"};
 
 function renderGroups(D){
   // легенда возрастов (только встречающиеся)
@@ -1072,7 +1076,7 @@ document.getElementById("onlineSubmit").addEventListener("click",()=>{
   const name=document.getElementById("onName").value.trim();
   const phone=document.getElementById("onPhone").value.trim();
   let ok=true;
-  const badName=name.length<2; document.getElementById("errOnName").classList.toggle("show",badName); if(badName)ok=false;
+  const badName=name.trim().split(/\s+/).length<2; document.getElementById("errOnName").classList.toggle("show",badName); if(badName)ok=false;
   const badPhone=phone.replace(/\D/g,"").length<7; document.getElementById("errOnPhone").classList.toggle("show",badPhone); if(badPhone)ok=false;
   if(!ok)return;
   pendingOnline={action:"book_online",title:onlineCourse,name:name,phone:phone};
@@ -1266,9 +1270,18 @@ const COURSES = {
   "DEMO": {
     title: "Демо-курс «Ораторское искусство»",
     lessons: [
-      {title:"Урок 1. Знакомство и цель", yt:"", hw:"Запишите видео-приветствие на 30 секунд и пришлите педагогу."},
-      {title:"Урок 2. Дыхание и голос", yt:"", hw:"Сделайте дыхательную гимнастику 3 дня подряд."},
-      {title:"Урок 3. Работа с текстом", yt:"", hw:"Подготовьте выразительное чтение короткого стихотворения."},
+      {title:"Урок 1. Знакомство и цель", yt:"",
+       desc:"В этом уроке знакомимся с курсом и ставим личную цель обучения.",
+       theory:"Публичная речь — это навык, а не талант. Любой навык развивается через регулярную практику и обратную связь.",
+       practice:"Запишите видео-приветствие на 30 секунд и пришлите педагогу."},
+      {title:"Урок 2. Дыхание и голос", yt:"",
+       desc:"Учимся управлять дыханием — основой сильного и спокойного голоса.",
+       theory:"Опора на диафрагму даёт голосу силу и устойчивость, убирает дрожь от волнения.",
+       practice:"Сделайте дыхательную гимнастику 3 дня подряд по 5 минут."},
+      {title:"Урок 3. Работа с текстом", yt:"",
+       desc:"Разбираем, как готовить текст к выразительному выступлению.",
+       theory:"Логические паузы и ударения управляют вниманием слушателя сильнее громкости.",
+       practice:"Подготовьте выразительное чтение короткого стихотворения."},
     ],
   },
 };
@@ -1342,23 +1355,29 @@ function renderLessons(code, done){
 }
 
 function openLesson(code, idx){
-  curCourseCode = code; curLessonIdx = idx;
-  const les = COURSES[code].lessons[idx];
-  document.getElementById("lessonTitle").textContent = les.title;
-  const v = document.getElementById("lessonVideo");
-  if(les.yt){
-    v.innerHTML = '<iframe src="https://www.youtube.com/embed/'+les.yt+'?rel=0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>';
-  } else {
-    v.innerHTML = '<div class="ph-vid">Видео урока появится здесь<br>(добавьте ID ролика YouTube)</div>';
-  }
-  document.getElementById("lessonHw").textContent = les.hw || "Домашнее задание появится здесь.";
-  const btn = document.getElementById("lessonDone");
-  const hint = document.getElementById("lessonDoneHint");
-  store.get(progKey(code), function(done){
-    done = parseInt(done||"0",10);
-    if(idx < done){
+  // Жёсткая защита: нельзя открыть урок дальше текущего доступного
+  store.get(progKey(code), function(doneCheck){
+    const done0 = parseInt(doneCheck||"0",10);
+    if(idx > done0){   // урок ещё закрыт — не открываем
+      return;
+    }
+    curCourseCode = code; curLessonIdx = idx;
+    const les = COURSES[code].lessons[idx];
+    document.getElementById("lessonTitle").textContent = les.title;
+    const v = document.getElementById("lessonVideo");
+    if(les.yt){
+      v.innerHTML = '<iframe src="https://www.youtube.com/embed/'+les.yt+'?rel=0" allow="encrypted-media; fullscreen" allowfullscreen></iframe>';
+    } else {
+      v.innerHTML = '<div class="ph-vid">Видео урока появится здесь<br>(добавьте ID ролика YouTube)</div>';
+    }
+    document.getElementById("lessonDesc").textContent = les.desc || "";
+    document.getElementById("lessonTheory").textContent = les.theory || "Теория появится здесь.";
+    document.getElementById("lessonHw").textContent = les.practice || les.hw || "Задание появится здесь.";
+    const btn = document.getElementById("lessonDone");
+    const hint = document.getElementById("lessonDoneHint");
+    if(idx < done0){
       btn.style.display="none"; hint.textContent="Урок уже пройден.";
-    } else if(idx === done){
+    } else {   // idx === done0 — текущий доступный
       btn.style.display=""; hint.textContent="Посмотрите видео, выполните задание и нажмите «Выполнено».";
       btn.onclick = function(){
         const newDone = idx+1;
@@ -1367,11 +1386,9 @@ function openLesson(code, idx){
           navTo("course");
         });
       };
-    } else {
-      btn.style.display="none"; hint.textContent="Этот урок ещё закрыт.";
     }
+    navTo("lesson");
   });
-  navTo("lesson");
 }
 
 /* кнопки в разделе онлайн */
@@ -1386,6 +1403,19 @@ store.get("course_access", function(code){
     b.addEventListener("click", function(){ openCourse(code); });
   }
 });
+
+
+/* ── Телефон: автоматически +7 ── */
+function setupPhone(el){
+  if(!el) return;
+  const PREFIX="+7 ";
+  const ensure=()=>{ if(!el.value || el.value.indexOf("+7")!==0){ el.value=PREFIX; } };
+  el.addEventListener("focus",ensure);
+  el.addEventListener("input",function(){ if(el.value.indexOf("+7")!==0){ el.value=PREFIX; } });
+  if(!el.value) el.value=PREFIX;
+}
+setupPhone(document.getElementById("inPhone"));
+setupPhone(document.getElementById("onPhone"));
 
 </script>
 </body>
