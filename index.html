@@ -1045,9 +1045,10 @@ function fallbackCopy(t){
   ta.remove();
 }
 function openGmailCompose(){
-  // Gmail compose как обычная https-ссылка — открывается без ошибки
+  // Только https — никаких схем вроде mailto, поэтому ошибки ERR_UNKNOWN_URL_SCHEME не будет
   const url="https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(STUDIO.email);
-  if(tg&&tg.openLink) tg.openLink(url); else window.open(url,"_blank");
+  try{ if(tg&&tg.openLink){ tg.openLink(url); return; } }catch(e){}
+  try{ window.open(url,"_blank"); }catch(e){ copyEmail(); }
 }
 document.getElementById("emailBtn").addEventListener("click",()=>{
   if(tg&&tg.showPopup){
@@ -1064,7 +1065,7 @@ document.getElementById("emailBtn").addEventListener("click",()=>{
       else if(id==="copy") copyEmail();
     });
   } else {
-    openGmailCompose();
+    copyEmail();   // без поддержки popup — просто копируем, без переходов
   }
 });
 
