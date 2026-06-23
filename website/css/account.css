@@ -155,7 +155,6 @@
 }
 .badge-green { background: rgba(43,168,74,.12); color: #1e8a3c; }
 .badge-gold { background: rgba(201,168,76,.15); color: #a07828; }
-.badge-red { background: rgba(227,6,19,.1); color: var(--primary); }
 
 /* progress bar */
 .cab-progress { height: 8px; border-radius: 999px; background: var(--bg-3); overflow: hidden; margin: 8px 0; }
@@ -235,6 +234,104 @@
 .cab-lesson-info span { font-size: .82rem; color: var(--muted); }
 .cab-empty { color: var(--muted); font-size: .9rem; }
 
+/* badge extra (subscription "completed" / hidden course) */
+.badge-gray { background: rgba(26,26,26,.07); color: var(--muted); }
+
+/* ---------------- NOTIFICATIONS (dashboard) -------------------------- */
+.cab-notifications { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+.cab-note {
+  display: flex; align-items: center; gap: 16px; padding: 16px 20px;
+  border-radius: var(--radius-md); border: 1px solid var(--gold-border);
+  background: var(--gold-light);
+}
+.cab-note.danger { border-color: rgba(227,6,19,.3); background: rgba(227,6,19,.07); }
+.cab-note-body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.cab-note-body strong { color: var(--dark); font-size: .95rem; }
+.cab-note-body span { color: var(--muted); font-size: .85rem; }
+.cab-note-action {
+  flex-shrink: 0; font-weight: 700; font-size: .82rem; color: var(--primary);
+  padding: 8px 16px; border-radius: 999px; background: var(--bg); border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+.cab-note-action:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ---------------- TABLES (history / admin) -------------------------- */
+.cab-table-wrap {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  overflow-x: auto;
+}
+.cab-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.cab-table thead th {
+  text-align: left; font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); padding: 16px 18px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.cab-table tbody td { padding: 16px 18px; border-bottom: 1px solid var(--border); color: var(--body); vertical-align: middle; }
+.cab-table tbody tr:last-child td { border-bottom: none; }
+.cab-table tbody tr:hover { background: var(--bg-alt); }
+.cab-table strong { color: var(--dark); }
+
+.cab-row-actions { display: flex; gap: 8px; }
+.btn-icon {
+  width: 34px; height: 34px; border-radius: var(--radius-sm); background: var(--bg-alt);
+  display: inline-flex; align-items: center; justify-content: center; font-size: .95rem;
+  color: var(--body); transition: all var(--transition); line-height: 1;
+}
+.btn-icon:hover { background: var(--primary); color: #fff; }
+.btn-icon.danger:hover { background: var(--primary); }
+
+/* ---------------- ADMIN TOOLBAR ------------------------------------- */
+.cab-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+.cab-search {
+  flex: 1; max-width: 360px; min-width: 200px;
+}
+.cab-search input { width: 100%; }
+
+/* ---------------- SHOP / BUY CARDS ---------------------------------- */
+.cab-shop-section { margin-bottom: 40px; }
+.cab-shop-section > h2 { font-size: 1.3rem; margin-bottom: 6px; }
+.cab-shop-section > .sub { color: var(--muted); font-size: .9rem; margin-bottom: 20px; }
+.cab-buy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.cab-buy-card {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 24px; display: flex; flex-direction: column;
+}
+.cab-buy-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.cab-buy-head h3 { font-size: 1.05rem; }
+.cab-buy-price { font-family: 'Playfair Display', serif; font-weight: 800; color: var(--primary); font-size: 1.2rem; white-space: nowrap; }
+.cab-buy-feats { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0 0 20px; flex: 1; }
+.cab-buy-feats li { font-size: .88rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+
+/* ---------------- MODAL --------------------------------------------- */
+.cab-modal {
+  position: fixed; inset: 0; z-index: 600; display: flex; align-items: center; justify-content: center;
+  background: rgba(26,26,26,.55); padding: 20px; opacity: 0; transition: opacity .2s ease;
+}
+.cab-modal.show { opacity: 1; }
+.cab-modal-dialog {
+  background: var(--bg); border-radius: var(--radius-lg); width: 100%; max-width: 540px;
+  max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+  transform: translateY(12px); transition: transform .2s ease;
+}
+.cab-modal.show .cab-modal-dialog { transform: none; }
+.cab-modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--bg);
+}
+.cab-modal-head h3 { font-size: 1.2rem; }
+.cab-modal-x { font-size: 1.6rem; line-height: 1; color: var(--muted); width: 36px; height: 36px; border-radius: 50%; }
+.cab-modal-x:hover { background: var(--bg-alt); color: var(--dark); }
+.cab-modal-body { padding: 24px; }
+.cab-modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
+.cab-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.cab-card-block { padding: 16px; background: var(--bg-alt); border-radius: var(--radius-md); margin-bottom: 20px; }
+.cab-block-title { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 10px; }
+.cab-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.cab-list li { font-size: .9rem; color: var(--body); padding: 8px 0; border-bottom: 1px solid var(--border); }
+.cab-list li:last-child { border-bottom: none; }
+.cab-empty a { color: var(--primary); font-weight: 700; }
+
 /* ---------------- TOAST ---------------------------------------------- */
 .toast {
   position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -247,6 +344,7 @@
 /* ---------------- RESPONSIVE ----------------------------------------- */
 @media (max-width: 1024px) {
   .cab-courses { grid-template-columns: repeat(2, 1fr); }
+  .cab-buy-grid { grid-template-columns: repeat(2, 1fr); }
   .cab-cal-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 860px) {
@@ -274,4 +372,25 @@
   .auth-page { grid-template-columns: 1fr; }
   .auth-aside { display: none; }
   .cab-courses { grid-template-columns: 1fr; }
+  .cab-buy-grid { grid-template-columns: 1fr; }
+  .cab-form-row { grid-template-columns: 1fr; }
+  .cab-note { flex-direction: column; align-items: flex-start; }
+
+  /* tables collapse into stacked cards */
+  .cab-table-wrap { border: none; background: transparent; overflow: visible; }
+  .cab-table, .cab-table thead, .cab-table tbody, .cab-table tr, .cab-table td { display: block; width: 100%; }
+  .cab-table thead { display: none; }
+  .cab-table tbody tr {
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md);
+    margin-bottom: 12px; padding: 6px 4px;
+  }
+  .cab-table tbody tr:hover { background: var(--bg); }
+  .cab-table tbody td { border-bottom: 1px solid var(--border); padding: 10px 16px; display: flex; justify-content: space-between; gap: 16px; text-align: right; }
+  .cab-table tbody td:last-child { border-bottom: none; }
+  .cab-table tbody td::before {
+    content: attr(data-th); font-weight: 700; color: var(--muted); text-align: left;
+    font-size: .78rem; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .cab-table tbody td:empty { display: none; }
+  .cab-row-actions { justify-content: flex-end; }
 }
