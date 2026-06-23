@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мероприятия — Shpigotskiy Art Space</title>
+  <meta name="description" content="Концерты, выставки, спектакли и мастер-классы студии Shpigotskiy Art Space в Петропавловске.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="name">Shpigotskiy Art Space</span><span class="tagline-small">Студия творческого развития</span></a>
+      <div class="nav-links"><a href="directions/index.html">Направления</a><a href="teachers.html">Преподаватели</a><a href="events.html" class="active">Мероприятия</a><a href="courses.html">Онлайн-курсы</a><a href="contacts.html">Контакты</a><a href="index.html#trial" class="nav-cta">Записаться</a></div>
+      <button class="nav-hamburger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+<nav class="mobile-nav">
+  <a href="directions/index.html">Направления</a><a href="teachers.html">Преподаватели</a><a href="events.html">Мероприятия</a><a href="courses.html">Онлайн-курсы</a><a href="contacts.html">Контакты</a>
+  <a href="index.html#trial" class="mob-cta">Записаться на пробное занятие</a>
+</nav>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Мероприятия</span></div>
+      <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Афиша</div>
+      <h1>Мероприятия студии</h1>
+      <p class="lead">Концерты, выставки, спектакли и мастер-классы. Наши ученики регулярно выступают — приходите поддержать их.</p>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <!-- Filter tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:48px;flex-wrap:wrap;">
+      <button class="form-chip selected" onclick="filterEvents(this,'all')" data-filter="all">Все</button>
+      <button class="form-chip" onclick="filterEvents(this,'concert')" data-filter="concert">Концерты</button>
+      <button class="form-chip" onclick="filterEvents(this,'exhibition')" data-filter="exhibition">Выставки</button>
+      <button class="form-chip" onclick="filterEvents(this,'spectacle')" data-filter="spectacle">Спектакли</button>
+      <button class="form-chip" onclick="filterEvents(this,'masterclass')" data-filter="masterclass">Мастер-классы</button>
+    </div>
+
+    <div class="events-grid" id="events-grid">
+
+      <div class="event-card fade-up" data-type="concert">
+        <div class="event-img">
+          <div style="height:200px;background:linear-gradient(135deg,#1a0808,#3d1010);"></div>
+          <div class="event-date-badge"><div class="day">15</div><div class="month">Июл</div></div>
+          <div class="event-type-badge">Концерт</div>
+        </div>
+        <div class="event-body">
+          <h3>Летний концерт учеников</h3>
+          <p>Большой итоговый концерт с участием всех направлений: вокал, гитара, танцы. Выступления на главной сцене города. Вход свободный для родителей и гостей.</p>
+          <div class="event-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg>Областной театр</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>18:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-card fade-up" data-type="exhibition">
+        <div class="event-img">
+          <div style="height:200px;background:linear-gradient(135deg,#080f1a,#0d1a30);"></div>
+          <div class="event-date-badge"><div class="day">22</div><div class="month">Июл</div></div>
+          <div class="event-type-badge">Выставка</div>
+        </div>
+        <div class="event-body">
+          <h3>Выставка живописи «Лето»</h3>
+          <p>Ученики класса живописи представят работы, созданные за учебный год. Работы в технике акварели, акрила и масла. Выставка открыта для всех желающих.</p>
+          <div class="event-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg>Студия Art Space</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>12:00–19:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-card fade-up" data-type="masterclass">
+        <div class="event-img">
+          <div style="height:200px;background:linear-gradient(135deg,#0d1a0d,#102810);"></div>
+          <div class="event-date-badge"><div class="day">5</div><div class="month">Авг</div></div>
+          <div class="event-type-badge">Мастер-класс</div>
+        </div>
+        <div class="event-body">
+          <h3>Мастер-класс по импровизации</h3>
+          <p>Открытый мастер-класс по актёрской импровизации. Никакого опыта не нужно — только желание попробовать. Подходит для возраста от 12 лет.</p>
+          <div class="event-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg>Студия Art Space</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>15:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-card fade-up" data-type="spectacle">
+        <div class="event-img">
+          <div style="height:200px;background:linear-gradient(135deg,#1a0a15,#2d0d28);"></div>
+          <div class="event-date-badge"><div class="day">20</div><div class="month">Авг</div></div>
+          <div class="event-type-badge">Спектакль</div>
+        </div>
+        <div class="event-body">
+          <h3>«Алиса в Стране чудес»</h3>
+          <p>Театральная постановка учеников класса актёрского мастерства. Полноценный спектакль с декорациями, костюмами и профессиональным светом.</p>
+          <div class="event-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg>Областной театр</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>17:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-card fade-up" data-type="masterclass">
+        <div class="event-img">
+          <div style="height:200px;background:linear-gradient(135deg,#1a1200,#302000);"></div>
+          <div class="event-date-badge"><div class="day">10</div><div class="month">Сен</div></div>
+          <div class="event-type-badge">Мастер-класс</div>
+        </div>
+        <div class="event-body">
+          <h3>Мастер-класс по акварели</h3>
+          <p>Открытый мастер-класс для всех желающих. Научитесь писать акварелью с нуля за 2 часа. Все материалы предоставляются, опыт не нужен.</p>
+          <div class="event-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg>Студия Art Space</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>13:00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-card fade-up" data-type="concert">
+        <div class="event-img">
+          <div style="height:200px;background:linear-gradient(135deg,#0a1520,#10273a);"></div>
+          <div class="event-date-badge"><div class="day">25</div><div class="month">Окт</div></div>
+          <div class="event-type-badge">Концерт</div>
+        </div>
+        <div class="event-body">
+          <h3>Осенний вечер — концерт вокала</h3>
+          <p>Вечер вокальной музыки с участием учеников студии и приглашённых исполнителей. Эстрада, поп, джаз. Вход свободный.</p>
+          <div class="event-meta">
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/><circle cx="12" cy="10" r="2"/></svg>Студия Art Space</span>
+            <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>19:00</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Past events note -->
+    <div style="text-align:center;margin-top:48px;padding:32px;background:var(--bg-alt);border-radius:var(--radius-lg);border:1px solid var(--border);">
+      <h3 style="margin-bottom:8px;">Хотите знать о мероприятиях первыми?</h3>
+      <p style="color:var(--muted);margin-bottom:20px;">Подпишитесь в Telegram или WhatsApp — публикуем анонсы за 2–3 недели до события.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a href="https://t.me/shpigotskiy_art" class="btn btn-dark" target="_blank" rel="noopener">Telegram-канал</a>
+        <a href="https://wa.me/77771234567" class="btn btn-outline" target="_blank" rel="noopener">WhatsApp</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <div class="free-badge">Первое занятие бесплатно</div>
+    <h2>Станьте частью наших событий</h2>
+    <p>Запишитесь на занятия — и уже через несколько месяцев ваш ребёнок будет выступать на сцене.</p>
+    <div class="cta-banner-btns">
+      <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться</a>
+      <a href="contacts.html" class="btn btn-white btn-lg">Контакты</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
+      <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
+      <div class="footer-col"><h4>Студия</h4><ul><li><a href="teachers.html">Преподаватели</a></li><li><a href="events.html">Мероприятия</a></li><li><a href="courses.html">Онлайн-курсы</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77771234567">+7 777 123-45-67</a></li><li><a href="https://wa.me/77771234567" target="_blank">WhatsApp</a></li><li><a href="https://t.me/shpigotskiy_art" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2024 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a></div>
+  </div>
+</footer>
+<script src="js/main.js"></script>
+<script>
+function filterEvents(btn, type) {
+  document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.querySelectorAll('.event-card').forEach(card => {
+    card.style.display = (type === 'all' || card.dataset.type === type) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>
