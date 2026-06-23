@@ -1,0 +1,277 @@
+/* =====================================================================
+   CABINET STYLES — Shpigotskiy Art Space (v0.2)
+   Loaded AFTER style.css; reuses its CSS variables and components.
+   ===================================================================== */
+
+/* ---------------- AUTH PAGES (login / register / recover) ------------- */
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  background: var(--bg);
+}
+.auth-aside {
+  position: relative;
+  background: linear-gradient(150deg, #1a1410, #0e0d0c 60%, #14100e);
+  color: #fff;
+  padding: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+.auth-aside::before {
+  content: '';
+  position: absolute; top: -120px; right: -120px; width: 480px; height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(227,6,19,.35), transparent 70%);
+}
+.auth-aside::after {
+  content: '';
+  position: absolute; bottom: -100px; left: -100px; width: 420px; height: 420px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,.22), transparent 70%);
+}
+.auth-aside > * { position: relative; z-index: 1; }
+.auth-brand .name {
+  font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 800; color: #fff;
+}
+.auth-brand .tagline-small {
+  font-size: .68rem; color: rgba(255,255,255,.6); letter-spacing: .08em; text-transform: uppercase;
+}
+.auth-aside h2 { color: #fff; max-width: 420px; margin-bottom: 16px; }
+.auth-aside p { color: rgba(255,255,255,.7); max-width: 400px; }
+.auth-points { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+.auth-point { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,.85); font-size: .95rem; }
+.auth-point svg { width: 20px; height: 20px; color: var(--gold); flex-shrink: 0; }
+.auth-aside .back-link { color: rgba(255,255,255,.6); font-size: .85rem; display: inline-flex; align-items: center; gap: 6px; }
+.auth-aside .back-link:hover { color: #fff; }
+.auth-aside .back-link svg { width: 14px; height: 14px; }
+
+.auth-main {
+  display: flex; align-items: center; justify-content: center; padding: 48px 24px;
+}
+.auth-form-wrap { width: 100%; max-width: 400px; }
+.auth-form-wrap h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin-bottom: 8px; }
+.auth-form-wrap .sub { color: var(--muted); margin-bottom: 32px; }
+.auth-alt { margin-top: 24px; text-align: center; font-size: .9rem; color: var(--muted); }
+.auth-alt a { color: var(--primary); font-weight: 700; }
+.auth-alt a:hover { text-decoration: underline; }
+.auth-forgot { display: block; text-align: right; font-size: .82rem; color: var(--muted); margin-top: -8px; margin-bottom: 18px; }
+.auth-forgot:hover { color: var(--primary); }
+.auth-demo {
+  margin-top: 24px; padding: 14px 16px; background: var(--bg-alt);
+  border: 1px solid var(--gold-border); border-radius: var(--radius-md);
+  font-size: .82rem; color: var(--muted); line-height: 1.6;
+}
+.auth-demo strong { color: var(--dark); }
+
+/* ---------------- CABINET LAYOUT ------------------------------------- */
+.cab-body { background: var(--bg-alt); min-height: 100vh; }
+.cab-shell { display: grid; grid-template-columns: 264px 1fr; min-height: 100vh; }
+
+.cab-sidebar {
+  background: var(--dark); color: rgba(255,255,255,.7);
+  padding: 28px 20px; display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh;
+}
+.cab-logo { display: flex; flex-direction: column; line-height: 1.1; margin-bottom: 8px; padding: 0 12px; }
+.cab-logo .name { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 800; color: #fff; }
+.cab-logo .tagline-small { font-size: .6rem; color: rgba(255,255,255,.5); letter-spacing: .08em; text-transform: uppercase; }
+.cab-user {
+  display: flex; align-items: center; gap: 12px; padding: 16px 12px; margin: 20px 0;
+  border-top: 1px solid rgba(255,255,255,.08); border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.cab-avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--primary);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-family: 'Playfair Display', serif; font-weight: 700; color: #fff;
+}
+.cab-user-meta { min-width: 0; }
+.cab-user-meta .nm { color: #fff; font-weight: 700; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cab-user-meta .role { font-size: .72rem; color: rgba(255,255,255,.5); }
+
+.cab-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.cab-nav a, .cab-nav .cab-nav-soon {
+  display: flex; align-items: center; gap: 12px; padding: 11px 12px;
+  border-radius: var(--radius-md); font-size: .92rem; font-weight: 600;
+  color: rgba(255,255,255,.7); transition: all var(--transition);
+}
+.cab-nav a svg, .cab-nav .cab-nav-soon svg { width: 19px; height: 19px; flex-shrink: 0; }
+.cab-nav a:hover { background: rgba(255,255,255,.06); color: #fff; }
+.cab-nav a.active { background: var(--primary); color: #fff; }
+.cab-nav-soon { color: rgba(255,255,255,.35); cursor: not-allowed; }
+.cab-nav-soon .soon-tag {
+  margin-left: auto; font-size: .6rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  background: rgba(201,168,76,.18); color: var(--gold); padding: 2px 7px; border-radius: 999px;
+}
+.cab-nav-sep { font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.35); padding: 16px 12px 6px; }
+.cab-signout {
+  margin-top: 8px; display: flex; align-items: center; gap: 12px; padding: 11px 12px;
+  border-radius: var(--radius-md); font-size: .92rem; font-weight: 600;
+  color: rgba(255,255,255,.7); width: 100%; text-align: left; transition: all var(--transition);
+}
+.cab-signout:hover { background: rgba(227,6,19,.18); color: #fff; }
+.cab-signout svg { width: 19px; height: 19px; }
+
+.cab-main { padding: 40px 40px 64px; min-width: 0; }
+.cab-topbar { display: none; }
+.cab-page-head { margin-bottom: 32px; }
+.cab-page-head h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+.cab-page-head .sub { color: var(--muted); margin-top: 6px; }
+
+/* ---------------- CARDS / GRID --------------------------------------- */
+.cab-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+.cab-card {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 28px;
+}
+.cab-card.span-2 { grid-column: span 2; }
+.cab-card-label {
+  font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+}
+.cab-card-label svg { width: 16px; height: 16px; color: var(--primary); }
+.cab-stat { font-family: 'Playfair Display', serif; font-size: 2.4rem; font-weight: 800; color: var(--dark); line-height: 1.1; }
+.cab-stat-sub { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+.cab-strong { font-weight: 700; color: var(--dark); font-size: 1.15rem; }
+.cab-muted { color: var(--muted); font-size: .9rem; margin-top: 4px; }
+
+/* next lesson highlight card */
+.cab-next {
+  background: linear-gradient(135deg, var(--dark), #2d1a0e);
+  color: #fff; border: none;
+}
+.cab-next .cab-card-label { color: rgba(255,255,255,.6); }
+.cab-next .cab-card-label svg { color: var(--gold); }
+.cab-next .big { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+.cab-next .mid { color: var(--gold); font-weight: 700; margin-bottom: 4px; }
+.cab-next .small { color: rgba(255,255,255,.7); font-size: .9rem; }
+
+/* badges */
+.cab-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 999px; font-size: .82rem; font-weight: 700;
+}
+.badge-green { background: rgba(43,168,74,.12); color: #1e8a3c; }
+.badge-gold { background: rgba(201,168,76,.15); color: #a07828; }
+.badge-red { background: rgba(227,6,19,.1); color: var(--primary); }
+
+/* progress bar */
+.cab-progress { height: 8px; border-radius: 999px; background: var(--bg-3); overflow: hidden; margin: 8px 0; }
+.cab-progress-bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--primary), var(--gold)); transition: width .6s ease; }
+
+/* weekly schedule rows */
+.cab-week-row {
+  display: flex; align-items: center; gap: 16px; padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.cab-week-row:last-child { border-bottom: none; }
+.cab-week-day { width: 110px; font-weight: 700; color: var(--dark); font-size: .9rem; flex-shrink: 0; }
+.cab-week-info { flex: 1; min-width: 0; }
+.cab-week-info strong { display: block; color: var(--dark); font-size: .95rem; }
+.cab-week-info span { font-size: .82rem; color: var(--muted); }
+.cab-week-time {
+  font-family: 'Playfair Display', serif; font-weight: 800; color: var(--primary); font-size: 1.1rem;
+}
+
+/* ---------------- MY COURSES ----------------------------------------- */
+.cab-courses { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.cab-course {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  overflow: hidden; transition: all var(--transition); display: flex; flex-direction: column;
+}
+.cab-course:hover { box-shadow: var(--shadow-md); transform: translateY(-4px); border-color: var(--gold-border); }
+.cab-course-cover { height: 130px; position: relative; }
+.cab-course-flag {
+  position: absolute; top: 12px; right: 12px; background: #2BA84A; color: #fff;
+  font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  padding: 4px 10px; border-radius: 8px;
+}
+.cab-course-body { padding: 22px; display: flex; flex-direction: column; flex: 1; }
+.cab-course-body h3 { font-size: 1.1rem; margin-bottom: 4px; }
+.cab-course-teacher { font-size: .82rem; color: var(--muted); margin-bottom: 16px; }
+.cab-course-meta { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; color: var(--muted); margin: 6px 0 18px; }
+.cab-course-pct { font-weight: 700; color: var(--dark); }
+.cab-course-btn { margin-top: auto; }
+
+/* ---------------- CALENDAR ------------------------------------------- */
+.cab-cal-layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
+.cab-cal-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; }
+.cal-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.cal-toolbar h2 { font-size: 1.3rem; }
+.cal-nav-btn {
+  width: 38px; height: 38px; border-radius: 50%; background: var(--bg-alt);
+  display: flex; align-items: center; justify-content: center; transition: all var(--transition);
+}
+.cal-nav-btn:hover { background: var(--primary); color: #fff; }
+.cal-nav-btn svg { width: 18px; height: 18px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-head { text-align: center; font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; padding-bottom: 6px; }
+.cal-cell {
+  aspect-ratio: 1; border-radius: var(--radius-sm); border: 1px solid transparent;
+  background: var(--bg-alt); display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; position: relative; transition: all var(--transition);
+}
+.cal-empty { background: transparent; }
+.cal-num { font-size: .9rem; font-weight: 600; color: var(--body); }
+.cal-has { cursor: pointer; }
+.cal-has:hover { border-color: var(--gold-border); }
+.cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+.cal-today { background: var(--gold-light); border-color: var(--gold-border); }
+.cal-today .cal-num { color: var(--dark); font-weight: 800; }
+.cal-cell.selected { background: var(--primary); border-color: var(--primary); }
+.cal-cell.selected .cal-num { color: #fff; }
+.cal-cell.selected .cal-dot { background: #fff; }
+
+.cab-detail-title { font-size: 1.2rem; margin-bottom: 16px; text-transform: capitalize; }
+.cab-lesson { display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.cab-lesson:last-child { border-bottom: none; }
+.cab-lesson-time {
+  font-family: 'Playfair Display', serif; font-weight: 800; color: var(--primary); font-size: 1.1rem;
+  width: 56px; flex-shrink: 0;
+}
+.cab-lesson-info strong { display: block; color: var(--dark); }
+.cab-lesson-info span { font-size: .82rem; color: var(--muted); }
+.cab-empty { color: var(--muted); font-size: .9rem; }
+
+/* ---------------- TOAST ---------------------------------------------- */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--dark); color: #fff; padding: 14px 24px; border-radius: var(--radius-md);
+  font-size: .9rem; font-weight: 600; box-shadow: var(--shadow-lg); z-index: 500;
+  opacity: 0; transition: opacity .3s ease, transform .3s ease; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------------- RESPONSIVE ----------------------------------------- */
+@media (max-width: 1024px) {
+  .cab-courses { grid-template-columns: repeat(2, 1fr); }
+  .cab-cal-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  .cab-shell { grid-template-columns: 1fr; }
+  .cab-sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; width: 264px; z-index: 120;
+    transform: translateX(-100%); transition: transform .3s cubic-bezier(.4,0,.2,1); height: 100vh;
+  }
+  .cab-sidebar.open { transform: none; box-shadow: var(--shadow-lg); }
+  .cab-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px; background: var(--dark); position: sticky; top: 0; z-index: 90;
+  }
+  .cab-topbar .name { font-family: 'Playfair Display', serif; font-weight: 800; color: #fff; font-size: 1rem; }
+  .cab-burger {
+    width: 42px; height: 42px; border-radius: var(--radius-sm); background: rgba(255,255,255,.1);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  }
+  .cab-burger span { width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+  .cab-main { padding: 24px 20px 48px; }
+  .cab-grid { grid-template-columns: 1fr; }
+  .cab-card.span-2 { grid-column: span 1; }
+}
+@media (max-width: 640px) {
+  .auth-page { grid-template-columns: 1fr; }
+  .auth-aside { display: none; }
+  .cab-courses { grid-template-columns: 1fr; }
+}
