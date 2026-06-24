@@ -1125,11 +1125,17 @@
      CHECKOUT  [v1.0] — summary → customer data → payment method →
      payment → confirmation. Access is granted ONLY after payment.
      ================================================================= */
+  /* Payment methods shown at checkout. `live: true` = selectable.
+     CloudPayments handles Visa/MC/Apple Pay/Google Pay in one widget.
+     Freedom Pay and Kaspi route through the backend proxy.
+     Secrets (API keys) are NEVER here — see .env.example.            */
   var PAY_METHODS = [
-    { id: 'mock',          label: 'Демо-оплата (тестовый режим)', live: true },
-    { id: 'kaspi',         label: 'Kaspi Pay',                    live: false },
-    { id: 'cloudpayments', label: 'Банковская карта',             live: false },
-    { id: 'stripe',        label: 'Stripe',                       live: false }
+    { id: 'cloudpayments', label: 'Банковская карта',  sub: 'Visa · Mastercard · Мир',         icon: '💳', live: false },
+    { id: 'applepay',      label: 'Apple Pay',          sub: 'через CloudPayments',              icon: '🍎', live: false, via: 'cloudpayments' },
+    { id: 'googlepay',     label: 'Google Pay',         sub: 'через CloudPayments',              icon: '⬛', live: false, via: 'cloudpayments' },
+    { id: 'kaspi',         label: 'Kaspi Pay',          sub: 'QR-код или редирект',              icon: '🔴', live: false },
+    { id: 'freedompay',    label: 'Freedom Pay',        sub: 'Фридом Банк',                      icon: '🔷', live: false },
+    { id: 'mock',          label: 'Демо-оплата',        sub: 'тестовый режим',                   icon: '🧪', live: true  }
   ];
   var checkoutRoot = $('#checkout-root');
   if (checkoutRoot) { renderCheckoutSummary(); }
@@ -1147,11 +1153,20 @@
           '<td data-th="Кол-во">' + it.qty + '</td>' +
           '<td data-th="Сумма">' + fmtMoney(it.price * it.qty) + '</td></tr>';
       }).join('');
+      var firstLive = true;
       var methods = PAY_METHODS.map(function (m) {
+        var checked = m.live && firstLive;
+        if (m.live && firstLive) firstLive = false;
         return '<label class="pay-method' + (m.live ? '' : ' disabled') + '">' +
           '<input type="radio" name="paymethod" value="' + m.id + '"' +
-            (m.live ? ' checked' : ' disabled') + '> ' +
-          escapeHtml(m.label) + (m.live ? '' : ' <span class="badge badge-gray">скоро</span>') +
+            (m.live ? (checked ? ' checked' : '') : ' disabled') + '>' +
+          '<span class="pay-method-inner">' +
+            (m.icon ? '<span class="pay-method-icon">' + m.icon + '</span>' : '') +
+            '<span class="pay-method-text"><strong>' + escapeHtml(m.label) + '</strong>' +
+              (m.sub ? '<span class="cab-muted" style="font-size:.8rem;display:block">' + escapeHtml(m.sub) + '</span>' : '') +
+            '</span>' +
+          '</span>' +
+          (m.live ? '' : ' <span class="badge badge-gray">скоро</span>') +
           '</label>';
       }).join('');
       checkoutRoot.innerHTML =
@@ -1178,17 +1193,21 @@
   }
   function startCheckout(total) {
     var btn = $('#co-pay-btn'); var err = $('#co-err');
-    var method = (checkoutRoot.querySelector('input[name="paymethod"]:checked') || {}).value || 'mock';
+    var selectedId = (checkoutRoot.querySelector('input[name="paymethod"]:checked') || {}).value || 'mock';
+    /* Apple Pay / Google Pay route through the CloudPayments widget. */
+    var selectedMeta = PAY_METHODS.filter(function (m) { return m.id === selectedId; })[0] || {};
+    var gatewayId = selectedMeta.via || selectedId;
     var name = $('#co-name').value.trim();
     var phone = $('#co-phone').value.trim();
     if (!name || !phone) { err.textContent = 'Укажите имя и телефон'; err.style.display = 'block'; return; }
     err.style.display = 'none'; btn.disabled = true; btn.textContent = 'Создаём заказ…';
-    API.orders.create({ name: name, phone: phone, email: $('#co-email').value.trim(), paymentMethod: method })
-      .then(function (order) { renderPaymentStep(order, method); })
+    API.orders.create({ name: name, phone: phone, email: ($('#co-email') || {}).value || '', paymentMethod: gatewayId })
+      .then(function (order) { renderPaymentStep(order, selectedId, gatewayId); })
       .catch(function (e) { err.textContent = e.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Перейти к оплате'; });
   }
-  function renderPaymentStep(order, method) {
-    var label = (PAY_METHODS.filter(function (m) { return m.id === method; })[0] || {}).label || method;
+  function renderPaymentStep(order, displayId, gatewayId) {
+    var method = gatewayId || displayId;
+    var label = (PAY_METHODS.filter(function (m) { return m.id === (displayId || method); })[0] || {}).label || method;
     checkoutRoot.innerHTML =
       '<div class="checkout-pay">' +
         '<div class="cab-page-head"><h2>Оплата заказа №' + order.id.split('-').pop() + '</h2></div>' +
@@ -1325,8 +1344,8 @@
   var adminAds = $('#admin-ads-root');
   if (adminAds) { loadAdminAds(); }
   function loadAdminAds() {
-    Promise.all([API.tracking.config(), API.telegram.config()]).then(function (cfgRes) {
-      renderAdsIntegrations(cfgRes[0], cfgRes[1]);
+    Promise.all([API.tracking.config(), API.telegram.config(), API.payments.config()]).then(function (cfgRes) {
+      renderAdsIntegrations(cfgRes[0], cfgRes[1], cfgRes[2]);
     });
     API.analytics.ads().then(function (data) {
       function tableFor(rows, keyLabel) {
@@ -1352,31 +1371,52 @@
         '<h3 style="margin:8px 0 12px">По источникам</h3>' + tableFor(data.bySource, 'Источник') +
         '<h3 style="margin:24px 0 12px">По рекламным кампаниям (UTM)</h3>' + tableFor(data.byCampaign, 'Кампания');
       /* integrations block is rendered separately (async) — re-attach if present */
-      Promise.all([API.tracking.config(), API.telegram.config()]).then(function (r) {
-        renderAdsIntegrations(r[0], r[1]);
+      Promise.all([API.tracking.config(), API.telegram.config(), API.payments.config()]).then(function (r) {
+        renderAdsIntegrations(r[0], r[1], r[2]);
       });
     });
   }
-  function renderAdsIntegrations(meta, tg) {
+  function renderAdsIntegrations(meta, tg, pay) {
     var host = $('#ads-integrations');
     if (!host) return;
+    var gwOpts = ['mock', 'cloudpayments', 'kaspi', 'freedompay'].map(function (k) {
+      var labels = { mock: 'Демо (тест)', cloudpayments: 'CloudPayments', kaspi: 'Kaspi Pay', freedompay: 'Freedom Pay' };
+      return '<option value="' + k + '"' + ((pay && pay.activeGateway === k) ? ' selected' : '') + '>' + labels[k] + '</option>';
+    }).join('');
     host.innerHTML =
-      '<h3 style="margin:24px 0 12px">Интеграции (Meta Pixel · Conversions API · Telegram)</h3>' +
-      '<div class="cab-card" style="padding:16px;max-width:560px">' +
+      '<h3 style="margin:24px 0 12px">Интеграции — Meta Pixel · Telegram · Оплата</h3>' +
+      '<div class="cab-card" style="padding:16px;max-width:560px;margin-bottom:16px">' +
+        '<h4 style="margin:0 0 10px">Meta Pixel / Conversions API</h4>' +
         '<div class="form-group"><label>Meta Pixel ID</label><input class="cab-input" id="meta-pixel" value="' + escapeHtml(meta.pixelId || '') + '" placeholder="напр. 123456789012345"></div>' +
         '<div class="form-group"><label>Conversions API — токен доступа</label><input class="cab-input" id="meta-capi" value="' + escapeHtml(meta.capiToken || '') + '" placeholder="EAAB..."></div>' +
-        '<label class="pay-method" style="margin:6px 0"><input type="checkbox" id="meta-enabled"' + (meta.enabled ? ' checked' : '') + '> Включить отправку событий</label>' +
-        '<div class="form-group" style="margin-top:8px"><label>Telegram — chat ID администратора</label><input class="cab-input" id="tg-chat" value="' + escapeHtml(tg.adminChatId || '') + '" placeholder="напр. 123456789"></div>' +
-        '<button class="btn btn-primary btn-sm" id="save-integrations">Сохранить настройки</button>' +
-        '<p class="cab-muted" style="margin-top:8px;font-size:.8rem">Бот: @' + escapeHtml(tg.bot || '') + '. Реальная отправка требует backend и ключей. До настройки события собираются локально (очередь CAPI).</p>' +
+        '<label class="pay-method" style="margin:6px 0;padding:8px 12px"><input type="checkbox" id="meta-enabled"' + (meta.enabled ? ' checked' : '') + '> Включить отправку событий</label>' +
+        '<div class="form-group" style="margin-top:10px"><label>Telegram — chat ID администратора</label><input class="cab-input" id="tg-chat" value="' + escapeHtml(tg.adminChatId || '') + '" placeholder="напр. 123456789"></div>' +
+        '<p class="cab-muted" style="font-size:.8rem;margin:4px 0 10px">Бот: @' + escapeHtml(tg.bot || '') + '. Секретный токен бота — только в переменной TELEGRAM_BOT_TOKEN на сервере.</p>' +
+        '<button class="btn btn-primary btn-sm" id="save-integrations">Сохранить</button>' +
+      '</div>' +
+      '<div class="cab-card" style="padding:16px;max-width:560px">' +
+        '<h4 style="margin:0 0 10px">Платёжный шлюз</h4>' +
+        '<div class="form-group"><label>Активный шлюз</label>' +
+          '<select class="cab-input" id="pay-gateway">' + gwOpts + '</select></div>' +
+        '<div class="form-group"><label>CloudPayments Public ID <span class="cab-muted">(клиентский, не секрет)</span></label>' +
+          '<input class="cab-input" id="cp-public-id" value="' + escapeHtml((pay && pay.cloudpaymentsPublicId) || '') + '" placeholder="pk_..."></div>' +
+        '<p class="cab-muted" style="font-size:.8rem;margin:4px 0 10px">API Secret, ключи Kaspi и Freedom Pay — только в переменных окружения на сервере. Смотрите <code>.env.example</code>.</p>' +
+        '<button class="btn btn-primary btn-sm" id="save-pay-cfg">Сохранить</button>' +
       '</div>';
     $('#save-integrations').addEventListener('click', function () {
-      var btn = $('#save-integrations'); btn.disabled = true;
+      var btn = this; btn.disabled = true;
       Promise.all([
         API.tracking.setConfig({ pixelId: $('#meta-pixel').value.trim(),
           capiToken: $('#meta-capi').value.trim(), enabled: $('#meta-enabled').checked }),
         API.telegram.setAdminChat($('#tg-chat').value.trim())
       ]).then(function () { toast('Настройки интеграций сохранены'); btn.disabled = false; });
+    });
+    $('#save-pay-cfg').addEventListener('click', function () {
+      var btn = this; btn.disabled = true;
+      API.payments.setConfig({
+        activeGateway: $('#pay-gateway').value,
+        cloudpaymentsPublicId: $('#cp-public-id').value.trim()
+      }).then(function () { toast('Настройки оплаты сохранены'); btn.disabled = false; });
     });
   }
 
@@ -2842,9 +2882,9 @@
   if (settingsRoot) loadSettings();
   function loadSettings() {
     var me = API.auth.current();
-    Promise.all([API.auth.prefs(), API.integrations.channels()]).then(function (res) {
-      var prefs = res[0], channels = res[1];
-      var tg = me.telegram || { linked: false };
+    Promise.all([API.auth.prefs(), API.integrations.channels(), API.telegram.checkPendingLink()]).then(function (res) {
+      var prefs = res[0], channels = res[1], tgStatus = res[2];
+      var tg = me.telegram || {};
       var prefRows = [
         ['lessons', 'Занятия и расписание'], ['homework', 'Домашние задания'],
         ['comments', 'Комментарии преподавателя'], ['subscription', 'Окончание абонемента'],
@@ -2852,6 +2892,26 @@
       ].map(function (p) {
         return '<label class="check-row"><input type="checkbox" data-pref="' + p[0] + '"' + (prefs[p[0]] !== false ? ' checked' : '') + '><span>' + p[1] + '</span></label>';
       }).join('');
+
+      var tgLinked = tgStatus.linked;
+      var tgPending = !tgLinked && tgStatus.pending;
+      var tgStatusText = tgLinked
+        ? ('Привязан' + (tgStatus.username ? ' · @' + escapeHtml(tgStatus.username) : ''))
+        : 'Не привязан';
+      var tgBlock = tgLinked
+        ? '<button class="btn btn-outline btn-sm" data-tg-unlink>Отвязать</button>'
+        : (tgPending
+          ? '<button class="btn btn-outline btn-sm" data-tg-cancel-link>Отменить</button>'
+          : '<button class="btn btn-primary btn-sm" data-tg-link>Привязать Telegram</button>');
+      var tgCodeHtml = tgPending
+        ? '<div class="tg-link-code" data-tg-code-block>' +
+            '<p style="margin:8px 0 4px">Отправьте этот код боту ' +
+              '<a href="https://t.me/' + escapeHtml(tgStatus.bot || 'shpigotskiy_art_bot') + '" target="_blank">@' + escapeHtml(tgStatus.bot || 'shpigotskiy_art_bot') + '</a>:</p>' +
+            '<div class="tg-code-display" data-tg-code>' + escapeHtml(tgPending.code) + '</div>' +
+            '<p class="cab-muted" style="font-size:.8rem;margin:4px 0 0">Код действителен 15 минут. Ожидаем подтверждения…</p>' +
+            '<div class="tg-link-spinner" data-tg-spinner>⏳</div>' +
+          '</div>'
+        : '';
 
       settingsRoot.innerHTML =
         '<div class="settings-grid">' +
@@ -2882,12 +2942,11 @@
           '<section class="cab-card settings-card"><h2>Привязанные аккаунты</h2>' +
             '<div class="linked-row">' +
               '<div class="linked-info">' + ICON.bell + '<div><strong>Telegram</strong>' +
-                '<span class="cab-muted" data-tg-status>' + (tg.linked ? ('Привязан' + (tg.username ? ' · @' + escapeHtml(tg.username) : '')) : 'Не привязан') + '</span></div></div>' +
-              (tg.linked
-                ? '<button class="btn btn-outline btn-sm" data-tg-unlink>Отвязать</button>'
-                : '<button class="btn btn-primary btn-sm" data-tg-link>Привязать Telegram</button>') +
+                '<span class="cab-muted" data-tg-status>' + tgStatusText + '</span></div></div>' +
+              tgBlock +
             '</div>' +
-            '<p class="cab-muted settings-channels">Каналы доставки: ' + channelStatus(channels) + '</p>' +
+            tgCodeHtml +
+            '<p class="cab-muted settings-channels" style="margin-top:8px">Каналы доставки: ' + channelStatus(channels) + '</p>' +
           '</section>' +
         '</div>';
 
@@ -2918,13 +2977,14 @@
       });
       // telegram link/unlink
       var linkBtn = $('[data-tg-link]', settingsRoot);
-      if (linkBtn) linkBtn.addEventListener('click', function () {
-        API.auth.linkTelegram({ id: '', username: '' }).then(function () { toast('Telegram привязан'); loadSettings(); });
-      });
+      if (linkBtn) linkBtn.addEventListener('click', startTelegramLink);
       var unlinkBtn = $('[data-tg-unlink]', settingsRoot);
       if (unlinkBtn) unlinkBtn.addEventListener('click', function () {
         API.auth.unlinkTelegram().then(function () { toast('Telegram отвязан'); loadSettings(); });
       });
+      // if a link code is pending, re-attach the polling block
+      var codeBlock = $('[data-tg-code-block]', settingsRoot);
+      if (codeBlock) attachLinkPolling(codeBlock);
     });
   }
   function channelStatus(ch) {
@@ -2933,6 +2993,60 @@
       return names[k] + ' — ' + (ch[k] ? 'вкл.' : 'скоро');
     }).join(' · ');
   }
+
+  /* Generate a TG-XXXXXX code and show the instruction block. */
+  function startTelegramLink() {
+    var btn = $('[data-tg-link]', settingsRoot);
+    if (btn) { btn.disabled = true; btn.textContent = 'Генерируем код…'; }
+    API.telegram.generateLinkCode().then(function (res) {
+      var section = btn ? btn.closest('section') : null;
+      if (!section) { loadSettings(); return; }
+      var existingBlock = $('[data-tg-code-block]', section);
+      if (existingBlock) existingBlock.remove();
+      var block = document.createElement('div');
+      block.className = 'tg-link-code'; block.setAttribute('data-tg-code-block', '');
+      block.innerHTML =
+        '<p style="margin:8px 0 4px">Отправьте этот код боту ' +
+          '<a href="https://t.me/' + escapeHtml(res.bot || 'shpigotskiy_art_bot') + '" target="_blank">@' + escapeHtml(res.bot || 'shpigotskiy_art_bot') + '</a>:</p>' +
+        '<div class="tg-code-display" data-tg-code>' + escapeHtml(res.code) + '</div>' +
+        '<p class="cab-muted" style="font-size:.8rem;margin:4px 0 0">Код действителен 15 минут. Ожидаем подтверждения…</p>' +
+        '<div style="display:flex;gap:8px;margin-top:8px">' +
+          '<span class="cab-muted" data-tg-spinner>⏳ Ожидаем…</span>' +
+          '<button class="btn btn-outline btn-sm" data-tg-cancel-link>Отменить</button>' +
+        '</div>';
+      var linkedRow = $('[data-tg-link]', section) ? $('[data-tg-link]', section).closest('.linked-row') : null;
+      if (linkedRow) { linkedRow.parentNode.insertBefore(block, linkedRow.nextSibling); }
+      else { section.appendChild(block); }
+      if (btn) btn.style.display = 'none';
+      attachLinkPolling(block);
+    }).catch(function (ex) {
+      toast('Ошибка: ' + ex.message);
+      if (btn) { btn.disabled = false; btn.textContent = 'Привязать Telegram'; }
+    });
+  }
+
+  /* Poll every 3 s until the bot confirms the code or the code expires. */
+  function attachLinkPolling(block) {
+    var cancelBtn = $('[data-tg-cancel-link]', settingsRoot || document);
+    if (cancelBtn) cancelBtn.addEventListener('click', function () {
+      API.telegram.cancelPendingLink().then(function () { loadSettings(); });
+    });
+    var timer = setInterval(function () {
+      if (!document.body.contains(block)) { clearInterval(timer); return; }
+      API.telegram.checkPendingLink().then(function (s) {
+        if (s.linked) {
+          clearInterval(timer);
+          toast('Telegram привязан' + (s.username ? ': @' + s.username : '') + '!');
+          loadSettings();
+        } else if (!s.pending) {
+          clearInterval(timer);
+          toast('Код истёк. Попробуйте снова.');
+          loadSettings();
+        }
+      }).catch(function () { clearInterval(timer); });
+    }, 3000);
+  }
+
   function collectForm(form) {
     var data = {};
     $all('input, select, textarea', form).forEach(function (el) { if (el.name) data[el.name] = el.value; });

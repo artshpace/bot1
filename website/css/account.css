@@ -1144,8 +1144,25 @@ body.tg-miniapp .cab-subnav { padding-left: 20px; padding-right: 20px; }
 }
 .pay-method:hover { border-color: var(--accent, #c0392b); }
 .pay-method.disabled { opacity: .55; cursor: not-allowed; }
-.pay-method input { accent-color: var(--accent, #c0392b); }
+.pay-method input { accent-color: var(--accent, #c0392b); flex-shrink: 0; }
+.pay-method-inner { display: flex; align-items: center; gap: 8px; }
+.pay-method-icon { font-size: 1.2rem; width: 24px; text-align: center; }
+.pay-method-text strong { display: block; line-height: 1.2; }
 .checkout-pay, .checkout-success { max-width: 520px; }
+
+/* Telegram account linking */
+.tg-link-code {
+  background: var(--bg-muted, #f8f5f2); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 14px 16px; margin-top: 10px;
+}
+.tg-code-display {
+  font-family: 'Courier New', monospace; font-size: 1.5rem; font-weight: 700;
+  letter-spacing: .15em; color: var(--accent, #c0392b);
+  background: #fff; border: 2px dashed var(--accent, #c0392b);
+  border-radius: 6px; padding: 8px 16px; display: inline-block;
+  margin: 4px 0; user-select: all;
+}
+
 @media (max-width: 760px) {
   .checkout-grid { grid-template-columns: 1fr; gap: 20px; }
 }

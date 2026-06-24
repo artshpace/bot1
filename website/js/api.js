@@ -67,6 +67,8 @@
   var LS_CHURN      = 'sas_churn';
   var LS_BROADCASTS = 'sas_broadcasts';
   var LS_SCHEDULE_SLOTS = 'sas_schedule_slots';
+  var LS_TG_PENDING = 'sas_tg_pending_link';
+  var LS_PAY_CONFIG = 'sas_pay_config';
 
   /* ---- storage ---- */
   function read(key, fallback) {
@@ -638,14 +640,18 @@
   ];
 
   /* =================================================================
-     UNIVERSAL PAYMENT LAYER  [v0.6]
+     UNIVERSAL PAYMENT LAYER  [v1.1]
      -----------------------------------------------------------------
-     Business logic never talks to a concrete PSP — it calls
-     processCharge(order) which routes to the active gateway. To plug a
-     real provider (Kaspi, Stripe, CloudPayments, …) add an object to
-     PAYMENT_GATEWAYS with a `charge(order) -> Promise` method and flip
-     `active`. Transaction statuses and the transaction log below stay
-     unchanged, so nothing in the rest of the app needs editing.
+     Business logic calls processCharge(order) — it routes to the
+     gateway selected by the user at checkout. To activate a real
+     provider, set its `live: true` and wire the backend credentials
+     via environment variables (see .env.example).
+
+     SECURITY RULES:
+       • NEVER put API secrets in client code
+       • CloudPayments Public ID is client-safe (it's public)
+       • All secret keys go through a backend proxy only
+       • Webhook endpoints verify signatures server-side
 
      Transaction status flow:
        pending → processing → succeeded
@@ -653,22 +659,118 @@
      ================================================================= */
   var TXN_STATUS = ['pending', 'processing', 'succeeded', 'failed'];
 
+  /* Runtime payment config — Public IDs only (never secrets).
+     Saved/loaded via payments.config() / payments.setConfig().
+     Secrets live in .env on the server, never here.              */
+  var PAY_CONFIG = (function () {
+    var defaults = {
+      activeGateway: 'mock',
+      cloudpaymentsPublicId: '',   // CLOUDPAYMENTS_PUBLIC_ID (public, ok in browser)
+      kaspiMerchantId: '',         // KASPI_MERCHANT_ID (for display / QR links only)
+      freedompayMerchantId: ''     // FREEDOMPAY_MERCHANT_ID (display only)
+    };
+    return Object.assign({}, defaults, read(LS_PAY_CONFIG, {}));
+  }());
+
   var PAYMENT_GATEWAYS = {
-    /* Built-in mock gateway: always succeeds. Real gateways replace this. */
+    /* ---- Mock (demo / test mode) ---- */
     mock: {
-      id: 'mock', title: 'Демо-оплата', live: false,
-      charge: function (order) { return delay({ ok: true, providerRef: uid('ref') }); }
+      id: 'mock', title: 'Демо-оплата (тест)', live: true,
+      charge: function (order) {
+        return delay({ ok: true, providerRef: uid('ref-mock') });
+      }
     },
-    /* Scaffolding for real providers — disabled until a backend is wired. */
-    kaspi:        { id: 'kaspi',        title: 'Kaspi Pay',     live: false, charge: gatewayNotReady },
-    cloudpayments:{ id: 'cloudpayments',title: 'CloudPayments', live: false, charge: gatewayNotReady },
-    stripe:       { id: 'stripe',       title: 'Stripe',        live: false, charge: gatewayNotReady }
+
+    /* ---- CloudPayments — Visa / Mastercard / Apple Pay / Google Pay ----
+       Client-side widget uses Public ID only (safe in browser).
+       Secret key (CLOUDPAYMENTS_API_SECRET) stays on the server:
+         • /api/webhooks/cloudpayments  — verifies HMAC, marks order paid
+         • /api/payments/refund          — issues refunds via CP REST API
+       Integration docs: https://developers.cloudpayments.ru/             */
+    cloudpayments: {
+      id: 'cloudpayments', title: 'Банковская карта', live: false,
+      charge: function (order) {
+        var publicId = PAY_CONFIG.cloudpaymentsPublicId;
+        if (!publicId) return fail('CloudPayments Public ID не настроен. Укажите его в настройках платежей.');
+        if (typeof cp === 'undefined' || !cp.CloudPayments) {
+          return fail('Виджет CloudPayments не загружен. Убедитесь, что скрипт widget.cloudpayments.ru подключён.');
+        }
+        return new Promise(function (resolve, reject) {
+          var widget = new cp.CloudPayments({ language: 'ru-RU' });
+          widget.pay('charge', {
+            publicId:    publicId,
+            description: 'Заказ ' + order.id,
+            amount:      order.total || order.amount,
+            currency:    'KZT',
+            accountId:   order.userId || '',
+            invoiceId:   order.id,
+            skin:        'mini'
+          }, {
+            onSuccess: function (options) {
+              resolve({ ok: true, providerRef: options.transactionId || uid('ref-cp') });
+            },
+            onFail: function (reason) {
+              reject(new Error('Оплата отклонена: ' + (reason || 'неизвестная ошибка')));
+            }
+          });
+        });
+      }
+    },
+
+    /* ---- Freedom Pay (Фридом Банк) ----
+       All credentials are server-side only (FREEDOMPAY_MERCHANT_ID,
+       FREEDOMPAY_SECRET_KEY). Frontend POSTs to a backend proxy which
+       signs and forwards to Freedom Pay API.
+       Webhook: /api/webhooks/freedompay — verifies signature, marks paid.
+       Docs: https://docs.freedompay.kz/                                   */
+    freedompay: {
+      id: 'freedompay', title: 'Freedom Pay', live: false,
+      charge: function (order) {
+        return fetch('/api/payments/freedompay/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: order.id, amount: order.total || order.amount,
+            currency: 'KZT', description: 'Заказ ' + order.id })
+        }).then(function (r) {
+          if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || r.statusText); });
+          return r.json();
+        }).then(function (data) {
+          if (data.redirectUrl) { location.href = data.redirectUrl; }
+          return { ok: true, providerRef: data.paymentId || uid('ref-fp') };
+        });
+      }
+    },
+
+    /* ---- Kaspi Pay ----
+       All credentials server-side (KASPI_MERCHANT_ID, KASPI_SECRET_KEY).
+       Frontend POSTs to backend proxy → receives QR link or redirect URL.
+       Webhook: /api/webhooks/kaspi — verifies, marks order paid.
+       Docs: https://kaspi.kz/merchantapi/                                  */
+    kaspi: {
+      id: 'kaspi', title: 'Kaspi Pay', live: false,
+      charge: function (order) {
+        return fetch('/api/payments/kaspi/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: order.id, amount: order.total || order.amount,
+            description: 'Заказ ' + order.id })
+        }).then(function (r) {
+          if (!r.ok) return r.json().then(function (e) { throw new Error(e.error || r.statusText); });
+          return r.json();
+        }).then(function (data) {
+          if (data.redirectUrl) { location.href = data.redirectUrl; }
+          return { ok: true, providerRef: data.paymentId || uid('ref-kaspi') };
+        });
+      }
+    }
   };
-  var ACTIVE_GATEWAY = 'mock';
+
+  var ACTIVE_GATEWAY = PAY_CONFIG.activeGateway || 'mock';
 
   function gatewayNotReady() {
     return fail('Платёжный шлюз ещё не подключён. Обратитесь к администратору.');
   }
+
 
   function logTransaction(rec) {
     var list = read(LS_TXN, []);
@@ -687,12 +789,16 @@
     return t;
   }
 
-  /* Routes an order through the active gateway, recording a transaction.
-     Resolves with { ok, txn } on success; rejects (and marks the txn
-     failed) on a declined / errored charge. */
+  /* Routes an order through the chosen gateway (order.paymentMethod or
+     ACTIVE_GATEWAY), records a transaction. Resolves with { ok, txn }
+     on success; rejects and marks the txn failed on error.             */
   function processCharge(order) {
-    var gw = PAYMENT_GATEWAYS[ACTIVE_GATEWAY] || PAYMENT_GATEWAYS.mock;
-    var txn = logTransaction({ studentId: order.studentId, amount: order.amount,
+    var gwId = order.paymentMethod || ACTIVE_GATEWAY;
+    var gw = PAYMENT_GATEWAYS[gwId] || PAYMENT_GATEWAYS[ACTIVE_GATEWAY] || PAYMENT_GATEWAYS.mock;
+    if (!gw.live && gw.id !== 'mock') {
+      return fail('Выбранный способ оплаты временно недоступен. Используйте другой метод.');
+    }
+    var txn = logTransaction({ studentId: order.studentId || order.userId, amount: order.amount || order.total,
       purpose: order.purpose || order.type, gateway: gw.id, status: 'processing' });
     return gw.charge(order).then(function (res) {
       setTxnStatus(txn.id, 'succeeded', { providerRef: res && res.providerRef });
@@ -1056,6 +1162,15 @@
       });
       list.sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
       return delay(list);
+    },
+    /* Gateway config management (Public IDs only — no secrets). */
+    config: function () { return delay(clone(PAY_CONFIG)); },
+    setConfig: function (cfg) {
+      var allowed = ['activeGateway', 'cloudpaymentsPublicId', 'kaspiMerchantId', 'freedompayMerchantId'];
+      allowed.forEach(function (k) { if (cfg && cfg[k] !== undefined) PAY_CONFIG[k] = cfg[k]; });
+      write(LS_PAY_CONFIG, PAY_CONFIG);
+      ACTIVE_GATEWAY = PAY_CONFIG.activeGateway || 'mock';
+      return delay(clone(PAY_CONFIG));
     }
   };
 
@@ -2174,16 +2289,109 @@
   };
 
   /* =================================================================
-     TELEGRAM — admin bot notifications scaffolding  [v1.0]
-     Composes + queues messages; actual delivery flips on when a real
-     bot token + admin chat id are wired (notifyChannels.telegram).
+     TELEGRAM — account linking + admin notifications  [v1.1]
+     -----------------------------------------------------------------
+     BINDING FLOW (secure, no bot token in browser):
+       1. generateLinkCode()  — creates TG-XXXXXX, stored in LS with expiry
+       2. User sends code to bot in Telegram
+       3. Bot webhook (server-side, uses TELEGRAM_BOT_TOKEN from .env)
+          calls confirmLinkCode(code, chatId, username)
+       4. checkPendingLink()  — frontend polls until linked or expired
+       5. cancelPendingLink() — user cancels
+
+     SECURITY: TELEGRAM_BOT_TOKEN never leaves the server.
+               BOT_USERNAME is public info — safe in client.
      ================================================================= */
+  function makeLinkCode() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusable chars
+    var code = 'TG-';
+    for (var i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
+
   var telegram = {
     config: function () {
-      return delay({ bot: BOT_USERNAME, connected: notifyChannels.telegram,
-        adminChatId: read('sas_tg_admin_chat', '') });
+      var userId = curId();
+      var pending = userId ? (read(LS_TG_PENDING, null) || null) : null;
+      if (pending && pending.userId !== userId) pending = null;
+      return delay({
+        bot: BOT_USERNAME,
+        connected: notifyChannels.telegram,
+        adminChatId: read('sas_tg_admin_chat', ''),
+        pending: pending && pending.expiresAt > Date.now() ? {
+          code: pending.code, expiresAt: pending.expiresAt
+        } : null
+      });
     },
     setAdminChat: function (chatId) { write('sas_tg_admin_chat', chatId || ''); return delay({ ok: true }); },
+
+    /* Step 1: generate a unique link code for the current user.
+       Returns { code, expiresAt, botUsername }.
+       The user sends this code to the bot in Telegram.              */
+    generateLinkCode: function () {
+      var userId = curId();
+      if (!userId) return fail('Необходима авторизация');
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.id === userId; })[0];
+      if (!u) return fail('Пользователь не найден');
+      if (u.telegram && u.telegram.chatId) return fail('Telegram уже привязан');
+      var code = makeLinkCode();
+      var pending = { code: code, userId: userId, createdAt: Date.now(),
+        expiresAt: Date.now() + 15 * 60 * 1000 }; // 15 min TTL
+      write(LS_TG_PENDING, pending);
+      return delay({ code: code, expiresAt: pending.expiresAt, bot: BOT_USERNAME });
+    },
+
+    /* Step 3 (called by bot webhook server, NOT from browser directly):
+       Verifies code, resolves pending link → updates user record.
+       In production this runs on the backend with TELEGRAM_BOT_TOKEN.
+       Exposed here so the admin panel / webhook proxy can call it.    */
+    confirmLinkCode: function (code, chatId, username) {
+      if (!code || !chatId) return fail('Неверные параметры');
+      var pending = read(LS_TG_PENDING, null);
+      if (!pending) return fail('Нет ожидающей привязки');
+      if (pending.code !== code) return fail('Неверный код');
+      if (pending.expiresAt < Date.now()) {
+        write(LS_TG_PENDING, null);
+        return fail('Код истёк. Сгенерируйте новый.');
+      }
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.id === pending.userId; })[0];
+      if (!u) return fail('Пользователь не найден');
+      u.telegram = { chatId: String(chatId), username: username || '', linkedAt: new Date().toISOString() };
+      write(LS_USERS, users);
+      write(LS_TG_PENDING, null);
+      return delay({ ok: true, userId: u.id, username: username || '' });
+    },
+
+    /* Step 4: poll for link status. Returns { linked, username, chatId } or
+       { pending: { code, expiresAt } } or { pending: null }.                */
+    checkPendingLink: function () {
+      var userId = curId();
+      if (!userId) return fail('Необходима авторизация');
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.id === userId; })[0];
+      if (!u) return fail('Пользователь не найден');
+      if (u.telegram && u.telegram.chatId) {
+        return delay({ linked: true, bot: BOT_USERNAME,
+          username: u.telegram.username || '', chatId: u.telegram.chatId,
+          linkedAt: u.telegram.linkedAt || null });
+      }
+      var pending = read(LS_TG_PENDING, null);
+      if (pending && pending.userId === userId && pending.expiresAt > Date.now()) {
+        return delay({ linked: false, bot: BOT_USERNAME,
+          pending: { code: pending.code, expiresAt: pending.expiresAt } });
+      }
+      return delay({ linked: false, bot: BOT_USERNAME, pending: null });
+    },
+
+    /* Cancel a pending link (user changed mind, code leaked, etc.). */
+    cancelPendingLink: function () {
+      write(LS_TG_PENDING, null);
+      return delay({ ok: true });
+    },
+
+    /* Admin notifications — queued to outbox; backend flushes via bot. */
     notifyAdmins: function (lead) {
       var text = '🔔 Новая заявка\nИмя: ' + lead.name + '\nТелефон: ' + lead.phone +
         (lead.direction ? '\nНаправление: ' + lead.direction : '') +
@@ -3074,7 +3282,7 @@
     /* CRM v0.9 */
     leads: leads, trials: trials, skillMap: skillMap,
     churn: churn, broadcast: broadcast, analytics: analytics,
-    /* funnel / ads v1.0 */
+    /* funnel / ads v1.0-1.1 */
     tracking: tracking, telegram: telegram, reminders: reminders,
     /* reserved (next versions) */
     tests: tests, gamification: gamification, wallet: wallet,
