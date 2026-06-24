@@ -65,6 +65,9 @@
   font-size: .82rem; color: var(--muted); line-height: 1.6;
 }
 .auth-demo strong { color: var(--dark); }
+.auth-demo-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.auth-demo-list li { padding-left: 14px; position: relative; }
+.auth-demo-list li::before { content: '·'; position: absolute; left: 2px; color: var(--gold); }
 
 /* ---------------- CABINET LAYOUT ------------------------------------- */
 .cab-body { background: var(--bg-alt); min-height: 100vh; }
