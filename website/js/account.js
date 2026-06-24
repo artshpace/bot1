@@ -180,12 +180,14 @@
     { href: 'subscriptions.html', label: 'Мои абонементы',    icon: ICON.card     },
     { href: 'payments.html',      label: 'История платежей',  icon: ICON.receipt  },
     { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     },
+    { href: 'orders.html',        label: 'Мои заказы',        icon: ICON.receipt  },
     { href: 'notifications.html', label: 'Уведомления',       icon: ICON.bell     },
     { href: 'settings.html',      label: 'Настройки',         icon: ICON.gear     }
   ];
   var PARENT_NAV = [
     { href: 'parent.html',        label: 'Кабинет родителя',  icon: ICON.parents  },
     { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     },
+    { href: 'orders.html',        label: 'Мои заказы',        icon: ICON.receipt  },
     { href: 'notifications.html', label: 'Уведомления',       icon: ICON.bell     },
     { href: 'settings.html',      label: 'Настройки',         icon: ICON.gear     }
   ];
@@ -218,7 +220,9 @@
     { href: 'admin-events.html',        label: 'Мероприятия',      icon: ICON.ticket    },
     /* --- Финансы / Аналитика --- */
     { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
+    { href: 'admin-orders.html',        label: 'Заказы',           icon: ICON.cart      },
     { href: 'admin-analytics.html',     label: 'Аналитика',        icon: ICON.chart     },
+    { href: 'admin-ads.html',           label: 'Реклама и лиды',   icon: ICON.funnel    },
     { href: 'admin-churn.html',         label: 'Причины ухода',    icon: ICON.logout    },
     { href: 'admin-reports.html',       label: 'Отчёты',           icon: ICON.folder    },
     /* --- Коммуникации --- */
@@ -330,6 +334,8 @@
     'parent.html':            { title: 'Кабинет родителя' },
     'teacher.html':           { title: 'Кабинет преподавателя' },
     'cart.html':              { title: 'Корзина' },
+    'checkout.html':          { title: 'Оформление заказа', parent: 'cart.html' },
+    'orders.html':            { title: 'Мои заказы' },
     'admin.html':             { title: 'Ученики' },
     'admin-parents.html':     { title: 'Родители' },
     'admin-subscriptions.html': { title: 'Абонементы' },
@@ -351,6 +357,8 @@
     'admin-skillmap.html':    { title: 'Карта развития' },
     'admin-churn.html':       { title: 'Причины ухода' },
     'admin-reports.html':     { title: 'Отчёты' },
+    'admin-orders.html':      { title: 'Заказы' },
+    'admin-ads.html':         { title: 'Реклама и лиды' },
     'director.html':          { title: 'Панель директора' }
   };
 
@@ -1099,24 +1107,277 @@
         });
         var checkoutBtn = $('#cart-checkout-btn');
         if (checkoutBtn) {
-          checkoutBtn.addEventListener('click', function () {
-            checkoutBtn.disabled = true; checkoutBtn.textContent = 'Оформляем…';
-            API.cart.checkout().then(function (order) {
-              toast('Заказ №' + order.id + ' оформлен! Спасибо за покупку.');
-              refreshCartBadge();
-              loadCart();
-            }).catch(function (e) {
-              toast(e.message);
-              checkoutBtn.disabled = false; checkoutBtn.textContent = 'Оформить заказ';
-            });
-          });
+          /* Go to the dedicated checkout page — payment-method selection and
+             payment happen there. Access is granted only after payment. */
+          checkoutBtn.addEventListener('click', function () { location.href = 'checkout.html'; });
         }
       });
     });
   }
   function cartTypeLabel(t) {
-    var MAP = { subscription: 'Абонемент', course: 'Курс', intensive: 'Интенсив', giftCert: 'Подарочный сертификат', event: 'Мастер-класс' };
+    var MAP = { subscription: 'Абонемент', 'subscription-plan': 'Абонемент', course: 'Курс',
+      intensive: 'Интенсив', giftCert: 'Подарочный сертификат', 'gift-cert': 'Подарочный сертификат',
+      event: 'Мастер-класс', masterclass: 'Мастер-класс', merch: 'Товар' };
     return MAP[t] || t;
+  }
+
+  /* =================================================================
+     CHECKOUT  [v1.0] — summary → customer data → payment method →
+     payment → confirmation. Access is granted ONLY after payment.
+     ================================================================= */
+  var PAY_METHODS = [
+    { id: 'mock',          label: 'Демо-оплата (тестовый режим)', live: true },
+    { id: 'kaspi',         label: 'Kaspi Pay',                    live: false },
+    { id: 'cloudpayments', label: 'Банковская карта',             live: false },
+    { id: 'stripe',        label: 'Stripe',                       live: false }
+  ];
+  var checkoutRoot = $('#checkout-root');
+  if (checkoutRoot) { renderCheckoutSummary(); }
+  function renderCheckoutSummary() {
+    Promise.all([API.cart.items(), API.cart.total()]).then(function (res) {
+      var items = res[0], total = res[1];
+      if (!items.length) {
+        checkoutRoot.innerHTML = '<p class="cab-empty">Корзина пуста. <a href="shop.html">Перейти в магазин →</a></p>';
+        return;
+      }
+      var me = API.auth.current() || {};
+      var rows = items.map(function (it) {
+        return '<tr><td data-th="Товар"><strong>' + escapeHtml(it.name) + '</strong>' +
+          '<div class="cab-muted">' + escapeHtml(cartTypeLabel(it.type)) + '</div></td>' +
+          '<td data-th="Кол-во">' + it.qty + '</td>' +
+          '<td data-th="Сумма">' + fmtMoney(it.price * it.qty) + '</td></tr>';
+      }).join('');
+      var methods = PAY_METHODS.map(function (m) {
+        return '<label class="pay-method' + (m.live ? '' : ' disabled') + '">' +
+          '<input type="radio" name="paymethod" value="' + m.id + '"' +
+            (m.live ? ' checked' : ' disabled') + '> ' +
+          escapeHtml(m.label) + (m.live ? '' : ' <span class="badge badge-gray">скоро</span>') +
+          '</label>';
+      }).join('');
+      checkoutRoot.innerHTML =
+        '<div class="checkout-grid">' +
+          '<div class="checkout-col">' +
+            '<h3>Состав заказа</h3>' +
+            '<div class="cab-table-wrap"><table class="cab-table"><thead><tr><th>Товар</th><th>Кол-во</th><th>Сумма</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+            '<div class="cart-total" style="margin-top:12px">Итого к оплате: <strong>' + fmtMoney(total) + '</strong></div>' +
+          '</div>' +
+          '<div class="checkout-col">' +
+            '<h3>Данные покупателя</h3>' +
+            '<div class="form-group"><label>Имя</label><input class="cab-input" id="co-name" value="' + escapeHtml(me.name || '') + '"></div>' +
+            '<div class="form-group"><label>Телефон</label><input class="cab-input" id="co-phone" value="' + escapeHtml(me.phone || '') + '"></div>' +
+            '<div class="form-group"><label>Email</label><input class="cab-input" id="co-email" value="' + escapeHtml(me.email || '') + '"></div>' +
+            '<h3 style="margin-top:16px">Способ оплаты</h3>' +
+            '<div class="pay-methods">' + methods + '</div>' +
+            '<div class="form-error" id="co-err" style="display:none"></div>' +
+            '<button class="btn btn-primary btn-full" id="co-pay-btn" style="margin-top:16px">Перейти к оплате</button>' +
+            '<p class="cab-muted" style="margin-top:8px;font-size:.8rem">Доступ к курсам и абонементам открывается только после успешной оплаты.</p>' +
+          '</div>' +
+        '</div>';
+      $('#co-pay-btn').addEventListener('click', function () { startCheckout(total); });
+    });
+  }
+  function startCheckout(total) {
+    var btn = $('#co-pay-btn'); var err = $('#co-err');
+    var method = (checkoutRoot.querySelector('input[name="paymethod"]:checked') || {}).value || 'mock';
+    var name = $('#co-name').value.trim();
+    var phone = $('#co-phone').value.trim();
+    if (!name || !phone) { err.textContent = 'Укажите имя и телефон'; err.style.display = 'block'; return; }
+    err.style.display = 'none'; btn.disabled = true; btn.textContent = 'Создаём заказ…';
+    API.orders.create({ name: name, phone: phone, email: $('#co-email').value.trim(), paymentMethod: method })
+      .then(function (order) { renderPaymentStep(order, method); })
+      .catch(function (e) { err.textContent = e.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Перейти к оплате'; });
+  }
+  function renderPaymentStep(order, method) {
+    var label = (PAY_METHODS.filter(function (m) { return m.id === method; })[0] || {}).label || method;
+    checkoutRoot.innerHTML =
+      '<div class="checkout-pay">' +
+        '<div class="cab-page-head"><h2>Оплата заказа №' + order.id.split('-').pop() + '</h2></div>' +
+        '<p>Сумма к оплате: <strong>' + fmtMoney(order.total) + '</strong></p>' +
+        '<p>Способ оплаты: <strong>' + escapeHtml(label) + '</strong></p>' +
+        '<p class="cab-muted">Статус заказа: ожидает оплаты. Нажмите «Оплатить», чтобы завершить покупку.</p>' +
+        '<div class="form-error" id="pay-err" style="display:none"></div>' +
+        '<div style="display:flex;gap:10px;margin-top:16px">' +
+          '<button class="btn btn-primary" id="pay-confirm">Оплатить ' + fmtMoney(order.total) + '</button>' +
+          '<a class="btn btn-outline" href="orders.html">Оплатить позже</a>' +
+        '</div>' +
+      '</div>';
+    $('#pay-confirm').addEventListener('click', function () {
+      var b = $('#pay-confirm'); var e = $('#pay-err');
+      b.disabled = true; b.textContent = 'Оплата…'; e.style.display = 'none';
+      API.orders.pay(order.id, method).then(function (paid) {
+        refreshCartBadge();
+        checkoutRoot.innerHTML =
+          '<div class="checkout-success" style="text-align:center;padding:40px 20px">' +
+            '<div class="success-icon" style="margin:0 auto 16px;width:64px;height:64px;border-radius:50%;background:rgba(76,175,80,.15);display:flex;align-items:center;justify-content:center;color:#4caf50;font-size:32px">✓</div>' +
+            '<h2>Оплата прошла успешно!</h2>' +
+            '<p class="cab-muted">Заказ №' + paid.id.split('-').pop() + ' оплачен. Доступ открыт.</p>' +
+            '<div style="display:flex;gap:10px;justify-content:center;margin-top:20px">' +
+              '<a class="btn btn-primary" href="orders.html">Мои заказы</a>' +
+              '<a class="btn btn-outline" href="dashboard.html">В кабинет</a>' +
+            '</div>' +
+          '</div>';
+      }).catch(function (ex) {
+        e.textContent = 'Оплата не прошла: ' + ex.message + ' Попробуйте ещё раз или выберите другой способ.';
+        e.style.display = 'block'; b.disabled = false; b.textContent = 'Оплатить ' + fmtMoney(order.total);
+      });
+    });
+  }
+
+  /* =================================================================
+     ORDERS — "Мои заказы"  [v1.0]
+     ================================================================= */
+  var ORDER_STATUS_LABELS = {
+    created: 'Создан', awaiting_payment: 'Ожидает оплаты', paid: 'Оплачен',
+    cancelled: 'Отменён', refunded: 'Возврат'
+  };
+  var ORDER_STATUS_CLS = {
+    created: 'badge-gray', awaiting_payment: 'badge-gold', paid: 'badge-green',
+    cancelled: 'badge-red', refunded: 'badge-blue'
+  };
+  var PAY_STATUS_LABELS = {
+    created: 'Создан', awaiting: 'Ожидает оплаты', succeeded: 'Оплачен',
+    failed: 'Ошибка оплаты', cancelled: 'Отменён', refunded: 'Возврат'
+  };
+  var ordersRoot = $('#orders-root');
+  if (ordersRoot) { loadMyOrders(); }
+  function loadMyOrders() {
+    API.orders.list().then(function (list) {
+      if (!list.length) {
+        ordersRoot.innerHTML = '<p class="cab-empty">У вас пока нет заказов. <a href="shop.html">Перейти в магазин →</a></p>';
+        return;
+      }
+      var rows = list.map(function (o) {
+        var items = o.items.map(function (i) { return escapeHtml(i.name) + (i.qty > 1 ? ' ×' + i.qty : ''); }).join(', ');
+        var actions = '';
+        if (o.status === 'awaiting_payment') {
+          actions = '<button class="btn btn-sm btn-primary" data-pay-order="' + o.id + '">Оплатить</button> ' +
+                    '<button class="btn btn-sm btn-outline" data-cancel-order="' + o.id + '">Отменить</button>';
+        }
+        return '<tr>' +
+          '<td data-th="№">' + o.id.split('-').pop() + '</td>' +
+          '<td data-th="Дата">' + fmtDate((o.createdAt || '').slice(0, 10)) + '</td>' +
+          '<td data-th="Товары">' + items + '</td>' +
+          '<td data-th="Сумма">' + fmtMoney(o.total) + '</td>' +
+          '<td data-th="Заказ"><span class="badge ' + (ORDER_STATUS_CLS[o.status] || 'badge-gray') + '">' + escapeHtml(ORDER_STATUS_LABELS[o.status] || o.status) + '</span></td>' +
+          '<td data-th="Оплата">' + escapeHtml(PAY_STATUS_LABELS[o.paymentStatus] || o.paymentStatus || '—') + '</td>' +
+          '<td data-th="">' + actions + '</td>' +
+        '</tr>';
+      }).join('');
+      ordersRoot.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>№</th><th>Дата</th><th>Товары</th><th>Сумма</th><th>Заказ</th><th>Оплата</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-pay-order]', ordersRoot).forEach(function (b) {
+        b.addEventListener('click', function () {
+          b.disabled = true;
+          API.orders.pay(b.getAttribute('data-pay-order')).then(function () {
+            toast('Оплата прошла успешно. Доступ открыт.'); loadMyOrders();
+          }).catch(function (e) { toast('Оплата не прошла: ' + e.message); b.disabled = false; });
+        });
+      });
+      $all('[data-cancel-order]', ordersRoot).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!confirm('Отменить заказ?')) return;
+          API.orders.cancel(b.getAttribute('data-cancel-order')).then(function () { toast('Заказ отменён'); loadMyOrders(); });
+        });
+      });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Заказы (all orders, refund)  [v1.0]
+     ================================================================= */
+  var adminOrders = $('#admin-orders-root');
+  if (adminOrders) { loadAdminOrders(); }
+  function loadAdminOrders() {
+    API.orders.all().then(function (list) {
+      if (!list.length) { adminOrders.innerHTML = '<p class="cab-empty">Заказов пока нет.</p>'; return; }
+      var rows = list.map(function (o) {
+        var items = o.items.map(function (i) { return escapeHtml(i.name) + (i.qty > 1 ? ' ×' + i.qty : ''); }).join(', ');
+        var refundBtn = o.status === 'paid'
+          ? '<button class="btn btn-sm btn-outline" data-refund="' + o.id + '">Возврат</button>' : '';
+        return '<tr>' +
+          '<td data-th="№">' + o.id.split('-').pop() + '</td>' +
+          '<td data-th="Клиент">' + escapeHtml(o.userName || (o.customer && o.customer.name) || '—') + '</td>' +
+          '<td data-th="Дата">' + fmtDate((o.createdAt || '').slice(0, 10)) + '</td>' +
+          '<td data-th="Товары">' + items + '</td>' +
+          '<td data-th="Сумма">' + fmtMoney(o.total) + '</td>' +
+          '<td data-th="Заказ"><span class="badge ' + (ORDER_STATUS_CLS[o.status] || 'badge-gray') + '">' + escapeHtml(ORDER_STATUS_LABELS[o.status] || o.status) + '</span></td>' +
+          '<td data-th="Оплата">' + escapeHtml(PAY_STATUS_LABELS[o.paymentStatus] || o.paymentStatus || '—') + '</td>' +
+          '<td data-th="">' + refundBtn + '</td>' +
+        '</tr>';
+      }).join('');
+      adminOrders.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>№</th><th>Клиент</th><th>Дата</th><th>Товары</th><th>Сумма</th><th>Заказ</th><th>Оплата</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-refund]', adminOrders).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (!confirm('Оформить возврат по заказу?')) return;
+          API.orders.refund(b.getAttribute('data-refund')).then(function () { toast('Возврат оформлен'); loadAdminOrders(); })
+            .catch(function (e) { toast(e.message); });
+        });
+      });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Реклама и лиды (ad analytics)  [v1.0]
+     ================================================================= */
+  var adminAds = $('#admin-ads-root');
+  if (adminAds) { loadAdminAds(); }
+  function loadAdminAds() {
+    Promise.all([API.tracking.config(), API.telegram.config()]).then(function (cfgRes) {
+      renderAdsIntegrations(cfgRes[0], cfgRes[1]);
+    });
+    API.analytics.ads().then(function (data) {
+      function tableFor(rows, keyLabel) {
+        if (!rows.length) return '<p class="cab-empty">Нет данных.</p>';
+        var body = rows.map(function (r) {
+          return '<tr><td data-th="' + keyLabel + '">' + escapeHtml(r.key) + '</td>' +
+            '<td data-th="Лиды">' + r.leads + '</td>' +
+            '<td data-th="Пробные">' + r.trials + '</td>' +
+            '<td data-th="Покупки">' + r.purchases + '</td>' +
+            '<td data-th="Конверсия">' + r.conversion + '%</td></tr>';
+        }).join('');
+        return '<div class="cab-table-wrap"><table class="cab-table"><thead><tr><th>' + keyLabel +
+          '</th><th>Лиды</th><th>Пробные</th><th>Покупки</th><th>Конверсия</th></tr></thead><tbody>' + body + '</tbody></table></div>';
+      }
+      adminAds.innerHTML =
+        '<div class="cab-stats-row" style="margin-bottom:24px">' +
+          '<div class="cab-stat-card"><div class="cab-stat-val">' + data.totalLeads + '</div><div class="cab-stat-label">Всего лидов</div></div>' +
+          '<div class="cab-stat-card"><div class="cab-stat-val">' + data.totalPurchases + '</div><div class="cab-stat-label">Покупок</div></div>' +
+          '<div class="cab-stat-card"><div class="cab-stat-val">' + data.conversion + '%</div><div class="cab-stat-label">Конверсия лид→покупка</div></div>' +
+          '<div class="cab-stat-card"><div class="cab-stat-val">' + fmtMoney(data.orderRevenue) + '</div><div class="cab-stat-label">Выручка по заказам</div></div>' +
+        '</div>' +
+        '<div id="ads-integrations"></div>' +
+        '<h3 style="margin:8px 0 12px">По источникам</h3>' + tableFor(data.bySource, 'Источник') +
+        '<h3 style="margin:24px 0 12px">По рекламным кампаниям (UTM)</h3>' + tableFor(data.byCampaign, 'Кампания');
+      /* integrations block is rendered separately (async) — re-attach if present */
+      Promise.all([API.tracking.config(), API.telegram.config()]).then(function (r) {
+        renderAdsIntegrations(r[0], r[1]);
+      });
+    });
+  }
+  function renderAdsIntegrations(meta, tg) {
+    var host = $('#ads-integrations');
+    if (!host) return;
+    host.innerHTML =
+      '<h3 style="margin:24px 0 12px">Интеграции (Meta Pixel · Conversions API · Telegram)</h3>' +
+      '<div class="cab-card" style="padding:16px;max-width:560px">' +
+        '<div class="form-group"><label>Meta Pixel ID</label><input class="cab-input" id="meta-pixel" value="' + escapeHtml(meta.pixelId || '') + '" placeholder="напр. 123456789012345"></div>' +
+        '<div class="form-group"><label>Conversions API — токен доступа</label><input class="cab-input" id="meta-capi" value="' + escapeHtml(meta.capiToken || '') + '" placeholder="EAAB..."></div>' +
+        '<label class="pay-method" style="margin:6px 0"><input type="checkbox" id="meta-enabled"' + (meta.enabled ? ' checked' : '') + '> Включить отправку событий</label>' +
+        '<div class="form-group" style="margin-top:8px"><label>Telegram — chat ID администратора</label><input class="cab-input" id="tg-chat" value="' + escapeHtml(tg.adminChatId || '') + '" placeholder="напр. 123456789"></div>' +
+        '<button class="btn btn-primary btn-sm" id="save-integrations">Сохранить настройки</button>' +
+        '<p class="cab-muted" style="margin-top:8px;font-size:.8rem">Бот: @' + escapeHtml(tg.bot || '') + '. Реальная отправка требует backend и ключей. До настройки события собираются локально (очередь CAPI).</p>' +
+      '</div>';
+    $('#save-integrations').addEventListener('click', function () {
+      var btn = $('#save-integrations'); btn.disabled = true;
+      Promise.all([
+        API.tracking.setConfig({ pixelId: $('#meta-pixel').value.trim(),
+          capiToken: $('#meta-capi').value.trim(), enabled: $('#meta-enabled').checked }),
+        API.telegram.setAdminChat($('#tg-chat').value.trim())
+      ]).then(function () { toast('Настройки интеграций сохранены'); btn.disabled = false; });
+    });
   }
 
   /* =================================================================
@@ -3092,7 +3353,7 @@
       var bars = revData.map(function (r) {
         var h = Math.round(r.amount / maxRev * 120);
         return '<div class="ana-bar-col">' +
-          '<div class="ana-bar" style="height:' + h + 'px" title="' + fmtMoney(r.amount) + '₸"></div>' +
+          '<div class="ana-bar" style="height:' + h + 'px" title="' + fmtMoney(r.amount) + '"></div>' +
           '<div class="ana-bar-label">' + escapeHtml(r.label) + '</div>' +
           '</div>';
       }).join('');
@@ -3103,7 +3364,7 @@
         { k: 'other', label: 'Прочее' }
       ].map(function (c) {
         var pct = cats.total > 0 ? Math.round(cats.categories[c.k] / cats.total * 100) : 0;
-        return '<tr><td>' + escapeHtml(c.label) + '</td><td>' + fmtMoney(cats.categories[c.k]) + ' ₸</td>' +
+        return '<tr><td>' + escapeHtml(c.label) + '</td><td>' + fmtMoney(cats.categories[c.k]) + '</td>' +
           '<td><div style="background:#2a1a1a;border-radius:4px;height:10px"><div style="background:var(--accent);border-radius:4px;height:10px;width:' + pct + '%"></div></div></td>' +
           '<td>' + pct + '%</td></tr>';
       }).join('');
@@ -3115,11 +3376,10 @@
         '<h3 style="margin:24px 0 12px">Задолженности</h3>' +
         '<div class="cab-stats-row">' +
           '<div class="cab-stat-card"><div class="cab-stat-val">' + unpaid.count + '</div><div class="cab-stat-label">Неоплаченных счетов</div></div>' +
-          '<div class="cab-stat-card"><div class="cab-stat-val">' + fmtMoney(unpaid.total) + ' ₸</div><div class="cab-stat-label">Сумма долга</div></div>' +
+          '<div class="cab-stat-card"><div class="cab-stat-val">' + fmtMoney(unpaid.total) + '</div><div class="cab-stat-label">Сумма долга</div></div>' +
         '</div>';
     });
   }
-  function fmtMoney(n) { return (n || 0).toLocaleString('ru-RU'); }
 
   /* =================================================================
      ADMIN — Рассылки  [v0.9]
@@ -3379,8 +3639,14 @@
           dStat('Преподавателей', s.teachers, '') +
         '</div>' +
         '<div class="cab-stats-row" style="margin-top:12px">' +
-          dStat('Выручка за месяц', fmtMoney(s.monthRevenue) + ' ₸', 'badge-green') +
-          dStat('Сумма долга', fmtMoney(s.unpaidTotal) + ' ₸', s.unpaidTotal > 0 ? 'badge-red' : '') +
+          dStat('Выручка за месяц', fmtMoney(s.monthRevenue), 'badge-green') +
+          dStat('Продаж за месяц', s.salesCount != null ? s.salesCount : '—', '') +
+          dStat('Конверсия лид→ученик', (s.conversion != null ? s.conversion : 0) + '%', 'badge-blue') +
+          dStat('Сумма долга', fmtMoney(s.unpaidTotal), s.unpaidTotal > 0 ? 'badge-red' : '') +
+        '</div>' +
+        '<div class="cab-stats-row" style="margin-top:12px">' +
+          dStat('Ожидают оплаты', s.awaitingOrders != null ? s.awaitingOrders : 0, s.awaitingOrders ? 'badge-gold' : '') +
+          dStat('Занятий за неделю', s.upcomingLessons != null ? s.upcomingLessons : 0, '') +
           dStat('Предстоящих событий', s.upcomingEvents, '') +
         '</div>' +
         '<h3 style="margin:24px 0 12px">Нагрузка преподавателей</h3>' +
@@ -3389,6 +3655,8 @@
           '<a href="admin-leads.html" class="btn-secondary">CRM Лиды</a>' +
           '<a href="admin-trials.html" class="btn-secondary">Пробные</a>' +
           '<a href="admin-funnel.html" class="btn-secondary">Воронка</a>' +
+          '<a href="admin-ads.html" class="btn-secondary">Реклама и лиды</a>' +
+          '<a href="admin-orders.html" class="btn-secondary">Заказы</a>' +
           '<a href="admin-analytics.html" class="btn-secondary">Аналитика</a>' +
           '<a href="admin-reports.html" class="btn-secondary">Отчёты</a>' +
         '</div>';

@@ -29,14 +29,14 @@
     'admin-leads.html', 'admin-trials.html', 'admin-teachers.html',
     'admin-funnel.html', 'admin-analytics.html', 'admin-broadcast.html',
     'admin-skillmap.html', 'admin-churn.html', 'admin-reports.html',
-    'director.html'];
+    'admin-orders.html', 'admin-ads.html', 'director.html'];
   // Pages that belong to the Parent cabinet.
   var PARENT_PAGES = ['parent.html'];
   // Pages that belong to the Teacher cabinet.
   var TEACHER_PAGES = ['teacher.html'];
   // Pages any signed-in user may open (role-aware content inside).  [v0.7]
   var SHARED_PAGES = ['settings.html', 'notifications.html', 'portfolio.html',
-    'achievements.html', 'cart.html', 'shop.html'];
+    'achievements.html', 'cart.html', 'shop.html', 'checkout.html', 'orders.html'];
 
   var file = (location.pathname.split('/').pop() || 'dashboard.html');
   var isPublic = PUBLIC_PAGES.indexOf(file) !== -1;

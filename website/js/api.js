@@ -39,7 +39,7 @@
 (function (global) {
   'use strict';
 
-  var VERSION = '0.9';
+  var VERSION = '1.0';
 
   var LS_USERS    = 'sas_users';
   var LS_SESSION  = 'sas_session';
@@ -2140,6 +2140,110 @@
   };
 
   /* =================================================================
+     TRACKING — Meta Pixel + Conversions API scaffolding  [v1.0]
+     -----------------------------------------------------------------
+     trackEvent() (hoisted above) does the browser-side fbq() call and
+     queues a server-side mirror. This namespace exposes config + the CAPI
+     queue so a real backend can flush events once a token is supplied.
+     ================================================================= */
+  var META_CONFIG = read('sas_meta_config', null) || {
+    pixelId: '', capiToken: '', testEventCode: '', enabled: false
+  };
+  var STANDARD_EVENTS = ['PageView', 'ViewContent', 'Lead', 'CompleteRegistration',
+    'Schedule', 'AddToCart', 'InitiateCheckout', 'Purchase'];
+  var tracking = {
+    config: function () { return delay(clone(META_CONFIG)); },
+    setConfig: function (cfg) {
+      META_CONFIG = Object.assign({}, META_CONFIG, cfg || {});
+      write('sas_meta_config', META_CONFIG);
+      return delay(clone(META_CONFIG));
+    },
+    events: function () { return delay(STANDARD_EVENTS.slice()); },
+    /* Fire an event now (browser Pixel + CAPI queue). */
+    fire: function (name, params) { trackEvent(name, params); return delay({ ok: true, event: name }); },
+    /* Inspect the queued server-side (Conversions API) events. */
+    capiQueue: function () { return delay(read('sas_capi_queue', [])); },
+    /* Flush the queue to a real Conversions API endpoint — needs backend + token. */
+    flushCapi: function () {
+      if (!META_CONFIG.enabled || !META_CONFIG.capiToken)
+        return fail('Conversions API не настроен: укажите токен доступа и включите интеграцию.');
+      var q = read('sas_capi_queue', []);
+      write('sas_capi_queue', []);
+      return delay({ sent: q.length });
+    }
+  };
+
+  /* =================================================================
+     TELEGRAM — admin bot notifications scaffolding  [v1.0]
+     Composes + queues messages; actual delivery flips on when a real
+     bot token + admin chat id are wired (notifyChannels.telegram).
+     ================================================================= */
+  var telegram = {
+    config: function () {
+      return delay({ bot: BOT_USERNAME, connected: notifyChannels.telegram,
+        adminChatId: read('sas_tg_admin_chat', '') });
+    },
+    setAdminChat: function (chatId) { write('sas_tg_admin_chat', chatId || ''); return delay({ ok: true }); },
+    notifyAdmins: function (lead) {
+      var text = '🔔 Новая заявка\nИмя: ' + lead.name + '\nТелефон: ' + lead.phone +
+        (lead.direction ? '\nНаправление: ' + lead.direction : '') +
+        (lead.age ? '\nВозраст: ' + lead.age : '') +
+        '\nИсточник: ' + lead.source +
+        (lead.utm && lead.utm.campaign ? '\nКампания: ' + lead.utm.campaign : '');
+      var queue = read('sas_tg_outbox', []);
+      queue.push({ id: uid('tg'), to: 'admins', text: text, ts: new Date().toISOString(),
+        delivered: notifyChannels.telegram });
+      write('sas_tg_outbox', queue.slice(-200));
+      return { queued: true, delivered: notifyChannels.telegram };
+    },
+    notifyTrial: function (trial) {
+      var text = '📅 Запись на пробное\n' + trial.name + ' · ' + trial.phone + '\n' +
+        trial.date + ' ' + (trial.time || '') + '\nПреподаватель: ' + (trial.teacher || '—');
+      var queue = read('sas_tg_outbox', []);
+      queue.push({ id: uid('tg'), to: 'admins', text: text, ts: new Date().toISOString(),
+        delivered: notifyChannels.telegram });
+      write('sas_tg_outbox', queue.slice(-200));
+      return { queued: true };
+    },
+    outbox: function () { return delay(read('sas_tg_outbox', [])); }
+  };
+
+  /* =================================================================
+     REMINDERS — automated client reminder ladder scaffolding  [v1.0]
+     Channels: telegram / whatsapp / sms / email (off until backend wired).
+     ================================================================= */
+  var REMINDER_CHANNELS = ['telegram', 'whatsapp', 'sms', 'email'];
+  var reminders = {
+    channels: function () { return delay(REMINDER_CHANNELS.slice()); },
+    list: function () { return delay(read('sas_reminders', [])); },
+    scheduleForLead: function (lead) {
+      var q = read('sas_reminders', []);
+      function add(offsetLabel, when, text) {
+        q.push({ id: uid('rem'), leadId: lead.id, to: lead.phone, when: when,
+          offset: offsetLabel, text: text, channels: REMINDER_CHANNELS.slice(),
+          status: 'scheduled', createdAt: new Date().toISOString() });
+      }
+      var now = new Date();
+      add('after_lead', ymd(now), 'Спасибо за заявку, ' + lead.name + '! Мы свяжемся с вами в течение часа.');
+      if (lead.preferredDate) {
+        add('day_before', ymd(addDays(parseYmd(lead.preferredDate), -1)),
+          'Напоминаем: завтра ваше пробное занятие' + (lead.preferredTime ? ' в ' + lead.preferredTime : '') + '.');
+        add('two_hours', lead.preferredDate, 'Через 2 часа — ваше пробное занятие. Ждём вас!');
+        add('after_trial', ymd(addDays(parseYmd(lead.preferredDate), 1)),
+          'Как вам пробное занятие? Будем рады видеть вас снова.');
+      }
+      write('sas_reminders', q.slice(-500));
+      return q;
+    },
+    markSent: function (id) {
+      var q = read('sas_reminders', []);
+      var r = q.filter(function (x) { return x.id === id; })[0];
+      if (r) { r.status = 'sent'; r.sentAt = new Date().toISOString(); write('sas_reminders', q); }
+      return delay(r || null);
+    }
+  };
+
+  /* =================================================================
      SHOP — catalogue with categories: subscriptions / courses /
      masterclasses / intensives / gift certificates  [v0.7]
      ================================================================= */
@@ -2175,6 +2279,93 @@
   };
 
   /* =================================================================
+     ORDER & PAYMENT STATUS MODELS  [v1.0]
+     -----------------------------------------------------------------
+     CRITICAL RULE: no digital product (subscription, course, ticket,
+     certificate) is ever activated until a payment SUCCEEDS. Access is
+     granted in exactly one place — fulfilOrder() — which is called only
+     inside the success branch of orders.pay().
+     ================================================================= */
+  var ORDER_STATUS   = ['created', 'awaiting_payment', 'paid', 'cancelled', 'refunded'];
+  var PAYMENT_STATUS = ['created', 'awaiting', 'succeeded', 'failed', 'cancelled', 'refunded'];
+  var ORDER_STATUS_LABELS = {
+    created: 'Создан', awaiting_payment: 'Ожидает оплаты', paid: 'Оплачен',
+    cancelled: 'Отменён', refunded: 'Возврат'
+  };
+  var PAYMENT_STATUS_LABELS = {
+    created: 'Создан', awaiting: 'Ожидает оплаты', succeeded: 'Успешно оплачен',
+    failed: 'Ошибка оплаты', cancelled: 'Отменён пользователем', refunded: 'Возврат'
+  };
+
+  /* Grant access for every line of a PAID order. Never call this before a
+     successful charge. Idempotent-ish: skips already-owned courses/events. */
+  function fulfilOrder(order) {
+    var id = order.userId;
+    order.items.forEach(function (item) {
+      var qty = item.qty || 1;
+      if (item.type === 'subscription-plan' || item.type === 'subscription') {
+        var plan = PLANS.filter(function (p) { return p.id === item.productId; })[0];
+        if (plan) {
+          var subs = read(LS_SUBS, []);
+          var start = new Date();
+          subs.push({ id: uid('sub'), studentId: id, name: plan.name,
+            lessonsTotal: plan.lessons, lessonsLeft: plan.lessons, price: plan.price,
+            startDate: ymd(start), endDate: ymd(addDays(start, plan.durationDays)),
+            purchaseDate: ymd(start), status: 'active', orderId: order.id });
+          write(LS_SUBS, subs);
+        }
+      } else if (item.type === 'course') {
+        var all = read(LS_COURSES, []);
+        var course = all.filter(function (c) { return c.id === item.productId; })[0];
+        if (course && !(course.enrollments && course.enrollments[id])) {
+          course.enrollments = course.enrollments || {};
+          course.enrollments[id] = { orderId: order.id, since: ymd(new Date()) };
+          write(LS_COURSES, all);
+        }
+      } else if (item.type === 'intensive') {
+        var intv = INTENSIVES.filter(function (x) { return x.id === item.productId; })[0];
+        if (intv) {
+          var subs2 = read(LS_SUBS, []);
+          var s2 = new Date();
+          subs2.push({ id: uid('sub'), studentId: id, name: intv.name,
+            lessonsTotal: intv.lessons, lessonsLeft: intv.lessons, price: intv.price,
+            startDate: ymd(s2), endDate: ymd(addDays(s2, intv.durationDays)),
+            purchaseDate: ymd(s2), status: 'active', orderId: order.id });
+          write(LS_SUBS, subs2);
+        }
+      } else if (item.type === 'masterclass' || item.type === 'event') {
+        var evs = read(LS_EVENTS, []);
+        var ev = evs.filter(function (e) { return e.id === item.productId; })[0];
+        if (ev) {
+          ev.registrations = ev.registrations || [];
+          if (ev.registrations.indexOf(id) === -1) ev.registrations.push(id);
+          write(LS_EVENTS, evs);
+        }
+      }
+      /* gift-cert & merch: nothing digital to unlock — recorded on the order. */
+      addPayment({ studentId: id, amount: (item.price || 0) * qty,
+        purpose: item.name, status: 'paid' });
+    });
+  }
+
+  /* Hoisted tracking helper — fans a conversion event out to Meta Pixel
+     (browser) and the Conversions API (server) scaffolds. Safe no-op until
+     a real Pixel ID / access token is configured. See `tracking` namespace. */
+  function trackEvent(name, params) {
+    try {
+      if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
+        window.fbq('track', name, params || {});
+      }
+    } catch (e) { /* never break business logic on a tracking error */ }
+    /* Server-side mirror (Conversions API) — queued for a real backend. */
+    try {
+      var q = read('sas_capi_queue', []);
+      q.push({ event: name, params: params || {}, ts: new Date().toISOString() });
+      write('sas_capi_queue', q.slice(-200));
+    } catch (e2) { /* ignore */ }
+  }
+
+  /* =================================================================
      CART — persistent per-session shopping cart  [v0.7]
      Items: { id, type, productId, name, price, qty }
      Types: 'subscription-plan' | 'course' | 'gift-cert' | 'intensive' | 'masterclass'
@@ -2201,6 +2392,7 @@
           price: +item.price, qty: 1 });
       }
       write(LS_CART, items);
+      trackEvent('AddToCart', { content_name: item.name, value: +item.price || 0, currency: 'KZT' });
       return delay(items.map(clone));
     },
     remove: function (itemId) {
@@ -2208,70 +2400,105 @@
       return delay({ ok: true });
     },
     clear: function () { write(LS_CART, []); return delay({ ok: true }); },
-    /* Process all cart items via the active payment gateway, create an order record. */
+    /* DEPRECATED back-compat: instant create+pay through the mock gateway.
+       The UI now uses the explicit orders.create → orders.pay flow so the
+       user picks a payment method and access is granted only after payment. */
     checkout: function () {
-      var items = read(LS_CART, []);
-      if (!items.length) return fail('Корзина пуста');
-      var total = items.reduce(function (s, x) { return s + (x.price || 0) * (x.qty || 1); }, 0);
-      var id = curId();
-      var purpose = items.map(function (x) { return x.name; }).join(', ');
-      return processCharge({ type: 'order', amount: total, studentId: id, purpose: 'Заказ: ' + purpose })
-        .then(function (res) {
-          /* Fulfil each item — create subscriptions, enrol in courses, etc. */
-          items.forEach(function (item) {
-            if (item.type === 'subscription-plan') {
-              var plan = PLANS.filter(function (p) { return p.id === item.productId; })[0];
-              if (plan) {
-                var subs = read(LS_SUBS, []);
-                var start = new Date();
-                subs.push({ id: uid('sub'), studentId: id, name: plan.name,
-                  lessonsTotal: plan.lessons, lessonsLeft: plan.lessons, price: plan.price,
-                  startDate: ymd(start), endDate: ymd(addDays(start, plan.durationDays)),
-                  purchaseDate: ymd(start), status: 'active' });
-                write(LS_SUBS, subs);
-              }
-            }
-            if (item.type === 'course') {
-              var all = read(LS_COURSES, []);
-              var course = all.filter(function (c) { return c.id === item.productId; })[0];
-              if (course && !(course.enrollments && course.enrollments[id])) {
-                course.enrollments = course.enrollments || {};
-                course.enrollments[id] = {};
-                write(LS_COURSES, all);
-              }
-            }
-            if (item.type === 'intensive') {
-              /* Intensives create a subscription with intensive format. */
-              var intv = INTENSIVES.filter(function (x) { return x.id === item.productId; })[0];
-              if (intv) {
-                var subs2 = read(LS_SUBS, []);
-                var s2 = new Date();
-                subs2.push({ id: uid('sub'), studentId: id, name: intv.name,
-                  lessonsTotal: intv.lessons, lessonsLeft: intv.lessons, price: intv.price,
-                  startDate: ymd(s2), endDate: ymd(addDays(s2, intv.durationDays)),
-                  purchaseDate: ymd(s2), status: 'active' });
-                write(LS_SUBS, subs2);
-              }
-            }
-            addPayment({ studentId: id, amount: (item.price || 0) * (item.qty || 1),
-              purpose: item.name, status: 'paid' });
-          });
-          var allOrders = read(LS_ORDERS, []);
-          var order = { id: uid('ord'), userId: id, items: items.map(clone),
-            total: total, status: 'paid', createdAt: new Date().toISOString(), txnId: res.txn };
-          allOrders.push(order); write(LS_ORDERS, allOrders);
-          write(LS_CART, []);
-          notify(id, 'Заказ #' + order.id.split('-').pop() + ' оформлен на сумму ' + total + ' ₸.',
-            { type: 'payment', title: 'Заказ оформлен', href: 'payments.html' });
-          return order;
-        });
+      return orders.create({}).then(function (order) { return orders.pay(order.id); });
     }
   };
 
   /* =================================================================
-     ORDERS — order history  [v0.7]
+     ORDERS — explicit checkout flow with pay-before-access  [v1.0]
+     ---------------------------------------------------------------------
+     Flow:  cart → orders.create() [awaiting_payment, NOT fulfilled]
+                 → orders.pay()    [charge → on success: fulfil + paid]
      ================================================================= */
   var orders = {
+    statuses: function () {
+      return delay({ order: clone(ORDER_STATUS_LABELS), payment: clone(PAYMENT_STATUS_LABELS) });
+    },
+    /* Create an order from the current cart (or explicit items). Captures
+       customer data + chosen method. Status awaiting_payment — NO access
+       is granted here. Moves the cart snapshot into the order. */
+    create: function (data) {
+      data = data || {};
+      var items = (data.items && data.items.length) ? data.items : read(LS_CART, []);
+      if (!items.length) return fail('Корзина пуста');
+      var total = items.reduce(function (s, x) { return s + (x.price || 0) * (x.qty || 1); }, 0);
+      var me = auth.current();
+      var id = curId();
+      var order = {
+        id: uid('ord'), userId: id,
+        items: items.map(clone), total: total,
+        customer: {
+          name:  (data.name  || (me && me.name)  || '').trim(),
+          phone: (data.phone || (me && me.phone) || '').trim(),
+          email: (data.email || (me && me.email) || '').trim()
+        },
+        promo: data.promo || null,
+        paymentMethod: data.paymentMethod || null,
+        status: 'awaiting_payment',
+        paymentStatus: 'awaiting',
+        createdAt: new Date().toISOString(),
+        paidAt: null, txnId: null
+      };
+      var all = read(LS_ORDERS, []); all.push(order); write(LS_ORDERS, all);
+      write(LS_CART, []);
+      trackEvent('InitiateCheckout', { value: total, currency: 'KZT', num_items: items.length });
+      return delay(clone(order));
+    },
+    /* Pay an awaiting order. On success: fulfil + paid. On failure: payment
+       marked failed, order stays awaiting_payment so the user can retry. */
+    pay: function (orderId, method) {
+      var all = read(LS_ORDERS, []);
+      var order = all.filter(function (o) { return o.id === orderId; })[0];
+      if (!order) return fail('Заказ не найден');
+      if (order.status === 'paid')      return fail('Заказ уже оплачен');
+      if (order.status === 'cancelled') return fail('Заказ отменён');
+      if (method) order.paymentMethod = method;
+      write(LS_ORDERS, all);
+      return processCharge({ type: 'order', amount: order.total, studentId: order.userId,
+          purpose: 'Заказ #' + order.id.split('-').pop() })
+        .then(function (res) {
+          fulfilOrder(order);
+          order.status = 'paid'; order.paymentStatus = 'succeeded';
+          order.paidAt = new Date().toISOString(); order.txnId = res.txn;
+          write(LS_ORDERS, all);
+          notify(order.userId, 'Оплата заказа #' + order.id.split('-').pop() + ' на сумму ' +
+            order.total + ' ₸ прошла успешно. Доступ открыт.',
+            { type: 'payment', title: 'Заказ оплачен', href: 'orders.html' });
+          trackEvent('Purchase', { value: order.total, currency: 'KZT',
+            num_items: order.items.length, content_ids: order.items.map(function (i) { return i.productId; }) });
+          return clone(order);
+        }, function (err) {
+          order.paymentStatus = 'failed';
+          write(LS_ORDERS, all);
+          throw err;
+        });
+    },
+    /* User cancels an unpaid order. */
+    cancel: function (orderId) {
+      var all = read(LS_ORDERS, []);
+      var order = all.filter(function (o) { return o.id === orderId; })[0];
+      if (!order) return fail('Заказ не найден');
+      if (order.status === 'paid') return fail('Оплаченный заказ нельзя отменить — нужен возврат');
+      order.status = 'cancelled'; order.paymentStatus = 'cancelled';
+      write(LS_ORDERS, all);
+      return delay(clone(order));
+    },
+    /* Admin-only refund of a paid order. */
+    refund: function (orderId) {
+      var me = auth.current();
+      if (!me || me.role !== 'admin') return fail('Нет прав');
+      var all = read(LS_ORDERS, []);
+      var order = all.filter(function (o) { return o.id === orderId; })[0];
+      if (!order) return fail('Заказ не найден');
+      if (order.status !== 'paid') return fail('Возврат возможен только для оплаченного заказа');
+      order.status = 'refunded'; order.paymentStatus = 'refunded';
+      write(LS_ORDERS, all);
+      return delay(clone(order));
+    },
     list: function () {
       var id = curId();
       var list = read(LS_ORDERS, []).filter(function (o) { return o.userId === id; });
@@ -2405,12 +2632,35 @@
         id: uid('ld'), name: (data.name || '').trim(), phone: (data.phone || '').trim(),
         email: (data.email || '').trim(), source: data.source || 'callback',
         status: 'new', createdAt: ymd(new Date()),
-        direction: data.direction || '', comment: data.comment || '',
+        direction: data.direction || '', age: (data.age || '').toString().trim(),
+        comment: data.comment || '',
+        /* preferred trial date/time the visitor picked, if any */
+        preferredDate: data.preferredDate || '', preferredTime: data.preferredTime || '',
+        /* ad-campaign attribution captured from the landing URL */
+        utm: {
+          source:   (data.utm && data.utm.source)   || '',
+          medium:   (data.utm && data.utm.medium)   || '',
+          campaign: (data.utm && data.utm.campaign) || '',
+          content:  (data.utm && data.utm.content)  || '',
+          term:     (data.utm && data.utm.term)     || ''
+        },
         comments: []
       };
       if (data.comment) lead.comments.push({ id: uid('lc'), text: data.comment, author: 'Система', date: ymd(new Date()) });
       list.push(lead);
       write(LS_LEADS, list);
+      /* Notify administration in-app + (scaffold) Telegram. */
+      var srcLabel = ({ trial: 'пробное', course: 'курс', callback: 'обратный звонок',
+        event: 'мероприятие', store: 'магазин' })[lead.source] || lead.source;
+      notify('admin', 'Новая заявка: ' + lead.name + ' · ' + lead.phone +
+        (lead.direction ? ' · ' + lead.direction : '') + ' · источник: ' + srcLabel,
+        { type: 'system', title: 'Новый лид', href: 'admin-leads.html' });
+      telegram.notifyAdmins(lead);
+      /* Schedule the client reminder ladder (scaffold). */
+      reminders.scheduleForLead(lead);
+      /* Conversion events for Meta. */
+      trackEvent('Lead', { content_name: lead.direction || 'Заявка', source: lead.source });
+      if (lead.preferredDate) trackEvent('Schedule', { content_name: lead.direction || 'Пробное' });
       return delay(clone(lead));
     },
     update: function (id, data) {
@@ -2479,6 +2729,8 @@
       write(LS_TRIALS, list);
       /* if linked to a lead, update its status */
       if (trial.leadId) leads.setStatus(trial.leadId, 'trial_scheduled');
+      /* alert administration (scaffold Telegram) about the booking */
+      telegram.notifyTrial(trial);
       return delay(clone(trial));
     },
     update: function (id, data) {
@@ -2716,6 +2968,38 @@
           conversionRate: trialsDone > 0 ? Math.round(trialsConverted / trialsDone * 100) : 0 }
       });
     },
+    /* Advertising performance: leads / trials / purchases / conversion broken
+       down by lead source and by UTM campaign. Powers the ad-analytics view. */
+    ads: function () {
+      var allLeads = read(LS_LEADS, []);
+      var won = { purchased: 1, active: 1 };
+      function bucketize(keyFn) {
+        var map = {};
+        allLeads.forEach(function (l) {
+          var key = keyFn(l) || '—';
+          if (!map[key]) map[key] = { key: key, leads: 0, trials: 0, purchases: 0 };
+          map[key].leads++;
+          if (l.status === 'trial_scheduled' || l.status === 'trial_done' || won[l.status]) map[key].trials++;
+          if (won[l.status]) map[key].purchases++;
+        });
+        return Object.keys(map).map(function (k) {
+          var b = map[k];
+          b.conversion = b.leads ? Math.round(b.purchases / b.leads * 100) : 0;
+          return b;
+        }).sort(function (a, b) { return b.leads - a.leads; });
+      }
+      var bySource = bucketize(function (l) { return l.source; });
+      var byCampaign = bucketize(function (l) { return (l.utm && l.utm.campaign) || ''; });
+      var totalLeads = allLeads.length;
+      var totalPurchases = allLeads.filter(function (l) { return won[l.status]; }).length;
+      var orderRevenue = read(LS_ORDERS, []).filter(function (o) { return o.status === 'paid'; })
+        .reduce(function (s, o) { return s + (o.total || 0); }, 0);
+      return delay({
+        totalLeads: totalLeads, totalPurchases: totalPurchases,
+        conversion: totalLeads ? Math.round(totalPurchases / totalLeads * 100) : 0,
+        orderRevenue: orderRevenue, bySource: bySource, byCampaign: byCampaign
+      });
+    },
     /* Director dashboard summary */
     summary: function () {
       var users = read(LS_USERS, []);
@@ -2741,11 +3025,29 @@
         var ac = academics[sid];
         if (ac && ac.teacher) teacherWorkload[ac.teacher] = (teacherWorkload[ac.teacher] || 0) + 1;
       });
+      /* sales = paid orders this month; conversion = purchased leads / all leads */
+      var monthOrders = read(LS_ORDERS, []).filter(function (o) {
+        return o.status === 'paid' && (o.paidAt || o.createdAt || '').slice(0, 10) >= monthStart;
+      });
+      var totalLeads = allLeads.length;
+      var wonLeads = allLeads.filter(function (l) { return l.status === 'purchased' || l.status === 'active'; }).length;
+      var awaitingOrders = read(LS_ORDERS, []).filter(function (o) { return o.status === 'awaiting_payment'; }).length;
+      /* upcoming lessons in the next 7 days from the schedule store, if present */
+      var upcomingLessons = 0;
+      try {
+        var slots = read(LS_SCHEDULE_SLOTS, []) || [];
+        upcomingLessons = slots.filter(function (s) {
+          return s.date && s.date >= ymd(now) && s.date <= ymd(addDays(now, 7));
+        }).length;
+      } catch (e) { upcomingLessons = 0; }
       return delay({
         activeStudents: activeStudents, teachers: teachers,
         newLeads: newLeads, scheduledTrials: scheduledTrials,
         monthRevenue: monthRevenue, unpaidTotal: unpaidTotal,
-        upcomingEvents: upcomingEvents, teacherWorkload: teacherWorkload
+        upcomingEvents: upcomingEvents, upcomingLessons: upcomingLessons,
+        salesCount: monthOrders.length, awaitingOrders: awaitingOrders,
+        conversion: totalLeads ? Math.round(wonLeads / totalLeads * 100) : 0,
+        teacherWorkload: teacherWorkload
       });
     }
   };
@@ -2772,6 +3074,8 @@
     /* CRM v0.9 */
     leads: leads, trials: trials, skillMap: skillMap,
     churn: churn, broadcast: broadcast, analytics: analytics,
+    /* funnel / ads v1.0 */
+    tracking: tracking, telegram: telegram, reminders: reminders,
     /* reserved (next versions) */
     tests: tests, gamification: gamification, wallet: wallet,
     ratings: ratings, seasons: seasons

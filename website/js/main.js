@@ -1,3 +1,47 @@
+/* ===== AD ATTRIBUTION (UTM) + META PIXEL  [v1.0] =====
+   Captures campaign params from the landing URL so every lead created on
+   the public site carries its ad source, and boots a Meta Pixel (real
+   library only if a Pixel ID is configured; otherwise a safe stub). */
+const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+const LS_UTM = 'sas_utm';
+
+function captureUTM() {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (!UTM_KEYS.some(k => params.get(k))) return;
+    const utm = { landedAt: new Date().toISOString(), landingPage: location.pathname };
+    UTM_KEYS.forEach(k => { utm[k.replace('utm_', '')] = params.get(k) || ''; });
+    localStorage.setItem(LS_UTM, JSON.stringify(utm));
+  } catch (e) { /* ignore */ }
+}
+function getUTM() {
+  try { return JSON.parse(localStorage.getItem(LS_UTM) || '{}'); } catch (e) { return {}; }
+}
+window.SAS_getUTM = getUTM;
+
+function bootPixel() {
+  if (window.fbq) return;
+  const n = window.fbq = function () {
+    n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+  };
+  if (!window._fbq) window._fbq = n;
+  n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
+  let pixelId = '';
+  try {
+    const cfg = JSON.parse(localStorage.getItem('sas_meta_config') || '{}');
+    if (cfg.enabled && cfg.pixelId) pixelId = cfg.pixelId;
+  } catch (e) { /* ignore */ }
+  if (pixelId) {
+    const s = document.createElement('script');
+    s.async = true; s.src = 'https://connect.facebook.net/en_US/fbevents.js';
+    document.head.appendChild(s);
+    window.fbq('init', pixelId);
+  }
+  window.fbq('track', 'PageView');
+}
+captureUTM();
+bootPixel();
+
 /* ===== NAVIGATION ===== */
 const header = document.querySelector('.site-header');
 const hamburger = document.querySelector('.nav-hamburger');
@@ -19,6 +63,19 @@ document.querySelectorAll('.mobile-nav a').forEach(a => {
     mobileNav && mobileNav.classList.remove('open');
     document.body.style.overflow = '';
   });
+});
+
+/* "О школе" dropdown — click toggle (hover handles desktop via CSS) */
+document.querySelectorAll('.nav-dropdown-toggle').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const dd = btn.closest('.nav-dropdown');
+    const open = dd.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.nav-dropdown.open').forEach(dd => dd.classList.remove('open'));
 });
 
 /* ===== SCROLL ANIMATIONS ===== */
@@ -110,13 +167,55 @@ function setupForm(formId, onSuccess) {
     if (success) success.classList.add('show');
     if (onSuccess) onSuccess(form);
 
-    // Collect data
-    const data = {};
-    form.querySelectorAll('[name]').forEach(inp => { data[inp.name] = inp.value; });
-    const selChips = [...form.querySelectorAll('.form-chip.selected')].map(c => c.dataset.value || c.textContent.trim());
-    data.chips = selChips;
-    console.log('Form submitted:', formId, data);
+    submitLead(formId, form);
   });
+}
+
+/* Map the public direction chips to the canonical direction names used by
+   the CRM, so leads land with a meaningful direction. */
+const CHIP_DIRECTION = {
+  guitar: 'Гитара', vocals: 'Вокал', painting: 'Живопись',
+  acting: 'Актёрское мастерство', dance: 'Современный танец', any: ''
+};
+/* Form id → lead source. */
+const FORM_SOURCE = {
+  'trial-form': 'trial', 'modal-form': 'trial',
+  'callback-form': 'callback', 'course-form': 'course'
+};
+
+/* Persist a public-site submission as a CRM lead (with UTM + Pixel events).
+   Degrades gracefully if the API layer isn't present on a given page. */
+function submitLead(formId, form) {
+  const data = {};
+  form.querySelectorAll('[name]').forEach(inp => { data[inp.name] = (inp.value || '').trim(); });
+  const chip = form.querySelector('.form-chip.selected');
+  const direction = chip ? (CHIP_DIRECTION[chip.dataset.value] !== undefined
+    ? CHIP_DIRECTION[chip.dataset.value] : chip.textContent.trim()) : '';
+
+  const utm = getUTM();
+  const payload = {
+    name: data.name || '',
+    phone: data.phone || '',
+    email: data.email || '',
+    age: data.age || '',
+    direction: direction,
+    source: FORM_SOURCE[formId] || 'callback',
+    preferredDate: data.date || '',
+    preferredTime: data.time || '',
+    comment: data.comment || data.message || '',
+    utm: {
+      source: utm.source || '', medium: utm.medium || '', campaign: utm.campaign || '',
+      content: utm.content || '', term: utm.term || ''
+    }
+  };
+
+  if (window.API && API.leads && payload.name && payload.phone) {
+    API.leads.create(payload).catch(() => { /* keep the success UI; lead retried server-side */ });
+  } else {
+    console.log('Lead (no API on page):', formId, payload);
+  }
+  /* Mark a completed registration for the Pixel even if no real id is set. */
+  if (window.fbq) window.fbq('track', 'CompleteRegistration', { content_name: direction || 'Заявка' });
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -669,6 +669,27 @@
 .lms-add-lesson:hover { background: var(--bg-alt); color: var(--primary); }
 .lms-add-lesson svg { width: 16px; height: 16px; }
 
+/* Cabinet form controls (used across CRM/checkout/ads pages) [v0.9/v1.0] */
+.cab-input {
+  width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: .9rem; font-family: inherit;
+  background: var(--bg); color: var(--dark); transition: border-color var(--transition);
+}
+.cab-input:focus { outline: none; border-color: var(--primary); }
+.cab-main .form-group { margin-bottom: 14px; }
+.cab-main .form-group > label {
+  display: block; margin-bottom: 6px; font-size: .82rem; font-weight: 600; color: var(--muted);
+}
+.cab-main .form-group .form-control,
+.cab-main .form-group .cab-input { width: 100%; }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 16px; border-radius: var(--radius-sm); font-size: .85rem; font-weight: 600;
+  background: var(--bg-alt, #f4f1ea); color: var(--dark); border: 1px solid var(--border);
+  cursor: pointer; transition: all var(--transition);
+}
+.btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+
 /* Textarea in forms */
 .cab-modal-body textarea {
   width: 100%; min-height: 100px; resize: vertical;
@@ -1108,4 +1129,23 @@ body.tg-miniapp .cab-subnav { padding-left: 20px; padding-right: 20px; }
   .cab-stats-row { gap: 8px; }
   .cab-stat-card { min-width: 100px; padding: 12px; }
   .cab-stat-val { font-size: 1.2rem; }
+}
+
+/* =====================================================================
+   v1.0 — CHECKOUT
+   ===================================================================== */
+.checkout-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 28px; align-items: start; }
+.checkout-col h3 { margin: 0 0 12px; }
+.pay-methods { display: flex; flex-direction: column; gap: 8px; }
+.pay-method {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  border: 1px solid var(--border); border-radius: var(--radius-md); cursor: pointer;
+  font-size: .92rem; transition: border-color .15s;
+}
+.pay-method:hover { border-color: var(--accent, #c0392b); }
+.pay-method.disabled { opacity: .55; cursor: not-allowed; }
+.pay-method input { accent-color: var(--accent, #c0392b); }
+.checkout-pay, .checkout-success { max-width: 520px; }
+@media (max-width: 760px) {
+  .checkout-grid { grid-template-columns: 1fr; gap: 20px; }
 }

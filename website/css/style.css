@@ -101,6 +101,27 @@ p { font-size: 1rem; line-height: 1.7; }
   font-weight: 700 !important;
 }
 .nav-cta:hover { background: var(--primary-dark) !important; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(227,6,19,.3); }
+/* "О школе" dropdown — groups secondary links to declutter the header */
+.nav-dropdown { position: relative; }
+.nav-dropdown-toggle {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 8px 14px; border-radius: var(--radius-sm); font-size: .9rem; font-weight: 600;
+  color: var(--body); background: none; border: none; cursor: pointer; font-family: inherit;
+  transition: all var(--transition);
+}
+.nav-dropdown-toggle:hover, .nav-dropdown-toggle.active { color: var(--primary); background: rgba(227,6,19,.06); }
+.nav-dropdown-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; min-width: 210px;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: 0 14px 34px rgba(0,0,0,.14); padding: 8px; z-index: 120;
+  display: none; flex-direction: column; gap: 2px;
+}
+.nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown.open .nav-dropdown-menu { display: flex; }
+.nav-dropdown-menu a {
+  padding: 10px 14px; border-radius: var(--radius-sm); font-size: .9rem;
+  font-weight: 600; color: var(--body); white-space: nowrap;
+}
+.nav-dropdown-menu a:hover { color: var(--primary); background: rgba(227,6,19,.06); }
 .nav-hamburger {
   display: none; width: 44px; height: 44px; border-radius: var(--radius-sm);
   align-items: center; justify-content: center; flex-direction: column; gap: 5px;
@@ -138,6 +159,7 @@ p { font-size: 1rem; line-height: 1.7; }
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 14px 28px; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700;
   transition: all var(--transition); white-space: nowrap; cursor: pointer;
+  max-width: 100%; box-sizing: border-box;
 }
 .btn-primary { background: var(--primary); color: #fff; }
 .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(227,6,19,.35); }
@@ -707,6 +729,8 @@ p { font-size: 1rem; line-height: 1.7; }
   .form-card { padding: 28px 20px; }
   .hero-btns { flex-direction: column; }
   .hero-btns .btn { width: 100%; text-align: center; }
+  .hero-btns .btn-lg { padding: 16px 20px; font-size: 1rem; white-space: normal; }
+  .mobile-nav { overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .cta-banner-btns { flex-direction: column; align-items: center; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .skills-grid { grid-template-columns: 1fr; }
