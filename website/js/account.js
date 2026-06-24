@@ -134,7 +134,11 @@
     note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
     chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>',
     clipboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
-    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
+    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+    folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+    gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+    ticket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a3 3 0 0 0 0 6v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M13 5v14"/></svg>'
   };
 
   /* status / type maps (v0.5) */
@@ -162,18 +166,24 @@
 
   var STUDENT_NAV = [
     { href: 'dashboard.html',     label: 'Главная',           icon: ICON.home     },
-    { href: 'schedule.html',      label: 'Расписание',        icon: ICON.calendar },
+    { href: 'schedule.html',      label: 'Календарь',         icon: ICON.calendar },
     { href: 'courses.html',       label: 'Мои курсы',         icon: ICON.book     },
     { href: 'attendance.html',    label: 'Посещаемость',      icon: ICON.check2   },
     { href: 'homework.html',      label: 'Домашние задания',  icon: ICON.hw       },
+    { href: 'achievements.html',  label: 'Достижения',        icon: ICON.star     },
     { href: 'certificates.html',  label: 'Сертификаты',       icon: ICON.cert     },
+    { href: 'portfolio.html',     label: 'Портфолио',         icon: ICON.folder   },
     { href: 'progress.html',      label: 'Профиль развития',  icon: ICON.chart    },
     { href: 'subscriptions.html', label: 'Мои абонементы',    icon: ICON.card     },
     { href: 'payments.html',      label: 'История платежей',  icon: ICON.receipt  },
-    { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     }
+    { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     },
+    { href: 'notifications.html', label: 'Уведомления',       icon: ICON.bell     },
+    { href: 'settings.html',      label: 'Настройки',         icon: ICON.gear     }
   ];
   var PARENT_NAV = [
-    { href: 'parent.html', label: 'Кабинет родителя', icon: ICON.parents }
+    { href: 'parent.html',        label: 'Кабинет родителя',  icon: ICON.parents  },
+    { href: 'notifications.html', label: 'Уведомления',       icon: ICON.bell     },
+    { href: 'settings.html',      label: 'Настройки',         icon: ICON.gear     }
   ];
   var ADMIN_NAV = [
     { href: 'admin.html',               label: 'Ученики',          icon: ICON.users     },
@@ -184,7 +194,11 @@
     { href: 'admin-homework.html',      label: 'Домашние задания', icon: ICON.hw        },
     { href: 'admin-certificates.html',  label: 'Сертификаты',      icon: ICON.cert      },
     { href: 'admin-achievements.html',  label: 'Достижения',       icon: ICON.star      },
-    { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   }
+    { href: 'admin-portfolio.html',     label: 'Портфолио',        icon: ICON.folder    },
+    { href: 'admin-events.html',        label: 'Мероприятия',      icon: ICON.ticket    },
+    { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
+    { href: 'notifications.html',       label: 'Уведомления',      icon: ICON.bell      },
+    { href: 'settings.html',            label: 'Настройки',        icon: ICON.gear      }
   ];
 
   function renderSidebar() {
@@ -192,6 +206,10 @@
     if (!host) return;
     var kind = host.getAttribute('data-cab-sidebar');
     var me = API.auth.current();
+    // Shared pages declare data-cab-sidebar="auto" → pick nav by role.  [v0.6]
+    if (kind === 'auto') {
+      kind = (me && me.role === 'admin') ? 'admin' : (me && me.role === 'parent') ? 'parent' : 'student';
+    }
     var file = location.pathname.split('/').pop() || 'dashboard.html';
     var isAdmin = me && me.role === 'admin';
     var roleLabel = isAdmin ? 'Администратор' : (kind === 'parent' ? 'Родитель' : 'Ученик');
@@ -233,12 +251,189 @@
 
   renderSidebar();
 
-  $all('[data-signout]').forEach(function (btn) { btn.addEventListener('click', function () { window.signOut(); }); });
   var sbToggle = $('[data-sidebar-toggle]');
   var sidebar  = $('.cab-sidebar');
   if (sbToggle && sidebar) {
     sbToggle.addEventListener('click', function () { sidebar.classList.toggle('open'); });
   }
+
+  /* =================================================================
+     NAVIGATION — back / home / breadcrumbs + sign-out confirm  [v0.6]
+     A subnav strip is injected under the topbar on every cabinet page,
+     so the existing topbar design stays intact.
+     ================================================================= */
+  var PAGE_META = {
+    'dashboard.html':         { title: 'Главная' },
+    'schedule.html':          { title: 'Расписание и календарь' },
+    'courses.html':           { title: 'Мои курсы' },
+    'lesson.html':            { title: 'Урок', parent: 'courses.html' },
+    'attendance.html':        { title: 'Посещаемость' },
+    'homework.html':          { title: 'Домашние задания' },
+    'certificates.html':      { title: 'Сертификаты' },
+    'achievements.html':      { title: 'Профиль достижений' },
+    'progress.html':          { title: 'Профиль развития' },
+    'portfolio.html':         { title: 'Портфолио' },
+    'notifications.html':     { title: 'Уведомления' },
+    'settings.html':          { title: 'Настройки аккаунта' },
+    'subscriptions.html':     { title: 'Мои абонементы' },
+    'payments.html':          { title: 'История платежей' },
+    'shop.html':              { title: 'Оплата и покупки' },
+    'parent.html':            { title: 'Кабинет родителя' },
+    'admin.html':             { title: 'Ученики' },
+    'admin-parents.html':     { title: 'Родители' },
+    'admin-subscriptions.html': { title: 'Абонементы' },
+    'admin-courses.html':     { title: 'Курсы' },
+    'admin-attendance.html':  { title: 'Посещаемость' },
+    'admin-homework.html':    { title: 'Домашние задания' },
+    'admin-certificates.html':{ title: 'Сертификаты' },
+    'admin-achievements.html':{ title: 'Достижения' },
+    'admin-events.html':      { title: 'Мероприятия' },
+    'admin-portfolio.html':   { title: 'Портфолио' },
+    'admin-payments.html':    { title: 'Платежи' }
+  };
+
+  function roleHome() {
+    var me = API.auth.current();
+    if (me && me.role === 'admin')  return { href: 'admin.html',     label: 'Админ-панель' };
+    if (me && me.role === 'parent') return { href: 'parent.html',    label: 'Кабинет родителя' };
+    return { href: 'dashboard.html', label: 'Главная' };
+  }
+
+  function buildCrumbs(file) {
+    var home = roleHome();
+    var crumbs = [{ href: home.href, label: home.label }];
+    var chain = [];
+    var cur = file;
+    var guard = 0;
+    while (cur && PAGE_META[cur] && PAGE_META[cur].parent && guard++ < 6) {
+      cur = PAGE_META[cur].parent;
+      if (PAGE_META[cur]) chain.unshift({ href: cur, label: PAGE_META[cur].title });
+    }
+    chain.forEach(function (c) { crumbs.push(c); });
+    var meta = PAGE_META[file];
+    if (file !== home.href && meta) crumbs.push({ href: null, label: meta.title });
+    return crumbs;
+  }
+
+  function renderSubnav() {
+    var topbar = $('.cab-topbar');
+    if (!topbar || $('.cab-subnav')) return;
+    var file = location.pathname.split('/').pop() || 'dashboard.html';
+    var home = roleHome();
+    var crumbs = buildCrumbs(file);
+    var isHome = file === home.href;
+
+    var trail = crumbs.map(function (c, i) {
+      var last = i === crumbs.length - 1;
+      if (c.href && !last) return '<a href="' + c.href + '">' + escapeHtml(c.label) + '</a>';
+      return '<span aria-current="page">' + escapeHtml(c.label) + '</span>';
+    }).join('<span class="sep">/</span>');
+
+    var bar = document.createElement('div');
+    bar.className = 'cab-subnav';
+    bar.innerHTML =
+      '<div class="cab-subnav-actions">' +
+        (isHome ? '' : '<button class="cab-navbtn" data-nav-back type="button">' + BACK_ICON + '<span>Назад</span></button>') +
+        '<a class="cab-navbtn" href="' + home.href + '">' + ICON.home + '<span>На главную</span></a>' +
+        '<a class="cab-navbtn cab-navbtn-site" href="../index.html">' + GLOBE_ICON + '<span>На сайт</span></a>' +
+      '</div>' +
+      '<nav class="cab-breadcrumbs" aria-label="Хлебные крошки">' + trail + '</nav>' +
+      '<div class="cab-search" data-search>' +
+        '<span class="cab-search-ic">' + SEARCH_ICON + '</span>' +
+        '<input type="search" class="cab-search-input" placeholder="Поиск по платформе…" autocomplete="off" aria-label="Глобальный поиск">' +
+        '<div class="cab-search-results" data-search-results hidden></div>' +
+      '</div>';
+    topbar.parentNode.insertBefore(bar, topbar.nextSibling);
+
+    var back = $('[data-nav-back]', bar);
+    if (back) back.addEventListener('click', function () {
+      if (history.length > 1) history.back();
+      else location.href = home.href;
+    });
+    wireGlobalSearch(bar);
+  }
+
+  var SEARCH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>';
+  var SEARCH_TYPE = { course: 'Курс', lesson: 'Урок', teacher: 'Преподаватель', homework: 'ДЗ', event: 'Мероприятие' };
+
+  function wireGlobalSearch(bar) {
+    var box = $('[data-search]', bar);
+    var input = $('.cab-search-input', box);
+    var results = $('[data-search-results]', box);
+    var timer = null;
+
+    function render(list, q) {
+      if (!list.length) {
+        results.innerHTML = '<div class="cab-search-empty">Ничего не найдено по запросу «' + escapeHtml(q) + '»</div>';
+      } else {
+        results.innerHTML = list.map(function (r) {
+          return '<a class="cab-search-row" href="' + r.href + '">' +
+            '<span class="cab-search-tag">' + escapeHtml(SEARCH_TYPE[r.type] || r.type) + '</span>' +
+            '<span class="cab-search-main"><span class="t">' + escapeHtml(r.title) + '</span>' +
+            (r.subtitle ? '<span class="s">' + escapeHtml(r.subtitle) + '</span>' : '') + '</span></a>';
+        }).join('');
+      }
+      results.hidden = false;
+    }
+    function close() { results.hidden = true; }
+
+    input.addEventListener('input', function () {
+      var q = input.value.trim();
+      if (timer) clearTimeout(timer);
+      if (q.length < 2) { close(); return; }
+      timer = setTimeout(function () {
+        API.search.global(q).then(function (list) { render(list, q); });
+      }, 200);
+    });
+    input.addEventListener('focus', function () { if (results.innerHTML && input.value.trim().length >= 2) results.hidden = false; });
+    document.addEventListener('click', function (e) { if (!box.contains(e.target)) close(); });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Escape') { input.value = ''; close(); } });
+  }
+
+  var BACK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>';
+  var GLOBE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>';
+
+  renderSubnav();
+
+  /* =================================================================
+     TELEGRAM MINI APP ADAPTER  [v0.6]
+     Activates only when a page is opened inside Telegram (the Telegram
+     WebApp SDK is present). Outside Telegram it is a no-op, so ordinary
+     browser use is unaffected. Architecture-ready for the real bot.
+     ================================================================= */
+  (function initMiniApp() {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg || !tg.initData) return;
+    try {
+      document.body.classList.add('tg-miniapp');
+      tg.ready();
+      tg.expand();
+      // Map Telegram's native Back button to our navigation.
+      var home = roleHome();
+      var file = location.pathname.split('/').pop() || 'dashboard.html';
+      if (file !== home.href && tg.BackButton) {
+        tg.BackButton.show();
+        tg.BackButton.onClick(function () {
+          if (history.length > 1) history.back(); else location.href = home.href;
+        });
+      }
+    } catch (e) { /* never break the page over the optional integration */ }
+  })();
+
+  /* Sign-out with confirmation. */
+  function confirmSignOut() {
+    var m = openModal('Выход из аккаунта',
+      '<p class="cab-confirm-text">Вы действительно хотите выйти из аккаунта?</p>' +
+      '<div class="cab-modal-actions">' +
+        '<button type="button" class="btn btn-outline btn-sm" data-no>Отмена</button>' +
+        '<button type="button" class="btn btn-primary btn-sm" data-yes>Выйти</button>' +
+      '</div>');
+    $('[data-no]', m.body).addEventListener('click', m.close);
+    $('[data-yes]', m.body).addEventListener('click', function () { window.signOut(); });
+  }
+  $all('[data-signout]').forEach(function (btn) {
+    btn.addEventListener('click', function () { confirmSignOut(); });
+  });
 
   /* =================================================================
      AUTH FORMS
@@ -589,21 +784,49 @@
   /* =================================================================
      PAYMENTS — "История платежей"
      ================================================================= */
+  var TXN_STATUS = {
+    succeeded:  { label: 'Успешно',     cls: 'badge-green' },
+    processing: { label: 'В обработке',  cls: 'badge-blue'  },
+    pending:    { label: 'Ожидает',      cls: 'badge-gold'  },
+    failed:     { label: 'Ошибка',       cls: 'badge-red'   }
+  };
+  function txnDate(iso) { return iso ? fmtDate(iso.slice(0, 10)) : '—'; }
   var payRoot = $('#payments-root');
   if (payRoot) {
-    API.payments.list().then(function (list) {
-      if (!list.length) { payRoot.innerHTML = '<p class="cab-empty">Платежей пока нет.</p>'; return; }
-      var rows = list.map(function (p) {
-        return '<tr>' +
-          '<td data-th="Дата">' + fmtDate(p.date) + '</td>' +
-          '<td data-th="Назначение">' + escapeHtml(p.purpose) + '</td>' +
-          '<td data-th="Сумма">' + fmtMoney(p.amount) + '</td>' +
-          '<td data-th="Статус">' + badge(PAY_STATUS, p.status) + '</td></tr>';
-      }).join('');
-      payRoot.innerHTML =
-        '<div class="cab-table-wrap"><table class="cab-table">' +
-        '<thead><tr><th>Дата</th><th>Назначение</th><th>Сумма</th><th>Статус</th></tr></thead>' +
-        '<tbody>' + rows + '</tbody></table></div>';
+    Promise.all([API.payments.list(), API.payments.transactions()]).then(function (res) {
+      var list = res[0], txns = res[1];
+      var html = '';
+      if (!list.length) {
+        html += '<p class="cab-empty">Платежей пока нет.</p>';
+      } else {
+        var rows = list.map(function (p) {
+          return '<tr>' +
+            '<td data-th="Дата">' + fmtDate(p.date) + '</td>' +
+            '<td data-th="Назначение">' + escapeHtml(p.purpose) + '</td>' +
+            '<td data-th="Сумма">' + fmtMoney(p.amount) + '</td>' +
+            '<td data-th="Статус">' + badge(PAY_STATUS, p.status) + '</td></tr>';
+        }).join('');
+        html += '<div class="cab-table-wrap"><table class="cab-table">' +
+          '<thead><tr><th>Дата</th><th>Назначение</th><th>Сумма</th><th>Статус</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody></table></div>';
+      }
+      // Transaction log from the universal payment layer.
+      if (txns.length) {
+        var trows = txns.map(function (t) {
+          return '<tr>' +
+            '<td data-th="Дата">' + txnDate(t.createdAt) + '</td>' +
+            '<td data-th="Операция">' + escapeHtml(t.purpose || '—') + '</td>' +
+            '<td data-th="Шлюз">' + escapeHtml(t.gateway) + '</td>' +
+            '<td data-th="Сумма">' + fmtMoney(t.amount) + '</td>' +
+            '<td data-th="Статус">' + badge(TXN_STATUS, t.status) +
+              (t.error ? ' <span class="cab-muted">(' + escapeHtml(t.error) + ')</span>' : '') + '</td></tr>';
+        }).join('');
+        html += '<h2 class="cab-section-title">История транзакций</h2>' +
+          '<div class="cab-table-wrap"><table class="cab-table">' +
+          '<thead><tr><th>Дата</th><th>Операция</th><th>Шлюз</th><th>Сумма</th><th>Статус</th></tr></thead>' +
+          '<tbody>' + trows + '</tbody></table></div>';
+      }
+      payRoot.innerHTML = html;
     });
   }
 
@@ -671,8 +894,20 @@
   }
 
   /* =================================================================
-     SCHEDULE CALENDAR
+     SCHEDULE / UNIFIED CALENDAR  [v0.6 — lessons + events + deadlines]
      ================================================================= */
+  var CAL_KIND = {
+    lesson:   { label: 'Занятие',   cls: 'ck-lesson' },
+    event:    { label: 'Мероприятие', cls: 'ck-event' },
+    deadline: { label: 'Дедлайн ДЗ', cls: 'ck-deadline' }
+  };
+  var CAL_EVENT_KIND = {
+    concert: 'Концерт', performance: 'Спектакль', exhibition: 'Выставка', masterclass: 'Мастер-класс'
+  };
+  function calKindOf(item) {
+    if (item.kind === 'event') return CAL_EVENT_KIND[item.eventType] || 'Мероприятие';
+    return CAL_KIND[item.kind] ? CAL_KIND[item.kind].label : item.kind;
+  }
   var calRoot = $('#calendar-root');
   if (calRoot) {
     var WEEKDAY_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
@@ -683,9 +918,9 @@
     function render() {
       var year = view.getFullYear(), month = view.getMonth();
       $('[data-cal="title"]').textContent = CAL_MONTHS[month] + ' ' + year;
-      API.schedule.month(year, month).then(function (lessons) {
+      API.calendar.month(year, month).then(function (items) {
         var byDate = {};
-        lessons.forEach(function (l) { (byDate[l.date] = byDate[l.date] || []).push(l); });
+        items.forEach(function (it) { (byDate[it.date] = byDate[it.date] || []).push(it); });
         var grid = $('[data-cal="grid"]');
         var html = WEEKDAY_SHORT.map(function (w) { return '<div class="cal-head">' + w + '</div>'; }).join('');
         var first = new Date(year, month, 1), lead = (first.getDay() + 6) % 7;
@@ -693,9 +928,17 @@
         var daysInMonth = new Date(year, month + 1, 0).getDate();
         var today = new Date(), todayStr = ymd2(today.getFullYear(), today.getMonth(), today.getDate());
         for (var d = 1; d <= daysInMonth; d++) {
-          var key = ymd2(year, month, d), dayLessons = byDate[key] || [];
-          var cls = 'cal-cell' + (key === todayStr ? ' cal-today' : '') + (dayLessons.length ? ' cal-has' : '');
-          html += '<div class="' + cls + '" data-day="' + key + '"><span class="cal-num">' + d + '</span>' + (dayLessons.length ? '<span class="cal-dot"></span>' : '') + '</div>';
+          var key = ymd2(year, month, d), day = byDate[key] || [];
+          var cls = 'cal-cell' + (key === todayStr ? ' cal-today' : '') + (day.length ? ' cal-has' : '');
+          var dots = '';
+          if (day.length) {
+            var kinds = {};
+            day.forEach(function (it) { kinds[it.kind] = true; });
+            dots = '<span class="cal-dots">' + Object.keys(kinds).map(function (k) {
+              return '<span class="cal-dot ' + (CAL_KIND[k] ? CAL_KIND[k].cls : '') + '"></span>';
+            }).join('') + '</span>';
+          }
+          html += '<div class="' + cls + '" data-day="' + key + '"><span class="cal-num">' + d + '</span>' + dots + '</div>';
         }
         grid.innerHTML = html;
         $all('.cal-has', grid).forEach(function (cell) {
@@ -706,16 +949,22 @@
         });
         var initial = byDate[todayStr] ? todayStr : Object.keys(byDate).sort()[0];
         if (initial) { var initCell = grid.querySelector('[data-day="' + initial + '"]'); if (initCell) initCell.classList.add('selected'); showDay(initial, byDate[initial]); }
-        else $('[data-cal="detail"]').innerHTML = '<p class="cab-empty">В этом месяце занятий нет.</p>';
+        else $('[data-cal="detail"]').innerHTML = '<p class="cab-empty">В этом месяце событий нет.</p>';
       });
     }
-    function showDay(dateStr, lessons) {
+    function showDay(dateStr, items) {
       var p = dateStr.split('-');
       var title = parseInt(p[2], 10) + ' ' + CAL_MONTHS[parseInt(p[1], 10) - 1].toLowerCase();
       var html = '<h3 class="cab-detail-title">' + title + '</h3>';
-      html += (lessons || []).map(function (l) {
-        return '<div class="cab-lesson"><div class="cab-lesson-time">' + l.time + '</div>' +
-          '<div class="cab-lesson-info"><strong>' + l.direction + '</strong><span>' + l.teacher + ' · ' + l.room + '</span></div></div>';
+      html += (items || []).map(function (it) {
+        var kindCls = CAL_KIND[it.kind] ? CAL_KIND[it.kind].cls : '';
+        var meta = it.kind === 'lesson' ? ((it.teacher || '') + (it.place ? ' · ' + it.place : ''))
+          : (it.place || (it.kind === 'deadline' ? 'Срок сдачи задания' : ''));
+        return '<div class="cab-lesson cal-item ' + kindCls + '">' +
+          '<div class="cab-lesson-time">' + (it.time || '—') + '</div>' +
+          '<div class="cab-lesson-info"><span class="cal-item-kind">' + escapeHtml(calKindOf(it)) + '</span>' +
+          '<strong>' + escapeHtml(it.title) + '</strong>' +
+          (meta ? '<span>' + escapeHtml(meta) + '</span>' : '') + '</div></div>';
       }).join('');
       $('[data-cal="detail"]').innerHTML = html;
     }
@@ -1696,6 +1945,441 @@
       var m = openModal(id ? 'Редактировать достижение' : 'Новое достижение', html);
       bindCrudForm(m, function (data) { return id ? API.achievements.update(id, data) : API.achievements.create(data); },
         function () { toast(id ? 'Сохранено' : 'Достижение создано'); loadAdminAch(); });
+    });
+  }
+
+  /* =================================================================
+     SHARED-PAGE VIEWER CONTEXT  [v0.6]
+     Student → self. Parent → one of their children. Admin → any student.
+     The selected child/student is carried in ?student=ID.
+     ================================================================= */
+  function targetStudentId() {
+    var m = location.search.match(/[?&]student=([^&]+)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function resolveViewer() {
+    var me = API.auth.current();
+    var sel = targetStudentId();
+    if (!me || me.role === 'student') return Promise.resolve({ id: me ? me.id : null, options: null });
+    var src = me.role === 'parent' ? API.parent.children() : API.admin.studentOptions();
+    return src.then(function (list) {
+      var opts = list.map(function (s) { return { id: s.id, name: s.name }; });
+      var id = (sel && opts.some(function (o) { return o.id === sel; })) ? sel : (opts[0] && opts[0].id);
+      return { id: id, options: opts };
+    });
+  }
+  function viewerPicker(ctx, page, label) {
+    if (!ctx.options || !ctx.options.length) return '';
+    var opts = ctx.options.map(function (o) {
+      return '<option value="' + escapeHtml(o.id) + '"' + (o.id === ctx.id ? ' selected' : '') + '>' + escapeHtml(o.name) + '</option>';
+    }).join('');
+    return '<div class="cab-viewer-pick"><label>' + (label || 'Ученик') + ':</label>' +
+      '<select class="form-control" data-viewer-pick data-page="' + page + '">' + opts + '</select></div>';
+  }
+  function bindViewerPicker(root) {
+    var sel = $('[data-viewer-pick]', root);
+    if (sel) sel.addEventListener('change', function () {
+      location.href = sel.getAttribute('data-page') + '?student=' + encodeURIComponent(sel.value);
+    });
+  }
+
+  /* =================================================================
+     NOTIFICATION CENTER  [v0.6]
+     ================================================================= */
+  var NOTICE_META = {
+    lesson:       { label: 'Занятие',          icon: ICON.calendar },
+    payment:      { label: 'Платёж',           icon: ICON.receipt  },
+    homework:     { label: 'Домашнее задание', icon: ICON.hw       },
+    certificate:  { label: 'Сертификат',       icon: ICON.cert     },
+    achievement:  { label: 'Достижение',       icon: ICON.star     },
+    event:        { label: 'Мероприятие',      icon: ICON.ticket   },
+    comment:      { label: 'Комментарий',      icon: ICON.note     },
+    subscription: { label: 'Абонемент',        icon: ICON.card     },
+    system:       { label: 'Система',          icon: ICON.bell     }
+  };
+  var notifRoot = $('#notifications-root');
+  if (notifRoot) {
+    var notifFilter = 'inbox';
+    loadNotifications();
+    function loadNotifications() {
+      API.notifications.feed(notifFilter).then(function (list) {
+        var tabs = '<div class="cab-tabs" data-notif-tabs>' +
+          tab('inbox', 'Входящие') + tab('unread', 'Непрочитанные') + tab('archived', 'Архив') + '</div>';
+        var actions = (notifFilter !== 'archived')
+          ? '<div class="cab-toolbar"><div></div><button class="btn btn-outline btn-sm" data-notif-readall>Отметить все прочитанными</button></div>'
+          : '';
+        var body = list.length ? list.map(renderNotice).join('')
+          : '<p class="cab-empty">' + (notifFilter === 'archived' ? 'Архив пуст.' : notifFilter === 'unread' ? 'Непрочитанных уведомлений нет.' : 'Уведомлений пока нет.') + '</p>';
+        notifRoot.innerHTML = tabs + actions + '<div class="notif-list">' + body + '</div>';
+        $all('[data-notif-tab]', notifRoot).forEach(function (b) {
+          b.addEventListener('click', function () { notifFilter = b.getAttribute('data-notif-tab'); loadNotifications(); });
+        });
+        var readAll = $('[data-notif-readall]', notifRoot);
+        if (readAll) readAll.addEventListener('click', function () {
+          API.notifications.markAllRead().then(function () { toast('Все уведомления прочитаны'); loadNotifications(); refreshNavBadge(); });
+        });
+        $all('[data-notif-read]', notifRoot).forEach(function (b) {
+          b.addEventListener('click', function () { API.notifications.markRead(b.getAttribute('data-notif-read')).then(function () { loadNotifications(); refreshNavBadge(); }); });
+        });
+        $all('[data-notif-arch]', notifRoot).forEach(function (b) {
+          b.addEventListener('click', function () { API.notifications.archive(b.getAttribute('data-notif-arch')).then(function () { toast('В архиве'); loadNotifications(); refreshNavBadge(); }); });
+        });
+        $all('[data-notif-unarch]', notifRoot).forEach(function (b) {
+          b.addEventListener('click', function () { API.notifications.unarchive(b.getAttribute('data-notif-unarch')).then(function () { loadNotifications(); }); });
+        });
+        $all('[data-notif-del]', notifRoot).forEach(function (b) {
+          b.addEventListener('click', function () { API.notifications.remove(b.getAttribute('data-notif-del')).then(function () { loadNotifications(); refreshNavBadge(); }); });
+        });
+      });
+      function tab(key, label) {
+        return '<button class="cab-tab' + (notifFilter === key ? ' active' : '') + '" data-notif-tab="' + key + '">' + label + '</button>';
+      }
+    }
+  }
+  function renderNotice(n) {
+    var meta = NOTICE_META[n.type] || NOTICE_META.system;
+    var link = n.href ? '<a class="btn btn-outline btn-sm" href="' + n.href + '">Открыть</a>' : '';
+    var act = n.archived
+      ? '<button class="btn-icon" data-notif-unarch="' + n.id + '" title="Вернуть из архива">↩</button>' +
+        '<button class="btn-icon danger" data-notif-del="' + n.id + '" title="Удалить">✕</button>'
+      : (n.read ? '' : '<button class="btn-icon" data-notif-read="' + n.id + '" title="Прочитано">' + ICON.check + '</button>') +
+        '<button class="btn-icon" data-notif-arch="' + n.id + '" title="В архив">' + ICON.folder + '</button>';
+    return '<div class="notif-item' + (n.read ? '' : ' unread') + '">' +
+      '<div class="notif-ic">' + meta.icon + '</div>' +
+      '<div class="notif-body">' +
+        '<div class="notif-top"><span class="notif-tag">' + meta.label + '</span>' +
+          '<span class="notif-date">' + fmtDate(n.date) + '</span></div>' +
+        '<strong>' + escapeHtml(n.title) + '</strong>' +
+        '<p>' + escapeHtml(n.text) + '</p>' +
+        (link ? '<div class="notif-actions-row">' + link + '</div>' : '') +
+      '</div>' +
+      '<div class="notif-actions">' + act + '</div>' +
+    '</div>';
+  }
+  /* Sidebar unread badge on the Уведомления link. */
+  function refreshNavBadge() {
+    if (!API.auth.current()) return;
+    API.notifications.unreadCount().then(function (n) {
+      $all('.cab-nav a[href="notifications.html"]').forEach(function (a) {
+        var b = a.querySelector('.cab-nav-badge');
+        if (n > 0) {
+          if (!b) { b = document.createElement('span'); b.className = 'cab-nav-badge'; a.appendChild(b); }
+          b.textContent = n > 99 ? '99+' : n;
+        } else if (b) { b.remove(); }
+      });
+    });
+  }
+  refreshNavBadge();
+
+  /* =================================================================
+     ACHIEVEMENTS PROFILE — "Профиль достижений"  [v0.6]
+     ================================================================= */
+  var achProfileRoot = $('#achievements-root');
+  if (achProfileRoot) {
+    resolveViewer().then(function (ctx) {
+      if (!ctx.id) { achProfileRoot.innerHTML = '<p class="cab-empty">Нет данных для отображения.</p>'; return; }
+      API.student.development(ctx.id).then(function (d) {
+        achProfileRoot.innerHTML = viewerPicker(ctx, 'achievements.html', 'Ученик') + achievementsProfileHtml(d);
+        bindMockDownloads(achProfileRoot);
+        bindViewerPicker(achProfileRoot);
+      });
+    });
+  }
+  function achievementsProfileHtml(d) {
+    var att = d.attendance;
+    var completed = d.courses.filter(function (c) { return c.done; });
+    var EVENT_ICONS = { concert: 1, stage: 1, exhibition: 1 };
+    var participation = d.achievements.filter(function (a) { return EVENT_ICONS[a.icon]; });
+    var achHtml = d.achievements.length
+      ? '<div class="ach-grid">' + d.achievements.map(renderAchCard).join('') + '</div>'
+      : '<p class="cab-empty">Достижений пока нет.</p>';
+    var partHtml = participation.length
+      ? '<div class="ach-grid">' + participation.map(renderAchCard).join('') + '</div>'
+      : '<p class="cab-empty">Участие в мероприятиях пока не отмечено.</p>';
+    var certsHtml = d.certificates.length
+      ? '<div class="cert-grid">' + d.certificates.map(renderCertCard).join('') + '</div>'
+      : '<p class="cab-empty">Сертификатов пока нет.</p>';
+    var coursesHtml = completed.length
+      ? '<ul class="cab-list">' + completed.map(function (c) { return '<li>' + ICON.check + ' ' + escapeHtml(c.title) + '</li>'; }).join('') + '</ul>'
+      : '<p class="cab-empty">Завершённых курсов пока нет.</p>';
+    return '' +
+      '<div class="cab-grid">' +
+        statCard(ICON.star, 'Достижения', d.achievements.length, '') +
+        statCard(ICON.cert, 'Сертификаты', d.certificates.length, '') +
+        statCard(ICON.book, 'Завершено курсов', completed.length, 'из ' + d.courses.length) +
+        statCard(ICON.check2, 'Посещаемость', att.rate + '%', att.present + ' из ' + att.total + ' занятий') +
+      '</div>' +
+      '<h2 class="cab-section-title">Достижения</h2>' + achHtml +
+      '<h2 class="cab-section-title">Участие в мероприятиях</h2>' + partHtml +
+      '<h2 class="cab-section-title">Завершённые курсы</h2>' + coursesHtml +
+      '<h2 class="cab-section-title">Сертификаты</h2>' + certsHtml;
+  }
+  function statCard(icon, label, value, sub) {
+    return '<div class="cab-card"><div class="cab-card-label">' + icon + label + '</div>' +
+      '<div class="cab-stat">' + value + '</div>' +
+      (sub ? '<div class="cab-stat-sub">' + sub + '</div>' : '') + '</div>';
+  }
+
+  /* =================================================================
+     PORTFOLIO — student / parent view  [v0.6]
+     ================================================================= */
+  var PF_KIND = {
+    photo:       { label: 'Фото',       icon: ICON.image },
+    video:       { label: 'Видео',      icon: ICON.play  },
+    audio:       { label: 'Аудио',      icon: ICON.note  },
+    document:    { label: 'Документ',   icon: ICON.file  },
+    diploma:     { label: 'Диплом',     icon: ICON.cert  },
+    certificate: { label: 'Сертификат', icon: ICON.cert  }
+  };
+  var pfRoot = $('#portfolio-root');
+  if (pfRoot) {
+    resolveViewer().then(function (ctx) {
+      if (!ctx.id) { pfRoot.innerHTML = '<p class="cab-empty">Нет данных для отображения.</p>'; return; }
+      API.portfolio.list(ctx.id).then(function (list) {
+        var grid = list.length
+          ? '<div class="pf-grid">' + list.map(renderPortfolioItem).join('') + '</div>'
+          : '<p class="cab-empty">Портфолио пока пустое. Материалы добавляет преподаватель.</p>';
+        pfRoot.innerHTML = viewerPicker(ctx, 'portfolio.html', 'Ученик') + grid;
+        bindViewerPicker(pfRoot);
+        $all('[data-pf-open]', pfRoot).forEach(function (b) {
+          b.addEventListener('click', function () { toast('Просмотр материала доступен в полной версии'); });
+        });
+      });
+    });
+  }
+  function renderPortfolioItem(p) {
+    var k = PF_KIND[p.kind] || PF_KIND.document;
+    return '<div class="pf-card pf-' + p.kind + '">' +
+      '<div class="pf-thumb">' + k.icon + '<span class="pf-kind">' + k.label + '</span></div>' +
+      '<div class="pf-body"><strong>' + escapeHtml(p.title) + '</strong>' +
+        (p.note ? '<p>' + escapeHtml(p.note) + '</p>' : '') +
+        '<div class="pf-meta">' + escapeHtml(p.addedBy || '') + ' · ' + fmtDate(p.date) + '</div>' +
+        '<button class="btn btn-outline btn-sm" data-pf-open>Открыть</button>' +
+      '</div></div>';
+  }
+
+  /* =================================================================
+     ACCOUNT SETTINGS  [v0.6]
+     ================================================================= */
+  var settingsRoot = $('#settings-root');
+  if (settingsRoot) loadSettings();
+  function loadSettings() {
+    var me = API.auth.current();
+    Promise.all([API.auth.prefs(), API.integrations.channels()]).then(function (res) {
+      var prefs = res[0], channels = res[1];
+      var tg = me.telegram || { linked: false };
+      var prefRows = [
+        ['lessons', 'Занятия и расписание'], ['homework', 'Домашние задания'],
+        ['comments', 'Комментарии преподавателя'], ['subscription', 'Окончание абонемента'],
+        ['events', 'Новые курсы и мероприятия']
+      ].map(function (p) {
+        return '<label class="check-row"><input type="checkbox" data-pref="' + p[0] + '"' + (prefs[p[0]] !== false ? ' checked' : '') + '><span>' + p[1] + '</span></label>';
+      }).join('');
+
+      settingsRoot.innerHTML =
+        '<div class="settings-grid">' +
+          '<section class="cab-card settings-card"><h2>Профиль</h2>' +
+            '<form data-form-profile>' +
+              field('Имя', input('name', me.name)) +
+              field('Email', input('email', me.email, 'email')) +
+              field('Телефон', input('phone', me.phone)) +
+              '<div class="form-error" data-err-profile></div>' +
+              '<button class="btn btn-primary btn-sm" type="submit">Сохранить профиль</button>' +
+            '</form></section>' +
+
+          '<section class="cab-card settings-card"><h2>Смена пароля</h2>' +
+            '<form data-form-pass>' +
+              field('Текущий пароль', input('current', '', 'password')) +
+              field('Новый пароль', input('next', '', 'password')) +
+              field('Повторите пароль', input('confirm', '', 'password')) +
+              '<div class="form-error" data-err-pass></div>' +
+              '<button class="btn btn-primary btn-sm" type="submit">Изменить пароль</button>' +
+            '</form></section>' +
+
+          '<section class="cab-card settings-card"><h2>Уведомления</h2>' +
+            '<p class="cab-muted">Выберите, о чём присылать уведомления.</p>' +
+            '<div class="check-list">' + prefRows + '</div>' +
+            '<button class="btn btn-primary btn-sm" data-save-prefs>Сохранить настройки</button>' +
+          '</section>' +
+
+          '<section class="cab-card settings-card"><h2>Привязанные аккаунты</h2>' +
+            '<div class="linked-row">' +
+              '<div class="linked-info">' + ICON.bell + '<div><strong>Telegram</strong>' +
+                '<span class="cab-muted" data-tg-status>' + (tg.linked ? ('Привязан' + (tg.username ? ' · @' + escapeHtml(tg.username) : '')) : 'Не привязан') + '</span></div></div>' +
+              (tg.linked
+                ? '<button class="btn btn-outline btn-sm" data-tg-unlink>Отвязать</button>'
+                : '<button class="btn btn-primary btn-sm" data-tg-link>Привязать Telegram</button>') +
+            '</div>' +
+            '<p class="cab-muted settings-channels">Каналы доставки: ' + channelStatus(channels) + '</p>' +
+          '</section>' +
+        '</div>';
+
+      // profile form
+      $('[data-form-profile]', settingsRoot).addEventListener('submit', function (e) {
+        e.preventDefault();
+        var err = $('[data-err-profile]', settingsRoot); hide(err);
+        var data = collectForm(this);
+        API.auth.updateProfile(data).then(function () {
+          toast('Профиль сохранён'); renderSidebar(); bindSignout();
+        }).catch(function (ex) { setFormError(err, ex.message); });
+      });
+      // password form
+      $('[data-form-pass]', settingsRoot).addEventListener('submit', function (e) {
+        e.preventDefault();
+        var err = $('[data-err-pass]', settingsRoot); hide(err);
+        var d = collectForm(this);
+        if (d.next !== d.confirm) { setFormError(err, 'Пароли не совпадают'); return; }
+        API.auth.changePassword(d.current, d.next).then(function () {
+          toast('Пароль изменён'); $('[data-form-pass]', settingsRoot).reset();
+        }).catch(function (ex) { setFormError(err, ex.message); });
+      });
+      // prefs
+      $('[data-save-prefs]', settingsRoot).addEventListener('click', function () {
+        var p = {};
+        $all('[data-pref]', settingsRoot).forEach(function (c) { p[c.getAttribute('data-pref')] = c.checked; });
+        API.auth.setPrefs(p).then(function () { toast('Настройки уведомлений сохранены'); });
+      });
+      // telegram link/unlink
+      var linkBtn = $('[data-tg-link]', settingsRoot);
+      if (linkBtn) linkBtn.addEventListener('click', function () {
+        API.auth.linkTelegram({ id: '', username: '' }).then(function () { toast('Telegram привязан'); loadSettings(); });
+      });
+      var unlinkBtn = $('[data-tg-unlink]', settingsRoot);
+      if (unlinkBtn) unlinkBtn.addEventListener('click', function () {
+        API.auth.unlinkTelegram().then(function () { toast('Telegram отвязан'); loadSettings(); });
+      });
+    });
+  }
+  function channelStatus(ch) {
+    var names = { telegram: 'Telegram', push: 'Push', email: 'Email', sms: 'SMS' };
+    return Object.keys(names).map(function (k) {
+      return names[k] + ' — ' + (ch[k] ? 'вкл.' : 'скоро');
+    }).join(' · ');
+  }
+  function collectForm(form) {
+    var data = {};
+    $all('input, select, textarea', form).forEach(function (el) { if (el.name) data[el.name] = el.value; });
+    return data;
+  }
+  function bindSignout() {
+    $all('[data-signout]').forEach(function (btn) {
+      btn.addEventListener('click', function () { confirmSignOut(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — events CRUD  [v0.6]
+     ================================================================= */
+  var EVENT_TYPE_OPTS = [
+    { value: 'concert', label: 'Концерт' },
+    { value: 'performance', label: 'Спектакль' },
+    { value: 'exhibition', label: 'Выставка' },
+    { value: 'masterclass', label: 'Мастер-класс' }
+  ];
+  function eventTypeLabel(t) {
+    var o = EVENT_TYPE_OPTS.filter(function (x) { return x.value === t; })[0];
+    return o ? o.label : t;
+  }
+  var adminEvents = $('#admin-events-root');
+  if (adminEvents) {
+    var addEventBtn = $('[data-add-event]');
+    if (addEventBtn) addEventBtn.addEventListener('click', function () { editEvent(null); });
+    loadAdminEvents();
+  }
+  function loadAdminEvents() {
+    API.events.all().then(function (list) {
+      if (!list.length) { adminEvents.innerHTML = '<p class="cab-empty">Мероприятий пока нет.</p>'; return; }
+      var rows = list.map(function (e) {
+        return '<tr>' +
+          '<td data-th="Тип">' + escapeHtml(eventTypeLabel(e.type)) + '</td>' +
+          '<td data-th="Название"><strong>' + escapeHtml(e.title) + '</strong></td>' +
+          '<td data-th="Дата">' + fmtDate(e.date) + (e.time ? ' · ' + escapeHtml(e.time) : '') + '</td>' +
+          '<td data-th="Место">' + escapeHtml(e.place || '—') + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + e.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + e.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminEvents.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Тип</th><th>Название</th><th>Дата</th><th>Место</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminEvents).forEach(function (b) { b.addEventListener('click', function () { editEvent(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminEvents).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить мероприятие?')) API.events.remove(b.getAttribute('data-del')).then(function () { toast('Удалено'); loadAdminEvents(); });
+        });
+      });
+    });
+  }
+  function editEvent(id) {
+    (id ? API.events.all() : Promise.resolve([])).then(function (list) {
+      var e = id ? (list.filter(function (x) { return x.id === id; })[0] || {}) : {};
+      var html = '<form data-form>' +
+        row(field('Тип', selectCtrl('type', EVENT_TYPE_OPTS, e.type || 'concert')),
+            field('Дата', input('date', e.date, 'date'))) +
+        field('Название', input('title', e.title)) +
+        row(field('Время', input('time', e.time)), field('Место', input('place', e.place))) +
+        field('Описание', textarea('description', e.description)) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать мероприятие' : 'Новое мероприятие', html);
+      bindCrudForm(m, function (data) { return id ? API.events.update(id, data) : API.events.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Мероприятие создано'); loadAdminEvents(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — portfolio CRUD  [v0.6]
+     ================================================================= */
+  var PF_KIND_OPTS = [
+    { value: 'photo', label: 'Фото' }, { value: 'video', label: 'Видео' },
+    { value: 'audio', label: 'Аудио' }, { value: 'document', label: 'Документ' },
+    { value: 'diploma', label: 'Диплом' }, { value: 'certificate', label: 'Сертификат' }
+  ];
+  var adminPf = $('#admin-portfolio-root');
+  if (adminPf) {
+    var addPfBtn = $('[data-add-pf]');
+    if (addPfBtn) addPfBtn.addEventListener('click', function () { editPortfolio(null); });
+    loadAdminPortfolio();
+  }
+  function loadAdminPortfolio() {
+    API.portfolio.all().then(function (list) {
+      if (!list.length) { adminPf.innerHTML = '<p class="cab-empty">Материалов пока нет.</p>'; return; }
+      var rows = list.map(function (p) {
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(p.studentName) + '</td>' +
+          '<td data-th="Тип">' + escapeHtml((PF_KIND[p.kind] || {}).label || p.kind) + '</td>' +
+          '<td data-th="Материал"><strong>' + escapeHtml(p.title) + '</strong></td>' +
+          '<td data-th="Дата">' + fmtDate(p.date) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + p.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + p.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminPf.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Ученик</th><th>Тип</th><th>Материал</th><th>Дата</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminPf).forEach(function (b) { b.addEventListener('click', function () { editPortfolio(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminPf).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить материал?')) API.portfolio.remove(b.getAttribute('data-del')).then(function () { toast('Удалено'); loadAdminPortfolio(); });
+        });
+      });
+    });
+  }
+  function editPortfolio(id) {
+    Promise.all([API.admin.studentOptions(), id ? API.portfolio.all() : Promise.resolve([])]).then(function (res) {
+      var students = res[0].map(function (s) { return { value: s.id, label: s.name }; });
+      var p = id ? (res[1].filter(function (x) { return x.id === id; })[0] || {}) : {};
+      var html = '<form data-form>' +
+        row(field('Ученик', selectCtrl('studentId', students, p.studentId)),
+            field('Тип материала', selectCtrl('kind', PF_KIND_OPTS, p.kind || 'photo'))) +
+        field('Название', input('title', p.title)) +
+        field('Комментарий', textarea('note', p.note)) +
+        row(field('Кто добавил', input('addedBy', p.addedBy)), field('Дата', input('date', p.date, 'date'))) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать материал' : 'Новый материал портфолио', html);
+      bindCrudForm(m, function (data) { return id ? API.portfolio.update(id, data) : API.portfolio.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Материал добавлен'); loadAdminPortfolio(); });
     });
   }
 

@@ -1,5 +1,5 @@
 /* =====================================================================
-   MOCK API LAYER — Shpigotskiy Art Space (v0.5)
+   MOCK API LAYER — Shpigotskiy Art Space (v0.6)
    ---------------------------------------------------------------------
    Centralised data access. Every page talks to window.API.* — swap
    methods for real fetch() calls when a backend exists.
@@ -19,13 +19,27 @@
      sas_certificates   — certificates     [v0.5]
      sas_achievements   — achievements     [v0.5]
      sas_teacher_notes  — teacher comments about students [v0.5]
+     sas_notifications  — notification center feed   [v0.6]
+     sas_events         — events / concerts / exhibitions / masterclasses [v0.6]
+     sas_portfolio      — student digital portfolio   [v0.6]
+     sas_transactions   — payment transaction log      [v0.6]
 
-   Payment integration point: processCharge() — replace body with PSP.
-   Reserved namespace: tests — scaffolding for a future version.
-   Integration stubs (notify): telegram / push / email / sms — see notify.
+   Integration points (architecture-ready, not wired to live services):
+     payment gateways  — PAYMENT_GATEWAYS + processCharge(): universal
+                         layer; add a provider object to plug in a real PSP.
+     notify()          — persists an in-app notification AND fans out to the
+                         enabled external channels (Telegram / push / email /
+                         SMS) via dispatchExternal(); channels are off by
+                         default until a real backend is connected.
+     auth.telegram*    — Telegram login / account linking scaffolding.
+   Reserved namespaces (return "next version"): tests, gamification,
+     wallet, ratings, seasons. The shop is live; its catalogue is reserved
+     for the future in-app currency.
    ===================================================================== */
 (function (global) {
   'use strict';
+
+  var VERSION = '0.6';
 
   var LS_USERS    = 'sas_users';
   var LS_SESSION  = 'sas_session';
@@ -41,6 +55,10 @@
   var LS_CERTS    = 'sas_certificates';
   var LS_ACHIEVE  = 'sas_achievements';
   var LS_TNOTES   = 'sas_teacher_notes';
+  var LS_NOTICES  = 'sas_notifications';
+  var LS_EVENTS   = 'sas_events';
+  var LS_PORTFOLIO= 'sas_portfolio';
+  var LS_TXN      = 'sas_transactions';
 
   /* ---- storage ---- */
   function read(key, fallback) {
@@ -69,10 +87,16 @@
 
   function norm(v) { return (v || '').trim().toLowerCase(); }
   function uid(prefix) { return prefix + '-' + Date.now() + '-' + Math.floor(Math.random() * 1000); }
+  function defaultPrefs() {
+    return { lessons: true, homework: true, comments: true, subscription: true, events: true };
+  }
   function publicUser(u) {
     if (!u) return null;
     var out = { id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role };
     if (u.role === 'parent') out.childrenIds = (u.childrenIds || []).slice();
+    out.telegram = u.telegram ? { linked: true, username: u.telegram.username || '', chatId: u.telegram.chatId || '' }
+                              : { linked: false, username: '', chatId: '' };
+    out.prefs = Object.assign(defaultPrefs(), u.prefs || {});
     return out;
   }
   function matches(u, login) { return norm(u.email) === login || norm(u.phone) === login; }
@@ -381,6 +405,67 @@
     ];
   }
 
+  function seedEvents() {
+    var now = new Date();
+    return [
+      { id: 'ev-1', type: 'concert', title: 'Отчётный концерт студии',
+        date: ymd(addDays(now, 9)), time: '18:00', place: 'Большой зал',
+        description: 'Выступления учеников всех направлений. Вход свободный.' },
+      { id: 'ev-2', type: 'exhibition', title: 'Выставка детских работ «Краски весны»',
+        date: ymd(addDays(now, 16)), time: '12:00', place: 'Галерея, 1 этаж',
+        description: 'Лучшие живописные и графические работы за сезон.' },
+      { id: 'ev-3', type: 'masterclass', title: 'Мастер-класс по импровизации на гитаре',
+        date: ymd(addDays(now, 4)), time: '19:00', place: 'Зал 1',
+        description: 'Открытый мастер-класс Антона Шпигоцкого.' },
+      { id: 'ev-4', type: 'performance', title: 'Спектакль театральной студии «Маленький принц»',
+        date: ymd(addDays(now, 23)), time: '17:00', place: 'Большой зал',
+        description: 'Премьера учебного спектакля.' }
+    ];
+  }
+
+  function seedPortfolio() {
+    var now = new Date();
+    return [
+      { id: 'pf-1', studentId: 'stu-demo', kind: 'video', title: 'Выступление на концерте',
+        note: 'Кавер «Город которого нет», апрель.', addedBy: 'Антон Шпигоцкий',
+        date: ymd(addDays(now, -40)) },
+      { id: 'pf-2', studentId: 'stu-demo', kind: 'audio', title: 'Запись этюда №3',
+        note: 'Домашняя запись, чистое исполнение.', addedBy: 'Антон Шпигоцкий',
+        date: ymd(addDays(now, -14)) },
+      { id: 'pf-3', studentId: 'stu-demo', kind: 'photo', title: 'Фото с открытого урока',
+        note: '', addedBy: 'Администратор', date: ymd(addDays(now, -8)) },
+      { id: 'pf-4', studentId: 'stu-demo', kind: 'diploma', title: 'Диплом за участие в конкурсе',
+        note: 'Городской конкурс юных исполнителей, 2 место.', addedBy: 'Администратор',
+        date: ymd(addDays(now, -30)) },
+      { id: 'pf-5', studentId: 'stu-max', kind: 'video', title: 'Дебютное выступление',
+        note: 'Отчётный концерт, вокал.', addedBy: 'Мария Лебедева', date: ymd(addDays(now, -20)) }
+    ];
+  }
+
+  function seedNotices() {
+    var now = new Date();
+    function rec(o) {
+      return { id: o.id, userId: o.userId, type: o.type, title: o.title, text: o.text,
+        href: o.href || null, date: o.date, read: !!o.read, archived: false };
+    }
+    return [
+      rec({ id: 'nt-1', userId: 'stu-demo', type: 'homework', title: 'Новое домашнее задание',
+        text: 'Этюд №5: отработать переходы между аккордами Am–Dm–E.',
+        href: 'homework.html', date: ymd(addDays(now, -1)) }),
+      rec({ id: 'nt-2', userId: 'stu-demo', type: 'comment', title: 'Комментарий преподавателя',
+        text: 'Антон Шпигоцкий оставил рекомендацию в вашем профиле развития.',
+        href: 'progress.html', date: ymd(addDays(now, -3)) }),
+      rec({ id: 'nt-3', userId: 'stu-demo', type: 'lesson', title: 'Напоминание о занятии',
+        text: 'Завтра в 17:00 — гитара, Зал 1.', href: 'schedule.html', date: ymd(addDays(now, -4)), read: true }),
+      rec({ id: 'nt-4', userId: 'stu-demo', type: 'event', title: 'Скоро отчётный концерт',
+        text: 'Отчётный концерт студии состоится через неделю. Не пропустите!',
+        href: 'schedule.html', date: ymd(addDays(now, -2)) }),
+      rec({ id: 'nt-5', userId: 'stu-demo', type: 'subscription', title: 'Абонемент заканчивается',
+        text: 'По абонементу «Гитара · Безлимит-8» осталось 2 занятия.',
+        href: 'shop.html', date: ymd(addDays(now, -5)), read: true })
+    ];
+  }
+
   (function ensureSeed() {
     var users = read(LS_USERS, null) || [];
     [DEMO_USER, DEMO_CHILD2, PARENT_USER, ADMIN_USER].forEach(function (seed) {
@@ -399,6 +484,9 @@
     if (!read(LS_CERTS, null))    write(LS_CERTS,    seedCertificates());
     if (!read(LS_ACHIEVE, null))  write(LS_ACHIEVE,  seedAchievements());
     if (!read(LS_TNOTES, null))   write(LS_TNOTES,   seedTeacherNotes());
+    if (!read(LS_EVENTS, null))   write(LS_EVENTS,   seedEvents());
+    if (!read(LS_PORTFOLIO, null))write(LS_PORTFOLIO,seedPortfolio());
+    if (!read(LS_NOTICES, null))  write(LS_NOTICES,  seedNotices());
   })();
 
   var PLANS = [
@@ -408,9 +496,70 @@
     { id: 'plan-paint8',name: 'Живопись · 8 занятий',  direction: 'Живопись',  lessons: 8,  price: 12000, durationDays: 30 }
   ];
 
-  /* Payment gateway integration point — replace with real PSP call. */
+  /* =================================================================
+     UNIVERSAL PAYMENT LAYER  [v0.6]
+     -----------------------------------------------------------------
+     Business logic never talks to a concrete PSP — it calls
+     processCharge(order) which routes to the active gateway. To plug a
+     real provider (Kaspi, Stripe, CloudPayments, …) add an object to
+     PAYMENT_GATEWAYS with a `charge(order) -> Promise` method and flip
+     `active`. Transaction statuses and the transaction log below stay
+     unchanged, so nothing in the rest of the app needs editing.
+
+     Transaction status flow:
+       pending → processing → succeeded
+                            ↘ failed   (error captured on the record)
+     ================================================================= */
+  var TXN_STATUS = ['pending', 'processing', 'succeeded', 'failed'];
+
+  var PAYMENT_GATEWAYS = {
+    /* Built-in mock gateway: always succeeds. Real gateways replace this. */
+    mock: {
+      id: 'mock', title: 'Демо-оплата', live: false,
+      charge: function (order) { return delay({ ok: true, providerRef: uid('ref') }); }
+    },
+    /* Scaffolding for real providers — disabled until a backend is wired. */
+    kaspi:        { id: 'kaspi',        title: 'Kaspi Pay',     live: false, charge: gatewayNotReady },
+    cloudpayments:{ id: 'cloudpayments',title: 'CloudPayments', live: false, charge: gatewayNotReady },
+    stripe:       { id: 'stripe',       title: 'Stripe',        live: false, charge: gatewayNotReady }
+  };
+  var ACTIVE_GATEWAY = 'mock';
+
+  function gatewayNotReady() {
+    return fail('Платёжный шлюз ещё не подключён. Обратитесь к администратору.');
+  }
+
+  function logTransaction(rec) {
+    var list = read(LS_TXN, []);
+    var txn = { id: uid('txn'), studentId: rec.studentId || curId(),
+      gateway: rec.gateway || ACTIVE_GATEWAY, amount: rec.amount || 0,
+      purpose: rec.purpose || '', status: rec.status || 'pending',
+      providerRef: rec.providerRef || null, error: rec.error || null,
+      createdAt: new Date().toISOString() };
+    list.push(txn); write(LS_TXN, list);
+    return txn;
+  }
+  function setTxnStatus(id, status, extra) {
+    var list = read(LS_TXN, []);
+    var t = list.filter(function (x) { return x.id === id; })[0];
+    if (t) { t.status = status; if (extra) { for (var k in extra) t[k] = extra[k]; } write(LS_TXN, list); }
+    return t;
+  }
+
+  /* Routes an order through the active gateway, recording a transaction.
+     Resolves with { ok, txn } on success; rejects (and marks the txn
+     failed) on a declined / errored charge. */
   function processCharge(order) {
-    return delay({ ok: true, provider: 'mock', order: order });
+    var gw = PAYMENT_GATEWAYS[ACTIVE_GATEWAY] || PAYMENT_GATEWAYS.mock;
+    var txn = logTransaction({ studentId: order.studentId, amount: order.amount,
+      purpose: order.purpose || order.type, gateway: gw.id, status: 'processing' });
+    return gw.charge(order).then(function (res) {
+      setTxnStatus(txn.id, 'succeeded', { providerRef: res && res.providerRef });
+      return { ok: true, provider: gw.id, order: order, txn: txn.id };
+    }, function (err) {
+      setTxnStatus(txn.id, 'failed', { error: err && err.message });
+      throw err;
+    });
   }
 
   function addPayment(rec) {
@@ -459,6 +608,77 @@
       var users = read(LS_USERS, []);
       var user = users.filter(function (u) { return matches(u, session.login); })[0];
       return publicUser(user);
+    },
+
+    /* ---- account settings  [v0.6] ---- */
+    updateProfile: function (data) {
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.id === curId(); })[0];
+      if (!u) return fail('Сессия не найдена');
+      var newLogin = norm((data.email != null ? data.email : u.email) || (data.phone != null ? data.phone : u.phone));
+      if (!newLogin) return fail('Укажите телефон или email');
+      var clash = users.some(function (x) { return x.id !== u.id && matches(x, newLogin); });
+      if (clash) return fail('Эти контактные данные уже заняты');
+      if (data.name != null) {
+        if (!data.name.trim()) return fail('Имя не может быть пустым');
+        u.name = data.name.trim();
+      }
+      if (data.email != null) u.email = data.email.trim();
+      if (data.phone != null) u.phone = data.phone.trim();
+      // keep the session pointed at the (possibly changed) login
+      write(LS_SESSION, { login: norm(u.email || u.phone), at: Date.now() });
+      write(LS_USERS, users);
+      return delay(publicUser(u));
+    },
+    changePassword: function (current, next) {
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.id === curId(); })[0];
+      if (!u) return fail('Сессия не найдена');
+      if (u.password !== current) return fail('Текущий пароль указан неверно');
+      if (!next || next.length < 6) return fail('Новый пароль должен быть не короче 6 символов');
+      u.password = next; write(LS_USERS, users);
+      return delay({ ok: true });
+    },
+    prefs: function () {
+      var u = read(LS_USERS, []).filter(function (x) { return x.id === curId(); })[0];
+      return delay(Object.assign(defaultPrefs(), (u && u.prefs) || {}));
+    },
+    setPrefs: function (prefs) {
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.id === curId(); })[0];
+      if (!u) return fail('Сессия не найдена');
+      u.prefs = Object.assign(defaultPrefs(), u.prefs || {}, prefs || {});
+      write(LS_USERS, users);
+      return delay(clone(u.prefs));
+    },
+
+    /* ---- Telegram login & account linking  [v0.6, scaffolding] ----
+       In production, verify Telegram `initData` / login-widget hash on a
+       backend, then map the Telegram id to a user. Here we link by the
+       already-signed-in account (or match by username) and store the ids. */
+    telegramAuth: function (tgUser) {
+      // tgUser: { id, username, first_name, ... } from Telegram WebApp/login widget
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.telegram && x.telegram.chatId === String(tgUser && tgUser.id); })[0];
+      if (!u) return fail('Telegram-аккаунт не привязан. Войдите обычным способом и привяжите Telegram в настройках.');
+      write(LS_SESSION, { login: norm(u.email || u.phone), at: Date.now() });
+      return delay(publicUser(u));
+    },
+    linkTelegram: function (tgUser) {
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.id === curId(); })[0];
+      if (!u) return fail('Сессия не найдена');
+      u.telegram = { chatId: String((tgUser && tgUser.id) || uid('tg')),
+        username: (tgUser && tgUser.username) || '' };
+      write(LS_USERS, users);
+      return delay(publicUser(u));
+    },
+    unlinkTelegram: function () {
+      var users = read(LS_USERS, []);
+      var u = users.filter(function (x) { return x.id === curId(); })[0];
+      if (!u) return fail('Сессия не найдена');
+      delete u.telegram; write(LS_USERS, users);
+      return delay(publicUser(u));
     }
   };
 
@@ -659,6 +879,41 @@
         var c = JSON.parse(JSON.stringify(p)); c.studentName = nameOf(p.studentId); return c;
       });
       list.sort(function (a, b) { return parseYmd(b.date) - parseYmd(a.date); });
+      return delay(list);
+    },
+    /* Available payment methods for the UI. `live:false` ⇒ shown disabled. */
+    gateways: function () {
+      var out = Object.keys(PAYMENT_GATEWAYS).map(function (k) {
+        var g = PAYMENT_GATEWAYS[k];
+        return { id: g.id, title: g.title, live: g.live, active: g.id === ACTIVE_GATEWAY };
+      });
+      return delay(out);
+    },
+    /* Universal entry point: route any order through the active gateway.
+       order: { type, amount, purpose, studentId } */
+    pay: function (order) {
+      var o = order || {};
+      if (!o.amount && o.amount !== 0) return fail('Не указана сумма платежа');
+      return processCharge(o).then(function (res) {
+        addPayment({ studentId: o.studentId || curId(), amount: o.amount,
+          purpose: o.purpose || 'Оплата', status: 'paid' });
+        return res;
+      });
+    },
+    /* Transaction log (every charge attempt, success or failure). */
+    transactions: function (studentId) {
+      var id = studentId || curId();
+      var list = read(LS_TXN, []).filter(function (t) { return !id || t.studentId === id; });
+      list.sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+      return delay(list.map(function (t) { return JSON.parse(JSON.stringify(t)); }));
+    },
+    allTransactions: function () {
+      var users = read(LS_USERS, []);
+      function nameOf(sid) { var u = users.filter(function (x) { return x.id === sid; })[0]; return u ? u.name : '—'; }
+      var list = read(LS_TXN, []).map(function (t) {
+        var c = JSON.parse(JSON.stringify(t)); c.studentName = nameOf(t.studentId); return c;
+      });
+      list.sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
       return delay(list);
     }
   };
@@ -937,8 +1192,48 @@
           action: { label: 'История платежей', href: 'payments.html' } });
       }
       return delay(out);
+    },
+
+    /* ---- Notification center (persistent feed)  [v0.6] ----
+       Types: lesson · payment · homework · certificate · achievement · event · comment · subscription */
+    feed: function (filter, userId) {
+      var id = userId || curId();
+      var list = read(LS_NOTICES, []).filter(function (n) { return n.userId === id; });
+      if (filter === 'unread')   list = list.filter(function (n) { return !n.read && !n.archived; });
+      else if (filter === 'archived') list = list.filter(function (n) { return n.archived; });
+      else /* inbox */            list = list.filter(function (n) { return !n.archived; });
+      list.sort(byDateDesc('date'));
+      return delay(list.map(clone));
+    },
+    unreadCount: function (userId) {
+      var id = userId || curId();
+      var n = read(LS_NOTICES, []).filter(function (x) { return x.userId === id && !x.read && !x.archived; }).length;
+      return delay(n);
+    },
+    markRead: function (noticeId) { return setNoticeFlag(noticeId, { read: true }); },
+    markUnread: function (noticeId) { return setNoticeFlag(noticeId, { read: false }); },
+    archive: function (noticeId) { return setNoticeFlag(noticeId, { archived: true, read: true }); },
+    unarchive: function (noticeId) { return setNoticeFlag(noticeId, { archived: false }); },
+    markAllRead: function (userId) {
+      var id = userId || curId();
+      var list = read(LS_NOTICES, []);
+      list.forEach(function (n) { if (n.userId === id && !n.archived) n.read = true; });
+      write(LS_NOTICES, list);
+      return delay({ ok: true });
+    },
+    remove: function (noticeId) {
+      write(LS_NOTICES, read(LS_NOTICES, []).filter(function (n) { return n.id !== noticeId; }));
+      return delay({ ok: true });
     }
   };
+  function setNoticeFlag(noticeId, flags) {
+    var list = read(LS_NOTICES, []);
+    var n = list.filter(function (x) { return x.id === noticeId; })[0];
+    if (!n) return fail('Уведомление не найдено');
+    for (var k in flags) n[k] = flags[k];
+    write(LS_NOTICES, list);
+    return delay(clone(n));
+  }
 
   function plural(n, one, few, many) {
     var m10 = n % 10, m100 = n % 100;
@@ -1068,11 +1363,63 @@
     };
   }
 
-  /* Notification dispatch stub — architecture point for future channels.
-     Real impl routes `message` to whichever channels are enabled. No-op now. */
+  /* =================================================================
+     NOTIFICATION DISPATCH  [v0.6]
+     -----------------------------------------------------------------
+     notify() is the single fan-out point used across the API. It:
+       1. resolves `target` (a userId, or a role keyword like 'student' /
+          'parent' / 'admin' / 'teacher') to concrete recipients;
+       2. writes a persistent in-app notification for each recipient
+          (respecting their per-type notification preferences);
+       3. hands the same payload to every enabled external channel via
+          dispatchExternal() — Telegram / push / email / SMS.
+     External channels are disabled until a real backend is connected,
+     so step 3 is a safe no-op today but the call sites already work. */
   var notifyChannels = { telegram: false, push: false, email: false, sms: false };
-  function notify(audience, message) {
-    return { queued: false, audience: audience, message: message };
+
+  function resolveRecipients(target) {
+    var users = read(LS_USERS, []);
+    if (!target) return [];
+    if (target === 'student' || target === 'parent' || target === 'admin') {
+      return users.filter(function (u) { return u.role === target; }).map(function (u) { return u.id; });
+    }
+    if (target === 'teacher') { // teachers are modelled as admins for now
+      return users.filter(function (u) { return u.role === 'admin'; }).map(function (u) { return u.id; });
+    }
+    return [target]; // explicit userId
+  }
+
+  /* External channel dispatch — architecture point for live integrations. */
+  function dispatchExternal(userId, payload) {
+    var u = read(LS_USERS, []).filter(function (x) { return x.id === userId; })[0];
+    var sent = [];
+    if (!u) return sent;
+    Object.keys(notifyChannels).forEach(function (ch) {
+      if (!notifyChannels[ch]) return;            // channel globally disabled
+      if (ch === 'telegram' && !(u.telegram && u.telegram.chatId)) return; // not linked
+      // Real impl would POST to the channel here. No-op stub for now.
+      sent.push(ch);
+    });
+    return sent;
+  }
+
+  function notify(target, message, opts) {
+    opts = opts || {};
+    var recipients = resolveRecipients(target);
+    var list = read(LS_NOTICES, []);
+    var users = read(LS_USERS, []);
+    recipients.forEach(function (uid_) {
+      var u = users.filter(function (x) { return x.id === uid_; })[0];
+      var prefs = Object.assign(defaultPrefs(), (u && u.prefs) || {});
+      var prefKey = opts.pref || opts.type; // some types map to a pref toggle
+      if (prefKey && prefs[prefKey] === false) return; // user muted this type
+      list.push({ id: uid('nt'), userId: uid_, type: opts.type || 'system',
+        title: opts.title || 'Уведомление', text: message, href: opts.href || null,
+        date: ymd(new Date()), read: false, archived: false });
+      dispatchExternal(uid_, { title: opts.title, text: message });
+    });
+    write(LS_NOTICES, list);
+    return { queued: recipients.length, target: target, message: message };
   }
 
   /* =================================================================
@@ -1150,7 +1497,8 @@
         files: (payload && payload.files) || [], submittedAt: ymd(new Date()) };
       h.status = 'submitted';
       write(LS_HOMEWORK, list);
-      notify('teacher', 'Новая сдача ДЗ: ' + h.title);
+      notify('teacher', 'Ученик сдал работу: ' + h.title,
+        { type: 'homework', title: 'Новая сдача ДЗ', href: 'admin-homework.html' });
       return delay(clone(h));
     },
     all: function () {
@@ -1173,7 +1521,8 @@
         materials: parseMaterials(data.materials),
         status: 'assigned', submission: null, review: null };
       list.push(h); write(LS_HOMEWORK, list);
-      notify('student', 'Новое домашнее задание: ' + h.title);
+      notify(h.studentId, 'Новое домашнее задание: ' + h.title,
+        { type: 'homework', pref: 'homework', title: 'Новое домашнее задание', href: 'homework.html' });
       return delay(clone(h));
     },
     update: function (id, data) {
@@ -1193,7 +1542,8 @@
       h.review = { comment: (payload && payload.comment) || '', reviewedAt: ymd(new Date()) };
       h.status = (payload && payload.status) || 'reviewed';
       write(LS_HOMEWORK, list);
-      notify('student', 'Домашнее задание проверено: ' + h.title);
+      notify(h.studentId, 'Домашнее задание проверено: ' + h.title,
+        { type: 'homework', pref: 'homework', title: 'ДЗ проверено', href: 'homework.html' });
       return delay(clone(h));
     },
     remove: function (id) {
@@ -1222,6 +1572,8 @@
         date: data.date || ymd(new Date()), description: (data.description || '').trim(),
         gradient: data.gradient || 'linear-gradient(135deg,#1a0a0a,#3d1010)' };
       list.push(rec); write(LS_CERTS, list);
+      notify(rec.studentId, 'Вам выдан сертификат: ' + rec.title,
+        { type: 'certificate', title: 'Новый сертификат', href: 'certificates.html' });
       return delay(rec);
     },
     update: function (id, data) {
@@ -1258,6 +1610,8 @@
         icon: data.icon || 'star', date: data.date || ymd(new Date()),
         description: (data.description || '').trim() };
       list.push(rec); write(LS_ACHIEVE, list);
+      notify(rec.studentId, 'Новое достижение: ' + rec.title,
+        { type: 'achievement', title: 'Новое достижение', href: 'achievements.html' });
       return delay(rec);
     },
     update: function (id, data) {
@@ -1295,6 +1649,8 @@
         text: data.text.trim(), author: (data.author || '').trim() || (me ? me.name : 'Преподаватель'),
         date: data.date || ymd(new Date()) };
       list.push(rec); write(LS_TNOTES, list);
+      notify(rec.studentId, 'Новый комментарий преподавателя в вашем профиле развития.',
+        { type: 'comment', pref: 'comments', title: 'Комментарий преподавателя', href: 'progress.html' });
       return delay(rec);
     },
     update: function (id, data) {
@@ -1308,6 +1664,197 @@
     remove: function (id) {
       write(LS_TNOTES, read(LS_TNOTES, []).filter(function (n) { return n.id !== id; }));
       return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     EVENTS — concerts / exhibitions / masterclasses / performances  [v0.6]
+     ================================================================= */
+  var EVENT_TYPES = ['concert', 'performance', 'exhibition', 'masterclass'];
+  var events = {
+    list: function () {
+      var list = read(LS_EVENTS, []).map(clone);
+      list.sort(function (a, b) { return parseYmd(a.date) - parseYmd(b.date); });
+      return delay(list);
+    },
+    upcoming: function (limit) {
+      var today = ymd(new Date());
+      var list = read(LS_EVENTS, []).filter(function (e) { return e.date >= today; });
+      list.sort(function (a, b) { return parseYmd(a.date) - parseYmd(b.date); });
+      if (limit) list = list.slice(0, limit);
+      return delay(list.map(clone));
+    },
+    all: function () { return events.list(); },
+    create: function (data) {
+      if (!data.title || !data.title.trim()) return fail('Введите название мероприятия');
+      if (!data.date) return fail('Укажите дату');
+      var list = read(LS_EVENTS, []);
+      var rec = { id: uid('ev'), type: data.type || 'concert', title: data.title.trim(),
+        date: data.date, time: (data.time || '').trim(), place: (data.place || '').trim(),
+        description: (data.description || '').trim() };
+      list.push(rec); write(LS_EVENTS, list);
+      notify('student', 'Новое мероприятие: ' + rec.title,
+        { type: 'event', pref: 'events', title: 'Новое мероприятие', href: 'schedule.html' });
+      return delay(rec);
+    },
+    update: function (id, data) {
+      var list = read(LS_EVENTS, []);
+      var rec = list.filter(function (e) { return e.id === id; })[0];
+      if (!rec) return fail('Мероприятие не найдено');
+      ['type','title','date','time','place','description'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      write(LS_EVENTS, list);
+      return delay(rec);
+    },
+    remove: function (id) {
+      write(LS_EVENTS, read(LS_EVENTS, []).filter(function (e) { return e.id !== id; }));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     PORTFOLIO — student digital portfolio  [v0.6]
+     Kinds: photo · video · audio · document · diploma · certificate
+     Students & parents view; teachers/admins add material.
+     ================================================================= */
+  var portfolio = {
+    list: function (studentId) {
+      var id = studentId || curId();
+      var list = read(LS_PORTFOLIO, []).filter(function (p) { return p.studentId === id; });
+      list.sort(byDateDesc('date'));
+      return delay(list.map(clone));
+    },
+    all: function () {
+      var list = read(LS_PORTFOLIO, []).map(function (p) {
+        var c = clone(p); c.studentName = userName(p.studentId); return c;
+      });
+      list.sort(byDateDesc('date'));
+      return delay(list);
+    },
+    create: function (data) {
+      if (!data.studentId) return fail('Выберите ученика');
+      if (!data.title || !data.title.trim()) return fail('Введите название материала');
+      var me = auth.current();
+      var list = read(LS_PORTFOLIO, []);
+      var rec = { id: uid('pf'), studentId: data.studentId, kind: data.kind || 'photo',
+        title: data.title.trim(), note: (data.note || '').trim(),
+        addedBy: (data.addedBy || '').trim() || (me ? me.name : 'Преподаватель'),
+        date: data.date || ymd(new Date()) };
+      list.push(rec); write(LS_PORTFOLIO, list);
+      notify(rec.studentId, 'В портфолио добавлен материал: ' + rec.title,
+        { type: 'achievement', title: 'Новое в портфолио', href: 'portfolio.html' });
+      return delay(rec);
+    },
+    update: function (id, data) {
+      var list = read(LS_PORTFOLIO, []);
+      var rec = list.filter(function (p) { return p.id === id; })[0];
+      if (!rec) return fail('Материал не найден');
+      ['studentId','kind','title','note','addedBy','date'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      write(LS_PORTFOLIO, list);
+      return delay(rec);
+    },
+    remove: function (id) {
+      write(LS_PORTFOLIO, read(LS_PORTFOLIO, []).filter(function (p) { return p.id !== id; }));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     CALENDAR — unified feed: lessons + events + homework deadlines  [v0.6]
+     ================================================================= */
+  var calendar = {
+    month: function (year, month, studentId) {
+      var id = studentId || curId();
+      var acad = academicFor(id);
+      var out = [];
+      // weekly lessons for this student's direction
+      var cursor = new Date(year, month, 1);
+      while (cursor.getMonth() === month) {
+        WEEKLY.forEach(function (slot) {
+          if (slot.weekday === cursor.getDay() && slot.direction === acad.direction) {
+            out.push({ kind: 'lesson', date: ymd(cursor), time: slot.time,
+              title: 'Занятие · ' + slot.direction, place: slot.room, teacher: slot.teacher });
+          }
+        });
+        cursor = new Date(year, month, cursor.getDate() + 1);
+      }
+      // events in this month
+      read(LS_EVENTS, []).forEach(function (e) {
+        var d = parseYmd(e.date);
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          out.push({ kind: 'event', eventType: e.type, date: e.date, time: e.time,
+            title: e.title, place: e.place });
+        }
+      });
+      // homework deadlines in this month (for this student)
+      read(LS_HOMEWORK, []).filter(function (h) { return h.studentId === id; }).forEach(function (h) {
+        if (!h.dueDate) return;
+        var d = parseYmd(h.dueDate);
+        if (d.getFullYear() === year && d.getMonth() === month) {
+          out.push({ kind: 'deadline', date: h.dueDate, time: '',
+            title: 'Дедлайн ДЗ: ' + h.title, status: h.status });
+        }
+      });
+      out.sort(function (a, b) { return parseYmd(a.date) - parseYmd(b.date); });
+      return delay(out);
+    }
+  };
+
+  /* =================================================================
+     GLOBAL SEARCH — courses / lessons / teachers / homework / events  [v0.6]
+     ================================================================= */
+  var search = {
+    global: function (query, studentId) {
+      var q = norm(query);
+      if (!q) return delay([]);
+      var id = studentId || curId();
+      var me = auth.current();
+      var isStaff = me && me.role === 'admin';
+      var out = [];
+      var teachers = {};
+
+      read(LS_COURSES, []).forEach(function (c) {
+        var owned = c.enrollments && c.enrollments[id];
+        if (!c.published && !owned && !isStaff) return;
+        if (norm(c.title).indexOf(q) !== -1) {
+          out.push({ type: 'course', title: c.title, subtitle: 'Курс · ' + (c.teacher || ''),
+            href: (owned || isStaff) ? 'courses.html' : 'courses.html' });
+        }
+        if (c.teacher) teachers[c.teacher] = true;
+      });
+
+      read(LS_LESSONS, []).forEach(function (l) {
+        if (norm(l.title).indexOf(q) !== -1) {
+          var course = read(LS_COURSES, []).filter(function (c) { return c.id === l.courseId; })[0];
+          var owned = course && course.enrollments && course.enrollments[id];
+          if (!owned && !isStaff) return;
+          out.push({ type: 'lesson', title: l.title,
+            subtitle: 'Урок · ' + (course ? course.title : ''), href: 'lesson.html?id=' + l.id });
+        }
+      });
+
+      WEEKLY.forEach(function (s) { teachers[s.teacher] = true; });
+      Object.keys(teachers).forEach(function (t) {
+        if (norm(t).indexOf(q) !== -1) {
+          out.push({ type: 'teacher', title: t, subtitle: 'Преподаватель', href: '../teachers.html' });
+        }
+      });
+
+      var hw = read(LS_HOMEWORK, []).filter(function (h) { return isStaff || h.studentId === id; });
+      hw.forEach(function (h) {
+        if (norm(h.title).indexOf(q) !== -1) {
+          out.push({ type: 'homework', title: h.title, subtitle: 'Домашнее задание',
+            href: isStaff ? 'admin-homework.html' : 'homework.html' });
+        }
+      });
+
+      read(LS_EVENTS, []).forEach(function (e) {
+        if (norm(e.title).indexOf(q) !== -1) {
+          out.push({ type: 'event', title: e.title, subtitle: 'Мероприятие · ' + e.date,
+            href: 'schedule.html' });
+        }
+      });
+
+      return delay(out.slice(0, 30));
     }
   };
 
@@ -1361,25 +1908,67 @@
   }
 
   /* =================================================================
-     INTEGRATIONS — scaffolding for Telegram / push / email / SMS  [v0.5]
-     Not implemented yet; channels disabled. notify() is a no-op.
+     INTEGRATIONS — Telegram Bot / Mini App / channels  [v0.6]
+     Architecture-ready: notify() already fans out through these channels
+     (see dispatchExternal). They stay disabled until a backend is wired.
      ================================================================= */
+  var BOT_USERNAME = 'shpigotskiy_art_bot'; // placeholder; set to the real bot
   var integrations = {
     channels: function () { return delay(clone(notifyChannels)); },
+    /* Telegram Bot descriptor + the notification topics it will deliver. */
+    telegram: function () {
+      return delay({
+        bot: BOT_USERNAME,
+        connected: notifyChannels.telegram,
+        topics: [
+          { key: 'lessons',      label: 'Уведомления о занятиях' },
+          { key: 'homework',     label: 'Новые домашние задания' },
+          { key: 'comments',     label: 'Комментарии преподавателя' },
+          { key: 'subscription', label: 'Окончание абонемента' },
+          { key: 'events',       label: 'Новые курсы и мероприятия' }
+        ]
+      });
+    },
+    /* True when the page is opened inside a Telegram Mini App container. */
+    isMiniApp: function () {
+      return !!(global.Telegram && global.Telegram.WebApp && global.Telegram.WebApp.initData);
+    },
+    /* Pages the Mini App exposes from its menu. */
+    miniAppPages: function () {
+      return delay([
+        { label: 'Личный кабинет', href: 'dashboard.html' },
+        { label: 'Расписание',     href: 'schedule.html' },
+        { label: 'Домашние задания', href: 'homework.html' },
+        { label: 'Онлайн-курсы',   href: 'courses.html' },
+        { label: 'Достижения',     href: 'achievements.html' },
+        { label: 'Сертификаты',    href: 'certificates.html' }
+      ]);
+    },
     send: function () {
-      return fail('Внешние уведомления (Telegram, push, email, SMS) появятся в следующей версии');
+      return fail('Внешняя отправка уведомлений включится после подключения реального backend');
     }
   };
 
-  /* Reserved namespace — future version. */
-  var tests = { list: function () { return fail('Тесты появятся в следующей версии'); } };
+  /* Reserved namespaces — architecture placeholders for future versions.
+     They return a friendly "coming soon" so UI can call them safely. */
+  function soon(label) { return function () { return fail(label + ' появится в следующей версии'); }; }
+  var tests       = { list: soon('Тесты и проверки') };
+  var gamification = { profile: soon('Геймификация'), leaderboard: soon('Геймификация') };
+  var wallet      = { balance: soon('Внутренняя валюта'), history: soon('Внутренняя валюта') };
+  var ratings     = { top: soon('Рейтинги') };
+  var seasons     = { current: soon('Сезонные события') };
 
   global.API = {
-    auth: auth, student: student, schedule: schedule,
+    version: VERSION,
+    auth: auth, student: student, schedule: schedule, calendar: calendar,
     subscriptions: subscriptions, payments: payments,
     courses: courses, lms: lms, notifications: notifications, admin: admin,
     parent: parent, attendance: attendance, homework: homework,
     certificates: certificates, achievements: achievements,
-    comments: comments, integrations: integrations, tests: tests
+    comments: comments, events: events, portfolio: portfolio, search: search,
+    integrations: integrations,
+    /* reserved (next versions) */
+    tests: tests, gamification: gamification, wallet: wallet,
+    ratings: ratings, seasons: seasons
   };
 })(window);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Расписание — Shpigotskiy Art Space</title>
+  <title>Календарь — Shpigotskiy Art Space</title>
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,14 +18,20 @@
 
   <div>
     <div class="cab-topbar">
-      <span class="name">Расписание</span>
+      <span class="name">Календарь</span>
       <button class="cab-burger" data-sidebar-toggle aria-label="Меню"><span></span><span></span><span></span></button>
     </div>
 
     <main class="cab-main" id="calendar-root">
       <div class="cab-page-head">
-        <h1>Расписание занятий</h1>
-        <p class="sub">Календарь занятий. Дни с занятиями отмечены точкой — нажмите, чтобы увидеть детали.</p>
+        <h1>Календарь</h1>
+        <p class="sub">Занятия, концерты, спектакли, выставки, мастер-классы и дедлайны домашних заданий. Нажмите на день, чтобы увидеть детали.</p>
+      </div>
+
+      <div class="cal-legend">
+        <span class="cal-legend-item"><span class="cal-dot ck-lesson"></span>Занятия</span>
+        <span class="cal-legend-item"><span class="cal-dot ck-event"></span>Мероприятия</span>
+        <span class="cal-legend-item"><span class="cal-dot ck-deadline"></span>Дедлайны ДЗ</span>
       </div>
 
       <div class="cab-cal-layout">

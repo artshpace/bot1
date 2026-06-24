@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Shpigotskiy Art Space — Mini App</title>
+  <meta name="robots" content="noindex">
+  <!-- Telegram Mini App SDK: provides window.Telegram.WebApp inside Telegram. -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/account.css">
+</head>
+<body class="cab-body miniapp-body">
+  <main class="miniapp">
+    <header class="miniapp-head">
+      <span class="miniapp-logo">Shpigotskiy Art Space</span>
+      <p id="miniapp-greeting" class="miniapp-greeting">Личный кабинет в Telegram</p>
+    </header>
+
+    <nav class="miniapp-menu" id="miniapp-menu" aria-label="Разделы">
+      <p class="cab-muted">Загрузка…</p>
+    </nav>
+
+    <p class="miniapp-note" id="miniapp-note"></p>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    var tg = window.Telegram && window.Telegram.WebApp;
+    var menu = document.getElementById('miniapp-menu');
+    var note = document.getElementById('miniapp-note');
+    var greet = document.getElementById('miniapp-greeting');
+
+    if (tg && tg.initData) {
+      try { tg.ready(); tg.expand(); document.body.classList.add('tg-miniapp'); } catch (e) {}
+    }
+
+    var me = API.auth.current();
+    if (me && greet) greet.textContent = 'Здравствуйте, ' + me.name + '!';
+
+    API.integrations.miniAppPages().then(function (pages) {
+      menu.innerHTML = pages.map(function (p) {
+        return '<a class="miniapp-link" href="account/' + p.href + '">' + p.label + '</a>';
+      }).join('');
+      if (!me) {
+        note.innerHTML = 'Вы не авторизованы. <a href="account/login.html">Войдите</a>, ' +
+          'затем привяжите Telegram в разделе «Настройки».';
+      } else {
+        note.textContent = 'Уведомления о занятиях, домашних заданиях и мероприятиях приходят прямо в Telegram.';
+      }
+    });
+  })();
+  </script>
+</body>
+</html>

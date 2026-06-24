@@ -1,5 +1,5 @@
 /* =====================================================================
-   ROUTE GUARD + SESSION HELPERS — cabinet & admin (v0.5)
+   ROUTE GUARD + SESSION HELPERS — cabinet & admin (v0.6)
    ---------------------------------------------------------------------
    Include on every /account/ page AFTER api.js but BEFORE account.js:
        <script src="../js/api.js"></script>
@@ -11,6 +11,8 @@
 
    Roles: student → dashboard.html · parent → parent.html · admin → admin.html
    Admin is a superuser and may view student/parent pages too.
+   Shared pages (settings, notifications, portfolio, achievements) are open
+   to every signed-in role.
    ===================================================================== */
 (function () {
   'use strict';
@@ -20,16 +22,20 @@
   // Pages that require the Admin role.
   var ADMIN_PAGES = ['admin.html', 'admin-subscriptions.html', 'admin-courses.html',
     'admin-payments.html', 'admin-parents.html', 'admin-attendance.html',
-    'admin-homework.html', 'admin-certificates.html', 'admin-achievements.html'];
+    'admin-homework.html', 'admin-certificates.html', 'admin-achievements.html',
+    'admin-events.html', 'admin-portfolio.html'];
   // Pages that belong to the Parent cabinet.
   var PARENT_PAGES = ['parent.html'];
+  // Pages any signed-in user may open (role-aware content inside).  [v0.6]
+  var SHARED_PAGES = ['settings.html', 'notifications.html', 'portfolio.html', 'achievements.html'];
 
   var file = (location.pathname.split('/').pop() || 'dashboard.html');
   var isPublic = PUBLIC_PAGES.indexOf(file) !== -1;
   var isAdminPage = ADMIN_PAGES.indexOf(file) !== -1;
   var isParentPage = PARENT_PAGES.indexOf(file) !== -1;
-  // Anything left over (and not public) is a student cabinet page.
-  var isStudentPage = !isPublic && !isAdminPage && !isParentPage;
+  var isSharedPage = SHARED_PAGES.indexOf(file) !== -1;
+  // Anything left over (and not public/shared) is a student cabinet page.
+  var isStudentPage = !isPublic && !isAdminPage && !isParentPage && !isSharedPage;
   var user = (window.API && API.auth) ? API.auth.current() : null;
   var role = user ? user.role : null;
 
