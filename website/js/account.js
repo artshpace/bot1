@@ -101,11 +101,11 @@
     }).join('');
     return '<select class="form-control" name="' + name + '">' + opts + '</select>';
   }
-  function formActions() {
+  function formActions(submitLabel) {
     return '<div class="form-error" data-err></div>' +
       '<div class="cab-modal-actions">' +
         '<button type="button" class="btn btn-outline btn-sm" data-cancel>Отмена</button>' +
-        '<button type="submit" class="btn btn-primary btn-sm">Сохранить</button>' +
+        '<button type="submit" class="btn btn-primary btn-sm">' + (submitLabel || 'Сохранить') + '</button>' +
       '</div>';
   }
 
@@ -138,7 +138,10 @@
     bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
     folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
     gear: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
-    ticket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a3 3 0 0 0 0 6v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M13 5v14"/></svg>'
+    ticket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a3 3 0 0 0 0 6v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2z"/><path d="M13 5v14"/></svg>',
+    funnel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>',
+    teacher: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>',
+    logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>'
   };
 
   /* status / type maps (v0.5) */
@@ -194,18 +197,35 @@
     { href: 'settings.html',      label: 'Настройки',         icon: ICON.gear     }
   ];
   var ADMIN_NAV = [
+    /* --- Ученики / Преподаватели --- */
     { href: 'admin.html',               label: 'Ученики',          icon: ICON.users     },
     { href: 'admin-parents.html',       label: 'Родители',         icon: ICON.parents   },
+    { href: 'admin-teachers.html',      label: 'Преподаватели',    icon: ICON.teacher   },
+    /* --- CRM --- */
+    { href: 'admin-leads.html',         label: 'CRM Лиды',         icon: ICON.funnel    },
+    { href: 'admin-trials.html',        label: 'Пробные занятия',  icon: ICON.calendar  },
+    { href: 'admin-funnel.html',        label: 'Воронка продаж',   icon: ICON.chart     },
+    /* --- Учёба --- */
     { href: 'admin-subscriptions.html', label: 'Абонементы',       icon: ICON.card      },
     { href: 'admin-courses.html',       label: 'Курсы',            icon: ICON.book      },
     { href: 'admin-attendance.html',    label: 'Посещаемость',     icon: ICON.check2    },
     { href: 'admin-homework.html',      label: 'Домашние задания', icon: ICON.hw        },
+    { href: 'admin-skillmap.html',      label: 'Карта развития',   icon: ICON.star      },
+    /* --- Контент --- */
     { href: 'admin-certificates.html',  label: 'Сертификаты',      icon: ICON.cert      },
     { href: 'admin-achievements.html',  label: 'Достижения',       icon: ICON.star      },
     { href: 'admin-portfolio.html',     label: 'Портфолио',        icon: ICON.folder    },
     { href: 'admin-events.html',        label: 'Мероприятия',      icon: ICON.ticket    },
+    /* --- Финансы / Аналитика --- */
     { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
+    { href: 'admin-analytics.html',     label: 'Аналитика',        icon: ICON.chart     },
+    { href: 'admin-churn.html',         label: 'Причины ухода',    icon: ICON.logout    },
+    { href: 'admin-reports.html',       label: 'Отчёты',           icon: ICON.folder    },
+    /* --- Коммуникации --- */
+    { href: 'admin-broadcast.html',     label: 'Рассылки',         icon: ICON.bell      },
     { href: 'notifications.html',       label: 'Уведомления',      icon: ICON.bell      },
+    /* --- Система --- */
+    { href: 'director.html',            label: 'Панель директора', icon: ICON.star      },
     { href: 'settings.html',            label: 'Настройки',        icon: ICON.gear      }
   ];
 
@@ -320,7 +340,18 @@
     'admin-achievements.html':{ title: 'Достижения' },
     'admin-events.html':      { title: 'Мероприятия' },
     'admin-portfolio.html':   { title: 'Портфолио' },
-    'admin-payments.html':    { title: 'Платежи' }
+    'admin-payments.html':    { title: 'Платежи' },
+    /* CRM v0.9 */
+    'admin-leads.html':       { title: 'CRM Лиды' },
+    'admin-trials.html':      { title: 'Пробные занятия' },
+    'admin-teachers.html':    { title: 'Преподаватели' },
+    'admin-funnel.html':      { title: 'Воронка продаж' },
+    'admin-analytics.html':   { title: 'Финансовая аналитика' },
+    'admin-broadcast.html':   { title: 'Рассылки' },
+    'admin-skillmap.html':    { title: 'Карта развития' },
+    'admin-churn.html':       { title: 'Причины ухода' },
+    'admin-reports.html':     { title: 'Отчёты' },
+    'director.html':          { title: 'Панель директора' }
   };
 
   function roleHome() {
@@ -2766,6 +2797,605 @@
       bindCrudForm(m, function (data) { return id ? API.portfolio.update(id, data) : API.portfolio.create(data); },
         function () { toast(id ? 'Сохранено' : 'Материал добавлен'); loadAdminPortfolio(); });
     });
+  }
+
+  /* =================================================================
+     ADMIN — CRM Лиды  [v0.9]
+     ================================================================= */
+  var LEAD_STATUS_LABELS = {
+    new: 'Новый', processing: 'В работе', no_answer: 'Не берёт трубку',
+    trial_scheduled: 'Записан на пробное', trial_done: 'Пробное проведено',
+    purchased: 'Купил', active: 'Активный ученик', lost: 'Потерян'
+  };
+  var LEAD_SOURCE_LABELS = { trial: 'Пробное', course: 'Курс', callback: 'Перезвонить', event: 'Мероприятие', store: 'Магазин' };
+  var adminLeads = $('#admin-leads-root');
+  if (adminLeads) {
+    var addLeadBtn = $('[data-add-lead]');
+    if (addLeadBtn) addLeadBtn.addEventListener('click', function () { editLead(null); });
+    var leadsFilter = $('[data-leads-filter]');
+    if (leadsFilter) leadsFilter.addEventListener('change', loadAdminLeads);
+    loadAdminLeads();
+  }
+  function loadAdminLeads() {
+    if (!adminLeads) return;
+    var f = leadsFilter ? leadsFilter.value : '';
+    API.leads.list(f ? { status: f } : {}).then(function (list) {
+      if (!list.length) { adminLeads.innerHTML = '<p class="cab-empty">Лидов нет.</p>'; return; }
+      var statusBadgeCls = { new: 'badge-blue', processing: 'badge-gold', no_answer: 'badge-gray',
+        trial_scheduled: 'badge-blue', trial_done: 'badge-gold', purchased: 'badge-green', active: 'badge-green', lost: 'badge-red' };
+      var rows = list.map(function (l) {
+        var cls = statusBadgeCls[l.status] || 'badge-gray';
+        return '<tr>' +
+          '<td data-th="Имя"><strong>' + escapeHtml(l.name) + '</strong></td>' +
+          '<td data-th="Телефон">' + escapeHtml(l.phone) + '</td>' +
+          '<td data-th="Источник">' + escapeHtml(LEAD_SOURCE_LABELS[l.source] || l.source) + '</td>' +
+          '<td data-th="Статус"><span class="badge ' + cls + '">' + escapeHtml(LEAD_STATUS_LABELS[l.status] || l.status) + '</span></td>' +
+          '<td data-th="Дата">' + fmtDate(l.createdAt) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-lead-card="' + l.id + '" title="Карточка">≡</button>' +
+            '<button class="btn-icon" data-edit-lead="' + l.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del-lead="' + l.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminLeads.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Имя</th><th>Телефон</th><th>Источник</th><th>Статус</th><th>Дата</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-lead-card]', adminLeads).forEach(function (b) {
+        b.addEventListener('click', function () { openLeadCard(b.getAttribute('data-lead-card')); });
+      });
+      $all('[data-edit-lead]', adminLeads).forEach(function (b) {
+        b.addEventListener('click', function () { editLead(b.getAttribute('data-edit-lead')); });
+      });
+      $all('[data-del-lead]', adminLeads).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить лид?')) API.leads.remove(b.getAttribute('data-del-lead')).then(function () { toast('Удалено'); loadAdminLeads(); });
+        });
+      });
+    });
+  }
+  function openLeadCard(id) {
+    API.leads.get(id).then(function (l) {
+      var comments = (l.comments || []).map(function (c) {
+        return '<div class="cab-comment"><span class="cab-comment-author">' + escapeHtml(c.author) + '</span> <span class="cab-comment-date">' + fmtDate(c.date) + '</span><p>' + escapeHtml(c.text) + '</p></div>';
+      }).join('');
+      var statusOpts = Object.keys(LEAD_STATUS_LABELS).map(function (k) {
+        return '<option value="' + k + '"' + (l.status === k ? ' selected' : '') + '>' + escapeHtml(LEAD_STATUS_LABELS[k]) + '</option>';
+      }).join('');
+      var html = '<div class="cab-lead-card">' +
+        '<p><strong>Телефон:</strong> ' + escapeHtml(l.phone) + '</p>' +
+        (l.email ? '<p><strong>Email:</strong> ' + escapeHtml(l.email) + '</p>' : '') +
+        '<p><strong>Источник:</strong> ' + escapeHtml(LEAD_SOURCE_LABELS[l.source] || l.source) + '</p>' +
+        '<p><strong>Создан:</strong> ' + fmtDate(l.createdAt) + '</p>' +
+        '<div class="cab-form-row" style="margin:12px 0"><label class="cab-label">Статус</label>' +
+          '<select id="lead-status-sel" class="cab-input">' + statusOpts + '</select></div>' +
+        '<div class="cab-comments">' + (comments || '<p class="cab-empty">Комментариев нет.</p>') + '</div>' +
+        '<div style="display:flex;gap:8px;margin-top:8px">' +
+          '<input id="lead-comment-inp" class="cab-input" style="flex:1" placeholder="Добавить комментарий…">' +
+          '<button class="btn-secondary" id="lead-comment-btn">Добавить</button>' +
+        '</div>' +
+        '<div style="margin-top:12px"><button class="btn-secondary" data-cancel>Закрыть</button></div>' +
+        '</div>';
+      var m = openModal('Лид: ' + escapeHtml(l.name), html);
+      var sel = m.body.querySelector('#lead-status-sel');
+      sel.addEventListener('change', function () {
+        API.leads.setStatus(id, sel.value).then(function () { toast('Статус обновлён'); loadAdminLeads(); });
+      });
+      var inp = m.body.querySelector('#lead-comment-inp');
+      m.body.querySelector('#lead-comment-btn').addEventListener('click', function () {
+        if (!inp.value.trim()) return;
+        API.leads.addComment(id, inp.value.trim()).then(function () { toast('Комментарий добавлен'); inp.value = ''; m.close(); openLeadCard(id); });
+      });
+      m.body.querySelector('[data-cancel]').addEventListener('click', m.close);
+    });
+  }
+  function editLead(id) {
+    var sourceOpts = [
+      { value: 'trial', label: 'Пробное' }, { value: 'callback', label: 'Перезвонить' },
+      { value: 'course', label: 'Курс' }, { value: 'event', label: 'Мероприятие' }, { value: 'store', label: 'Магазин' }
+    ];
+    var statusOpts = Object.keys(LEAD_STATUS_LABELS).map(function (k) { return { value: k, label: LEAD_STATUS_LABELS[k] }; });
+    (id ? API.leads.get(id) : Promise.resolve({})).then(function (l) {
+      var html = '<form data-form>' +
+        row(field('Имя *', input('name', l.name)), field('Телефон *', input('phone', l.phone))) +
+        row(field('Email', input('email', l.email, 'email')), field('Направление', input('direction', l.direction))) +
+        row(field('Источник', selectCtrl('source', sourceOpts, l.source || 'callback')),
+            field('Статус', selectCtrl('status', statusOpts, l.status || 'new'))) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать лид' : 'Новый лид', html);
+      bindCrudForm(m, function (data) { return id ? API.leads.update(id, data) : API.leads.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Лид создан'); loadAdminLeads(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Пробные занятия  [v0.9]
+     ================================================================= */
+  var adminTrials = $('#admin-trials-root');
+  if (adminTrials) {
+    var addTrialBtn = $('[data-add-trial]');
+    if (addTrialBtn) addTrialBtn.addEventListener('click', function () { editTrial(null); });
+    loadAdminTrials();
+  }
+  function loadAdminTrials() {
+    if (!adminTrials) return;
+    API.trials.list().then(function (list) {
+      if (!list.length) { adminTrials.innerHTML = '<p class="cab-empty">Пробных занятий пока нет.</p>'; return; }
+      var statusBadge = { scheduled: 'badge-blue', done: 'badge-green', cancelled: 'badge-red', no_show: 'badge-gray' };
+      var statusLabel = { scheduled: 'Запланировано', done: 'Проведено', cancelled: 'Отменено', no_show: 'Не пришёл' };
+      var rows = list.map(function (t) {
+        return '<tr>' +
+          '<td data-th="Имя"><strong>' + escapeHtml(t.name) + '</strong></td>' +
+          '<td data-th="Телефон">' + escapeHtml(t.phone) + '</td>' +
+          '<td data-th="Направление">' + escapeHtml(t.direction) + '</td>' +
+          '<td data-th="Преподаватель">' + escapeHtml(t.teacher) + '</td>' +
+          '<td data-th="Дата/Время">' + fmtDate(t.date) + (t.time ? ' ' + escapeHtml(t.time) : '') + '</td>' +
+          '<td data-th="Статус"><span class="badge ' + (statusBadge[t.status] || 'badge-gray') + '">' + escapeHtml(statusLabel[t.status] || t.status) + '</span></td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            (t.status === 'scheduled' ? '<button class="btn-icon" data-trial-result="' + t.id + '" title="Записать результат">✓</button>' : '') +
+            '<button class="btn-icon" data-edit-trial="' + t.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del-trial="' + t.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminTrials.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Имя</th><th>Телефон</th><th>Направление</th><th>Преподаватель</th><th>Дата/Время</th><th>Статус</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-trial-result]', adminTrials).forEach(function (b) {
+        b.addEventListener('click', function () { recordTrialResult(b.getAttribute('data-trial-result')); });
+      });
+      $all('[data-edit-trial]', adminTrials).forEach(function (b) {
+        b.addEventListener('click', function () { editTrial(b.getAttribute('data-edit-trial')); });
+      });
+      $all('[data-del-trial]', adminTrials).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить пробное занятие?')) API.trials.remove(b.getAttribute('data-del-trial')).then(function () { toast('Удалено'); loadAdminTrials(); });
+        });
+      });
+    });
+  }
+  function recordTrialResult(id) {
+    var resultOpts = [
+      { value: 'converted', label: 'Записался' },
+      { value: 'not_converted', label: 'Не записался' },
+      { value: 'reschedule', label: 'Перенести' }
+    ];
+    var html = '<form data-form>' +
+      field('Результат', selectCtrl('result', resultOpts, 'converted')) +
+      field('Комментарий преподавателя', textarea('teacherComment', '')) +
+      field('Рекомендация', input('recommendation', '')) +
+      formActions('Сохранить результат') + '</form>';
+    var m = openModal('Результат пробного занятия', html);
+    bindCrudForm(m, function (data) { return API.trials.recordResult(id, data.result, data.teacherComment, data.recommendation); },
+      function () { toast('Результат сохранён'); loadAdminTrials(); });
+  }
+  function editTrial(id) {
+    (id ? API.trials.get(id) : Promise.resolve({})).then(function (t) {
+      var html = '<form data-form>' +
+        row(field('Имя *', input('name', t.name)), field('Телефон', input('phone', t.phone))) +
+        row(field('Дата *', input('date', t.date, 'date')), field('Время', input('time', t.time))) +
+        row(field('Преподаватель', input('teacher', t.teacher)), field('Направление', input('direction', t.direction))) +
+        field('Комментарий', textarea('adminComment', t.adminComment)) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать занятие' : 'Новое пробное занятие', html);
+      bindCrudForm(m, function (data) { return id ? API.trials.update(id, data) : API.trials.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Занятие создано'); loadAdminTrials(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Преподаватели CRM  [v0.9]
+     ================================================================= */
+  var adminTeachers = $('#admin-teachers-root');
+  if (adminTeachers) { loadAdminTeachers(); }
+  function loadAdminTeachers() {
+    if (!adminTeachers) return;
+    var users = (window.API && API.auth) ? [] : [];
+    Promise.all([
+      API.admin.list(),
+      Promise.resolve(read_users_safe())
+    ]).then(function () {
+      var academics = JSON.parse(localStorage.getItem('sas_academics') || '{}');
+      var allUsers = JSON.parse(localStorage.getItem('sas_users') || '[]');
+      var teachers = allUsers.filter(function (u) { return u.role === 'teacher'; });
+      if (!teachers.length) { adminTeachers.innerHTML = '<p class="cab-empty">Преподавателей пока нет.</p>'; return; }
+      var rows = teachers.map(function (t) {
+        var studentCount = Object.keys(academics).filter(function (sid) {
+          return academics[sid] && academics[sid].teacher === t.name;
+        }).length;
+        return '<tr>' +
+          '<td data-th="Имя"><strong>' + escapeHtml(t.name) + '</strong></td>' +
+          '<td data-th="Email">' + escapeHtml(t.email || '—') + '</td>' +
+          '<td data-th="Телефон">' + escapeHtml(t.phone || '—') + '</td>' +
+          '<td data-th="Учеников">' + studentCount + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-teacher-card="' + t.id + '" title="Профиль">≡</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminTeachers.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Имя</th><th>Email</th><th>Телефон</th><th>Учеников</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-teacher-card]', adminTeachers).forEach(function (b) {
+        b.addEventListener('click', function () { openTeacherCard(b.getAttribute('data-teacher-card')); });
+      });
+    });
+  }
+  function read_users_safe() {
+    try { return JSON.parse(localStorage.getItem('sas_users') || '[]'); } catch (e) { return []; }
+  }
+  function openTeacherCard(teacherId) {
+    var allUsers = read_users_safe();
+    var t = allUsers.filter(function (u) { return u.id === teacherId; })[0];
+    if (!t) return;
+    var academics = JSON.parse(localStorage.getItem('sas_academics') || '{}');
+    var students = allUsers.filter(function (u) {
+      return u.role === 'student' && academics[u.id] && academics[u.id].teacher === t.name;
+    });
+    var slist = students.map(function (s) {
+      var ac = academics[s.id] || {};
+      return '<li>' + escapeHtml(s.name) + ' · ' + escapeHtml(ac.direction || '—') + '</li>';
+    }).join('') || '<li>Нет назначенных учеников</li>';
+    var html = '<div class="cab-teacher-card">' +
+      '<p><strong>Email:</strong> ' + escapeHtml(t.email || '—') + '</p>' +
+      '<p><strong>Телефон:</strong> ' + escapeHtml(t.phone || '—') + '</p>' +
+      '<p><strong>Роль:</strong> Преподаватель</p>' +
+      '<h4 style="margin:16px 0 8px">Ученики (' + students.length + ')</h4><ul style="padding-left:20px">' + slist + '</ul>' +
+      '<div style="margin-top:16px"><button class="btn-secondary" data-cancel>Закрыть</button></div>' +
+      '</div>';
+    var m = openModal('Профиль: ' + escapeHtml(t.name), html);
+    m.body.querySelector('[data-cancel]').addEventListener('click', m.close);
+  }
+
+  /* =================================================================
+     ADMIN — Воронка продаж  [v0.9]
+     ================================================================= */
+  var adminFunnel = $('#admin-funnel-root');
+  if (adminFunnel) { loadAdminFunnel(); }
+  function loadAdminFunnel() {
+    if (!adminFunnel) return;
+    API.analytics.funnel().then(function (data) {
+      var stagesHtml = data.stages.map(function (s, i) {
+        var width = Math.max(20, s.rate || 0);
+        return '<div class="funnel-stage" style="width:' + width + '%;min-width:180px">' +
+          '<div class="funnel-label">' + escapeHtml(s.label) + '</div>' +
+          '<div class="funnel-count">' + s.count + ' чел.</div>' +
+          (i > 0 ? '<div class="funnel-rate">' + (s.rate || 0) + '%</div>' : '') +
+          '</div>';
+      }).join('<div class="funnel-arrow">▼</div>');
+      var t = data.trials;
+      adminFunnel.innerHTML =
+        '<div class="funnel-wrap">' + stagesHtml + '</div>' +
+        '<div class="cab-stats-row" style="margin-top:24px">' +
+          stat('Пробных запланировано', t.scheduled) +
+          stat('Пробных проведено', t.done) +
+          stat('Конвертировано', t.converted) +
+          stat('Конверсия пробного', t.conversionRate + '%') +
+        '</div>';
+    });
+    function stat(label, val) {
+      return '<div class="cab-stat-card"><div class="cab-stat-val">' + val + '</div><div class="cab-stat-label">' + escapeHtml(label) + '</div></div>';
+    }
+  }
+
+  /* =================================================================
+     ADMIN — Финансовая аналитика  [v0.9]
+     ================================================================= */
+  var adminAnalytics = $('#admin-analytics-root');
+  if (adminAnalytics) { loadAdminAnalytics(); }
+  function loadAdminAnalytics() {
+    if (!adminAnalytics) return;
+    Promise.all([
+      API.analytics.revenue('month', 6),
+      API.analytics.byCategory(),
+      API.analytics.unpaid()
+    ]).then(function (res) {
+      var revData = res[0], cats = res[1], unpaid = res[2];
+      var maxRev = Math.max.apply(null, revData.map(function (r) { return r.amount; })) || 1;
+      var bars = revData.map(function (r) {
+        var h = Math.round(r.amount / maxRev * 120);
+        return '<div class="ana-bar-col">' +
+          '<div class="ana-bar" style="height:' + h + 'px" title="' + fmtMoney(r.amount) + '₸"></div>' +
+          '<div class="ana-bar-label">' + escapeHtml(r.label) + '</div>' +
+          '</div>';
+      }).join('');
+      var catRows = [
+        { k: 'subscriptions', label: 'Абонементы' },
+        { k: 'courses', label: 'Курсы' },
+        { k: 'store', label: 'Магазин' },
+        { k: 'other', label: 'Прочее' }
+      ].map(function (c) {
+        var pct = cats.total > 0 ? Math.round(cats.categories[c.k] / cats.total * 100) : 0;
+        return '<tr><td>' + escapeHtml(c.label) + '</td><td>' + fmtMoney(cats.categories[c.k]) + ' ₸</td>' +
+          '<td><div style="background:#2a1a1a;border-radius:4px;height:10px"><div style="background:var(--accent);border-radius:4px;height:10px;width:' + pct + '%"></div></div></td>' +
+          '<td>' + pct + '%</td></tr>';
+      }).join('');
+      adminAnalytics.innerHTML =
+        '<h3 style="margin-bottom:16px">Выручка по месяцам</h3>' +
+        '<div class="ana-bar-chart">' + bars + '</div>' +
+        '<h3 style="margin:24px 0 12px">Выручка по категориям</h3>' +
+        '<div class="cab-table-wrap"><table class="cab-table"><thead><tr><th>Категория</th><th>Сумма</th><th>Доля</th><th>%</th></tr></thead><tbody>' + catRows + '</tbody></table></div>' +
+        '<h3 style="margin:24px 0 12px">Задолженности</h3>' +
+        '<div class="cab-stats-row">' +
+          '<div class="cab-stat-card"><div class="cab-stat-val">' + unpaid.count + '</div><div class="cab-stat-label">Неоплаченных счетов</div></div>' +
+          '<div class="cab-stat-card"><div class="cab-stat-val">' + fmtMoney(unpaid.total) + ' ₸</div><div class="cab-stat-label">Сумма долга</div></div>' +
+        '</div>';
+    });
+  }
+  function fmtMoney(n) { return (n || 0).toLocaleString('ru-RU'); }
+
+  /* =================================================================
+     ADMIN — Рассылки  [v0.9]
+     ================================================================= */
+  var adminBroadcast = $('#admin-broadcast-root');
+  if (adminBroadcast) { loadBroadcastHistory(); loadBroadcastTemplates(); }
+  function loadBroadcastHistory() {
+    var histRoot = $('[data-broadcast-history]');
+    if (!histRoot) return;
+    API.broadcast.history().then(function (list) {
+      if (!list.length) { histRoot.innerHTML = '<p class="cab-empty">Рассылок пока не было.</p>'; return; }
+      var rows = list.map(function (b) {
+        return '<tr>' +
+          '<td data-th="Тема"><strong>' + escapeHtml(b.subject) + '</strong></td>' +
+          '<td data-th="Получатели">' + escapeHtml(b.recipients) + '</td>' +
+          '<td data-th="Каналы">' + (b.channels || []).join(', ') + '</td>' +
+          '<td data-th="Отправлено">' + fmtDate(b.sentAt) + '</td>' +
+          '<td data-th="Кол-во">' + (b.recipientCount || 0) + '</td>' +
+          '</tr>';
+      }).join('');
+      histRoot.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Тема</th><th>Получатели</th><th>Каналы</th><th>Отправлено</th><th>Кол-во</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+    });
+  }
+  function loadBroadcastTemplates() {
+    var tplRoot = $('[data-broadcast-templates]');
+    if (!tplRoot) return;
+    API.broadcast.templates().then(function (list) {
+      tplRoot.innerHTML = list.map(function (t) {
+        return '<div class="cab-card" style="margin-bottom:8px;cursor:pointer" data-tpl-id="' + t.id + '">' +
+          '<strong>' + escapeHtml(t.name) + '</strong><br><small style="color:var(--text-muted)">' + escapeHtml(t.body.slice(0, 80)) + '…</small></div>';
+      }).join('');
+      $all('[data-tpl-id]', tplRoot).forEach(function (el) {
+        el.addEventListener('click', function () { openBroadcastForm(el.getAttribute('data-tpl-id')); });
+      });
+    });
+  }
+  function openBroadcastForm(tplId) {
+    API.broadcast.templates().then(function (tmpls) {
+      var tpl = tplId ? (tmpls.filter(function (t) { return t.id === tplId; })[0] || {}) : {};
+      var recipOpts = [
+        { value: 'all', label: 'Все' }, { value: 'student', label: 'Ученики' },
+        { value: 'parent', label: 'Родители' }, { value: 'teacher', label: 'Преподаватели' }
+      ];
+      var html = '<form data-form>' +
+        field('Тема', input('subject', tpl.name || '')) +
+        field('Текст', textarea('body', tpl.body || '')) +
+        row(field('Получатели', selectCtrl('recipients', recipOpts, 'all')),
+            field('Каналы (через запятую)', input('channels', 'in_app'))) +
+        '<input type="hidden" name="template" value="' + escapeHtml(tplId || 'custom') + '">' +
+        formActions('Отправить') + '</form>';
+      var m = openModal('Новая рассылка', html);
+      bindCrudForm(m, function (data) {
+        data.channels = data.channels ? data.channels.split(',').map(function (c) { return c.trim(); }) : ['in_app'];
+        return API.broadcast.send(data);
+      }, function () { toast('Рассылка отправлена'); loadBroadcastHistory(); });
+    });
+  }
+  var sendBroadcastBtn = $('[data-send-broadcast]');
+  if (sendBroadcastBtn) sendBroadcastBtn.addEventListener('click', function () { openBroadcastForm(null); });
+
+  /* =================================================================
+     ADMIN — Карта развития  [v0.9]
+     ================================================================= */
+  var adminSkillmap = $('#admin-skillmap-root');
+  if (adminSkillmap) { loadAdminSkillmap(); }
+  function loadAdminSkillmap() {
+    if (!adminSkillmap) return;
+    var allUsers = read_users_safe();
+    var students = allUsers.filter(function (u) { return u.role === 'student'; });
+    if (!students.length) { adminSkillmap.innerHTML = '<p class="cab-empty">Учеников нет.</p>'; return; }
+    var opts = students.map(function (s) { return '<option value="' + s.id + '">' + escapeHtml(s.name) + '</option>'; }).join('');
+    adminSkillmap.innerHTML = '<div style="margin-bottom:16px">' +
+      '<label class="cab-label">Ученик</label>' +
+      '<select class="cab-input" id="skillmap-stu-sel" style="max-width:320px">' + opts + '</select>' +
+      '</div><div id="skillmap-display"></div>';
+    var sel = $('#skillmap-stu-sel');
+    sel.addEventListener('change', function () { showSkillmap(sel.value); });
+    showSkillmap(students[0].id);
+  }
+  function showSkillmap(studentId) {
+    var disp = $('#skillmap-display');
+    if (!disp) return;
+    API.skillMap.getForStudent(studentId).then(function (map) {
+      API.skillMap.templates().then(function (templates) {
+        if (!Object.keys(map).length) { disp.innerHTML = '<p class="cab-empty">Навыки не заданы. Нажмите «Редактировать», чтобы добавить.</p>'; }
+        var html = Object.keys(templates).map(function (dir) {
+          var skills = templates[dir];
+          var dirSkills = map[dir] || {};
+          var rows = skills.map(function (sk) {
+            var lvl = dirSkills[sk] || 0;
+            var dots = [0,1,2,3,4,5].map(function (i) {
+              return '<span class="skill-dot' + (i <= lvl ? ' skill-dot-filled' : '') + '" data-dir="' + encodeURIComponent(dir) + '" data-sk="' + encodeURIComponent(sk) + '" data-lvl="' + i + '">' + (i === 0 ? '○' : '●') + '</span>';
+            }).join('');
+            return '<div class="skill-row"><span class="skill-name">' + escapeHtml(sk) + '</span><span class="skill-dots">' + dots + '</span><span class="skill-level">' + lvl + '/5</span></div>';
+          }).join('');
+          return '<div class="skill-direction"><h4>' + escapeHtml(dir) + '</h4>' + rows + '</div>';
+        }).join('');
+        disp.innerHTML = html || '<p class="cab-empty">Нет шаблонов.</p>';
+        $all('[data-dir]', disp).forEach(function (dot) {
+          dot.style.cursor = 'pointer';
+          dot.addEventListener('click', function () {
+            var dir = decodeURIComponent(dot.getAttribute('data-dir'));
+            var sk = decodeURIComponent(dot.getAttribute('data-sk'));
+            var lvl = parseInt(dot.getAttribute('data-lvl'), 10);
+            var stuSel = $('#skillmap-stu-sel');
+            var sid = stuSel ? stuSel.value : studentId;
+            API.skillMap.setLevel(sid, dir, sk, lvl).then(function () { showSkillmap(sid); });
+          });
+        });
+      });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Причины ухода  [v0.9]
+     ================================================================= */
+  var CHURN_REASON_LABELS = {
+    expensive: 'Дорого', moved: 'Переезд', schedule: 'Расписание',
+    interest: 'Потеря интереса', competitor: 'Конкурент', other: 'Другое'
+  };
+  var adminChurn = $('#admin-churn-root');
+  if (adminChurn) { loadAdminChurn(); }
+  function loadAdminChurn() {
+    if (!adminChurn) return;
+    Promise.all([API.churn.stats()]).then(function (res) {
+      var stats = res[0];
+      var statCards = Object.keys(stats.byReason).map(function (r) {
+        return '<div class="cab-stat-card"><div class="cab-stat-val">' + stats.byReason[r] + '</div><div class="cab-stat-label">' + escapeHtml(CHURN_REASON_LABELS[r] || r) + '</div></div>';
+      }).join('');
+      var rows = stats.list.map(function (c) {
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(c.studentName) + '</td>' +
+          '<td data-th="Причина"><span class="badge badge-red">' + escapeHtml(CHURN_REASON_LABELS[c.reason] || c.reason) + '</span></td>' +
+          '<td data-th="Направление">' + escapeHtml(c.direction || '—') + '</td>' +
+          '<td data-th="Комментарий">' + escapeHtml(c.comment || '—') + '</td>' +
+          '<td data-th="Дата">' + fmtDate(c.date) + '</td>' +
+          '</tr>';
+      }).join('');
+      adminChurn.innerHTML =
+        '<div class="cab-stats-row" style="margin-bottom:24px">' +
+          '<div class="cab-stat-card"><div class="cab-stat-val">' + stats.total + '</div><div class="cab-stat-label">Всего ушло</div></div>' +
+          statCards +
+        '</div>' +
+        (rows ? '<div class="cab-table-wrap"><table class="cab-table"><thead><tr><th>Ученик</th><th>Причина</th><th>Направление</th><th>Комментарий</th><th>Дата</th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="cab-empty">Данных об уходе пока нет.</p>');
+    });
+    var addChurnBtn = $('[data-add-churn]');
+    if (addChurnBtn) addChurnBtn.addEventListener('click', function () { openAddChurn(); });
+  }
+  function openAddChurn() {
+    var allUsers = read_users_safe();
+    var students = allUsers.filter(function (u) { return u.role === 'student'; });
+    var stuOpts = students.map(function (s) { return { value: s.id, label: s.name }; });
+    var reasonOpts = Object.keys(CHURN_REASON_LABELS).map(function (k) { return { value: k, label: CHURN_REASON_LABELS[k] }; });
+    var html = '<form data-form>' +
+      row(field('Ученик', selectCtrl('studentId', stuOpts, '')),
+          field('Причина', selectCtrl('reason', reasonOpts, 'expensive'))) +
+      field('Направление', input('direction', '')) +
+      field('Комментарий', textarea('comment', '')) +
+      formActions('Записать') + '</form>';
+    var m = openModal('Причина ухода ученика', html);
+    bindCrudForm(m, function (data) {
+      var stu = students.filter(function (s) { return s.id === data.studentId; })[0];
+      data.studentName = stu ? stu.name : '—';
+      return API.churn.record(data);
+    }, function () { toast('Записано'); loadAdminChurn(); });
+  }
+
+  /* =================================================================
+     ADMIN — Отчёты  [v0.9]
+     ================================================================= */
+  var adminReports = $('#admin-reports-root');
+  if (adminReports) { loadAdminReports(); }
+  function loadAdminReports() {
+    if (!adminReports) return;
+    var REPORTS = [
+      { id: 'attendance', label: 'Посещаемость', desc: 'Статистика посещений по ученикам за период.' },
+      { id: 'sales', label: 'Продажи', desc: 'Детализация платежей и абонементов за период.' },
+      { id: 'leads', label: 'Лиды', desc: 'Новые заявки, источники и конверсия.' },
+      { id: 'trials', label: 'Пробные занятия', desc: 'Список пробных, результаты, конверсия.' },
+      { id: 'debts', label: 'Задолженности', desc: 'Неоплаченные счета и суммы долга.' },
+      { id: 'workload', label: 'Нагрузка преподавателей', desc: 'Количество учеников и занятий по преподавателям.' }
+    ];
+    adminReports.innerHTML = REPORTS.map(function (r) {
+      return '<div class="cab-card" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">' +
+        '<div><strong>' + escapeHtml(r.label) + '</strong><br><small style="color:var(--text-muted)">' + escapeHtml(r.desc) + '</small></div>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button class="btn-secondary" data-report="' + r.id + '" data-fmt="json">Просмотр</button>' +
+          '<button class="btn-secondary" data-report="' + r.id + '" data-fmt="csv">CSV</button>' +
+        '</div></div>';
+    }).join('');
+    $all('[data-report]', adminReports).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var rId = btn.getAttribute('data-report');
+        var fmt = btn.getAttribute('data-fmt');
+        generateReport(rId, fmt);
+      });
+    });
+  }
+  function generateReport(reportId, fmt) {
+    var generators = {
+      attendance: function () { return Promise.resolve(JSON.parse(localStorage.getItem('sas_attendance') || '[]')); },
+      sales: function () { return Promise.resolve(JSON.parse(localStorage.getItem('sas_payments') || '[]')); },
+      leads: function () { return Promise.resolve(JSON.parse(localStorage.getItem('sas_leads') || '[]')); },
+      trials: function () { return Promise.resolve(JSON.parse(localStorage.getItem('sas_trials') || '[]')); },
+      debts: function () {
+        var p = JSON.parse(localStorage.getItem('sas_payments') || '[]');
+        return Promise.resolve(p.filter(function (x) { return x.status === 'pending'; }));
+      },
+      workload: function () {
+        var ac = JSON.parse(localStorage.getItem('sas_academics') || '{}');
+        var wl = {};
+        Object.keys(ac).forEach(function (sid) { var t = ac[sid].teacher; if (t) wl[t] = (wl[t] || 0) + 1; });
+        return Promise.resolve(Object.keys(wl).map(function (t) { return { teacher: t, students: wl[t] }; }));
+      }
+    };
+    var gen = generators[reportId];
+    if (!gen) return;
+    gen().then(function (data) {
+      if (fmt === 'csv') {
+        if (!data.length) { toast('Нет данных'); return; }
+        var keys = Object.keys(data[0]);
+        var csv = [keys.join(',')].concat(data.map(function (row) {
+          return keys.map(function (k) { var v = row[k]; return typeof v === 'object' ? JSON.stringify(v) : (v || ''); }).join(',');
+        })).join('\n');
+        var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = reportId + '-report.csv'; a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        var html = '<pre style="max-height:400px;overflow:auto;font-size:11px;background:#111;padding:12px;border-radius:6px">' +
+          escapeHtml(JSON.stringify(data, null, 2)) + '</pre><div style="margin-top:12px"><button class="btn-secondary" data-cancel>Закрыть</button></div>';
+        var m = openModal('Отчёт: ' + reportId, html);
+        m.body.querySelector('[data-cancel]').addEventListener('click', m.close);
+      }
+    });
+  }
+
+  /* =================================================================
+     DIRECTOR — управленческая панель  [v0.9]
+     ================================================================= */
+  var directorRoot = $('#director-root');
+  if (directorRoot) { loadDirectorDashboard(); }
+  function loadDirectorDashboard() {
+    if (!directorRoot) return;
+    directorRoot.innerHTML = '<p class="cab-empty">Загрузка данных…</p>';
+    API.analytics.summary().then(function (s) {
+      var teacherRows = Object.keys(s.teacherWorkload).map(function (t) {
+        return '<tr><td>' + escapeHtml(t) + '</td><td>' + s.teacherWorkload[t] + ' учеников</td></tr>';
+      }).join('') || '<tr><td colspan="2" class="cab-empty">Нет данных</td></tr>';
+      directorRoot.innerHTML =
+        '<div class="cab-stats-row">' +
+          dStat('Активных учеников', s.activeStudents, 'badge-green') +
+          dStat('Новых заявок', s.newLeads, 'badge-blue') +
+          dStat('Пробных ожидается', s.scheduledTrials, 'badge-gold') +
+          dStat('Преподавателей', s.teachers, '') +
+        '</div>' +
+        '<div class="cab-stats-row" style="margin-top:12px">' +
+          dStat('Выручка за месяц', fmtMoney(s.monthRevenue) + ' ₸', 'badge-green') +
+          dStat('Сумма долга', fmtMoney(s.unpaidTotal) + ' ₸', s.unpaidTotal > 0 ? 'badge-red' : '') +
+          dStat('Предстоящих событий', s.upcomingEvents, '') +
+        '</div>' +
+        '<h3 style="margin:24px 0 12px">Нагрузка преподавателей</h3>' +
+        '<div class="cab-table-wrap"><table class="cab-table"><thead><tr><th>Преподаватель</th><th>Учеников</th></tr></thead><tbody>' + teacherRows + '</tbody></table></div>' +
+        '<div class="dir-quick-links" style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">' +
+          '<a href="admin-leads.html" class="btn-secondary">CRM Лиды</a>' +
+          '<a href="admin-trials.html" class="btn-secondary">Пробные</a>' +
+          '<a href="admin-funnel.html" class="btn-secondary">Воронка</a>' +
+          '<a href="admin-analytics.html" class="btn-secondary">Аналитика</a>' +
+          '<a href="admin-reports.html" class="btn-secondary">Отчёты</a>' +
+        '</div>';
+    });
+    function dStat(label, val, cls) {
+      return '<div class="cab-stat-card"><div class="cab-stat-val' + (cls ? ' ' + cls : '') + '">' + val + '</div><div class="cab-stat-label">' + escapeHtml(label) + '</div></div>';
+    }
   }
 
   /* shared CRUD form binder */

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Карта развития — Админ-панель</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/account.css">
+  <style>
+    .skill-direction { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+    .skill-direction h4 { margin: 0 0 12px; color: var(--accent); }
+    .skill-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,.05)); }
+    .skill-row:last-child { border-bottom: none; }
+    .skill-name { flex: 1; font-size: .85rem; }
+    .skill-dots { display: flex; gap: 4px; }
+    .skill-dot { font-size: 1rem; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+    .skill-dot-filled { color: var(--accent); }
+    .skill-level { font-size: .75rem; color: var(--text-muted); min-width: 28px; text-align: right; }
+  </style>
+</head>
+<body class="cab-body">
+<div class="cab-shell">
+
+  <aside class="cab-sidebar" data-cab-sidebar="admin"></aside>
+
+  <div>
+    <div class="cab-topbar">
+      <span class="name">Админ · Карта развития</span>
+      <button class="cab-burger" data-sidebar-toggle aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+
+    <main class="cab-main">
+      <div class="cab-page-head">
+        <h1>Карта развития ученика</h1>
+        <p class="sub">Прогресс по навыкам (0–5) по каждому направлению. Кликайте по точкам для обновления уровня.</p>
+      </div>
+
+      <div id="admin-skillmap-root"></div>
+    </main>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/account.js"></script>
+</body>
+</html>

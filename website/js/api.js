@@ -39,7 +39,7 @@
 (function (global) {
   'use strict';
 
-  var VERSION = '0.7';
+  var VERSION = '0.9';
 
   var LS_USERS    = 'sas_users';
   var LS_SESSION  = 'sas_session';
@@ -59,8 +59,14 @@
   var LS_EVENTS   = 'sas_events';
   var LS_PORTFOLIO= 'sas_portfolio';
   var LS_TXN      = 'sas_transactions';
-  var LS_CART     = 'sas_cart';
-  var LS_ORDERS   = 'sas_orders';
+  var LS_CART       = 'sas_cart';
+  var LS_ORDERS     = 'sas_orders';
+  var LS_LEADS      = 'sas_leads';
+  var LS_TRIALS     = 'sas_trials';
+  var LS_SKILL_MAP  = 'sas_skill_map';
+  var LS_CHURN      = 'sas_churn';
+  var LS_BROADCASTS = 'sas_broadcasts';
+  var LS_SCHEDULE_SLOTS = 'sas_schedule_slots';
 
   /* ---- storage ---- */
   function read(key, fallback) {
@@ -500,6 +506,102 @@
     ];
   }
 
+  /* ---- CRM seed data ---- */
+  var LEAD_STATUSES = ['new','processing','no_answer','trial_scheduled','trial_done','purchased','active','lost'];
+  var LEAD_SOURCES  = ['trial','course','callback','event','store'];
+  var TRIAL_STATUSES = ['scheduled','done','cancelled','no_show'];
+  var DIRECTIONS    = ['Гитара','Вокал','Живопись','Актёрское мастерство','Современный танец'];
+
+  var SKILL_TEMPLATES = {
+    'Гитара':                ['Посадка и постановка','Аккорды','Перебор','Бой','Баррэ','Импровизация','Сценическое выступление'],
+    'Вокал':                 ['Дыхание','Интонация','Ритм','Диапазон','Сценическая подача'],
+    'Живопись':              ['Композиция','Работа с цветом','Перспектива','Работа с материалами','Детализация'],
+    'Актёрское мастерство':  ['Сценическая речь','Пластика','Работа с партнёром','Импровизация','Сценическое присутствие'],
+    'Современный танец':     ['Техника движения','Ритм и музыкальность','Пространство','Партнёрство','Хореография']
+  };
+
+  function seedLeads() {
+    var now = new Date();
+    return [
+      { id: 'ld-1', name: 'Наталья Иванова', phone: '+7 701 111 2233', email: 'ivanova@example.com',
+        source: 'trial', status: 'new', createdAt: ymd(addDays(now, -1)),
+        comments: [{ id: 'lc-1', text: 'Интересует гитара для дочери 9 лет', author: 'Система', date: ymd(addDays(now, -1)) }] },
+      { id: 'ld-2', name: 'Дмитрий Сейткали', phone: '+7 702 222 3344', email: 'seit@example.com',
+        source: 'callback', status: 'processing', createdAt: ymd(addDays(now, -3)),
+        comments: [{ id: 'lc-2', text: 'Перезвонить после 18:00', author: 'Администратор', date: ymd(addDays(now, -2)) }] },
+      { id: 'ld-3', name: 'Карина Ахметова', phone: '+7 705 333 4455', email: '',
+        source: 'event', status: 'trial_scheduled', createdAt: ymd(addDays(now, -5)),
+        comments: [] },
+      { id: 'ld-4', name: 'Сергей Попов', phone: '+7 707 444 5566', email: 'popov@example.com',
+        source: 'course', status: 'trial_done', createdAt: ymd(addDays(now, -8)),
+        comments: [{ id: 'lc-3', text: 'Занятие прошло хорошо, думает', author: 'Администратор', date: ymd(addDays(now, -4)) }] },
+      { id: 'ld-5', name: 'Алия Жумаева', phone: '+7 708 555 6677', email: 'aliya@example.com',
+        source: 'trial', status: 'purchased', createdAt: ymd(addDays(now, -14)),
+        comments: [] },
+      { id: 'ld-6', name: 'Руслан Бекова', phone: '+7 701 666 7788', email: '',
+        source: 'store', status: 'lost', createdAt: ymd(addDays(now, -20)),
+        comments: [{ id: 'lc-4', text: 'Сказал что дорого', author: 'Администратор', date: ymd(addDays(now, -15)) }] },
+      { id: 'ld-7', name: 'Анна Петрова', phone: '+7 702 777 8899', email: 'anna@example.com',
+        source: 'trial', status: 'active', createdAt: ymd(addDays(now, -30)),
+        comments: [] },
+      { id: 'ld-8', name: 'Тимур Карибаев', phone: '+7 705 888 9900', email: '',
+        source: 'callback', status: 'no_answer', createdAt: ymd(addDays(now, -2)),
+        comments: [{ id: 'lc-5', text: 'Не берёт трубку, попробовать позже', author: 'Администратор', date: ymd(addDays(now, -1)) }] }
+    ];
+  }
+
+  function seedTrials() {
+    var now = new Date();
+    return [
+      { id: 'tr-1', leadId: 'ld-3', name: 'Карина Ахметова', phone: '+7 705 333 4455',
+        date: ymd(addDays(now, 2)), time: '15:00', teacher: 'Ирина Волошина',
+        direction: 'Вокал', adminComment: 'Первый опыт пения', status: 'scheduled',
+        result: null, teacherComment: '', recommendation: '' },
+      { id: 'tr-2', leadId: 'ld-4', name: 'Сергей Попов', phone: '+7 707 444 5566',
+        date: ymd(addDays(now, -4)), time: '17:00', teacher: 'Антон Шпигоцкий',
+        direction: 'Гитара', adminComment: '', status: 'done',
+        result: 'converted', teacherComment: 'Хороший слух, легко схватывает. Рекомендую записаться.',
+        recommendation: 'Абонемент 8 занятий — гитара' },
+      { id: 'tr-3', leadId: 'ld-5', name: 'Алия Жумаева', phone: '+7 708 555 6677',
+        date: ymd(addDays(now, -12)), time: '11:00', teacher: 'Мария Лебедева',
+        direction: 'Современный танец', adminComment: 'Была на мастер-классе', status: 'done',
+        result: 'converted', teacherComment: 'Отличная пластика. Купила абонемент на месте.',
+        recommendation: 'Абонемент 12 занятий — танец' },
+      { id: 'tr-4', leadId: 'ld-2', name: 'Дмитрий Сейткали', phone: '+7 702 222 3344',
+        date: ymd(addDays(now, 5)), time: '10:00', teacher: 'Антон Шпигоцкий',
+        direction: 'Гитара', adminComment: 'Взрослый, с нуля', status: 'scheduled',
+        result: null, teacherComment: '', recommendation: '' }
+    ];
+  }
+
+  function seedSkillMap() {
+    return {
+      'stu-demo': {
+        'Гитара': { 'Посадка и постановка': 5, 'Аккорды': 4, 'Перебор': 3, 'Бой': 3, 'Баррэ': 2, 'Импровизация': 1, 'Сценическое выступление': 3 }
+      },
+      'stu-max': {
+        'Вокал': { 'Дыхание': 4, 'Интонация': 3, 'Ритм': 4, 'Диапазон': 2, 'Сценическая подача': 3 }
+      }
+    };
+  }
+
+  function seedBroadcasts() {
+    var now = new Date();
+    return [
+      { id: 'bc-1', subject: 'Напоминание о концерте', body: 'Уважаемые ученики и родители! Отчётный концерт состоится 15 июля в 18:00. Просьба подтвердить участие.',
+        recipients: 'student', channels: ['in_app'], template: 'custom', sentAt: ymd(addDays(now, -2)), sentBy: 'Администратор', recipientCount: 12 },
+      { id: 'bc-2', subject: 'Изменение расписания', body: 'Занятие в четверг 11 июля переносится с 17:00 на 18:00 в связи с ремонтными работами.',
+        recipients: 'all', channels: ['in_app', 'telegram'], template: 'custom', sentAt: ymd(addDays(now, -7)), sentBy: 'Администратор', recipientCount: 18 }
+    ];
+  }
+
+  var BROADCAST_TEMPLATES = [
+    { id: 'tpl-homework', name: 'Напоминание о ДЗ', body: 'Уважаемый ученик! Напоминаем о домашнем задании по направлению {{direction}}. Срок сдачи: {{due}}.' },
+    { id: 'tpl-payment',  name: 'Напоминание об оплате', body: 'Уважаемый {{name}}! Ваш абонемент заканчивается через {{days}} дней. Пожалуйста, продлите его заблаговременно.' },
+    { id: 'tpl-event',    name: 'Анонс мероприятия', body: 'Уважаемые ученики и родители! Приглашаем вас на {{event}} {{date}}. Место: {{place}}.' },
+    { id: 'tpl-trial',    name: 'Подтверждение пробного', body: 'Здравствуйте, {{name}}! Подтверждаем запись на пробное занятие {{date}} в {{time}}. Преподаватель: {{teacher}}.' }
+  ];
+
   (function ensureSeed() {
     var users = read(LS_USERS, null) || [];
     [DEMO_USER, DEMO_CHILD2, PARENT_USER, ADMIN_USER, TEACHER_USER, TEACHER_USER2].forEach(function (seed) {
@@ -521,6 +623,11 @@
     if (!read(LS_EVENTS, null))   write(LS_EVENTS,   seedEvents());
     if (!read(LS_PORTFOLIO, null))write(LS_PORTFOLIO,seedPortfolio());
     if (!read(LS_NOTICES, null))  write(LS_NOTICES,  seedNotices());
+    if (!read(LS_LEADS, null))      write(LS_LEADS,      seedLeads());
+    if (!read(LS_TRIALS, null))     write(LS_TRIALS,     seedTrials());
+    if (!read(LS_SKILL_MAP, null))  write(LS_SKILL_MAP,  seedSkillMap());
+    if (!read(LS_BROADCASTS, null)) write(LS_BROADCASTS, seedBroadcasts());
+    if (!read(LS_CHURN, null))      write(LS_CHURN,      []);
   })();
 
   var PLANS = [
@@ -2269,6 +2376,380 @@
     schedule:         function (year, month) { return schedule.month(year, month); }
   };
 
+  /* =================================================================
+     LEADS — CRM for incoming leads  [v0.9]
+     ================================================================= */
+  var leads = {
+    list: function (filters) {
+      var list = read(LS_LEADS, []);
+      filters = filters || {};
+      if (filters.status) list = list.filter(function (l) { return l.status === filters.status; });
+      if (filters.source) list = list.filter(function (l) { return l.source === filters.source; });
+      if (filters.q) {
+        var q = norm(filters.q);
+        list = list.filter(function (l) {
+          return norm(l.name).indexOf(q) !== -1 || norm(l.phone || '').indexOf(q) !== -1 || norm(l.email || '').indexOf(q) !== -1;
+        });
+      }
+      list.sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+      return delay(list);
+    },
+    get: function (id) {
+      var l = read(LS_LEADS, []).filter(function (x) { return x.id === id; })[0];
+      return l ? delay(clone(l)) : fail('Лид не найден');
+    },
+    create: function (data) {
+      if (!data || !data.name || !data.phone) return fail('Имя и телефон обязательны');
+      var list = read(LS_LEADS, []);
+      var lead = {
+        id: uid('ld'), name: (data.name || '').trim(), phone: (data.phone || '').trim(),
+        email: (data.email || '').trim(), source: data.source || 'callback',
+        status: 'new', createdAt: ymd(new Date()),
+        direction: data.direction || '', comment: data.comment || '',
+        comments: []
+      };
+      if (data.comment) lead.comments.push({ id: uid('lc'), text: data.comment, author: 'Система', date: ymd(new Date()) });
+      list.push(lead);
+      write(LS_LEADS, list);
+      return delay(clone(lead));
+    },
+    update: function (id, data) {
+      var list = read(LS_LEADS, []);
+      var lead = list.filter(function (x) { return x.id === id; })[0];
+      if (!lead) return fail('Лид не найден');
+      var allowed = ['name','phone','email','source','status','direction'];
+      allowed.forEach(function (k) { if (data[k] !== undefined) lead[k] = data[k]; });
+      write(LS_LEADS, list);
+      return delay(clone(lead));
+    },
+    setStatus: function (id, status) {
+      if (LEAD_STATUSES.indexOf(status) === -1) return fail('Неверный статус');
+      return leads.update(id, { status: status });
+    },
+    addComment: function (id, text, author) {
+      var list = read(LS_LEADS, []);
+      var lead = list.filter(function (x) { return x.id === id; })[0];
+      if (!lead) return fail('Лид не найден');
+      var comment = { id: uid('lc'), text: text, author: author || 'Администратор', date: ymd(new Date()) };
+      lead.comments = lead.comments || [];
+      lead.comments.push(comment);
+      write(LS_LEADS, list);
+      return delay(clone(comment));
+    },
+    remove: function (id) {
+      var list = read(LS_LEADS, []).filter(function (x) { return x.id !== id; });
+      write(LS_LEADS, list);
+      return delay({ ok: true });
+    },
+    statuses: function () { return delay(LEAD_STATUSES.slice()); },
+    sources: function () { return delay(LEAD_SOURCES.slice()); }
+  };
+
+  /* =================================================================
+     TRIALS — trial lesson management  [v0.9]
+     ================================================================= */
+  var trials = {
+    list: function (filters) {
+      var list = read(LS_TRIALS, []);
+      filters = filters || {};
+      if (filters.status) list = list.filter(function (t) { return t.status === filters.status; });
+      if (filters.teacherId) {
+        var tname = userName(filters.teacherId);
+        list = list.filter(function (t) { return t.teacher === tname; });
+      }
+      list.sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); });
+      return delay(list.map(clone));
+    },
+    get: function (id) {
+      var t = read(LS_TRIALS, []).filter(function (x) { return x.id === id; })[0];
+      return t ? delay(clone(t)) : fail('Пробное занятие не найдено');
+    },
+    create: function (data) {
+      if (!data || !data.name || !data.date) return fail('Имя и дата обязательны');
+      var list = read(LS_TRIALS, []);
+      var trial = {
+        id: uid('tr'), leadId: data.leadId || null,
+        name: (data.name || '').trim(), phone: (data.phone || '').trim(),
+        date: data.date, time: data.time || '10:00',
+        teacher: data.teacher || '', direction: data.direction || '',
+        adminComment: data.adminComment || '', status: 'scheduled',
+        result: null, teacherComment: '', recommendation: ''
+      };
+      list.push(trial);
+      write(LS_TRIALS, list);
+      /* if linked to a lead, update its status */
+      if (trial.leadId) leads.setStatus(trial.leadId, 'trial_scheduled');
+      return delay(clone(trial));
+    },
+    update: function (id, data) {
+      var list = read(LS_TRIALS, []);
+      var trial = list.filter(function (x) { return x.id === id; })[0];
+      if (!trial) return fail('Пробное занятие не найдено');
+      var allowed = ['date','time','teacher','direction','adminComment','status','result','teacherComment','recommendation'];
+      allowed.forEach(function (k) { if (data[k] !== undefined) trial[k] = data[k]; });
+      write(LS_TRIALS, list);
+      return delay(clone(trial));
+    },
+    recordResult: function (id, result, teacherComment, recommendation) {
+      var list = read(LS_TRIALS, []);
+      var trial = list.filter(function (x) { return x.id === id; })[0];
+      if (!trial) return fail('Пробное занятие не найдено');
+      trial.status = 'done';
+      trial.result = result; /* 'converted' | 'not_converted' | 'reschedule' */
+      trial.teacherComment = teacherComment || '';
+      trial.recommendation = recommendation || '';
+      write(LS_TRIALS, list);
+      /* update lead status */
+      if (trial.leadId) {
+        leads.setStatus(trial.leadId, result === 'converted' ? 'trial_done' : 'trial_done');
+      }
+      return delay(clone(trial));
+    },
+    remove: function (id) {
+      write(LS_TRIALS, read(LS_TRIALS, []).filter(function (x) { return x.id !== id; }));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     SKILL MAP — per-student skill progress radar  [v0.9]
+     ================================================================= */
+  var skillMap = {
+    /* Returns skill map for a student: { direction: { skill: level } } */
+    getForStudent: function (studentId) {
+      var map = read(LS_SKILL_MAP, {});
+      return delay(clone(map[studentId] || {}));
+    },
+    /* Returns skill levels for one direction */
+    getForDirection: function (studentId, direction) {
+      var map = read(LS_SKILL_MAP, {});
+      var stu = map[studentId] || {};
+      var skills = SKILL_TEMPLATES[direction] || [];
+      var levels = stu[direction] || {};
+      var result = skills.map(function (s) { return { skill: s, level: levels[s] || 0 }; });
+      return delay(result);
+    },
+    /* Set level for one skill */
+    setLevel: function (studentId, direction, skill, level) {
+      if (level < 0 || level > 5) return fail('Уровень должен быть 0–5');
+      var map = read(LS_SKILL_MAP, {});
+      if (!map[studentId]) map[studentId] = {};
+      if (!map[studentId][direction]) map[studentId][direction] = {};
+      map[studentId][direction][skill] = level;
+      write(LS_SKILL_MAP, map);
+      return delay({ studentId: studentId, direction: direction, skill: skill, level: level });
+    },
+    /* Bulk set for a direction */
+    setDirection: function (studentId, direction, skillLevels) {
+      var map = read(LS_SKILL_MAP, {});
+      if (!map[studentId]) map[studentId] = {};
+      map[studentId][direction] = skillLevels;
+      write(LS_SKILL_MAP, map);
+      return delay({ ok: true });
+    },
+    templates: function () { return delay(clone(SKILL_TEMPLATES)); },
+    directions: function () { return delay(DIRECTIONS.slice()); }
+  };
+
+  /* =================================================================
+     CHURN — student departure reason tracking  [v0.9]
+     ================================================================= */
+  var CHURN_REASONS = ['expensive','moved','schedule','interest','competitor','other'];
+  var churn = {
+    list: function () {
+      return delay(read(LS_CHURN, []).map(clone));
+    },
+    record: function (data) {
+      if (!data || !data.studentId || !data.reason) return fail('studentId и reason обязательны');
+      if (CHURN_REASONS.indexOf(data.reason) === -1) return fail('Неверная причина');
+      var list = read(LS_CHURN, []);
+      var rec = {
+        id: uid('ch'), studentId: data.studentId, studentName: data.studentName || userName(data.studentId),
+        reason: data.reason, comment: data.comment || '', date: ymd(new Date()),
+        direction: data.direction || ''
+      };
+      list.push(rec);
+      write(LS_CHURN, list);
+      return delay(clone(rec));
+    },
+    stats: function () {
+      var list = read(LS_CHURN, []);
+      var byReason = {};
+      CHURN_REASONS.forEach(function (r) { byReason[r] = 0; });
+      list.forEach(function (c) { byReason[c.reason] = (byReason[c.reason] || 0) + 1; });
+      return delay({ total: list.length, byReason: byReason, list: list.map(clone) });
+    },
+    reasons: function () { return delay(CHURN_REASONS.slice()); }
+  };
+
+  /* =================================================================
+     BROADCAST — mass notification center  [v0.9]
+     ================================================================= */
+  var broadcast = {
+    templates: function () { return delay(BROADCAST_TEMPLATES.map(clone)); },
+    history: function () {
+      var list = read(LS_BROADCASTS, []);
+      list.sort(function (a, b) { return (b.sentAt || '').localeCompare(a.sentAt || ''); });
+      return delay(list.map(clone));
+    },
+    send: function (data) {
+      if (!data || !data.subject || !data.body) return fail('Тема и текст обязательны');
+      var recipients = data.recipients || 'all'; /* 'all'|'student'|'parent'|'teacher'|array of ids */
+      var channels = data.channels || ['in_app'];
+      var users = read(LS_USERS, []);
+      var targets = [];
+      if (Array.isArray(recipients)) {
+        targets = recipients;
+      } else if (recipients === 'all') {
+        targets = users.map(function (u) { return u.id; });
+      } else {
+        targets = users.filter(function (u) { return u.role === recipients; }).map(function (u) { return u.id; });
+      }
+      /* Fan out in-app notifications */
+      if (channels.indexOf('in_app') !== -1) {
+        targets.forEach(function (uid_) {
+          notify(uid_, data.subject + ': ' + data.body.slice(0, 120), { type: 'broadcast', read: false });
+        });
+      }
+      /* Record the broadcast */
+      var me = auth.current();
+      var record = {
+        id: uid('bc'), subject: data.subject, body: data.body,
+        recipients: recipients, channels: channels,
+        template: data.template || 'custom',
+        sentAt: ymd(new Date()), sentBy: me ? me.name : 'Администратор',
+        recipientCount: targets.length
+      };
+      var history = read(LS_BROADCASTS, []);
+      history.push(record);
+      write(LS_BROADCASTS, history);
+      return delay(clone(record));
+    }
+  };
+
+  /* =================================================================
+     ANALYTICS — financial + funnel metrics  [v0.9]
+     Computed on-the-fly from existing data stores. No new storage.
+     ================================================================= */
+  var analytics = {
+    /* Revenue by period: 'day'|'week'|'month' for past N periods */
+    revenue: function (period, count) {
+      var payments = read(LS_PAYMENTS, []).filter(function (p) { return p.status === 'paid'; });
+      period = period || 'month';
+      count = count || 6;
+      var now = new Date();
+      var result = [];
+      for (var i = count - 1; i >= 0; i--) {
+        var start, end, label;
+        if (period === 'day') {
+          start = ymd(addDays(now, -i));
+          end = start;
+          label = start;
+        } else if (period === 'week') {
+          var d = addDays(now, -i * 7);
+          start = ymd(addDays(d, -6));
+          end = ymd(d);
+          label = 'Нед. ' + (count - i);
+        } else {
+          var m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          var mNames = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+          label = mNames[m.getMonth()] + ' ' + m.getFullYear();
+          start = ymd(m);
+          end = ymd(new Date(m.getFullYear(), m.getMonth() + 1, 0));
+        }
+        var amount = payments.filter(function (p) {
+          return p.date >= start && p.date <= end;
+        }).reduce(function (s, p) { return s + (p.amount || 0); }, 0);
+        result.push({ label: label, start: start, end: end, amount: amount });
+      }
+      return delay(result);
+    },
+    /* Revenue breakdown by category */
+    byCategory: function () {
+      var payments = read(LS_PAYMENTS, []).filter(function (p) { return p.status === 'paid'; });
+      var cats = { subscriptions: 0, courses: 0, store: 0, other: 0 };
+      payments.forEach(function (p) {
+        var purp = (p.purpose || '').toLowerCase();
+        if (purp.indexOf('абонемент') !== -1) cats.subscriptions += p.amount || 0;
+        else if (purp.indexOf('курс') !== -1) cats.courses += p.amount || 0;
+        else if (purp.indexOf('магазин') !== -1 || purp.indexOf('товар') !== -1 || purp.indexOf('сертификат') !== -1) cats.store += p.amount || 0;
+        else cats.other += p.amount || 0;
+      });
+      var total = cats.subscriptions + cats.courses + cats.store + cats.other;
+      return delay({ total: total, categories: cats });
+    },
+    /* Unpaid services */
+    unpaid: function () {
+      var payments = read(LS_PAYMENTS, []).filter(function (p) { return p.status === 'pending'; });
+      var total = payments.reduce(function (s, p) { return s + (p.amount || 0); }, 0);
+      return delay({ count: payments.length, total: total, items: payments.map(clone) });
+    },
+    /* Sales funnel: leads → trial → purchase → active */
+    funnel: function () {
+      var allLeads = read(LS_LEADS, []);
+      var allTrials = read(LS_TRIALS, []);
+      var stages = [
+        { id: 'new',             label: 'Новые заявки',      count: 0 },
+        { id: 'trial_scheduled', label: 'Записаны на пробное', count: 0 },
+        { id: 'trial_done',      label: 'Прошли пробное',    count: 0 },
+        { id: 'purchased',       label: 'Купили',            count: 0 },
+        { id: 'active',          label: 'Активные ученики',  count: 0 }
+      ];
+      var stageOrder = ['new','processing','no_answer','trial_scheduled','trial_done','purchased','active','lost'];
+      allLeads.forEach(function (l) {
+        stages.forEach(function (s) {
+          if (stageOrder.indexOf(l.status) >= stageOrder.indexOf(s.id)) s.count++;
+        });
+      });
+      /* Compute conversion rates between stages */
+      for (var i = 1; i < stages.length; i++) {
+        var prev = stages[i - 1].count || 1;
+        stages[i].rate = Math.round(stages[i].count / prev * 100);
+      }
+      stages[0].rate = 100;
+      var trialsScheduled = allTrials.filter(function (t) { return t.status === 'scheduled'; }).length;
+      var trialsDone = allTrials.filter(function (t) { return t.status === 'done'; }).length;
+      var trialsConverted = allTrials.filter(function (t) { return t.result === 'converted'; }).length;
+      return delay({
+        stages: stages,
+        trials: { scheduled: trialsScheduled, done: trialsDone, converted: trialsConverted,
+          conversionRate: trialsDone > 0 ? Math.round(trialsConverted / trialsDone * 100) : 0 }
+      });
+    },
+    /* Director dashboard summary */
+    summary: function () {
+      var users = read(LS_USERS, []);
+      var activeStudents = users.filter(function (u) { return u.role === 'student'; }).length;
+      var teachers = users.filter(function (u) { return u.role === 'teacher'; }).length;
+      var allLeads = read(LS_LEADS, []);
+      var newLeads = allLeads.filter(function (l) { return l.status === 'new'; }).length;
+      var scheduledTrials = read(LS_TRIALS, []).filter(function (t) { return t.status === 'scheduled'; }).length;
+      var payments = read(LS_PAYMENTS, []);
+      var now = new Date();
+      var monthStart = ymd(new Date(now.getFullYear(), now.getMonth(), 1));
+      var monthRevenue = payments.filter(function (p) {
+        return p.status === 'paid' && p.date >= monthStart;
+      }).reduce(function (s, p) { return s + (p.amount || 0); }, 0);
+      var unpaidTotal = payments.filter(function (p) { return p.status === 'pending'; })
+        .reduce(function (s, p) { return s + (p.amount || 0); }, 0);
+      var upcomingEvents = read(LS_EVENTS, []).filter(function (e) {
+        return e.date >= ymd(now);
+      }).length;
+      var academics = read(LS_ACADEMICS, {}) || {};
+      var teacherWorkload = {};
+      Object.keys(academics).forEach(function (sid) {
+        var ac = academics[sid];
+        if (ac && ac.teacher) teacherWorkload[ac.teacher] = (teacherWorkload[ac.teacher] || 0) + 1;
+      });
+      return delay({
+        activeStudents: activeStudents, teachers: teachers,
+        newLeads: newLeads, scheduledTrials: scheduledTrials,
+        monthRevenue: monthRevenue, unpaidTotal: unpaidTotal,
+        upcomingEvents: upcomingEvents, teacherWorkload: teacherWorkload
+      });
+    }
+  };
+
   /* Reserved namespaces — architecture placeholders for future versions.
      They return a friendly "coming soon" so UI can call them safely. */
   function soon(label) { return function () { return fail(label + ' появится в следующей версии'); }; }
@@ -2288,6 +2769,9 @@
     comments: comments, events: events, portfolio: portfolio, search: search,
     integrations: integrations,
     shop: shop, cart: cart, orders: orders, teacher: teacher,
+    /* CRM v0.9 */
+    leads: leads, trials: trials, skillMap: skillMap,
+    churn: churn, broadcast: broadcast, analytics: analytics,
     /* reserved (next versions) */
     tests: tests, gamification: gamification, wallet: wallet,
     ratings: ratings, seasons: seasons

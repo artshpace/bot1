@@ -1054,3 +1054,58 @@ body.tg-miniapp .cab-subnav { padding-left: 20px; padding-right: 20px; }
 @media (max-width: 640px) {
   .cart-footer { flex-direction: column; align-items: flex-start; }
 }
+
+/* =====================================================================
+   v0.9 — CRM / ANALYTICS
+   ===================================================================== */
+.cab-stats-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+.cab-stat-card {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px 20px; text-align: center; min-width: 130px; flex: 1;
+}
+.cab-stat-val { font-size: 1.6rem; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+.cab-stat-label { font-size: .75rem; color: var(--text-muted); }
+
+/* Lead card comments */
+.cab-comments { margin-top: 12px; }
+.cab-comment { padding: 8px 0; border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,.06)); }
+.cab-comment-author { font-weight: 600; font-size: .8rem; }
+.cab-comment-date { font-size: .75rem; color: var(--text-muted); margin-left: 6px; }
+.cab-comment p { margin: 4px 0 0; font-size: .85rem; }
+
+/* Funnel */
+.funnel-wrap { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 0 auto; max-width: 560px; }
+.funnel-stage {
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 20px; text-align: center; margin: 4px 0; transition: width .3s; min-width: 180px;
+}
+.funnel-arrow { color: var(--text-muted); font-size: 20px; line-height: 1; }
+.funnel-label { font-size: .85rem; color: var(--text-muted); }
+.funnel-count { font-size: 1.5rem; font-weight: 700; color: var(--accent); margin: 2px 0; }
+.funnel-rate { font-size: .75rem; color: var(--text-muted); }
+
+/* Analytics bar chart */
+.ana-bar-chart {
+  display: flex; align-items: flex-end; gap: 8px; height: 160px;
+  padding: 0 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px;
+}
+.ana-bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; min-width: 40px; }
+.ana-bar { background: var(--accent); border-radius: 4px 4px 0 0; width: 100%; min-height: 4px; transition: height .4s; }
+.ana-bar-label { font-size: .7rem; color: var(--text-muted); margin-top: 6px; text-align: center; white-space: nowrap; }
+
+/* Skill map */
+.skill-direction { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.skill-direction h4 { margin: 0 0 12px; color: var(--accent); }
+.skill-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+.skill-row:last-child { border-bottom: none; }
+.skill-name { flex: 1; font-size: .85rem; }
+.skill-dots { display: flex; gap: 4px; }
+.skill-dot { font-size: 1rem; color: var(--text-muted); cursor: pointer; transition: color .15s; }
+.skill-dot-filled { color: var(--accent); }
+.skill-level { font-size: .75rem; color: var(--text-muted); min-width: 28px; text-align: right; }
+
+@media (max-width: 640px) {
+  .cab-stats-row { gap: 8px; }
+  .cab-stat-card { min-width: 100px; padding: 12px; }
+  .cab-stat-val { font-size: 1.2rem; }
+}

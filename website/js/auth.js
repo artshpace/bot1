@@ -24,7 +24,12 @@
   var ADMIN_PAGES = ['admin.html', 'admin-subscriptions.html', 'admin-courses.html',
     'admin-payments.html', 'admin-parents.html', 'admin-attendance.html',
     'admin-homework.html', 'admin-certificates.html', 'admin-achievements.html',
-    'admin-events.html', 'admin-portfolio.html'];
+    'admin-events.html', 'admin-portfolio.html',
+    /* CRM v0.9 */
+    'admin-leads.html', 'admin-trials.html', 'admin-teachers.html',
+    'admin-funnel.html', 'admin-analytics.html', 'admin-broadcast.html',
+    'admin-skillmap.html', 'admin-churn.html', 'admin-reports.html',
+    'director.html'];
   // Pages that belong to the Parent cabinet.
   var PARENT_PAGES = ['parent.html'];
   // Pages that belong to the Teacher cabinet.

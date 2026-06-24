@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Панель директора — Shpigotskiy Art Space</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/account.css">
+  <style>
+    .cab-stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; text-align: center; min-width: 140px; }
+    .cab-stat-val { font-size: 1.8rem; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+    .cab-stat-val.badge-green { color: #4caf50; }
+    .cab-stat-val.badge-red { color: #e53935; }
+    .cab-stat-val.badge-blue { color: #2196f3; }
+    .cab-stat-val.badge-gold { color: #ffc107; }
+    .cab-stat-label { font-size: .75rem; color: var(--text-muted); }
+    .cab-stats-row { display: flex; flex-wrap: wrap; gap: 12px; }
+  </style>
+</head>
+<body class="cab-body">
+<div class="cab-shell">
+
+  <aside class="cab-sidebar" data-cab-sidebar="admin"></aside>
+
+  <div>
+    <div class="cab-topbar">
+      <span class="name">Панель директора</span>
+      <button class="cab-burger" data-sidebar-toggle aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+
+    <main class="cab-main">
+      <div class="cab-page-head">
+        <h1>Управленческая панель</h1>
+        <p class="sub">Ключевые показатели школы в режиме реального времени.</p>
+      </div>
+
+      <div id="director-root"></div>
+    </main>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/account.js"></script>
+</body>
+</html>
