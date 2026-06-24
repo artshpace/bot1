@@ -196,7 +196,7 @@ p { font-size: 1rem; line-height: 1.7; }
 /* ===== STATS BAR ===== */
 .stats-bar { background: var(--bg-alt); border-bottom: 1px solid var(--gold-border); }
 .stats-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   divide-x: var(--gold-border);
 }
 .stat-item {

@@ -1528,8 +1528,11 @@
         files: (payload && payload.files) || [], submittedAt: ymd(new Date()) };
       h.status = 'submitted';
       write(LS_HOMEWORK, list);
-      notify('teacher', 'Ученик сдал работу: ' + h.title,
-        { type: 'homework', title: 'Новая сдача ДЗ', href: 'admin-homework.html' });
+      var teacherUser = read(LS_USERS, []).filter(function (u) { return u.name === h.teacher; })[0];
+      if (teacherUser) {
+        notify(teacherUser.id, 'Ученик сдал работу: ' + h.title,
+          { type: 'homework', title: 'Новая сдача ДЗ', href: 'teacher.html' });
+      }
       return delay(clone(h));
     },
     all: function () {
@@ -1739,6 +1742,39 @@
     remove: function (id) {
       write(LS_EVENTS, read(LS_EVENTS, []).filter(function (e) { return e.id !== id; }));
       return delay({ ok: true });
+    },
+    register: function (id) {
+      var me = auth.current();
+      if (!me) return fail('Необходима авторизация');
+      var list = read(LS_EVENTS, []);
+      var ev = list.filter(function (e) { return e.id === id; })[0];
+      if (!ev) return fail('Мероприятие не найдено');
+      ev.registrations = ev.registrations || [];
+      if (ev.registrations.indexOf(me.id) !== -1) return fail('Вы уже зарегистрированы');
+      ev.registrations.push(me.id);
+      write(LS_EVENTS, list);
+      notify(me.id, 'Вы зарегистрированы на мероприятие: ' + ev.title,
+        { type: 'event', title: 'Регистрация на мероприятие', href: 'schedule.html' });
+      return delay({ ok: true, eventId: id });
+    },
+    unregister: function (id) {
+      var me = auth.current();
+      if (!me) return fail('Необходима авторизация');
+      var list = read(LS_EVENTS, []);
+      var ev = list.filter(function (e) { return e.id === id; })[0];
+      if (!ev) return fail('Мероприятие не найдено');
+      ev.registrations = (ev.registrations || []).filter(function (uid_) { return uid_ !== me.id; });
+      write(LS_EVENTS, list);
+      return delay({ ok: true });
+    },
+    myRegistrations: function () {
+      var me = auth.current();
+      if (!me) return delay([]);
+      var list = read(LS_EVENTS, []).filter(function (e) {
+        return e.registrations && e.registrations.indexOf(me.id) !== -1;
+      });
+      list.sort(function (a, b) { return parseYmd(a.date) - parseYmd(b.date); });
+      return delay(list.map(clone));
     }
   };
 
@@ -2171,10 +2207,14 @@
       }).map(function (u) {
         var ac = academics[u.id] || {};
         var s = activeSubFor(u.id);
+        var stats = attendanceStats(u.id);
+        var hwPending = read(LS_HOMEWORK, []).filter(function (h) {
+          return h.studentId === u.id && (h.status === 'assigned' || h.status === 'revision');
+        }).length;
         return { id: u.id, name: u.name, email: u.email, phone: u.phone,
           direction: ac.direction || '', level: ac.level || '',
           subscription: s ? s.name : null, lessonsLeft: s ? s.lessonsLeft : null,
-          attendance: attendanceStats(u.id) };
+          attendance: stats, attendanceRate: stats.rate, homeworkPending: hwPending };
       });
       if (q) {
         list = list.filter(function (s) {

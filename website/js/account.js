@@ -274,7 +274,16 @@
   var sbToggle = $('[data-sidebar-toggle]');
   var sidebar  = $('.cab-sidebar');
   if (sbToggle && sidebar) {
-    sbToggle.addEventListener('click', function () { sidebar.classList.toggle('open'); });
+    var backdrop = document.createElement('div');
+    backdrop.className = 'cab-backdrop';
+    document.body.appendChild(backdrop);
+    function openSidebar()  { sidebar.classList.add('open');    backdrop.classList.add('show'); }
+    function closeSidebar() { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+    sbToggle.addEventListener('click', function () {
+      sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+    backdrop.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSidebar(); });
   }
 
   /* =================================================================
@@ -860,19 +869,23 @@
   var shopRoot = $('#shop-root');
   if (shopRoot) { loadShop(); }
   function loadShop() {
-    API.subscriptions.plans().then(function (plans) {
-      $('[data-shop="plans"]').innerHTML = plans.map(function (p) {
-        return '<div class="cab-buy-card">' +
-          '<div class="cab-buy-head"><h3>' + escapeHtml(p.name) + '</h3><span class="cab-buy-price">' + fmtMoney(p.price) + '</span></div>' +
-          '<ul class="cab-buy-feats"><li>' + p.lessons + ' занятий</li><li>Срок ' + p.durationDays + ' дней</li><li>' + escapeHtml(p.direction) + '</li></ul>' +
-          '<button class="btn btn-primary btn-full" data-buy-plan="' + p.id + '">Купить</button></div>';
-      }).join('');
-      $all('[data-buy-plan]').forEach(function (btn) {
-        btn.addEventListener('click', function () { buyPlan(btn.getAttribute('data-buy-plan'), btn); });
+    var plansHost = $('[data-shop="plans"]');
+    if (plansHost) {
+      API.subscriptions.plans().then(function (plans) {
+        plansHost.innerHTML = plans.map(function (p) {
+          return '<div class="cab-buy-card">' +
+            '<div class="cab-buy-head"><h3>' + escapeHtml(p.name) + '</h3><span class="cab-buy-price">' + fmtMoney(p.price) + '</span></div>' +
+            '<ul class="cab-buy-feats"><li>' + p.lessons + ' занятий</li><li>Срок ' + p.durationDays + ' дней</li><li>' + escapeHtml(p.direction) + '</li></ul>' +
+            '<button class="btn btn-primary btn-full" data-buy-plan="' + p.id + '">Купить</button></div>';
+        }).join('');
+        $all('[data-buy-plan]', plansHost).forEach(function (btn) {
+          btn.addEventListener('click', function () { buyPlan(btn.getAttribute('data-buy-plan'), btn); });
+        });
       });
-    });
+    }
     API.subscriptions.list().then(function (list) {
       var host = $('[data-shop="renew"]');
+      if (!host) return;
       var renewable = list.filter(function (s) { return s.status !== 'completed'; });
       if (!renewable.length) { host.innerHTML = '<p class="cab-empty">Нет абонементов для продления.</p>'; return; }
       host.innerHTML = renewable.map(function (s) {
@@ -881,12 +894,14 @@
           '<ul class="cab-buy-feats"><li>Осталось ' + s.lessonsLeft + ' из ' + s.lessonsTotal + '</li><li>До ' + fmtDate(s.endDate) + '</li><li>' + badge(SUB_STATUS, s.status) + '</li></ul>' +
           '<button class="btn btn-outline btn-full" data-renew="' + s.id + '">Продлить</button></div>';
       }).join('');
-      $all('[data-renew]').forEach(function (btn) {
+      $all('[data-renew]', host).forEach(function (btn) {
         btn.addEventListener('click', function () { renewSub(btn.getAttribute('data-renew'), btn); });
       });
     });
     API.courses.catalog().then(function (list) {
-      $('[data-shop="courses"]').innerHTML = list.map(function (c) {
+      var coursesHost = $('[data-shop="courses"]');
+      if (!coursesHost) return;
+      coursesHost.innerHTML = list.map(function (c) {
         return '<div class="cab-buy-card">' +
           '<div class="cab-buy-head"><h3>' + escapeHtml(c.title) + '</h3><span class="cab-buy-price">' + fmtMoney(c.price) + '</span></div>' +
           '<ul class="cab-buy-feats"><li>' + escapeHtml(c.teacher) + '</li><li>' + c.lessonsTotal + ' уроков</li></ul>' +
@@ -895,7 +910,7 @@
             : '<button class="btn btn-primary btn-full" data-buy-course="' + c.id + '">Купить курс</button>') +
           '</div>';
       }).join('');
-      $all('[data-buy-course]').forEach(function (btn) {
+      $all('[data-buy-course]', coursesHost).forEach(function (btn) {
         btn.addEventListener('click', function () { buyCourse(btn.getAttribute('data-buy-course'), btn); });
       });
     });

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Портфолио учеников — Shpigotskiy Art Space</title>
+  <meta name="description" content="Лучшие работы учеников студии Shpigotskiy Art Space: живопись, музыкальные записи, видео выступлений и творческие проекты.">
+  <meta name="keywords" content="портфолио учеников, детские работы, живопись, музыка, творческие работы, Shpigotskiy Art Space">
+  <link rel="canonical" href="https://shpigotskiy-art.kz/portfolio.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/portfolio-public.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="name">Shpigotskiy Art Space</span><span class="tagline-small">Студия творческого развития</span></a>
+      <div class="nav-links">
+        <a href="directions/index.html">Направления</a>
+        <a href="teachers.html">Преподаватели</a>
+        <a href="events.html">Мероприятия</a>
+        <a href="gallery.html">Галерея</a>
+        <a href="courses.html">Онлайн-курсы</a>
+        <a href="store.html">Магазин</a>
+        <a href="materials.html">Статьи</a>
+        <a href="contacts.html">Контакты</a>
+        <a href="account/login.html">Кабинет</a>
+        <a href="index.html#trial" class="nav-cta">Записаться</a>
+      </div>
+      <button class="nav-hamburger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+<nav class="mobile-nav">
+  <a href="directions/index.html">Направления</a>
+  <a href="teachers.html">Преподаватели</a>
+  <a href="events.html">Мероприятия</a>
+  <a href="gallery.html">Галерея</a>
+  <a href="courses.html">Онлайн-курсы</a>
+  <a href="store.html">Магазин</a>
+  <a href="materials.html">Статьи</a>
+  <a href="contacts.html">Контакты</a>
+  <a href="account/login.html">Личный кабинет</a>
+  <a href="index.html#trial" class="mob-cta">Записаться на пробное занятие</a>
+</nav>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Портфолио</span></div>
+      <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Творчество</div>
+      <h1>Портфолио учеников</h1>
+      <p class="lead">Лучшие работы наших учеников — живопись, музыкальные записи, видео выступлений и творческие проекты.</p>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div style="display:flex;gap:8px;margin-bottom:48px;flex-wrap:wrap;">
+      <button class="form-chip selected" data-pf-filter="all">Все работы</button>
+      <button class="form-chip" data-pf-filter="photo">Живопись</button>
+      <button class="form-chip" data-pf-filter="audio">Музыка</button>
+      <button class="form-chip" data-pf-filter="video">Видео</button>
+      <button class="form-chip" data-pf-filter="diploma">Дипломы</button>
+    </div>
+
+    <div class="pf-grid" id="pf-grid">
+
+      <article class="pf-card fade-up" data-kind="photo">
+        <div class="pf-media pf-media--art" style="background:linear-gradient(135deg,#2d1010,#4a1a1a);"></div>
+        <div class="pf-body">
+          <div class="pf-meta"><span class="pf-kind">Живопись</span><span class="pf-dir">Класс живописи</span></div>
+          <h3>«Осенний парк» (акварель)</h3>
+          <p>Работа написана после первого года обучения. Техника: акварель на хлопковой бумаге, 30×40 см.</p>
+          <div class="pf-student">Автор: <strong>Анна К.</strong> · 12 лет</div>
+        </div>
+      </article>
+
+      <article class="pf-card fade-up" data-kind="audio">
+        <div class="pf-media pf-media--music" style="background:linear-gradient(135deg,#101a10,#1a3020);">
+          <div class="pf-play">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          <div class="pf-wave"></div>
+        </div>
+        <div class="pf-body">
+          <div class="pf-meta"><span class="pf-kind">Музыка</span><span class="pf-dir">Класс гитары</span></div>
+          <h3>Fingerstyle — авторская композиция</h3>
+          <p>Авторская пьеса для акустической гитары. Записано в студии на втором году обучения.</p>
+          <div class="pf-student">Автор: <strong>Михаил Т.</strong> · 16 лет</div>
+        </div>
+      </article>
+
+      <article class="pf-card fade-up" data-kind="video">
+        <div class="pf-media pf-media--video" style="background:linear-gradient(135deg,#0a0a1a,#10102d);">
+          <div class="pf-play">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="pf-body">
+          <div class="pf-meta"><span class="pf-kind">Видео</span><span class="pf-dir">Вокал</span></div>
+          <h3>Сольное выступление на летнем концерте</h3>
+          <p>Исполнение «Журавли» на главном концерте года. Зал Областного театра, 2024.</p>
+          <div class="pf-student">Исполнитель: <strong>Дарья С.</strong> · 14 лет</div>
+        </div>
+      </article>
+
+      <article class="pf-card fade-up" data-kind="photo">
+        <div class="pf-media pf-media--art" style="background:linear-gradient(135deg,#1a1200,#2d2000);"></div>
+        <div class="pf-body">
+          <div class="pf-meta"><span class="pf-kind">Живопись</span><span class="pf-dir">Класс живописи</span></div>
+          <h3>«Закат над степью» (масло)</h3>
+          <p>Первая работа маслом на холсте. 50×60 см. Выставлялась на весенней выставке студии.</p>
+          <div class="pf-student">Автор: <strong>Иван Р.</strong> · 11 лет</div>
+        </div>
+      </article>
+
+      <article class="pf-card fade-up" data-kind="diploma">
+        <div class="pf-media pf-media--diploma" style="background:linear-gradient(135deg,#1a1500,#2d2400);">
+          <svg class="pf-award-icon" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="28" r="18" fill="none" stroke="#C9A84C" stroke-width="3"/>
+            <path d="M24 50l8-8 8 8-3-10-5 4-5-4z" fill="#C9A84C"/>
+            <path d="M32 20v4M32 36v-8M25 28h14" stroke="#C9A84C" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="pf-body">
+          <div class="pf-meta"><span class="pf-kind pf-kind--gold">Диплом</span><span class="pf-dir">Актёрское мастерство</span></div>
+          <h3>Лауреат 1-й степени — Городской фестиваль</h3>
+          <p>Диплом 1-й степени на городском фестивале детских театральных коллективов «Золотой занавес» 2024.</p>
+          <div class="pf-student">Победитель: <strong>Класс актёрского мастерства</strong></div>
+        </div>
+      </article>
+
+      <article class="pf-card fade-up" data-kind="audio">
+        <div class="pf-media pf-media--music" style="background:linear-gradient(135deg,#1a0810,#2d0d1a);">
+          <div class="pf-play">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+          <div class="pf-wave"></div>
+        </div>
+        <div class="pf-body">
+          <div class="pf-meta"><span class="pf-kind">Музыка</span><span class="pf-dir">Вокал</span></div>
+          <h3>Дуэт «Звёздное небо»</h3>
+          <p>Дуэтное исполнение авторской песни. Студийная запись, 2023.</p>
+          <div class="pf-student">Исполнители: <strong>Алия Н. и Карина М.</strong></div>
+        </div>
+      </article>
+
+      <article class="pf-card fade-up" data-kind="video">
+        <div class="pf-media pf-media--video" style="background:linear-gradient(135deg,#1a0a15,#2d0d28);">
+          <div class="pf-play">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="pf-body">
+          <div class="pf-meta"><span class="pf-kind">Видео</span><span class="pf-dir">Современный танец</span></div>
+          <h3>Contemporary dance — «Ветер»</h3>
+          <p>Хореографическая постановка на тему природы. Дипломный номер, 2024.</p>
+          <div class="pf-student">Исполнители: <strong>Группа «Элемент»</strong></div>
+        </div>
+      </article>
+
+      <article class="pf-card fade-up" data-kind="diploma">
+        <div class="pf-media pf-media--diploma" style="background:linear-gradient(135deg,#0d0a1a,#151025);">
+          <svg class="pf-award-icon" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="28" r="18" fill="none" stroke="#C9A84C" stroke-width="3"/>
+            <path d="M24 50l8-8 8 8-3-10-5 4-5-4z" fill="#C9A84C"/>
+            <text x="32" y="32" text-anchor="middle" fill="#C9A84C" font-size="14" font-weight="bold">1</text>
+          </svg>
+        </div>
+        <div class="pf-body">
+          <div class="pf-meta"><span class="pf-kind pf-kind--gold">Диплом</span><span class="pf-dir">Гитара</span></div>
+          <h3>Победитель областного конкурса гитаристов</h3>
+          <p>Первое место в номинации «Акустическая гитара, юниоры». Областной конкурс исполнителей, 2023.</p>
+          <div class="pf-student">Победитель: <strong>Михаил Т.</strong> · 16 лет</div>
+        </div>
+      </article>
+
+    </div>
+
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;">
+      <div>
+        <div class="eyebrow">Для учеников</div>
+        <h2>Добавьте свою работу</h2>
+        <p style="color:var(--muted);margin-bottom:24px;">Ученики студии могут добавлять свои работы в цифровое портфолио через личный кабинет. Лучшие работы появляются на этой странице.</p>
+        <ul style="list-style:none;padding:0;margin:0 0 32px;">
+          <li style="display:flex;gap:12px;margin-bottom:16px;"><svg style="flex-shrink:0;width:20px;height:20px;color:var(--primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5 9-11"/></svg>Фотографии работ и диплома</li>
+          <li style="display:flex;gap:12px;margin-bottom:16px;"><svg style="flex-shrink:0;width:20px;height:20px;color:var(--primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5 9-11"/></svg>Аудиозаписи и видео выступлений</li>
+          <li style="display:flex;gap:12px;"><svg style="flex-shrink:0;width:20px;height:20px;color:var(--primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5 9-11"/></svg>Описание работы и история создания</li>
+        </ul>
+        <a href="account/login.html" class="btn btn-primary">Войти в кабинет</a>
+      </div>
+      <div style="background:var(--bg-3);border-radius:var(--radius-lg);padding:40px;text-align:center;border:1px solid var(--gold-border);">
+        <div style="font-family:'Playfair Display',serif;font-size:3rem;font-weight:800;color:var(--gold);line-height:1;">87</div>
+        <div style="font-size:.85rem;color:var(--muted);margin-bottom:24px;">работ в портфолио</div>
+        <div style="font-family:'Playfair Display',serif;font-size:3rem;font-weight:800;color:var(--dark);line-height:1;">14</div>
+        <div style="font-size:.85rem;color:var(--muted);margin-bottom:24px;">дипломов и наград</div>
+        <div style="font-family:'Playfair Display',serif;font-size:3rem;font-weight:800;color:var(--primary);line-height:1;">6</div>
+        <div style="font-size:.85rem;color:var(--muted);">конкурсных побед в 2024</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <div class="free-badge">Первое занятие бесплатно</div>
+    <h2>Создайте своё портфолио</h2>
+    <p>Начните обучение сегодня — и уже через несколько месяцев у вас появятся первые работы, которыми можно гордиться.</p>
+    <div class="cta-banner-btns">
+      <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться</a>
+      <a href="directions/index.html" class="btn btn-white btn-lg">Все направления</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
+      <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
+      <div class="footer-col"><h4>Студия</h4><ul><li><a href="teachers.html">Преподаватели</a></li><li><a href="events.html">Мероприятия</a></li><li><a href="gallery.html">Галерея</a></li><li><a href="portfolio.html">Портфолио учеников</a></li><li><a href="materials.html">Статьи</a></li><li><a href="store.html">Магазин</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77771234567">+7 777 123-45-67</a></li><li><a href="https://wa.me/77771234567" target="_blank">WhatsApp</a></li><li><a href="https://t.me/shpigotskiy_art" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2024 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a></div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+(function () {
+  document.querySelectorAll('[data-pf-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-pf-filter]').forEach(function (b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      var kind = btn.getAttribute('data-pf-filter');
+      document.querySelectorAll('.pf-card').forEach(function (card) {
+        card.style.display = (kind === 'all' || card.getAttribute('data-kind') === kind) ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
