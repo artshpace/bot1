@@ -39,7 +39,7 @@
 (function (global) {
   'use strict';
 
-  var VERSION = '0.6';
+  var VERSION = '0.7';
 
   var LS_USERS    = 'sas_users';
   var LS_SESSION  = 'sas_session';
@@ -59,6 +59,8 @@
   var LS_EVENTS   = 'sas_events';
   var LS_PORTFOLIO= 'sas_portfolio';
   var LS_TXN      = 'sas_transactions';
+  var LS_CART     = 'sas_cart';
+  var LS_ORDERS   = 'sas_orders';
 
   /* ---- storage ---- */
   function read(key, fallback) {
@@ -129,6 +131,38 @@
     email: 'admin@shpigotskiy.art', phone: '+7 777 000-00-00',
     password: 'admin1234', role: 'admin'
   };
+  /* Teacher demo accounts — v0.7 */
+  var TEACHER_USER = {
+    id: 'tch-1', name: 'Антон Шпигоцкий',
+    email: 'teacher@shpigotskiy.art', phone: '+7 777 100-00-01',
+    password: 'teacher1234', role: 'teacher'
+  };
+  var TEACHER_USER2 = {
+    id: 'tch-2', name: 'Мария Лебедева',
+    email: 'teacher2@shpigotskiy.art', phone: '+7 777 100-00-02',
+    password: 'teacher1234', role: 'teacher'
+  };
+
+  /* Shop catalogue — v0.7 */
+  var GIFT_CERTS = [
+    { id: 'gc-5000',  name: 'Подарочный сертификат 5 000 ₸',  value: 5000,  price: 5000,
+      description: 'Универсальный подарок — на занятия, абонемент или онлайн-курс.' },
+    { id: 'gc-10000', name: 'Подарочный сертификат 10 000 ₸', value: 10000, price: 10000,
+      description: 'Отличный подарок для любителей музыки, пения или живописи.' },
+    { id: 'gc-20000', name: 'Подарочный сертификат 20 000 ₸', value: 20000, price: 20000,
+      description: 'Максимальный сертификат — покроет полный онлайн-курс.' }
+  ];
+  var INTENSIVES = [
+    { id: 'int-guitar', name: 'Интенсив «Гитара за 5 дней»',   direction: 'Гитара',
+      lessons: 10, durationDays: 5, price: 25000,
+      description: '10 занятий за 5 дней — ускоренный старт для начинающих гитаристов.' },
+    { id: 'int-vocal',  name: 'Интенсив «Вокал: базовый курс»', direction: 'Вокал',
+      lessons: 8,  durationDays: 4, price: 22000,
+      description: 'Базовые техники пения и постановка голоса за 4 дня.' },
+    { id: 'int-paint',  name: 'Интенсив «Акварель за выходные»', direction: 'Живопись',
+      lessons: 6,  durationDays: 2, price: 18000,
+      description: 'Быстрый старт в акварели — от нуля до первого этюда за два дня.' }
+  ];
 
   function seedSubscriptions() {
     var now = new Date();
@@ -468,7 +502,7 @@
 
   (function ensureSeed() {
     var users = read(LS_USERS, null) || [];
-    [DEMO_USER, DEMO_CHILD2, PARENT_USER, ADMIN_USER].forEach(function (seed) {
+    [DEMO_USER, DEMO_CHILD2, PARENT_USER, ADMIN_USER, TEACHER_USER, TEACHER_USER2].forEach(function (seed) {
       if (!users.some(function (u) { return u.id === seed.id; })) users.push(seed);
     });
     write(LS_USERS, users);
@@ -1380,11 +1414,8 @@
   function resolveRecipients(target) {
     var users = read(LS_USERS, []);
     if (!target) return [];
-    if (target === 'student' || target === 'parent' || target === 'admin') {
+    if (target === 'student' || target === 'parent' || target === 'admin' || target === 'teacher') {
       return users.filter(function (u) { return u.role === target; }).map(function (u) { return u.id; });
-    }
-    if (target === 'teacher') { // teachers are modelled as admins for now
-      return users.filter(function (u) { return u.role === 'admin'; }).map(function (u) { return u.id; });
     }
     return [target]; // explicit userId
   }
@@ -1933,20 +1964,269 @@
     isMiniApp: function () {
       return !!(global.Telegram && global.Telegram.WebApp && global.Telegram.WebApp.initData);
     },
-    /* Pages the Mini App exposes from its menu. */
+    /* Pages the Mini App exposes from its menu (role-aware). */
     miniAppPages: function () {
+      var me = auth.current();
+      if (me && me.role === 'teacher') {
+        return delay([
+          { label: 'Мои ученики',         href: 'teacher.html' },
+          { label: 'Расписание',          href: 'schedule.html' },
+          { label: 'Домашние задания',    href: 'teacher.html?tab=homework' },
+          { label: 'Уведомления',         href: 'notifications.html' }
+        ]);
+      }
+      if (me && me.role === 'parent') {
+        return delay([
+          { label: 'Кабинет родителя',    href: 'parent.html' },
+          { label: 'Уведомления',         href: 'notifications.html' }
+        ]);
+      }
       return delay([
-        { label: 'Личный кабинет', href: 'dashboard.html' },
-        { label: 'Расписание',     href: 'schedule.html' },
+        { label: 'Личный кабинет',   href: 'dashboard.html' },
+        { label: 'Расписание',       href: 'schedule.html' },
         { label: 'Домашние задания', href: 'homework.html' },
-        { label: 'Онлайн-курсы',   href: 'courses.html' },
-        { label: 'Достижения',     href: 'achievements.html' },
-        { label: 'Сертификаты',    href: 'certificates.html' }
+        { label: 'Онлайн-курсы',    href: 'courses.html' },
+        { label: 'Достижения',      href: 'achievements.html' },
+        { label: 'Сертификаты',     href: 'certificates.html' },
+        { label: 'Магазин',         href: 'shop.html' }
       ]);
     },
     send: function () {
       return fail('Внешняя отправка уведомлений включится после подключения реального backend');
     }
+  };
+
+  /* =================================================================
+     SHOP — catalogue with categories: subscriptions / courses /
+     masterclasses / intensives / gift certificates  [v0.7]
+     ================================================================= */
+  var shop = {
+    giftCertificates: function () { return delay(GIFT_CERTS.map(clone)); },
+    intensives: function () { return delay(INTENSIVES.map(clone)); },
+    /* Upcoming masterclasses from the events catalogue. */
+    masterclasses: function () {
+      var today = ymd(new Date());
+      var list = read(LS_EVENTS, []).filter(function (e) {
+        return e.type === 'masterclass' && e.date >= today;
+      });
+      list.sort(function (a, b) { return parseYmd(a.date) - parseYmd(b.date); });
+      return delay(list.map(function (e) {
+        var c = clone(e);
+        c.price = c.price || 3000; // default ticket price
+        return c;
+      }));
+    },
+    /* All products grouped by category (for the shop overview). */
+    all: function () {
+      return Promise.all([
+        subscriptions.plans(),
+        courses.catalog(),
+        shop.masterclasses(),
+        shop.intensives(),
+        shop.giftCertificates()
+      ]).then(function (res) {
+        return { subscriptions: res[0], courses: res[1],
+          masterclasses: res[2], intensives: res[3], giftCerts: res[4] };
+      });
+    }
+  };
+
+  /* =================================================================
+     CART — persistent per-session shopping cart  [v0.7]
+     Items: { id, type, productId, name, price, qty }
+     Types: 'subscription-plan' | 'course' | 'gift-cert' | 'intensive' | 'masterclass'
+     ================================================================= */
+  var cart = {
+    items: function () { return delay(read(LS_CART, []).map(clone)); },
+    count: function () {
+      var n = read(LS_CART, []).reduce(function (s, x) { return s + (x.qty || 1); }, 0);
+      return delay(n);
+    },
+    total: function () {
+      var t = read(LS_CART, []).reduce(function (s, x) { return s + (x.price || 0) * (x.qty || 1); }, 0);
+      return delay(t);
+    },
+    add: function (item) {
+      if (!item || !item.name || !item.price) return fail('Неверные данные товара');
+      var items = read(LS_CART, []);
+      var existing = items.filter(function (x) { return x.productId === item.productId && x.type === item.type; })[0];
+      if (existing) {
+        existing.qty = (existing.qty || 1) + 1;
+      } else {
+        items.push({ id: uid('ci'), type: item.type || 'other',
+          productId: item.productId || item.id, name: item.name,
+          price: +item.price, qty: 1 });
+      }
+      write(LS_CART, items);
+      return delay(items.map(clone));
+    },
+    remove: function (itemId) {
+      write(LS_CART, read(LS_CART, []).filter(function (x) { return x.id !== itemId; }));
+      return delay({ ok: true });
+    },
+    clear: function () { write(LS_CART, []); return delay({ ok: true }); },
+    /* Process all cart items via the active payment gateway, create an order record. */
+    checkout: function () {
+      var items = read(LS_CART, []);
+      if (!items.length) return fail('Корзина пуста');
+      var total = items.reduce(function (s, x) { return s + (x.price || 0) * (x.qty || 1); }, 0);
+      var id = curId();
+      var purpose = items.map(function (x) { return x.name; }).join(', ');
+      return processCharge({ type: 'order', amount: total, studentId: id, purpose: 'Заказ: ' + purpose })
+        .then(function (res) {
+          /* Fulfil each item — create subscriptions, enrol in courses, etc. */
+          items.forEach(function (item) {
+            if (item.type === 'subscription-plan') {
+              var plan = PLANS.filter(function (p) { return p.id === item.productId; })[0];
+              if (plan) {
+                var subs = read(LS_SUBS, []);
+                var start = new Date();
+                subs.push({ id: uid('sub'), studentId: id, name: plan.name,
+                  lessonsTotal: plan.lessons, lessonsLeft: plan.lessons, price: plan.price,
+                  startDate: ymd(start), endDate: ymd(addDays(start, plan.durationDays)),
+                  purchaseDate: ymd(start), status: 'active' });
+                write(LS_SUBS, subs);
+              }
+            }
+            if (item.type === 'course') {
+              var all = read(LS_COURSES, []);
+              var course = all.filter(function (c) { return c.id === item.productId; })[0];
+              if (course && !(course.enrollments && course.enrollments[id])) {
+                course.enrollments = course.enrollments || {};
+                course.enrollments[id] = {};
+                write(LS_COURSES, all);
+              }
+            }
+            if (item.type === 'intensive') {
+              /* Intensives create a subscription with intensive format. */
+              var intv = INTENSIVES.filter(function (x) { return x.id === item.productId; })[0];
+              if (intv) {
+                var subs2 = read(LS_SUBS, []);
+                var s2 = new Date();
+                subs2.push({ id: uid('sub'), studentId: id, name: intv.name,
+                  lessonsTotal: intv.lessons, lessonsLeft: intv.lessons, price: intv.price,
+                  startDate: ymd(s2), endDate: ymd(addDays(s2, intv.durationDays)),
+                  purchaseDate: ymd(s2), status: 'active' });
+                write(LS_SUBS, subs2);
+              }
+            }
+            addPayment({ studentId: id, amount: (item.price || 0) * (item.qty || 1),
+              purpose: item.name, status: 'paid' });
+          });
+          var allOrders = read(LS_ORDERS, []);
+          var order = { id: uid('ord'), userId: id, items: items.map(clone),
+            total: total, status: 'paid', createdAt: new Date().toISOString(), txnId: res.txn };
+          allOrders.push(order); write(LS_ORDERS, allOrders);
+          write(LS_CART, []);
+          notify(id, 'Заказ #' + order.id.split('-').pop() + ' оформлен на сумму ' + total + ' ₸.',
+            { type: 'payment', title: 'Заказ оформлен', href: 'payments.html' });
+          return order;
+        });
+    }
+  };
+
+  /* =================================================================
+     ORDERS — order history  [v0.7]
+     ================================================================= */
+  var orders = {
+    list: function () {
+      var id = curId();
+      var list = read(LS_ORDERS, []).filter(function (o) { return o.userId === id; });
+      list.sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+      return delay(list.map(clone));
+    },
+    get: function (id) {
+      var o = read(LS_ORDERS, []).filter(function (x) { return x.id === id; })[0];
+      if (!o) return fail('Заказ не найден');
+      return delay(clone(o));
+    },
+    all: function () {
+      var users = read(LS_USERS, []);
+      function nameOf (uid_) { var u = users.filter(function (x) { return x.id === uid_; })[0]; return u ? u.name : '—'; }
+      var list = read(LS_ORDERS, []).map(function (o) {
+        var c = clone(o); c.userName = nameOf(o.userId); return c;
+      });
+      list.sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+      return delay(list);
+    }
+  };
+
+  /* =================================================================
+     TEACHER — cabinet for role='teacher'  [v0.7]
+     Teachers reuse the existing attendance / homework / comments APIs;
+     this namespace adds teacher-scoped views on top.
+     ================================================================= */
+  var teacher = {
+    /* Students assigned to the signed-in teacher (matched by name in academics map). */
+    myStudents: function (query) {
+      var me = auth.current();
+      if (!me) return fail('Нет доступа');
+      var teacherName = me.name;
+      var academics = read(LS_ACADEMICS, {}) || {};
+      var q = norm(query);
+      var list = read(LS_USERS, []).filter(function (u) {
+        if (u.role !== 'student') return false;
+        var ac = academics[u.id];
+        return ac && ac.teacher === teacherName;
+      }).map(function (u) {
+        var ac = academics[u.id] || {};
+        var s = activeSubFor(u.id);
+        return { id: u.id, name: u.name, email: u.email, phone: u.phone,
+          direction: ac.direction || '', level: ac.level || '',
+          subscription: s ? s.name : null, lessonsLeft: s ? s.lessonsLeft : null,
+          attendance: attendanceStats(u.id) };
+      });
+      if (q) {
+        list = list.filter(function (s) {
+          return norm(s.name).indexOf(q) !== -1 || norm(s.email || '').indexOf(q) !== -1;
+        });
+      }
+      list.sort(function (a, b) { return a.name.localeCompare(b.name, 'ru'); });
+      return delay(list);
+    },
+    /* Homework assigned by this teacher, sorted: submitted first. */
+    homeworkForReview: function () {
+      var me = auth.current();
+      if (!me) return delay([]);
+      var teacherName = me.name;
+      var order = { submitted: 0, revision: 1, assigned: 2, reviewed: 3 };
+      var list = read(LS_HOMEWORK, []).filter(function (h) { return h.teacher === teacherName; })
+        .map(function (h) { var c = clone(h); c.studentName = userName(h.studentId); return c; });
+      list.sort(function (a, b) { return (order[a.status] || 9) - (order[b.status] || 9); });
+      return delay(list);
+    },
+    /* Today's attendance sheet for this teacher's students. */
+    todayAttendance: function () {
+      var me = auth.current();
+      if (!me) return delay([]);
+      var teacherName = me.name;
+      var today = ymd(new Date());
+      var academics = read(LS_ACADEMICS, {}) || {};
+      var myIds = read(LS_USERS, []).filter(function (u) {
+        if (u.role !== 'student') return false;
+        var ac = academics[u.id];
+        return ac && ac.teacher === teacherName;
+      }).map(function (u) { return u.id; });
+      var existing = read(LS_ATTEND, []).filter(function (a) {
+        return a.date === today && myIds.indexOf(a.studentId) !== -1;
+      });
+      return delay(myIds.map(function (sid) {
+        var rec = existing.filter(function (a) { return a.studentId === sid; })[0];
+        var ac = academics[sid] || {};
+        return { studentId: sid, studentName: userName(sid),
+          direction: ac.direction || '', date: today,
+          status: rec ? rec.status : null, attendanceId: rec ? rec.id : null };
+      }));
+    },
+    /* Delegate write ops to existing namespaces. */
+    markAttendance:   function (data)        { return attendance.create(data); },
+    updateAttendance: function (id, data)    { return attendance.update(id, data); },
+    createHomework:   function (data)        { return homework.create(data); },
+    updateHomework:   function (id, data)    { return homework.update(id, data); },
+    removeHomework:   function (id)          { return homework.remove(id); },
+    reviewHomework:   function (id, payload) { return homework.review(id, payload); },
+    addComment:       function (data)        { return comments.create(data); },
+    schedule:         function (year, month) { return schedule.month(year, month); }
   };
 
   /* Reserved namespaces — architecture placeholders for future versions.
@@ -1967,6 +2247,7 @@
     certificates: certificates, achievements: achievements,
     comments: comments, events: events, portfolio: portfolio, search: search,
     integrations: integrations,
+    shop: shop, cart: cart, orders: orders, teacher: teacher,
     /* reserved (next versions) */
     tests: tests, gamification: gamification, wallet: wallet,
     ratings: ratings, seasons: seasons

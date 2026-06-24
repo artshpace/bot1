@@ -182,6 +182,14 @@
   ];
   var PARENT_NAV = [
     { href: 'parent.html',        label: 'Кабинет родителя',  icon: ICON.parents  },
+    { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     },
+    { href: 'notifications.html', label: 'Уведомления',       icon: ICON.bell     },
+    { href: 'settings.html',      label: 'Настройки',         icon: ICON.gear     }
+  ];
+  var TEACHER_NAV = [
+    { href: 'teacher.html',       label: 'Кабинет',           icon: ICON.home     },
+    { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     },
+    { href: 'cart.html',          label: 'Корзина',           icon: ICON.receipt  },
     { href: 'notifications.html', label: 'Уведомления',       icon: ICON.bell     },
     { href: 'settings.html',      label: 'Настройки',         icon: ICON.gear     }
   ];
@@ -206,16 +214,22 @@
     if (!host) return;
     var kind = host.getAttribute('data-cab-sidebar');
     var me = API.auth.current();
-    // Shared pages declare data-cab-sidebar="auto" → pick nav by role.  [v0.6]
+    // Shared pages declare data-cab-sidebar="auto" → pick nav by role.  [v0.7]
     if (kind === 'auto') {
-      kind = (me && me.role === 'admin') ? 'admin' : (me && me.role === 'parent') ? 'parent' : 'student';
+      var r = me && me.role;
+      kind = r === 'admin' ? 'admin' : r === 'parent' ? 'parent' : r === 'teacher' ? 'teacher' : 'student';
     }
     var file = location.pathname.split('/').pop() || 'dashboard.html';
     var isAdmin = me && me.role === 'admin';
-    var roleLabel = isAdmin ? 'Администратор' : (kind === 'parent' ? 'Родитель' : 'Ученик');
+    var roleLabel = isAdmin ? 'Администратор'
+      : kind === 'parent' ? 'Родитель'
+      : kind === 'teacher' ? 'Преподаватель'
+      : 'Ученик';
     var initial = ((me && me.name) || '?').trim().charAt(0).toUpperCase() || '?';
     var tagline = kind === 'admin' ? 'Администрирование'
-      : (kind === 'parent' ? 'Кабинет родителя' : 'Личный кабинет');
+      : kind === 'parent' ? 'Кабинет родителя'
+      : kind === 'teacher' ? 'Кабинет преподавателя'
+      : 'Личный кабинет';
 
     function link(item) {
       return '<a href="' + item.href + '"' + (item.href === file ? ' class="active"' : '') + '>' +
@@ -227,6 +241,12 @@
       nav += ADMIN_NAV.map(link).join('');
     } else if (kind === 'parent') {
       nav += PARENT_NAV.map(link).join('');
+    } else if (kind === 'teacher') {
+      nav += TEACHER_NAV.map(link).join('');
+      if (isAdmin) {
+        nav += '<div class="cab-nav-sep">Администрирование</div>' +
+          '<a href="admin.html">' + ICON.shield + 'Админ-панель</a>';
+      }
     } else {
       nav += STUDENT_NAV.map(link).join('');
       if (isAdmin) {
@@ -279,6 +299,8 @@
     'payments.html':          { title: 'История платежей' },
     'shop.html':              { title: 'Оплата и покупки' },
     'parent.html':            { title: 'Кабинет родителя' },
+    'teacher.html':           { title: 'Кабинет преподавателя' },
+    'cart.html':              { title: 'Корзина' },
     'admin.html':             { title: 'Ученики' },
     'admin-parents.html':     { title: 'Родители' },
     'admin-subscriptions.html': { title: 'Абонементы' },
@@ -294,8 +316,9 @@
 
   function roleHome() {
     var me = API.auth.current();
-    if (me && me.role === 'admin')  return { href: 'admin.html',     label: 'Админ-панель' };
-    if (me && me.role === 'parent') return { href: 'parent.html',    label: 'Кабинет родителя' };
+    if (me && me.role === 'admin')   return { href: 'admin.html',    label: 'Админ-панель' };
+    if (me && me.role === 'parent')  return { href: 'parent.html',   label: 'Кабинет родителя' };
+    if (me && me.role === 'teacher') return { href: 'teacher.html',  label: 'Кабинет преподавателя' };
     return { href: 'dashboard.html', label: 'Главная' };
   }
 
@@ -452,6 +475,7 @@
         if (dest === 'dashboard.html') {
           if (user.role === 'admin') dest = 'admin.html';
           else if (user.role === 'parent') dest = 'parent.html';
+          else if (user.role === 'teacher') dest = 'teacher.html';
         }
         location.href = dest;
       }).catch(function (err) { setFormError(box, err.message); btn.disabled = false; btn.textContent = btn.dataset.label; });
@@ -875,7 +899,80 @@
         btn.addEventListener('click', function () { buyCourse(btn.getAttribute('data-buy-course'), btn); });
       });
     });
+    var mcHost = $('[data-shop="masterclasses"]');
+    if (mcHost) {
+      API.shop.masterclasses().then(function (list) {
+        if (!list.length) { mcHost.innerHTML = '<p class="cab-empty">Нет доступных мастер-классов.</p>'; return; }
+        mcHost.innerHTML = list.map(function (e) {
+          return '<div class="cab-buy-card">' +
+            '<div class="cab-buy-head"><h3>' + escapeHtml(e.title) + '</h3><span class="cab-buy-price">' + fmtMoney(e.price || 0) + '</span></div>' +
+            '<ul class="cab-buy-feats">' +
+              (e.date ? '<li>' + fmtDate(e.date) + (e.time ? ' · ' + escapeHtml(e.time) : '') + '</li>' : '') +
+              (e.place ? '<li>' + escapeHtml(e.place) + '</li>' : '') +
+            '</ul>' +
+            '<button class="btn btn-primary btn-full" data-cart-add data-type="event" data-id="' + e.id + '" data-name="' + escapeHtml(e.title) + '" data-price="' + (e.price || 0) + '">В корзину</button>' +
+          '</div>';
+        }).join('');
+        bindCartAddButtons(mcHost);
+      });
+    }
+    var intHost = $('[data-shop="intensives"]');
+    if (intHost) {
+      API.shop.intensives().then(function (list) {
+        if (!list.length) { intHost.innerHTML = '<p class="cab-empty">Нет доступных интенсивов.</p>'; return; }
+        intHost.innerHTML = list.map(function (p) {
+          return '<div class="cab-buy-card">' +
+            '<div class="cab-buy-head"><h3>' + escapeHtml(p.name) + '</h3><span class="cab-buy-price">' + fmtMoney(p.price) + '</span></div>' +
+            '<ul class="cab-buy-feats"><li>' + escapeHtml(p.direction) + '</li><li>' + p.lessons + ' занятий · ' + p.durationDays + ' дней</li></ul>' +
+            '<button class="btn btn-primary btn-full" data-cart-add data-type="intensive" data-id="' + p.id + '" data-name="' + escapeHtml(p.name) + '" data-price="' + p.price + '">В корзину</button>' +
+          '</div>';
+        }).join('');
+        bindCartAddButtons(intHost);
+      });
+    }
+    var gcHost = $('[data-shop="giftcerts"]');
+    if (gcHost) {
+      API.shop.giftCertificates().then(function (list) {
+        if (!list.length) { gcHost.innerHTML = '<p class="cab-empty">Нет доступных сертификатов.</p>'; return; }
+        gcHost.innerHTML = list.map(function (gc) {
+          return '<div class="cab-buy-card">' +
+            '<div class="cab-buy-head"><h3>' + escapeHtml(gc.name) + '</h3><span class="cab-buy-price">' + fmtMoney(gc.price) + '</span></div>' +
+            '<ul class="cab-buy-feats"><li>Номинал ' + fmtMoney(gc.value) + '</li><li>Действует 12 месяцев</li></ul>' +
+            '<button class="btn btn-primary btn-full" data-cart-add data-type="giftCert" data-id="' + gc.id + '" data-name="' + escapeHtml(gc.name) + '" data-price="' + gc.price + '">В корзину</button>' +
+          '</div>';
+        }).join('');
+        bindCartAddButtons(gcHost);
+      });
+    }
   }
+  function bindCartAddButtons(root) {
+    $all('[data-cart-add]', root).forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var item = {
+          type: btn.getAttribute('data-type'),
+          productId: btn.getAttribute('data-id'),
+          name: btn.getAttribute('data-name'),
+          price: parseFloat(btn.getAttribute('data-price')) || 0
+        };
+        API.cart.add(item).then(function () {
+          toast('Добавлено в корзину');
+          refreshCartBadge();
+        }).catch(function (e) { toast(e.message); });
+      });
+    });
+  }
+  function refreshCartBadge() {
+    API.cart.count().then(function (n) {
+      $all('.cab-nav a[href="cart.html"]').forEach(function (a) {
+        var b = a.querySelector('.cab-nav-badge');
+        if (n > 0) {
+          if (!b) { b = document.createElement('span'); b.className = 'cab-nav-badge'; a.appendChild(b); }
+          b.textContent = n;
+        } else if (b) { b.remove(); }
+      });
+    });
+  }
+  refreshCartBadge();
   function lock(btn, text) { btn.disabled = true; btn.dataset.t = btn.textContent; btn.textContent = text; }
   function buyPlan(id, btn) {
     lock(btn, 'Оформляем…');
@@ -891,6 +988,89 @@
     lock(btn, 'Покупаем…');
     API.courses.buy(id).then(function () { toast('Курс приобретён'); loadShop(); })
       .catch(function (e) { toast(e.message); btn.disabled = false; btn.textContent = btn.dataset.t; });
+  }
+
+  /* =================================================================
+     CART  [v0.7]
+     ================================================================= */
+  var cartRoot = $('#cart-root');
+  if (cartRoot) { loadCart(); }
+  function loadCart() {
+    API.cart.items().then(function (items) {
+      if (!items.length) {
+        cartRoot.innerHTML =
+          '<div class="cab-page-head"><h1>Корзина</h1></div>' +
+          '<p class="cab-empty">Корзина пуста. <a href="shop.html">Перейти в магазин →</a></p>';
+        return;
+      }
+      var rows = items.map(function (it) {
+        return '<tr>' +
+          '<td data-th="Товар"><strong>' + escapeHtml(it.name) + '</strong>' +
+            '<div class="cab-muted">' + escapeHtml(cartTypeLabel(it.type)) + '</div></td>' +
+          '<td data-th="Кол-во"><div class="cart-qty-ctrl">' +
+            '<button class="btn-icon" data-cart-minus="' + it.id + '">−</button>' +
+            '<span>' + it.qty + '</span>' +
+            '<button class="btn-icon" data-cart-plus="' + it.id + '">+</button>' +
+          '</div></td>' +
+          '<td data-th="Цена">' + fmtMoney(it.price * it.qty) + '</td>' +
+          '<td data-th=""><button class="btn-icon danger" data-cart-rm="' + it.id + '" title="Удалить">✕</button></td>' +
+        '</tr>';
+      }).join('');
+      API.cart.total().then(function (total) {
+        cartRoot.innerHTML =
+          '<div class="cab-page-head"><h1>Корзина</h1></div>' +
+          '<div class="cab-table-wrap"><table class="cab-table">' +
+          '<thead><tr><th>Товар</th><th>Кол-во</th><th>Сумма</th><th></th></tr></thead>' +
+          '<tbody>' + rows + '</tbody></table></div>' +
+          '<div class="cart-footer">' +
+            '<div class="cart-total">Итого: <strong>' + fmtMoney(total) + '</strong></div>' +
+            '<button class="btn btn-primary" id="cart-checkout-btn">Оформить заказ</button>' +
+          '</div>';
+        $all('[data-cart-rm]', cartRoot).forEach(function (b) {
+          b.addEventListener('click', function () {
+            API.cart.remove(b.getAttribute('data-cart-rm')).then(function () { refreshCartBadge(); loadCart(); });
+          });
+        });
+        $all('[data-cart-minus]', cartRoot).forEach(function (b) {
+          b.addEventListener('click', function () {
+            var id = b.getAttribute('data-cart-minus');
+            var cur = items.filter(function (i) { return i.id === id; })[0];
+            if (cur && cur.qty <= 1) {
+              API.cart.remove(id).then(function () { refreshCartBadge(); loadCart(); });
+            } else {
+              API.cart.add({ id: id, qty: -1, _delta: true }).then(function () { loadCart(); }).catch(function () {
+                API.cart.remove(id).then(function () { refreshCartBadge(); loadCart(); });
+              });
+            }
+          });
+        });
+        $all('[data-cart-plus]', cartRoot).forEach(function (b) {
+          b.addEventListener('click', function () {
+            var id = b.getAttribute('data-cart-plus');
+            var cur = items.filter(function (i) { return i.id === id; })[0];
+            if (cur) API.cart.add({ type: cur.type, productId: cur.productId, name: cur.name, price: cur.price }).then(function () { loadCart(); });
+          });
+        });
+        var checkoutBtn = $('#cart-checkout-btn');
+        if (checkoutBtn) {
+          checkoutBtn.addEventListener('click', function () {
+            checkoutBtn.disabled = true; checkoutBtn.textContent = 'Оформляем…';
+            API.cart.checkout().then(function (order) {
+              toast('Заказ №' + order.id + ' оформлен! Спасибо за покупку.');
+              refreshCartBadge();
+              loadCart();
+            }).catch(function (e) {
+              toast(e.message);
+              checkoutBtn.disabled = false; checkoutBtn.textContent = 'Оформить заказ';
+            });
+          });
+        }
+      });
+    });
+  }
+  function cartTypeLabel(t) {
+    var MAP = { subscription: 'Абонемент', course: 'Курс', intensive: 'Интенсив', giftCert: 'Подарочный сертификат', event: 'Мастер-класс' };
+    return MAP[t] || t;
   }
 
   /* =================================================================
@@ -971,6 +1151,196 @@
     $('[data-cal="prev"]').addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); render(); });
     $('[data-cal="next"]').addEventListener('click', function () { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); render(); });
     render();
+  }
+
+  /* =================================================================
+     TEACHER CABINET  [v0.7]
+     ================================================================= */
+  var teacherRoot = $('#teacher-root');
+  if (teacherRoot) { loadTeacherCabinet(); }
+  function loadTeacherCabinet() {
+    Promise.all([
+      API.teacher.myStudents(),
+      API.teacher.homeworkForReview(),
+      API.teacher.todayAttendance()
+    ]).then(function (res) {
+      var students = res[0], hwReview = res[1], attendance = res[2];
+      var pending = hwReview.filter(function (h) { return h.status === 'submitted'; }).length;
+      var html =
+        '<div class="cab-page-head"><h1>Кабинет преподавателя</h1></div>' +
+        '<div class="cab-grid">' +
+          statCard(ICON.users,  'Мои ученики',    students.length, '') +
+          statCard(ICON.hw,     'На проверку',    pending,         pending ? 'требуют проверки' : 'заданий к проверке нет') +
+          statCard(ICON.check2, 'Посещаемость сегодня', attendance.length, 'занятий сегодня') +
+        '</div>' +
+        '<h2 class="cab-section-title">Мои ученики' +
+          '<button class="btn btn-outline btn-sm" style="float:right" data-add-teacher-hw>+ Задание</button></h2>' +
+        '<div class="cab-search" style="margin-bottom:16px">' +
+          '<span class="cab-search-ic">' + SEARCH_ICON + '</span>' +
+          '<input type="search" class="cab-search-input" id="teacher-student-search" placeholder="Поиск ученика…" autocomplete="off">' +
+        '</div>' +
+        '<div id="teacher-students-list">' + renderTeacherStudents(students) + '</div>';
+
+      if (hwReview.length) {
+        html += '<h2 class="cab-section-title">Домашние задания на проверку</h2>' +
+          '<div id="teacher-hw-review">' + renderTeacherHwReview(hwReview) + '</div>';
+      }
+
+      if (attendance.length) {
+        html += '<h2 class="cab-section-title">Посещаемость сегодня</h2>' +
+          '<div id="teacher-attendance">' + renderTeacherAttendance(attendance, students) + '</div>';
+      }
+
+      teacherRoot.innerHTML = html;
+
+      var searchInput = $('#teacher-student-search', teacherRoot);
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          var q = searchInput.value.toLowerCase();
+          var filtered = students.filter(function (s) { return !q || s.name.toLowerCase().indexOf(q) !== -1; });
+          $('#teacher-students-list', teacherRoot).innerHTML = renderTeacherStudents(filtered);
+          bindTeacherStudentActions(teacherRoot);
+        });
+      }
+      bindTeacherStudentActions(teacherRoot);
+      bindTeacherHwActions(teacherRoot);
+
+      var addHwBtn = $('[data-add-teacher-hw]', teacherRoot);
+      if (addHwBtn) addHwBtn.addEventListener('click', function () { editTeacherHomework(null, students); });
+    });
+  }
+  function renderTeacherStudents(students) {
+    if (!students.length) return '<p class="cab-empty">Учеников не найдено.</p>';
+    return '<div class="cab-table-wrap"><table class="cab-table">' +
+      '<thead><tr><th>Ученик</th><th>Направление</th><th>Посещаемость</th><th>Незакрытые ДЗ</th><th></th></tr></thead><tbody>' +
+      students.map(function (s) {
+        return '<tr>' +
+          '<td data-th="Ученик"><strong>' + escapeHtml(s.name) + '</strong></td>' +
+          '<td data-th="Направление">' + escapeHtml(s.direction || '—') + '</td>' +
+          '<td data-th="Посещаемость">' + (s.attendanceRate != null ? s.attendanceRate + '%' : '—') + '</td>' +
+          '<td data-th="Незакрытые ДЗ">' + (s.homeworkPending || 0) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn btn-outline btn-sm" data-teacher-card="' + s.id + '">Карточка</button>' +
+            '<button class="btn btn-outline btn-sm" data-teacher-note="' + s.id + '" data-teacher-note-name="' + escapeHtml(s.name) + '">Комментарий</button>' +
+          '</div></td></tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+  function renderTeacherHwReview(list) {
+    if (!list.length) return '<p class="cab-empty">Заданий на проверку нет.</p>';
+    return '<div class="cab-table-wrap"><table class="cab-table">' +
+      '<thead><tr><th>Ученик</th><th>Задание</th><th>Статус</th><th>Срок</th><th></th></tr></thead><tbody>' +
+      list.map(function (h) {
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(h.studentName) + '</td>' +
+          '<td data-th="Задание"><strong>' + escapeHtml(h.title) + '</strong></td>' +
+          '<td data-th="Статус">' + badge(HW_STATUS, h.status) + '</td>' +
+          '<td data-th="Срок">' + fmtDate(h.dueDate) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn btn-outline btn-sm" data-teacher-review-hw="' + h.id + '">Проверить</button>' +
+            '<button class="btn-icon" data-teacher-edit-hw="' + h.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-teacher-del-hw="' + h.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+  function renderTeacherAttendance(list, students) {
+    var attOpts = [
+      { value: 'present',   label: 'Присутствовал' },
+      { value: 'excused',   label: 'Уважительная причина' },
+      { value: 'unexcused', label: 'Неуважительная причина' },
+      { value: 'absent',    label: 'Отсутствовал' }
+    ];
+    if (!list.length) return '<p class="cab-empty">Занятий сегодня нет.</p>';
+    return '<div class="cab-table-wrap"><table class="cab-table">' +
+      '<thead><tr><th>Ученик</th><th>Направление</th><th>Статус</th><th></th></tr></thead><tbody>' +
+      list.map(function (a) {
+        var opts = attOpts.map(function (o) {
+          return '<option value="' + o.value + '"' + (a.status === o.value ? ' selected' : '') + '>' + o.label + '</option>';
+        }).join('');
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(a.studentName) + '</td>' +
+          '<td data-th="Направление">' + escapeHtml(a.direction) + '</td>' +
+          '<td data-th="Статус"><select class="form-control form-control-sm" data-att-sel="' + a.id + '">' + opts + '</select></td>' +
+          '<td data-th=""><button class="btn btn-outline btn-sm" data-att-save="' + a.id + '">Сохранить</button></td></tr>';
+      }).join('') +
+      '</tbody></table></div>';
+  }
+  function bindTeacherStudentActions(root) {
+    $all('[data-teacher-card]', root).forEach(function (b) {
+      b.addEventListener('click', function () { openStudentCard(b.getAttribute('data-teacher-card')); });
+    });
+    $all('[data-teacher-note]', root).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-teacher-note');
+        var name = b.getAttribute('data-teacher-note-name');
+        addTeacherNote(id, name);
+      });
+    });
+    $all('[data-att-save]', root).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.getAttribute('data-att-save');
+        var sel = $('[data-att-sel="' + id + '"]', root);
+        if (!sel) return;
+        API.teacher.updateAttendance(id, { status: sel.value }).then(function () { toast('Посещаемость обновлена'); });
+      });
+    });
+  }
+  function bindTeacherHwActions(root) {
+    $all('[data-teacher-review-hw]', root).forEach(function (b) {
+      b.addEventListener('click', function () { reviewHomework(b.getAttribute('data-teacher-review-hw')); });
+    });
+    $all('[data-teacher-edit-hw]', root).forEach(function (b) {
+      b.addEventListener('click', function () {
+        API.teacher.myStudents().then(function (students) {
+          editTeacherHomework(b.getAttribute('data-teacher-edit-hw'), students);
+        });
+      });
+    });
+    $all('[data-teacher-del-hw]', root).forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (confirm('Удалить задание?')) {
+          API.teacher.removeHomework(b.getAttribute('data-teacher-del-hw')).then(function () {
+            toast('Задание удалено'); loadTeacherCabinet();
+          });
+        }
+      });
+    });
+  }
+  function addTeacherNote(studentId, studentName) {
+    var typeOpts = [
+      { value: 'progress', label: 'О прогрессе' },
+      { value: 'recommendation', label: 'Рекомендация' },
+      { value: 'remark', label: 'Замечание' }
+    ];
+    var html = '<form data-form>' +
+      field('Тип', selectCtrl('type', typeOpts, 'progress')) +
+      field('Комментарий', textarea('text', '')) +
+      formActions() + '</form>';
+    var m = openModal('Комментарий: ' + escapeHtml(studentName), html);
+    bindCrudForm(m, function (data) {
+      return API.teacher.addComment({ studentId: studentId, type: data.type, text: data.text });
+    }, function () { toast('Комментарий добавлен'); });
+  }
+  function editTeacherHomework(id, students) {
+    Promise.all([
+      id ? API.homework.get(id) : Promise.resolve({}),
+      students ? Promise.resolve(students) : API.teacher.myStudents()
+    ]).then(function (res) {
+      var h = res[0] || {}, sts = res[1];
+      var studentOpts = sts.map(function (s) { return { value: s.id, label: s.name }; });
+      var html = '<form data-form>' +
+        field('Ученик', selectCtrl('studentId', studentOpts, h.studentId)) +
+        field('Название', input('title', h.title)) +
+        field('Описание', textarea('description', h.description)) +
+        row(field('Дата выдачи', input('assignedDate', h.assignedDate, 'date')),
+            field('Срок выполнения', input('dueDate', h.dueDate, 'date'))) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать задание' : 'Новое задание', html);
+      bindCrudForm(m, function (data) {
+        return id ? API.teacher.updateHomework(id, data) : API.teacher.createHomework(data);
+      }, function () { toast(id ? 'Сохранено' : 'Задание создано'); loadTeacherCabinet(); });
+    });
   }
 
   /* =================================================================
