@@ -128,27 +128,63 @@
     play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
     file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>',
-    image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>'
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    check2: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>',
+    note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>',
+    clipboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>',
+    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
   };
 
+  /* status / type maps (v0.5) */
+  var HW_STATUS = {
+    assigned:  { label: 'Назначено',          cls: 'badge-gold'  },
+    submitted: { label: 'Отправлено',         cls: 'badge-blue'  },
+    reviewed:  { label: 'Проверено',          cls: 'badge-green' },
+    revision:  { label: 'Требуется доработка', cls: 'badge-red'   }
+  };
+  var ATT_STATUS = {
+    present:   { label: 'Присутствовал',  cls: 'badge-green' },
+    excused:   { label: 'Уважительная',   cls: 'badge-gold'  },
+    unexcused: { label: 'Неуважительная', cls: 'badge-red'   },
+    absent:    { label: 'Отсутствовал',   cls: 'badge-gray'  }
+  };
+  var NOTE_TYPE = {
+    recommendation: { label: 'Рекомендация', cls: 'badge-blue'  },
+    remark:         { label: 'Замечание',    cls: 'badge-gold'  },
+    progress:       { label: 'О прогрессе',  cls: 'badge-green' }
+  };
+  var ACH_ICON = {
+    concert: 'note', stage: 'star', calendar: 'calendar', course: 'cert', exhibition: 'image', star: 'star'
+  };
+  function achIcon(key) { return ICON[ACH_ICON[key] || 'star'] || ICON.star; }
+
   var STUDENT_NAV = [
-    { href: 'dashboard.html',     label: 'Главная',           icon: ICON.home    },
-    { href: 'schedule.html',      label: 'Расписание',        icon: ICON.calendar},
-    { href: 'courses.html',       label: 'Мои курсы',         icon: ICON.book    },
-    { href: 'subscriptions.html', label: 'Мои абонементы',    icon: ICON.card    },
-    { href: 'payments.html',      label: 'История платежей',  icon: ICON.receipt },
-    { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart    }
+    { href: 'dashboard.html',     label: 'Главная',           icon: ICON.home     },
+    { href: 'schedule.html',      label: 'Расписание',        icon: ICON.calendar },
+    { href: 'courses.html',       label: 'Мои курсы',         icon: ICON.book     },
+    { href: 'attendance.html',    label: 'Посещаемость',      icon: ICON.check2   },
+    { href: 'homework.html',      label: 'Домашние задания',  icon: ICON.hw       },
+    { href: 'certificates.html',  label: 'Сертификаты',       icon: ICON.cert     },
+    { href: 'progress.html',      label: 'Профиль развития',  icon: ICON.chart    },
+    { href: 'subscriptions.html', label: 'Мои абонементы',    icon: ICON.card     },
+    { href: 'payments.html',      label: 'История платежей',  icon: ICON.receipt  },
+    { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     }
   ];
-  var STUDENT_SOON = [
-    { label: 'Родительский кабинет', icon: ICON.parents, tag: 'v0.5' },
-    { label: 'Домашние задания',     icon: ICON.hw,      tag: 'v0.5' },
-    { label: 'Сертификаты',          icon: ICON.cert,    tag: 'v0.5' }
+  var PARENT_NAV = [
+    { href: 'parent.html', label: 'Кабинет родителя', icon: ICON.parents }
   ];
   var ADMIN_NAV = [
-    { href: 'admin.html',               label: 'Ученики',    icon: ICON.users   },
-    { href: 'admin-subscriptions.html', label: 'Абонементы', icon: ICON.card    },
-    { href: 'admin-courses.html',       label: 'Курсы',      icon: ICON.book    },
-    { href: 'admin-payments.html',      label: 'Платежи',    icon: ICON.receipt }
+    { href: 'admin.html',               label: 'Ученики',          icon: ICON.users     },
+    { href: 'admin-parents.html',       label: 'Родители',         icon: ICON.parents   },
+    { href: 'admin-subscriptions.html', label: 'Абонементы',       icon: ICON.card      },
+    { href: 'admin-courses.html',       label: 'Курсы',            icon: ICON.book      },
+    { href: 'admin-attendance.html',    label: 'Посещаемость',     icon: ICON.check2    },
+    { href: 'admin-homework.html',      label: 'Домашние задания', icon: ICON.hw        },
+    { href: 'admin-certificates.html',  label: 'Сертификаты',      icon: ICON.cert      },
+    { href: 'admin-achievements.html',  label: 'Достижения',       icon: ICON.star      },
+    { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   }
   ];
 
   function renderSidebar() {
@@ -158,8 +194,10 @@
     var me = API.auth.current();
     var file = location.pathname.split('/').pop() || 'dashboard.html';
     var isAdmin = me && me.role === 'admin';
-    var roleLabel = isAdmin ? 'Администратор' : 'Ученик';
+    var roleLabel = isAdmin ? 'Администратор' : (kind === 'parent' ? 'Родитель' : 'Ученик');
     var initial = ((me && me.name) || '?').trim().charAt(0).toUpperCase() || '?';
+    var tagline = kind === 'admin' ? 'Администрирование'
+      : (kind === 'parent' ? 'Кабинет родителя' : 'Личный кабинет');
 
     function link(item) {
       return '<a href="' + item.href + '"' + (item.href === file ? ' class="active"' : '') + '>' +
@@ -169,23 +207,20 @@
     var nav = '';
     if (kind === 'admin') {
       nav += ADMIN_NAV.map(link).join('');
+    } else if (kind === 'parent') {
+      nav += PARENT_NAV.map(link).join('');
     } else {
       nav += STUDENT_NAV.map(link).join('');
       if (isAdmin) {
         nav += '<div class="cab-nav-sep">Администрирование</div>' +
           '<a href="admin.html">' + ICON.shield + 'Админ-панель</a>';
       }
-      nav += '<div class="cab-nav-sep">Скоро</div>';
-      nav += STUDENT_SOON.map(function (s) {
-        return '<span class="cab-nav-soon">' + s.icon + s.label +
-          '<span class="soon-tag">' + s.tag + '</span></span>';
-      }).join('');
     }
 
     host.innerHTML =
       '<a href="../index.html" class="cab-logo">' +
         '<span class="name">Shpigotskiy Art Space</span>' +
-        '<span class="tagline-small">' + (kind === 'admin' ? 'Администрирование' : 'Личный кабинет') + '</span>' +
+        '<span class="tagline-small">' + tagline + '</span>' +
       '</a>' +
       '<div class="cab-user">' +
         '<div class="cab-avatar">' + escapeHtml(initial) + '</div>' +
@@ -219,7 +254,10 @@
       btn.disabled = true; btn.dataset.label = btn.textContent; btn.textContent = 'Вход…';
       API.auth.login(login, password).then(function (user) {
         var dest = getNextParam();
-        if (user.role === 'admin' && dest === 'dashboard.html') dest = 'admin.html';
+        if (dest === 'dashboard.html') {
+          if (user.role === 'admin') dest = 'admin.html';
+          else if (user.role === 'parent') dest = 'parent.html';
+        }
         location.href = dest;
       }).catch(function (err) { setFormError(box, err.message); btn.disabled = false; btn.textContent = btn.dataset.label; });
     });
@@ -728,13 +766,60 @@
       var crs = data.courses.length
         ? data.courses.map(function (c) { return '<li>' + escapeHtml(c.title) + ' — ' + c.progress + '%</li>'; }).join('')
         : '<li class="cab-muted">нет</li>';
-      openModal('Карточка ученика',
+      var att = data.attendance || { rate: 0, present: 0, total: 0 };
+      var certs = data.certificates.length
+        ? data.certificates.map(function (c) { return '<li>' + escapeHtml(c.title) + ' · ' + fmtDate(c.date) + '</li>'; }).join('')
+        : '<li class="cab-muted">нет</li>';
+      var achs = data.achievements.length
+        ? data.achievements.map(function (a) { return '<li>' + escapeHtml(a.title) + ' · ' + fmtDate(a.date) + '</li>'; }).join('')
+        : '<li class="cab-muted">нет</li>';
+      var m = openModal('Карточка ученика',
         '<div class="cab-card-block"><div class="cab-strong">' + escapeHtml(u.name) + '</div>' +
           '<div class="cab-muted">' + escapeHtml(u.email || '—') + ' · ' + escapeHtml(u.phone || '—') + '</div></div>' +
+        '<h4 class="cab-block-title">Посещаемость</h4>' +
+          '<p class="cab-muted">' + att.rate + '% · посещено ' + att.present + ' из ' + att.total + ' занятий</p>' +
         '<h4 class="cab-block-title">Абонементы</h4><ul class="cab-list">' + subs + '</ul>' +
         '<h4 class="cab-block-title">Платежи</h4><ul class="cab-list">' + pays + '</ul>' +
-        '<h4 class="cab-block-title">Курсы</h4><ul class="cab-list">' + crs + '</ul>');
+        '<h4 class="cab-block-title">Курсы</h4><ul class="cab-list">' + crs + '</ul>' +
+        '<h4 class="cab-block-title">Сертификаты</h4><ul class="cab-list">' + certs + '</ul>' +
+        '<h4 class="cab-block-title">Достижения</h4><ul class="cab-list">' + achs + '</ul>' +
+        '<div class="cab-block-head"><h4 class="cab-block-title">Комментарии преподавателя</h4>' +
+          '<button class="btn btn-outline btn-sm" data-add-note>+ Комментарий</button></div>' +
+        '<div class="note-list" data-notes-list></div>');
+      renderCardNotes(m, id);
+      m.body.querySelector('[data-add-note]').addEventListener('click', function () { addNote(id, m); });
     }).catch(function (e) { toast(e.message); });
+  }
+  function renderCardNotes(m, studentId) {
+    var host = m.body.querySelector('[data-notes-list]');
+    API.comments.list(studentId).then(function (notes) {
+      if (!notes.length) { host.innerHTML = '<p class="cab-empty">Комментариев пока нет.</p>'; return; }
+      host.innerHTML = notes.map(function (n) {
+        return '<div class="note-item"><div class="note-head">' + badge(NOTE_TYPE, n.type) +
+          '<span class="note-meta">' + escapeHtml(n.author) + ' · ' + fmtDate(n.date) + '</span>' +
+          '<button class="btn-icon danger" data-del-note="' + n.id + '" title="Удалить">✕</button></div>' +
+          '<p>' + escapeHtml(n.text) + '</p></div>';
+      }).join('');
+      $all('[data-del-note]', host).forEach(function (b) {
+        b.addEventListener('click', function () {
+          API.comments.remove(b.getAttribute('data-del-note')).then(function () { renderCardNotes(m, studentId); });
+        });
+      });
+    });
+  }
+  function addNote(studentId, parentModal) {
+    var typeOpts = [
+      { value: 'progress', label: 'О прогрессе' },
+      { value: 'recommendation', label: 'Рекомендация' },
+      { value: 'remark', label: 'Замечание' }
+    ];
+    var html = '<form data-form>' +
+      field('Тип', selectCtrl('type', typeOpts, 'progress')) +
+      field('Комментарий', textarea('text', '')) +
+      formActions() + '</form>';
+    var m = openModal('Новый комментарий', html);
+    bindCrudForm(m, function (data) { data.studentId = studentId; return API.comments.create(data); },
+      function () { toast('Комментарий добавлен'); renderCardNotes(parentModal, studentId); });
   }
 
   /* =================================================================
@@ -1009,6 +1094,608 @@
         '<div class="cab-table-wrap"><table class="cab-table">' +
         '<thead><tr><th>Дата</th><th>Ученик</th><th>Назначение</th><th>Сумма</th><th>Статус</th></tr></thead>' +
         '<tbody>' + rows + '</tbody></table></div>';
+    });
+  }
+
+  /* =================================================================
+     ATTENDANCE — student view  [v0.5]
+     ================================================================= */
+  var attendanceRoot = $('#attendance-root');
+  if (attendanceRoot) {
+    Promise.all([API.attendance.stats(), API.attendance.list()]).then(function (res) {
+      var st = res[0], list = res[1];
+      var stats =
+        '<div class="cab-grid">' +
+          '<div class="cab-card">' +
+            '<div class="cab-card-label">' + ICON.check2 + 'Посещаемость</div>' +
+            '<div class="cab-stat">' + st.rate + '%</div>' +
+            '<div class="cab-stat-sub">' + st.present + ' из ' + st.total + ' занятий посещено</div>' +
+            '<div class="cab-progress"><div class="cab-progress-bar" style="width:' + st.rate + '%;"></div></div>' +
+          '</div>' +
+          '<div class="cab-card">' +
+            '<div class="cab-card-label">' + ICON.chart + 'Статистика за период</div>' +
+            '<div class="att-legend">' +
+              attLegend('Присутствовал', st.present, 'badge-green') +
+              attLegend('Уважительная причина', st.excused, 'badge-gold') +
+              attLegend('Неуважительная причина', st.unexcused, 'badge-red') +
+              attLegend('Отсутствовал', st.absent, 'badge-gray') +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      var table;
+      if (!list.length) {
+        table = '<p class="cab-empty">Записей о посещениях пока нет.</p>';
+      } else {
+        var rows = list.map(function (a) {
+          return '<tr>' +
+            '<td data-th="Дата">' + fmtDate(a.date) + '</td>' +
+            '<td data-th="Направление">' + escapeHtml(a.direction) + '</td>' +
+            '<td data-th="Статус">' + badge(ATT_STATUS, a.status) + '</td></tr>';
+        }).join('');
+        table =
+          '<h2 class="cab-section-title">История посещений</h2>' +
+          '<div class="cab-table-wrap"><table class="cab-table">' +
+          '<thead><tr><th>Дата</th><th>Направление</th><th>Статус</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody></table></div>';
+      }
+      attendanceRoot.innerHTML = stats + table;
+    });
+  }
+  function attLegend(label, n, cls) {
+    return '<div class="att-legend-row"><span class="cab-badge ' + cls + '">' + n + '</span><span>' + escapeHtml(label) + '</span></div>';
+  }
+
+  /* =================================================================
+     HOMEWORK — student view  [v0.5]
+     ================================================================= */
+  var hwRoot = $('#homework-root');
+  if (hwRoot) { loadStudentHomework(); }
+  function loadStudentHomework() {
+    API.homework.list().then(function (list) {
+      if (!list.length) { hwRoot.innerHTML = '<p class="cab-empty">Домашних заданий пока нет.</p>'; return; }
+      hwRoot.innerHTML = list.map(renderHwCard).join('');
+      $all('[data-hw-submit]', hwRoot).forEach(function (b) {
+        b.addEventListener('click', function () { openSubmitHw(b.getAttribute('data-hw-submit')); });
+      });
+    });
+  }
+  function hwFiles(files) {
+    if (!files || !files.length) return '';
+    return '<div class="hw-materials">' + files.map(function (f) {
+      return '<span class="hw-file">' + ICON.file + escapeHtml(f.name) + '</span>';
+    }).join('') + '</div>';
+  }
+  function renderHwCard(h) {
+    var overdue = (h.status === 'assigned' || h.status === 'revision') && daysLeft(h.dueDate) < 0;
+    var materials = (h.materials || []).length
+      ? '<div class="hw-block"><div class="hw-block-label">Материалы задания</div>' + hwFiles(h.materials) + '</div>' : '';
+    var submission = h.submission
+      ? '<div class="hw-block"><div class="hw-block-label">Ваш ответ · ' + fmtDate(h.submission.submittedAt) + '</div>' +
+          (h.submission.comment ? '<p>' + escapeHtml(h.submission.comment) + '</p>' : '') + hwFiles(h.submission.files) + '</div>'
+      : '';
+    var review = h.review
+      ? '<div class="hw-block hw-review"><div class="hw-block-label">Комментарий преподавателя · ' + fmtDate(h.review.reviewedAt) + '</div>' +
+          '<p>' + escapeHtml(h.review.comment) + '</p></div>'
+      : '';
+    var canSubmit = h.status === 'assigned' || h.status === 'revision';
+    var action = canSubmit
+      ? '<div class="hw-actions"><button class="btn btn-primary btn-sm" data-hw-submit="' + h.id + '">' +
+          (h.status === 'revision' ? 'Отправить заново' : 'Сдать работу') + '</button></div>'
+      : '';
+    return '<div class="hw-card">' +
+      '<div class="hw-card-head">' +
+        '<div><h3>' + escapeHtml(h.title) + '</h3>' +
+          '<div class="hw-meta">' + escapeHtml(h.direction) + ' · ' + escapeHtml(h.teacher) + '</div></div>' +
+        badge(HW_STATUS, h.status) +
+      '</div>' +
+      '<p class="hw-desc">' + escapeHtml(h.description) + '</p>' +
+      '<div class="hw-dates">' +
+        '<span>Выдано: ' + fmtDate(h.assignedDate) + '</span>' +
+        '<span class="' + (overdue ? 'hw-overdue' : '') + '">Срок: ' + fmtDate(h.dueDate) + (overdue ? ' · просрочено' : '') + '</span>' +
+      '</div>' +
+      materials + submission + review + action +
+    '</div>';
+  }
+  function openSubmitHw(id) {
+    API.homework.get(id).then(function (h) {
+      var html = '<form data-form>' +
+        '<p class="cab-muted" style="margin-bottom:16px;">Прикрепите файл (видео, изображение или документ) и при необходимости добавьте комментарий преподавателю.</p>' +
+        field('Файл с работой', '<input class="form-control" type="file" name="file" accept="image/*,video/*,.pdf,.doc,.docx">') +
+        field('Комментарий (опционально)', textarea('comment', '')) +
+        '<div class="form-error" data-err></div>' +
+        '<div class="cab-modal-actions">' +
+          '<button type="button" class="btn btn-outline btn-sm" data-cancel>Отмена</button>' +
+          '<button type="submit" class="btn btn-primary btn-sm">Отправить на проверку</button>' +
+        '</div></form>';
+      var m = openModal('Сдать работу: ' + escapeHtml(h.title), html);
+      var form = m.body.querySelector('[data-form]');
+      m.body.querySelector('[data-cancel]').addEventListener('click', m.close);
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var err = form.querySelector('[data-err]'); hide(err);
+        var fileInput = form.querySelector('input[type=file]');
+        var files = [];
+        if (fileInput && fileInput.files && fileInput.files.length) {
+          files = Array.prototype.slice.call(fileInput.files).map(function (f) { return { name: f.name, kind: f.type }; });
+        }
+        if (!files.length) { setFormError(err, 'Выберите файл с работой'); return; }
+        var comment = form.querySelector('textarea[name=comment]').value;
+        var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
+        API.homework.submit(id, { comment: comment, files: files }).then(function () {
+          m.close(); toast('Работа отправлена на проверку'); loadStudentHomework();
+        }).catch(function (ex) { setFormError(err, ex.message); btn.disabled = false; });
+      });
+    });
+  }
+  function daysLeft(iso) {
+    var p = (iso || '').split('-'); var due = new Date(+p[0], (+p[1] || 1) - 1, +p[2] || 1);
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    return Math.round((due - today) / 86400000);
+  }
+
+  /* =================================================================
+     CERTIFICATES — student view  [v0.5]
+     ================================================================= */
+  var certRoot = $('#certificates-root');
+  if (certRoot) {
+    API.certificates.list().then(function (list) {
+      if (!list.length) {
+        certRoot.innerHTML = '<p class="cab-empty">Сертификатов пока нет. Они появятся по мере прохождения курсов и участия в мероприятиях.</p>';
+        return;
+      }
+      certRoot.innerHTML = '<div class="cert-grid">' + list.map(renderCertCard).join('') + '</div>';
+      bindMockDownloads(certRoot);
+    });
+  }
+  function renderCertCard(c) {
+    return '<div class="cert-card">' +
+      '<div class="cert-ribbon" style="background:' + c.gradient + ';">' + ICON.cert + '</div>' +
+      '<div class="cert-body">' +
+        '<h3>' + escapeHtml(c.title) + '</h3>' +
+        '<div class="cert-date">' + fmtDate(c.date) + '</div>' +
+        (c.description ? '<p class="cert-desc">' + escapeHtml(c.description) + '</p>' : '') +
+        '<button class="btn btn-outline btn-sm" data-mock-dl>' + ICON.download + ' Скачать</button>' +
+      '</div></div>';
+  }
+  function bindMockDownloads(root) {
+    $all('[data-mock-dl]', root).forEach(function (btn) {
+      btn.addEventListener('click', function () { toast('Файл доступен в полной версии'); });
+    });
+  }
+  function renderAchCard(a) {
+    return '<div class="ach-card"><div class="ach-icon">' + achIcon(a.icon) + '</div>' +
+      '<div class="ach-info"><strong>' + escapeHtml(a.title) + '</strong>' +
+        '<span class="ach-date">' + fmtDate(a.date) + '</span>' +
+        (a.description ? '<p>' + escapeHtml(a.description) + '</p>' : '') +
+      '</div></div>';
+  }
+  function renderNote(n) {
+    return '<div class="note-item">' +
+      '<div class="note-head">' + badge(NOTE_TYPE, n.type) +
+        '<span class="note-meta">' + escapeHtml(n.author) + ' · ' + fmtDate(n.date) + '</span></div>' +
+      '<p>' + escapeHtml(n.text) + '</p></div>';
+  }
+
+  /* =================================================================
+     DEVELOPMENT PROFILE — student view  [v0.5]
+     ================================================================= */
+  var devRoot = $('#development-root');
+  if (devRoot) {
+    API.student.development().then(function (d) {
+      devRoot.innerHTML = developmentHtml(d);
+      bindMockDownloads(devRoot);
+    });
+  }
+  function developmentHtml(d) {
+    var att = d.attendance;
+    var completed = d.courses.filter(function (c) { return c.done; });
+    var coursesHtml = d.courses.length
+      ? d.courses.map(function (c) {
+          return '<div class="dev-course"><div class="dev-course-head"><strong>' + escapeHtml(c.title) + '</strong><span>' + c.progress + '%</span></div>' +
+            '<div class="cab-progress"><div class="cab-progress-bar" style="width:' + c.progress + '%;"></div></div></div>';
+        }).join('')
+      : '<p class="cab-empty">Нет курсов.</p>';
+    var certsHtml = d.certificates.length
+      ? '<div class="cert-grid">' + d.certificates.map(renderCertCard).join('') + '</div>'
+      : '<p class="cab-empty">Сертификатов пока нет.</p>';
+    var achHtml = d.achievements.length
+      ? '<div class="ach-grid">' + d.achievements.map(renderAchCard).join('') + '</div>'
+      : '<p class="cab-empty">Достижений пока нет.</p>';
+    var notesHtml = d.notes.length ? d.notes.map(renderNote).join('') : '<p class="cab-empty">Комментариев преподавателя пока нет.</p>';
+    return '' +
+      '<div class="cab-grid">' +
+        '<div class="cab-card"><div class="cab-card-label">' + ICON.check2 + 'Посещаемость</div>' +
+          '<div class="cab-stat">' + att.rate + '%</div>' +
+          '<div class="cab-stat-sub">' + att.present + ' из ' + att.total + ' занятий</div></div>' +
+        '<div class="cab-card"><div class="cab-card-label">' + ICON.book + 'Завершённые курсы</div>' +
+          '<div class="cab-stat">' + completed.length + '</div>' +
+          '<div class="cab-stat-sub">из ' + d.courses.length + ' приобретённых</div></div>' +
+        '<div class="cab-card"><div class="cab-card-label">' + ICON.cert + 'Сертификаты</div>' +
+          '<div class="cab-stat">' + d.certificates.length + '</div></div>' +
+        '<div class="cab-card"><div class="cab-card-label">' + ICON.star + 'Достижения</div>' +
+          '<div class="cab-stat">' + d.achievements.length + '</div></div>' +
+      '</div>' +
+      '<h2 class="cab-section-title">Прогресс по курсам</h2>' + coursesHtml +
+      '<h2 class="cab-section-title">Достижения</h2>' + achHtml +
+      '<h2 class="cab-section-title">Сертификаты</h2>' + certsHtml +
+      '<h2 class="cab-section-title">Комментарии преподавателей</h2><div class="note-list">' + notesHtml + '</div>';
+  }
+
+  /* =================================================================
+     PARENT CABINET  [v0.5]
+     ================================================================= */
+  var parentRoot = $('#parent-root');
+  if (parentRoot) {
+    API.parent.children().then(function (kids) {
+      if (!kids.length) {
+        parentRoot.innerHTML = '<p class="cab-empty">К вашему аккаунту пока не привязаны ученики. Обратитесь к администратору студии.</p>';
+        return;
+      }
+      parentRoot.innerHTML = kids.map(renderChildCard).join('');
+      bindMockDownloads(parentRoot);
+    });
+  }
+  function pcTile(label, value) {
+    return '<div class="pc-tile"><div class="pc-tile-label">' + label + '</div><div class="pc-tile-val">' + value + '</div></div>';
+  }
+  function renderChildCard(c) {
+    var next = c.nextLesson
+      ? c.nextLesson.weekday + ', ' + fmtDate(c.nextLesson.date) + ' · ' + c.nextLesson.time
+      : 'Нет занятий';
+    var pay = PAY_STATUS[c.paymentStatus] || PAY_STATUS.pending;
+    var courses = c.courses.length
+      ? c.courses.map(function (cr) {
+          return '<div class="dev-course"><div class="dev-course-head"><strong>' + escapeHtml(cr.title) + '</strong><span>' + cr.progress + '%</span></div>' +
+            '<div class="cab-progress"><div class="cab-progress-bar" style="width:' + cr.progress + '%;"></div></div></div>';
+        }).join('')
+      : '<p class="cab-empty">Нет онлайн-курсов.</p>';
+    var hw = c.homework.length
+      ? c.homework.slice(0, 5).map(function (h) {
+          return '<li class="pc-hw-item"><span>' + escapeHtml(h.title) + '</span>' + badge(HW_STATUS, h.status) + '</li>';
+        }).join('')
+      : '<li class="cab-empty">Заданий нет.</li>';
+    var ach = c.achievements.length
+      ? '<div class="ach-grid">' + c.achievements.map(renderAchCard).join('') + '</div>'
+      : '<p class="cab-empty">Достижений пока нет.</p>';
+    var certs = c.certificates.length
+      ? '<div class="cert-grid">' + c.certificates.map(renderCertCard).join('') + '</div>'
+      : '<p class="cab-empty">Сертификатов пока нет.</p>';
+    var notes = c.notes.length ? c.notes.slice(0, 3).map(renderNote).join('') : '<p class="cab-empty">Комментариев пока нет.</p>';
+    return '<section class="pc-child">' +
+      '<div class="pc-head">' +
+        '<div class="cab-avatar pc-avatar">' + escapeHtml(c.name.charAt(0)) + '</div>' +
+        '<div><h2>' + escapeHtml(c.name) + '</h2>' +
+          '<div class="pc-sub">' + escapeHtml(c.direction) + ' · ' + escapeHtml(c.teacher) + ' · ' + escapeHtml(c.level) + '</div></div>' +
+      '</div>' +
+      '<div class="pc-tiles">' +
+        pcTile('Ближайшее занятие', escapeHtml(next)) +
+        pcTile('Осталось занятий', c.lessonsTotal ? (c.lessonsLeft + ' из ' + c.lessonsTotal) : 'нет абонемента') +
+        pcTile('Посещаемость', c.attendance.rate + '%') +
+        pcTile('Оплата', '<span class="cab-badge ' + pay.cls + '">' + pay.label + '</span>') +
+      '</div>' +
+      '<div class="pc-cols">' +
+        '<div class="pc-col"><h3 class="pc-col-title">Прогресс по курсам</h3>' + courses + '</div>' +
+        '<div class="pc-col"><h3 class="pc-col-title">Домашние задания' +
+          (c.homeworkPending ? ' <span class="pc-badge">' + c.homeworkPending + '</span>' : '') +
+          '</h3><ul class="pc-hw-list">' + hw + '</ul></div>' +
+      '</div>' +
+      '<h3 class="pc-col-title">Достижения</h3>' + ach +
+      '<h3 class="pc-col-title">Сертификаты</h3>' + certs +
+      '<h3 class="pc-col-title">Комментарии преподавателей</h3><div class="note-list">' + notes + '</div>' +
+    '</section>';
+  }
+
+  /* =================================================================
+     ADMIN — parents CRUD  [v0.5]
+     ================================================================= */
+  var adminParents = $('#admin-parents-root');
+  if (adminParents) {
+    var addParentBtn = $('[data-add-parent]');
+    if (addParentBtn) addParentBtn.addEventListener('click', function () { editParent(null); });
+    loadAdminParents();
+  }
+  function loadAdminParents() {
+    API.admin.parents().then(function (list) {
+      if (!list.length) { adminParents.innerHTML = '<p class="cab-empty">Родителей пока нет.</p>'; return; }
+      var rows = list.map(function (p) {
+        return '<tr>' +
+          '<td data-th="Имя"><strong>' + escapeHtml(p.name) + '</strong></td>' +
+          '<td data-th="Контакты">' + escapeHtml(p.email || p.phone || '—') + '</td>' +
+          '<td data-th="Дети">' + (p.children.length ? escapeHtml(p.children.join(', ')) : '<span class="cab-muted">не привязаны</span>') + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + p.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + p.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminParents.innerHTML =
+        '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Имя</th><th>Контакты</th><th>Дети</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminParents).forEach(function (b) { b.addEventListener('click', function () { editParent(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminParents).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить родителя?')) API.admin.removeParent(b.getAttribute('data-del')).then(function () { toast('Родитель удалён'); loadAdminParents(); });
+        });
+      });
+    });
+  }
+  function editParent(id) {
+    Promise.all([API.admin.studentOptions(), id ? API.admin.parents() : Promise.resolve([])]).then(function (res) {
+      var students = res[0];
+      var p = id ? (res[1].filter(function (x) { return x.id === id; })[0] || {}) : {};
+      var childIds = p.childrenIds || [];
+      var checks = students.length
+        ? students.map(function (s) {
+            var on = childIds.indexOf(s.id) !== -1;
+            return '<label class="check-row"><input type="checkbox" value="' + s.id + '" data-child' + (on ? ' checked' : '') + '> ' + escapeHtml(s.name) + '</label>';
+          }).join('')
+        : '<p class="cab-muted">Нет учеников.</p>';
+      var html = '<form data-form>' +
+        field('Имя родителя', input('name', p.name)) +
+        row(field('Email', input('email', p.email)), field('Телефон', input('phone', p.phone))) +
+        field('Пароль' + (id ? ' (пусто — не менять)' : ''), input('password', '')) +
+        field('Привязанные ученики', '<div class="check-list">' + checks + '</div>') +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать родителя' : 'Новый родитель', html);
+      var form = m.body.querySelector('[data-form]');
+      m.body.querySelector('[data-cancel]').addEventListener('click', m.close);
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var err = form.querySelector('[data-err]'); hide(err);
+        var data = {};
+        $all('input[name], select[name], textarea[name]', form).forEach(function (el) { if (el.name) data[el.name] = el.value; });
+        data.childrenIds = $all('[data-child]', form).filter(function (ch) { return ch.checked; }).map(function (ch) { return ch.value; });
+        var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
+        var op = id ? API.admin.updateParent(id, data) : API.admin.createParent(data);
+        op.then(function () { m.close(); toast(id ? 'Сохранено' : 'Родитель создан'); loadAdminParents(); })
+          .catch(function (ex) { setFormError(err, ex.message); btn.disabled = false; });
+      });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — attendance CRUD  [v0.5]
+     ================================================================= */
+  var adminAtt = $('#admin-attendance-root');
+  if (adminAtt) {
+    var addAttBtn = $('[data-add-att]');
+    if (addAttBtn) addAttBtn.addEventListener('click', function () { editAttendance(null); });
+    loadAdminAttendance();
+  }
+  function loadAdminAttendance() {
+    API.attendance.all().then(function (list) {
+      if (!list.length) { adminAtt.innerHTML = '<p class="cab-empty">Записей о посещаемости пока нет.</p>'; return; }
+      var rows = list.map(function (a) {
+        return '<tr>' +
+          '<td data-th="Дата">' + fmtDate(a.date) + '</td>' +
+          '<td data-th="Ученик">' + escapeHtml(a.studentName) + '</td>' +
+          '<td data-th="Направление">' + escapeHtml(a.direction) + '</td>' +
+          '<td data-th="Статус">' + badge(ATT_STATUS, a.status) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + a.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + a.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminAtt.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Дата</th><th>Ученик</th><th>Направление</th><th>Статус</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminAtt).forEach(function (b) { b.addEventListener('click', function () { editAttendance(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminAtt).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить запись?')) API.attendance.remove(b.getAttribute('data-del')).then(function () { toast('Запись удалена'); loadAdminAttendance(); });
+        });
+      });
+    });
+  }
+  function editAttendance(id) {
+    Promise.all([API.admin.studentOptions(), id ? API.attendance.all() : Promise.resolve([])]).then(function (res) {
+      var students = res[0].map(function (s) { return { value: s.id, label: s.name }; });
+      var rec = id ? (res[1].filter(function (a) { return a.id === id; })[0] || {}) : {};
+      var statusOpts = [
+        { value: 'present', label: 'Присутствовал' },
+        { value: 'excused', label: 'Уважительная причина' },
+        { value: 'unexcused', label: 'Неуважительная причина' },
+        { value: 'absent', label: 'Отсутствовал' }
+      ];
+      var html = '<form data-form>' +
+        field('Ученик', selectCtrl('studentId', students, rec.studentId)) +
+        row(field('Дата', input('date', rec.date, 'date')), field('Направление', input('direction', rec.direction))) +
+        field('Статус', selectCtrl('status', statusOpts, rec.status || 'present')) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать посещение' : 'Новая отметка', html);
+      bindCrudForm(m, function (data) { return id ? API.attendance.update(id, data) : API.attendance.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Отметка добавлена'); loadAdminAttendance(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — homework CRUD + review  [v0.5]
+     ================================================================= */
+  var adminHw = $('#admin-homework-root');
+  if (adminHw) {
+    var addHwBtn = $('[data-add-hw]');
+    if (addHwBtn) addHwBtn.addEventListener('click', function () { editHomework(null); });
+    loadAdminHomework();
+  }
+  function loadAdminHomework() {
+    API.homework.all().then(function (list) {
+      if (!list.length) { adminHw.innerHTML = '<p class="cab-empty">Домашних заданий пока нет.</p>'; return; }
+      var rows = list.map(function (h) {
+        var reviewBtn = (h.status === 'submitted' || h.status === 'reviewed' || h.status === 'revision')
+          ? '<button class="btn btn-outline btn-sm" data-review="' + h.id + '">Проверить</button>' : '';
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(h.studentName) + '</td>' +
+          '<td data-th="Задание"><strong>' + escapeHtml(h.title) + '</strong></td>' +
+          '<td data-th="Направление">' + escapeHtml(h.direction) + '</td>' +
+          '<td data-th="Срок">' + fmtDate(h.dueDate) + '</td>' +
+          '<td data-th="Статус">' + badge(HW_STATUS, h.status) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' + reviewBtn +
+            '<button class="btn-icon" data-edit="' + h.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + h.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminHw.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Ученик</th><th>Задание</th><th>Направление</th><th>Срок</th><th>Статус</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminHw).forEach(function (b) { b.addEventListener('click', function () { editHomework(b.getAttribute('data-edit')); }); });
+      $all('[data-review]', adminHw).forEach(function (b) { b.addEventListener('click', function () { reviewHomework(b.getAttribute('data-review')); }); });
+      $all('[data-del]', adminHw).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить задание?')) API.homework.remove(b.getAttribute('data-del')).then(function () { toast('Задание удалено'); loadAdminHomework(); });
+        });
+      });
+    });
+  }
+  function editHomework(id) {
+    Promise.all([API.admin.studentOptions(), id ? API.homework.get(id) : Promise.resolve({})]).then(function (res) {
+      var students = res[0].map(function (s) { return { value: s.id, label: s.name }; });
+      var h = res[1] || {};
+      var materials = (h.materials || []).map(function (mm) { return mm.name; }).join(', ');
+      var html = '<form data-form>' +
+        field('Ученик', selectCtrl('studentId', students, h.studentId)) +
+        field('Название', input('title', h.title)) +
+        field('Описание', textarea('description', h.description)) +
+        row(field('Дата выдачи', input('assignedDate', h.assignedDate, 'date')),
+            field('Срок выполнения', input('dueDate', h.dueDate, 'date'))) +
+        field('Материалы (имена файлов через запятую)', input('materials', materials)) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать задание' : 'Новое задание', html);
+      bindCrudForm(m, function (data) { return id ? API.homework.update(id, data) : API.homework.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Задание создано'); loadAdminHomework(); });
+    });
+  }
+  function reviewHomework(id) {
+    API.homework.get(id).then(function (h) {
+      var sub = h.submission
+        ? '<div class="hw-block"><div class="hw-block-label">Ответ ученика · ' + fmtDate(h.submission.submittedAt) + '</div>' +
+            (h.submission.comment ? '<p>' + escapeHtml(h.submission.comment) + '</p>' : '') + hwFiles(h.submission.files) + '</div>'
+        : '<p class="cab-empty">Ученик ещё не отправил работу.</p>';
+      var statusOpts = [
+        { value: 'reviewed', label: 'Проверено' },
+        { value: 'revision', label: 'Требуется доработка' }
+      ];
+      var html = '<div class="cab-card-block"><div class="cab-strong">' + escapeHtml(h.title) + '</div></div>' + sub +
+        '<form data-form>' +
+          field('Комментарий преподавателя', textarea('comment', h.review ? h.review.comment : '')) +
+          field('Статус', selectCtrl('status', statusOpts, h.status === 'revision' ? 'revision' : 'reviewed')) +
+          formActions() + '</form>';
+      var m = openModal('Проверка работы', html);
+      bindCrudForm(m, function (data) { return API.homework.review(id, data); },
+        function () { toast('Работа проверена'); loadAdminHomework(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — certificates CRUD  [v0.5]
+     ================================================================= */
+  var adminCerts = $('#admin-certificates-root');
+  if (adminCerts) {
+    var addCertBtn = $('[data-add-cert]');
+    if (addCertBtn) addCertBtn.addEventListener('click', function () { editCertificate(null); });
+    loadAdminCerts();
+  }
+  function loadAdminCerts() {
+    API.certificates.all().then(function (list) {
+      if (!list.length) { adminCerts.innerHTML = '<p class="cab-empty">Сертификатов пока нет.</p>'; return; }
+      var rows = list.map(function (c) {
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(c.studentName) + '</td>' +
+          '<td data-th="Название"><strong>' + escapeHtml(c.title) + '</strong></td>' +
+          '<td data-th="Дата">' + fmtDate(c.date) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + c.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + c.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminCerts.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Ученик</th><th>Название</th><th>Дата</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminCerts).forEach(function (b) { b.addEventListener('click', function () { editCertificate(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminCerts).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить сертификат?')) API.certificates.remove(b.getAttribute('data-del')).then(function () { toast('Сертификат удалён'); loadAdminCerts(); });
+        });
+      });
+    });
+  }
+  function editCertificate(id) {
+    Promise.all([API.admin.studentOptions(), id ? API.certificates.all() : Promise.resolve([])]).then(function (res) {
+      var students = res[0].map(function (s) { return { value: s.id, label: s.name }; });
+      var c = id ? (res[1].filter(function (x) { return x.id === id; })[0] || {}) : {};
+      var gradOpts = [
+        { value: 'linear-gradient(135deg,#1a0a0a,#3d1010)', label: 'Красный' },
+        { value: 'linear-gradient(135deg,#0d1a0d,#0d3020)', label: 'Зелёный' },
+        { value: 'linear-gradient(135deg,#0d0d1a,#151530)', label: 'Синий' },
+        { value: 'linear-gradient(135deg,#1a0a15,#2d0d28)', label: 'Фиолетовый' }
+      ];
+      var html = '<form data-form>' +
+        field('Ученик', selectCtrl('studentId', students, c.studentId)) +
+        field('Название', input('title', c.title)) +
+        field('Дата выдачи', input('date', c.date, 'date')) +
+        field('Описание', textarea('description', c.description)) +
+        field('Оформление', selectCtrl('gradient', gradOpts, c.gradient)) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать сертификат' : 'Новый сертификат', html);
+      bindCrudForm(m, function (data) { return id ? API.certificates.update(id, data) : API.certificates.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Сертификат создан'); loadAdminCerts(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — achievements CRUD  [v0.5]
+     ================================================================= */
+  var adminAch = $('#admin-achievements-root');
+  if (adminAch) {
+    var addAchBtn = $('[data-add-ach]');
+    if (addAchBtn) addAchBtn.addEventListener('click', function () { editAchievement(null); });
+    loadAdminAch();
+  }
+  function loadAdminAch() {
+    API.achievements.all().then(function (list) {
+      if (!list.length) { adminAch.innerHTML = '<p class="cab-empty">Достижений пока нет.</p>'; return; }
+      var rows = list.map(function (a) {
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(a.studentName) + '</td>' +
+          '<td data-th="Достижение"><strong>' + escapeHtml(a.title) + '</strong></td>' +
+          '<td data-th="Дата">' + fmtDate(a.date) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + a.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + a.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminAch.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Ученик</th><th>Достижение</th><th>Дата</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminAch).forEach(function (b) { b.addEventListener('click', function () { editAchievement(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminAch).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить достижение?')) API.achievements.remove(b.getAttribute('data-del')).then(function () { toast('Достижение удалено'); loadAdminAch(); });
+        });
+      });
+    });
+  }
+  function editAchievement(id) {
+    Promise.all([API.admin.studentOptions(), id ? API.achievements.all() : Promise.resolve([])]).then(function (res) {
+      var students = res[0].map(function (s) { return { value: s.id, label: s.name }; });
+      var a = id ? (res[1].filter(function (x) { return x.id === id; })[0] || {}) : {};
+      var iconOpts = [
+        { value: 'concert', label: 'Концерт' },
+        { value: 'stage', label: 'Выступление' },
+        { value: 'calendar', label: 'Без пропусков' },
+        { value: 'course', label: 'Курс завершён' },
+        { value: 'exhibition', label: 'Выставка' },
+        { value: 'star', label: 'Звезда' }
+      ];
+      var html = '<form data-form>' +
+        field('Ученик', selectCtrl('studentId', students, a.studentId)) +
+        field('Название', input('title', a.title)) +
+        row(field('Иконка', selectCtrl('icon', iconOpts, a.icon || 'star')),
+            field('Дата', input('date', a.date, 'date'))) +
+        field('Описание', textarea('description', a.description)) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать достижение' : 'Новое достижение', html);
+      bindCrudForm(m, function (data) { return id ? API.achievements.update(id, data) : API.achievements.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Достижение создано'); loadAdminAch(); });
     });
   }
 

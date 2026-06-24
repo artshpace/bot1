@@ -682,3 +682,139 @@
   .cab-modal-wide .cab-modal-dialog { max-width: 100%; }
   .lms-lesson-item { flex-wrap: wrap; }
 }
+
+/* =====================================================================
+   v0.5 — PARENT CABINET · ATTENDANCE · HOMEWORK · CERTIFICATES ·
+          ACHIEVEMENTS · TEACHER COMMENTS · DEVELOPMENT PROFILE
+   ===================================================================== */
+
+/* extra badges */
+.badge-blue { background: rgba(14,133,204,.12); color: #0e6fa8; }
+.badge-red  { background: rgba(227,6,19,.1);   color: #c00813;  }
+
+/* section heading used across new pages */
+.cab-section-title { font-size: 1.2rem; margin: 36px 0 18px; }
+.cab-section-title:first-child { margin-top: 0; }
+
+/* ---------------- ATTENDANCE ---------------------------------------- */
+.att-legend { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.att-legend-row { display: flex; align-items: center; gap: 12px; font-size: .9rem; color: var(--body); }
+.att-legend-row .cab-badge { min-width: 44px; justify-content: center; }
+
+/* ---------------- HOMEWORK ------------------------------------------ */
+.hw-card {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 24px; margin-bottom: 20px;
+}
+.hw-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.hw-card-head h3 { font-size: 1.1rem; }
+.hw-meta { font-size: .82rem; color: var(--muted); margin-top: 2px; }
+.hw-desc { color: var(--body); line-height: 1.65; margin-bottom: 14px; }
+.hw-dates { display: flex; gap: 20px; flex-wrap: wrap; font-size: .82rem; color: var(--muted); margin-bottom: 4px; }
+.hw-overdue { color: var(--primary); font-weight: 700; }
+.hw-block { margin-top: 16px; padding: 14px 16px; background: var(--bg-alt); border-radius: var(--radius-md); }
+.hw-block-label { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.hw-block p { color: var(--body); line-height: 1.6; }
+.hw-review { background: var(--gold-light); border: 1px solid var(--gold-border); }
+.hw-materials { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.hw-file {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 999px;
+  font-size: .82rem; color: var(--body);
+}
+.hw-file svg { width: 15px; height: 15px; color: var(--muted); }
+.hw-actions { margin-top: 18px; }
+
+/* ---------------- CERTIFICATES -------------------------------------- */
+.cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+.cert-card {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  overflow: hidden; display: flex; flex-direction: column; transition: all var(--transition);
+}
+.cert-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); border-color: var(--gold-border); }
+.cert-ribbon {
+  height: 96px; display: flex; align-items: center; justify-content: center; color: #fff;
+}
+.cert-ribbon svg { width: 44px; height: 44px; opacity: .92; }
+.cert-body { padding: 20px; display: flex; flex-direction: column; flex: 1; }
+.cert-body h3 { font-size: 1.02rem; margin-bottom: 6px; }
+.cert-date { font-size: .8rem; color: var(--muted); margin-bottom: 10px; }
+.cert-desc { font-size: .88rem; color: var(--body); line-height: 1.55; margin-bottom: 16px; flex: 1; }
+.cert-body .btn { margin-top: auto; display: inline-flex; align-items: center; gap: 8px; }
+.cert-body .btn svg { width: 16px; height: 16px; }
+
+/* ---------------- ACHIEVEMENTS -------------------------------------- */
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.ach-card {
+  display: flex; gap: 16px; align-items: flex-start;
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px;
+}
+.ach-icon {
+  width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%;
+  background: var(--gold-light); color: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+}
+.ach-icon svg { width: 24px; height: 24px; }
+.ach-info { min-width: 0; }
+.ach-info strong { display: block; color: var(--dark); font-size: .98rem; }
+.ach-date { font-size: .78rem; color: var(--muted); }
+.ach-info p { font-size: .85rem; color: var(--body); margin-top: 6px; line-height: 1.5; }
+
+/* ---------------- TEACHER COMMENTS (notes) -------------------------- */
+.note-list { display: flex; flex-direction: column; gap: 12px; }
+.note-item { padding: 16px 18px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); }
+.note-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.note-meta { font-size: .8rem; color: var(--muted); }
+.note-head .btn-icon { margin-left: auto; }
+.note-item p { color: var(--body); line-height: 1.6; }
+
+/* ---------------- DEVELOPMENT PROFILE ------------------------------- */
+.dev-course { margin-bottom: 16px; }
+.dev-course-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.dev-course-head strong { color: var(--dark); font-size: .95rem; }
+.dev-course-head span { font-weight: 700; color: var(--primary); font-size: .9rem; }
+
+/* ---------------- PARENT CABINET ------------------------------------ */
+.pc-child {
+  background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 28px; margin-bottom: 28px;
+}
+.pc-head { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+.pc-avatar { width: 52px; height: 52px; font-size: 1.3rem; }
+.pc-head h2 { font-size: 1.4rem; }
+.pc-sub { font-size: .85rem; color: var(--muted); margin-top: 2px; }
+.pc-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.pc-tile { background: var(--bg-alt); border-radius: var(--radius-md); padding: 16px; }
+.pc-tile-label { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.pc-tile-val { font-weight: 700; color: var(--dark); font-size: .98rem; }
+.pc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 8px; }
+.pc-col-title { font-size: 1.05rem; margin: 24px 0 14px; display: flex; align-items: center; gap: 10px; }
+.pc-badge {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px;
+  padding: 0 7px; border-radius: 999px; background: var(--primary); color: #fff; font-size: .75rem; font-weight: 700;
+}
+.pc-hw-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.pc-hw-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: .9rem; color: var(--body); }
+.pc-hw-item span { min-width: 0; }
+
+/* ---------------- FORMS (checkbox list, block head) ----------------- */
+.check-list { display: flex; flex-direction: column; gap: 10px; padding: 12px 14px; background: var(--bg-alt); border-radius: var(--radius-sm); }
+.check-row { display: flex; align-items: center; gap: 10px; font-size: .9rem; color: var(--body); cursor: pointer; }
+.check-row input { width: auto; }
+.cab-block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.cab-block-head .cab-block-title { margin: 0; }
+
+/* ---------------- RESPONSIVE (v0.5) --------------------------------- */
+@media (max-width: 1024px) {
+  .pc-tiles { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 860px) {
+  .pc-cols { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .pc-tiles { grid-template-columns: 1fr; }
+  .pc-child { padding: 20px; }
+  .hw-card-head { flex-direction: column; }
+  .cert-grid { grid-template-columns: 1fr; }
+  .ach-grid { grid-template-columns: 1fr; }
+}

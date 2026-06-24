@@ -1,11 +1,11 @@
 /* =====================================================================
-   MOCK API LAYER — Shpigotskiy Art Space (v0.4)
+   MOCK API LAYER — Shpigotskiy Art Space (v0.5)
    ---------------------------------------------------------------------
    Centralised data access. Every page talks to window.API.* — swap
    methods for real fetch() calls when a backend exists.
 
    localStorage keys:
-     sas_users          — users
+     sas_users          — users (student / parent / admin) [v0.5: parent]
      sas_session        — current session
      sas_subscriptions  — subscriptions   [v0.3]
      sas_payments       — payments        [v0.3]
@@ -13,10 +13,16 @@
      sas_lms_modules    — course modules  [v0.4]
      sas_lms_lessons    — lessons         [v0.4]
      sas_lms_progress   — lesson progress [v0.4]
+     sas_academics      — per-student direction/teacher/level [v0.5]
+     sas_attendance     — attendance records   [v0.5]
+     sas_homework       — homework + submissions [v0.5]
+     sas_certificates   — certificates     [v0.5]
+     sas_achievements   — achievements     [v0.5]
+     sas_teacher_notes  — teacher comments about students [v0.5]
 
    Payment integration point: processCharge() — replace body with PSP.
-   Reserved namespaces: parent, attendance, homework, certificates,
-   tests, comments — scaffolding for future versions.
+   Reserved namespace: tests — scaffolding for a future version.
+   Integration stubs (notify): telegram / push / email / sms — see notify.
    ===================================================================== */
 (function (global) {
   'use strict';
@@ -29,6 +35,12 @@
   var LS_MODULES  = 'sas_lms_modules';
   var LS_LESSONS  = 'sas_lms_lessons';
   var LS_PROGRESS = 'sas_lms_progress';
+  var LS_ACADEMICS= 'sas_academics';
+  var LS_ATTEND   = 'sas_attendance';
+  var LS_HOMEWORK = 'sas_homework';
+  var LS_CERTS    = 'sas_certificates';
+  var LS_ACHIEVE  = 'sas_achievements';
+  var LS_TNOTES   = 'sas_teacher_notes';
 
   /* ---- storage ---- */
   function read(key, fallback) {
@@ -59,10 +71,16 @@
   function uid(prefix) { return prefix + '-' + Date.now() + '-' + Math.floor(Math.random() * 1000); }
   function publicUser(u) {
     if (!u) return null;
-    return { id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role };
+    var out = { id: u.id, name: u.name, email: u.email, phone: u.phone, role: u.role };
+    if (u.role === 'parent') out.childrenIds = (u.childrenIds || []).slice();
+    return out;
   }
   function matches(u, login) { return norm(u.email) === login || norm(u.phone) === login; }
   function curId() { var u = auth.current(); return u ? u.id : null; }
+  function userName(id) {
+    var u = read(LS_USERS, []).filter(function (x) { return x.id === id; })[0];
+    return u ? u.name : '—';
+  }
 
   /* =================================================================
      SEED DATA
@@ -71,6 +89,16 @@
     id: 'stu-demo', name: 'Алина Ким',
     email: 'demo@shpigotskiy.art', phone: '+7 777 123-45-67',
     password: 'demo1234', role: 'student'
+  };
+  var DEMO_CHILD2 = {
+    id: 'stu-max', name: 'Максим Ким',
+    email: 'max@shpigotskiy.art', phone: '+7 777 123-45-68',
+    password: 'demo1234', role: 'student'
+  };
+  var PARENT_USER = {
+    id: 'par-demo', name: 'Елена Ким',
+    email: 'parent@shpigotskiy.art', phone: '+7 777 222-33-44',
+    password: 'parent1234', role: 'parent', childrenIds: ['stu-demo', 'stu-max']
   };
   var ADMIN_USER = {
     id: 'adm-1', name: 'Антон Шпигоцкий',
@@ -242,10 +270,122 @@
     return items;
   }
 
+  /* ---- v0.5 seeds ---- */
+  function seedAcademics() {
+    return {
+      'stu-demo': { direction: 'Гитара', teacher: 'Антон Шпигоцкий', level: 'Базовый уровень · 1 год обучения' },
+      'stu-max':  { direction: 'Вокал',  teacher: 'Мария Лебедева',   level: 'Начальный уровень · 4 месяца' }
+    };
+  }
+
+  function seedAttendance() {
+    var now = new Date();
+    var rec = [];
+    /* stu-demo — Гитара, ~6 недель занятий 2 раза в неделю */
+    [-40,-38,-33,-31,-26,-24,-19,-17,-12,-10,-5,-3].forEach(function (d, i) {
+      var status = i === 3 ? 'excused' : (i === 8 ? 'unexcused' : 'present');
+      rec.push({ id: 'att-demo-' + i, studentId: 'stu-demo', date: ymd(addDays(now, d)),
+        direction: 'Гитара', status: status });
+    });
+    /* stu-max — Вокал */
+    [-28,-21,-14,-7,-2].forEach(function (d, i) {
+      rec.push({ id: 'att-max-' + i, studentId: 'stu-max', date: ymd(addDays(now, d)),
+        direction: 'Вокал', status: i === 2 ? 'unexcused' : 'present' });
+    });
+    return rec;
+  }
+
+  function seedHomework() {
+    var now = new Date();
+    return [
+      { id: 'hw-1', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+        title: 'Отработка перехода Am → Em',
+        description: 'Записать видео плавной смены аккордов Am и Em в темпе 60 BPM — не менее 10 повторов без остановки.',
+        assignedDate: ymd(addDays(now, -14)), dueDate: ymd(addDays(now, -7)),
+        materials: [{ name: 'am-em-shema.pdf' }], status: 'reviewed',
+        submission: { comment: 'Записал, местами сбивался ритм.', files: [{ name: 'perehod.mp4' }], submittedAt: ymd(addDays(now, -8)) },
+        review: { comment: 'Хорошая работа! Темп держишь увереннее. Поработай над чёткостью последнего удара.', reviewedAt: ymd(addDays(now, -6)) } },
+      { id: 'hw-2', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+        title: 'Бой «шестёрка»',
+        description: 'Освоить ритмический рисунок «шестёрка» и сыграть его под метроном 70 BPM.',
+        assignedDate: ymd(addDays(now, -5)), dueDate: ymd(addDays(now, 2)),
+        materials: [{ name: 'boy-shesterka.pdf' }], status: 'submitted',
+        submission: { comment: 'Старался держать ровный ритм.', files: [{ name: 'boy.mp4' }], submittedAt: ymd(addDays(now, -1)) },
+        review: null },
+      { id: 'hw-3', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+        title: 'Разбор первой песни',
+        description: 'Разобрать аккорды первой песни по табулатуре из урока и прислать аудиозапись.',
+        assignedDate: ymd(addDays(now, -2)), dueDate: ymd(addDays(now, 6)),
+        materials: [{ name: 'pervaya-pesnya-tabs.pdf' }], status: 'assigned',
+        submission: null, review: null },
+      { id: 'hw-4', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+        title: 'Гамма до мажор',
+        description: 'Сыграть гамму C-dur в две октавы восходяще и нисходяще под метроном.',
+        assignedDate: ymd(addDays(now, -20)), dueDate: ymd(addDays(now, -13)),
+        materials: [], status: 'revision',
+        submission: { comment: 'Вот моя запись.', files: [{ name: 'gamma.mp4' }], submittedAt: ymd(addDays(now, -15)) },
+        review: { comment: 'Пальцы ставишь верно, но нужно ровнее по длительности. Перезапиши под метроном 50 BPM.', reviewedAt: ymd(addDays(now, -13)) } },
+      { id: 'hw-5', studentId: 'stu-max', direction: 'Вокал', teacher: 'Мария Лебедева',
+        title: 'Дыхательные упражнения',
+        description: 'Выполнять комплекс диафрагмального дыхания 10 минут в день. Записать одно занятие.',
+        assignedDate: ymd(addDays(now, -3)), dueDate: ymd(addDays(now, 4)),
+        materials: [{ name: 'dyhanie.pdf' }], status: 'assigned',
+        submission: null, review: null }
+    ];
+  }
+
+  function seedCertificates() {
+    var now = new Date();
+    return [
+      { id: 'cert-1', studentId: 'stu-demo', title: 'Завершение курса «Акварель с нуля»',
+        date: ymd(addDays(now, -12)), description: 'Успешно пройден онлайн-курс, выполнены все практические задания.',
+        gradient: 'linear-gradient(135deg,#0d0d1a,#151530)' },
+      { id: 'cert-2', studentId: 'stu-demo', title: 'Участник отчётного концерта',
+        date: ymd(addDays(now, -45)), description: 'За участие в зимнем отчётном концерте студии.',
+        gradient: 'linear-gradient(135deg,#1a0a0a,#3d1010)' },
+      { id: 'cert-3', studentId: 'stu-max', title: 'Первое публичное выступление',
+        date: ymd(addDays(now, -20)), description: 'За смелость и первый выход на сцену.',
+        gradient: 'linear-gradient(135deg,#0d1a0d,#0d3020)' }
+    ];
+  }
+
+  function seedAchievements() {
+    var now = new Date();
+    return [
+      { id: 'ach-1', studentId: 'stu-demo', icon: 'concert', title: 'Первый концерт',
+        date: ymd(addDays(now, -45)), description: 'Первое выступление на сцене студии.' },
+      { id: 'ach-2', studentId: 'stu-demo', icon: 'calendar', title: 'Месяц без пропусков',
+        date: ymd(addDays(now, -10)), description: '30 дней занятий без единого пропуска.' },
+      { id: 'ach-3', studentId: 'stu-demo', icon: 'course', title: 'Курс завершён',
+        date: ymd(addDays(now, -12)), description: 'Полностью пройден курс «Акварель с нуля».' },
+      { id: 'ach-4', studentId: 'stu-max', icon: 'stage', title: 'Первое выступление',
+        date: ymd(addDays(now, -20)), description: 'Дебют на отчётном концерте.' }
+    ];
+  }
+
+  function seedTeacherNotes() {
+    var now = new Date();
+    return [
+      { id: 'tn-1', studentId: 'stu-demo', type: 'progress', author: 'Антон Шпигоцкий',
+        text: 'Заметный прогресс в ритмике за последний месяц — смена аккордов стала увереннее.',
+        date: ymd(addDays(now, -6)) },
+      { id: 'tn-2', studentId: 'stu-demo', type: 'recommendation', author: 'Антон Шпигоцкий',
+        text: 'Рекомендую ежедневно уделять 10 минут упражнению на переходы между аккордами.',
+        date: ymd(addDays(now, -6)) },
+      { id: 'tn-3', studentId: 'stu-demo', type: 'remark', author: 'Антон Шпигоцкий',
+        text: 'Были два пропуска подряд — важно не терять регулярность занятий.',
+        date: ymd(addDays(now, -18)) },
+      { id: 'tn-4', studentId: 'stu-max', type: 'progress', author: 'Мария Лебедева',
+        text: 'Хорошо работает над дыханием, голос звучит свободнее.',
+        date: ymd(addDays(now, -9)) }
+    ];
+  }
+
   (function ensureSeed() {
     var users = read(LS_USERS, null) || [];
-    if (!users.some(function (u) { return u.id === DEMO_USER.id; })) users.push(DEMO_USER);
-    if (!users.some(function (u) { return u.id === ADMIN_USER.id; })) users.push(ADMIN_USER);
+    [DEMO_USER, DEMO_CHILD2, PARENT_USER, ADMIN_USER].forEach(function (seed) {
+      if (!users.some(function (u) { return u.id === seed.id; })) users.push(seed);
+    });
     write(LS_USERS, users);
     if (!read(LS_SUBS, null))     write(LS_SUBS,     seedSubscriptions());
     if (!read(LS_PAYMENTS, null)) write(LS_PAYMENTS, seedPayments());
@@ -253,6 +393,12 @@
     if (!read(LS_MODULES, null))  write(LS_MODULES,  seedModules());
     if (!read(LS_LESSONS, null))  write(LS_LESSONS,  seedLessons());
     if (!read(LS_PROGRESS, null)) write(LS_PROGRESS, seedProgress());
+    if (!read(LS_ACADEMICS, null))write(LS_ACADEMICS,seedAcademics());
+    if (!read(LS_ATTEND, null))   write(LS_ATTEND,   seedAttendance());
+    if (!read(LS_HOMEWORK, null)) write(LS_HOMEWORK, seedHomework());
+    if (!read(LS_CERTS, null))    write(LS_CERTS,    seedCertificates());
+    if (!read(LS_ACHIEVE, null))  write(LS_ACHIEVE,  seedAchievements());
+    if (!read(LS_TNOTES, null))   write(LS_TNOTES,   seedTeacherNotes());
   })();
 
   var PLANS = [
@@ -326,12 +472,18 @@
   ];
   var WEEKDAY_RU = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 
-  function nextOccurrence(from) {
+  function academicFor(id) {
+    var map = read(LS_ACADEMICS, {}) || {};
+    return map[id] || { direction: 'Гитара', teacher: 'Антон Шпигоцкий', level: 'Базовый уровень' };
+  }
+
+  function nextOccurrence(from, direction) {
     var best = null;
     for (var add = 0; add <= 7; add++) {
       var day = new Date(from.getFullYear(), from.getMonth(), from.getDate() + add);
       WEEKLY.forEach(function (slot) {
         if (slot.weekday !== day.getDay()) return;
+        if (direction && slot.direction !== direction) return;
         var parts = slot.time.split(':');
         var when = new Date(day.getFullYear(), day.getMonth(), day.getDate(), +parts[0], +parts[1]);
         if (when > from && (!best || when < best.when)) best = { when: when, slot: slot };
@@ -341,33 +493,47 @@
     return best;
   }
 
+  function profileFor(id) {
+    var acad = academicFor(id);
+    var next = nextOccurrence(new Date(), acad.direction);
+    var active = activeSubFor(id);
+    var pending = read(LS_PAYMENTS, []).some(function (p) {
+      return p.studentId === id && p.status === 'pending';
+    });
+    return {
+      id: id, name: userName(id),
+      direction: acad.direction, teacher: acad.teacher, level: acad.level,
+      nextLesson: next ? { date: ymd(next.when), time: next.slot.time,
+        direction: next.slot.direction, teacher: next.slot.teacher,
+        room: next.slot.room, weekday: WEEKDAY_RU[next.when.getDay()] } : null,
+      subscription: active,
+      lessonsLeft: active ? active.lessonsLeft : 0,
+      lessonsTotal: active ? active.lessonsTotal : 0,
+      subscriptionUntil: active ? active.endDate : null,
+      paymentStatus: pending ? 'pending' : 'paid'
+    };
+  }
+
   var student = {
     profile: function (studentId) {
-      var id = studentId || curId();
-      var me = auth.current();
-      var next = nextOccurrence(new Date());
-      var active = activeSubFor(id);
-      var pending = read(LS_PAYMENTS, []).some(function (p) {
-        return p.studentId === id && p.status === 'pending';
-      });
-      return delay({
-        name: me ? me.name : 'Ученик',
-        direction: 'Гитара', teacher: 'Антон Шпигоцкий', level: 'Базовый уровень · 1 год обучения',
-        nextLesson: next ? { date: ymd(next.when), time: next.slot.time,
-          direction: next.slot.direction, teacher: next.slot.teacher,
-          room: next.slot.room, weekday: WEEKDAY_RU[next.when.getDay()] } : null,
-        subscription: active,
-        lessonsLeft: active ? active.lessonsLeft : 0,
-        lessonsTotal: active ? active.lessonsTotal : 0,
-        subscriptionUntil: active ? active.endDate : null,
-        paymentStatus: pending ? 'pending' : 'paid'
-      });
+      return delay(profileFor(studentId || curId()));
     },
     weekly: function () {
       return delay(WEEKLY.map(function (s) {
         return { weekday: WEEKDAY_RU[s.weekday], time: s.time,
           direction: s.direction, teacher: s.teacher, room: s.room };
       }));
+    },
+    development: function (studentId) {
+      var id = studentId || curId();
+      return delay({
+        profile: profileFor(id),
+        attendance: attendanceStats(id),
+        courses: coursesDoneFor(id),
+        certificates: certsFor(id),
+        achievements: achievementsFor(id),
+        notes: notesFor(id)
+      });
     }
   };
 
@@ -817,7 +983,9 @@
           return { id: c.id, title: c.title, progress: s.progress,
             lessonsDone: s.lessonsDone, lessonsTotal: s.lessonsTotal };
         });
-      return delay({ user: publicUser(u), subscriptions: subs, payments: pays, courses: crs });
+      return delay({ user: publicUser(u), subscriptions: subs, payments: pays, courses: crs,
+        attendance: attendanceStats(id), certificates: certsFor(id),
+        achievements: achievementsFor(id), notes: notesFor(id) });
     },
     studentOptions: function () {
       var list = read(LS_USERS, []).filter(function (u) { return u.role === 'student'; })
@@ -828,20 +996,390 @@
   };
 
   /* =================================================================
-     RESERVED NAMESPACES — future versions
+     v0.5 SHARED HELPERS — attendance / development aggregates
      ================================================================= */
-  var parent      = { children: function () { return fail('Родительский кабинет появится в следующей версии'); } };
-  var attendance  = { list:     function () { return fail('Учёт посещаемости появится в следующей версии'); } };
-  var homework    = { list:     function () { return fail('Домашние задания появятся в следующей версии'); } };
-  var certificates= { list:    function () { return fail('Сертификаты появятся в следующей версии'); } };
-  var tests       = { list:    function () { return fail('Тесты появятся в следующей версии'); } };      /* v0.5 */
-  var comments    = { list:    function () { return fail('Комментарии появятся в следующей версии'); } }; /* v0.5 */
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  function byDateDesc(field) {
+    return function (a, b) { return parseYmd(b[field]) - parseYmd(a[field]); };
+  }
+  function parseMaterials(input) {
+    if (Array.isArray(input)) {
+      return input.map(function (m) { return typeof m === 'string' ? { name: m } : m; });
+    }
+    if (!input) return [];
+    return String(input).split(/[\n,]+/).map(function (s) { return s.trim(); })
+      .filter(Boolean).map(function (n) { return { name: n }; });
+  }
+
+  function attendanceList(id) {
+    var list = read(LS_ATTEND, []).filter(function (a) { return a.studentId === id; });
+    list.sort(byDateDesc('date'));
+    return list.map(clone);
+  }
+  function attendanceStats(id) {
+    var list = read(LS_ATTEND, []).filter(function (a) { return a.studentId === id; });
+    var c = { present: 0, excused: 0, unexcused: 0, absent: 0 };
+    list.forEach(function (a) { if (c[a.status] != null) c[a.status]++; });
+    var total = list.length;
+    return { total: total, present: c.present, excused: c.excused,
+      unexcused: c.unexcused, absent: c.absent, missed: total - c.present,
+      rate: total ? Math.round((c.present / total) * 100) : 0 };
+  }
+  function coursesDoneFor(id) {
+    return read(LS_COURSES, []).filter(function (c) { return c.enrollments && c.enrollments[id]; })
+      .map(function (c) {
+        var s = courseLmsStats(c.id, id);
+        return { id: c.id, title: c.title, teacher: c.teacher, progress: s.progress,
+          lessonsDone: s.lessonsDone, lessonsTotal: s.lessonsTotal, done: s.progress >= 100 };
+      });
+  }
+  function certsFor(id) {
+    var list = read(LS_CERTS, []).filter(function (c) { return c.studentId === id; });
+    list.sort(byDateDesc('date'));
+    return list.map(clone);
+  }
+  function achievementsFor(id) {
+    var list = read(LS_ACHIEVE, []).filter(function (a) { return a.studentId === id; });
+    list.sort(byDateDesc('date'));
+    return list.map(clone);
+  }
+  function notesFor(id) {
+    var list = read(LS_TNOTES, []).filter(function (n) { return n.studentId === id; });
+    list.sort(byDateDesc('date'));
+    return list.map(clone);
+  }
+  function childSummary(cid) {
+    var p = profileFor(cid);
+    var hw = read(LS_HOMEWORK, []).filter(function (h) { return h.studentId === cid; });
+    hw.sort(byDateDesc('assignedDate'));
+    var hwLite = hw.map(function (h) {
+      return { id: h.id, title: h.title, status: h.status, dueDate: h.dueDate, direction: h.direction };
+    });
+    return {
+      id: cid, name: p.name, direction: p.direction, teacher: p.teacher, level: p.level,
+      nextLesson: p.nextLesson, lessonsLeft: p.lessonsLeft, lessonsTotal: p.lessonsTotal,
+      subscriptionUntil: p.subscriptionUntil,
+      subscription: p.subscription ? p.subscription.name : null,
+      paymentStatus: p.paymentStatus,
+      courses: coursesDoneFor(cid), attendance: attendanceStats(cid),
+      homework: hwLite,
+      homeworkPending: hwLite.filter(function (h) { return h.status === 'assigned' || h.status === 'revision'; }).length,
+      achievements: achievementsFor(cid), certificates: certsFor(cid), notes: notesFor(cid)
+    };
+  }
+
+  /* Notification dispatch stub — architecture point for future channels.
+     Real impl routes `message` to whichever channels are enabled. No-op now. */
+  var notifyChannels = { telegram: false, push: false, email: false, sms: false };
+  function notify(audience, message) {
+    return { queued: false, audience: audience, message: message };
+  }
+
+  /* =================================================================
+     PARENT — cabinet (children overview)  [v0.5]
+     ================================================================= */
+  var parent = {
+    children: function (parentId) {
+      var pid = parentId || curId();
+      var pu = read(LS_USERS, []).filter(function (u) { return u.id === pid; })[0];
+      var ids = (pu && pu.childrenIds) || [];
+      return delay(ids.map(function (cid) { return childSummary(cid); }));
+    },
+    child: function (childId) { return delay(childSummary(childId)); }
+  };
+
+  /* =================================================================
+     ATTENDANCE  [v0.5]
+     ================================================================= */
+  var attendance = {
+    list: function (studentId) { return delay(attendanceList(studentId || curId())); },
+    stats: function (studentId) { return delay(attendanceStats(studentId || curId())); },
+    all: function () {
+      var list = read(LS_ATTEND, []).map(function (a) {
+        var c = clone(a); c.studentName = userName(a.studentId); return c;
+      });
+      list.sort(byDateDesc('date'));
+      return delay(list);
+    },
+    create: function (data) {
+      if (!data.studentId) return fail('Выберите ученика');
+      if (!data.date) return fail('Укажите дату');
+      var list = read(LS_ATTEND, []);
+      var rec = { id: uid('att'), studentId: data.studentId, date: data.date,
+        direction: (data.direction || '').trim() || academicFor(data.studentId).direction,
+        status: data.status || 'present' };
+      list.push(rec); write(LS_ATTEND, list);
+      return delay(rec);
+    },
+    update: function (id, data) {
+      var list = read(LS_ATTEND, []);
+      var rec = list.filter(function (a) { return a.id === id; })[0];
+      if (!rec) return fail('Запись не найдена');
+      ['studentId','date','direction','status'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      write(LS_ATTEND, list);
+      return delay(rec);
+    },
+    remove: function (id) {
+      write(LS_ATTEND, read(LS_ATTEND, []).filter(function (a) { return a.id !== id; }));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     HOMEWORK + review  [v0.5]
+     Status flow: assigned → submitted → reviewed | revision
+     ================================================================= */
+  var homework = {
+    list: function (studentId) {
+      var id = studentId || curId();
+      var list = read(LS_HOMEWORK, []).filter(function (h) { return h.studentId === id; });
+      list.sort(byDateDesc('assignedDate'));
+      return delay(list.map(clone));
+    },
+    get: function (id) {
+      var h = read(LS_HOMEWORK, []).filter(function (x) { return x.id === id; })[0];
+      if (!h) return fail('Задание не найдено');
+      return delay(clone(h));
+    },
+    submit: function (id, payload) {
+      var list = read(LS_HOMEWORK, []);
+      var h = list.filter(function (x) { return x.id === id; })[0];
+      if (!h) return fail('Задание не найдено');
+      if (h.studentId !== curId()) return fail('Нет доступа к заданию');
+      h.submission = { comment: (payload && payload.comment) || '',
+        files: (payload && payload.files) || [], submittedAt: ymd(new Date()) };
+      h.status = 'submitted';
+      write(LS_HOMEWORK, list);
+      notify('teacher', 'Новая сдача ДЗ: ' + h.title);
+      return delay(clone(h));
+    },
+    all: function () {
+      var list = read(LS_HOMEWORK, []).map(function (h) {
+        var c = clone(h); c.studentName = userName(h.studentId); return c;
+      });
+      list.sort(byDateDesc('assignedDate'));
+      return delay(list);
+    },
+    create: function (data) {
+      if (!data.studentId) return fail('Выберите ученика');
+      if (!data.title || !data.title.trim()) return fail('Введите название задания');
+      var list = read(LS_HOMEWORK, []);
+      var h = { id: uid('hw'), studentId: data.studentId,
+        direction: (data.direction || '').trim() || academicFor(data.studentId).direction,
+        teacher: (data.teacher || '').trim() || academicFor(data.studentId).teacher,
+        title: data.title.trim(), description: (data.description || '').trim(),
+        assignedDate: data.assignedDate || ymd(new Date()),
+        dueDate: data.dueDate || ymd(addDays(new Date(), 7)),
+        materials: parseMaterials(data.materials),
+        status: 'assigned', submission: null, review: null };
+      list.push(h); write(LS_HOMEWORK, list);
+      notify('student', 'Новое домашнее задание: ' + h.title);
+      return delay(clone(h));
+    },
+    update: function (id, data) {
+      var list = read(LS_HOMEWORK, []);
+      var h = list.filter(function (x) { return x.id === id; })[0];
+      if (!h) return fail('Задание не найдено');
+      ['studentId','direction','teacher','title','description','assignedDate','dueDate','status']
+        .forEach(function (k) { if (data[k] != null) h[k] = data[k]; });
+      if (data.materials != null) h.materials = parseMaterials(data.materials);
+      write(LS_HOMEWORK, list);
+      return delay(clone(h));
+    },
+    review: function (id, payload) {
+      var list = read(LS_HOMEWORK, []);
+      var h = list.filter(function (x) { return x.id === id; })[0];
+      if (!h) return fail('Задание не найдено');
+      h.review = { comment: (payload && payload.comment) || '', reviewedAt: ymd(new Date()) };
+      h.status = (payload && payload.status) || 'reviewed';
+      write(LS_HOMEWORK, list);
+      notify('student', 'Домашнее задание проверено: ' + h.title);
+      return delay(clone(h));
+    },
+    remove: function (id) {
+      write(LS_HOMEWORK, read(LS_HOMEWORK, []).filter(function (x) { return x.id !== id; }));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     CERTIFICATES  [v0.5]
+     ================================================================= */
+  var certificates = {
+    list: function (studentId) { return delay(certsFor(studentId || curId())); },
+    all: function () {
+      var list = read(LS_CERTS, []).map(function (c) {
+        var x = clone(c); x.studentName = userName(c.studentId); return x;
+      });
+      list.sort(byDateDesc('date'));
+      return delay(list);
+    },
+    create: function (data) {
+      if (!data.studentId) return fail('Выберите ученика');
+      if (!data.title || !data.title.trim()) return fail('Введите название сертификата');
+      var list = read(LS_CERTS, []);
+      var rec = { id: uid('cert'), studentId: data.studentId, title: data.title.trim(),
+        date: data.date || ymd(new Date()), description: (data.description || '').trim(),
+        gradient: data.gradient || 'linear-gradient(135deg,#1a0a0a,#3d1010)' };
+      list.push(rec); write(LS_CERTS, list);
+      return delay(rec);
+    },
+    update: function (id, data) {
+      var list = read(LS_CERTS, []);
+      var rec = list.filter(function (c) { return c.id === id; })[0];
+      if (!rec) return fail('Сертификат не найден');
+      ['studentId','title','date','description','gradient'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      write(LS_CERTS, list);
+      return delay(rec);
+    },
+    remove: function (id) {
+      write(LS_CERTS, read(LS_CERTS, []).filter(function (c) { return c.id !== id; }));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     ACHIEVEMENTS  [v0.5]
+     ================================================================= */
+  var achievements = {
+    list: function (studentId) { return delay(achievementsFor(studentId || curId())); },
+    all: function () {
+      var list = read(LS_ACHIEVE, []).map(function (a) {
+        var x = clone(a); x.studentName = userName(a.studentId); return x;
+      });
+      list.sort(byDateDesc('date'));
+      return delay(list);
+    },
+    create: function (data) {
+      if (!data.studentId) return fail('Выберите ученика');
+      if (!data.title || !data.title.trim()) return fail('Введите название достижения');
+      var list = read(LS_ACHIEVE, []);
+      var rec = { id: uid('ach'), studentId: data.studentId, title: data.title.trim(),
+        icon: data.icon || 'star', date: data.date || ymd(new Date()),
+        description: (data.description || '').trim() };
+      list.push(rec); write(LS_ACHIEVE, list);
+      return delay(rec);
+    },
+    update: function (id, data) {
+      var list = read(LS_ACHIEVE, []);
+      var rec = list.filter(function (a) { return a.id === id; })[0];
+      if (!rec) return fail('Достижение не найдено');
+      ['studentId','title','icon','date','description'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      write(LS_ACHIEVE, list);
+      return delay(rec);
+    },
+    remove: function (id) {
+      write(LS_ACHIEVE, read(LS_ACHIEVE, []).filter(function (a) { return a.id !== id; }));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     TEACHER COMMENTS (recommendations / remarks / progress)  [v0.5]
+     ================================================================= */
+  var comments = {
+    list: function (studentId) { return delay(notesFor(studentId || curId())); },
+    all: function () {
+      var list = read(LS_TNOTES, []).map(function (n) {
+        var x = clone(n); x.studentName = userName(n.studentId); return x;
+      });
+      list.sort(byDateDesc('date'));
+      return delay(list);
+    },
+    create: function (data) {
+      if (!data.studentId) return fail('Выберите ученика');
+      if (!data.text || !data.text.trim()) return fail('Введите текст комментария');
+      var me = auth.current();
+      var list = read(LS_TNOTES, []);
+      var rec = { id: uid('tn'), studentId: data.studentId, type: data.type || 'progress',
+        text: data.text.trim(), author: (data.author || '').trim() || (me ? me.name : 'Преподаватель'),
+        date: data.date || ymd(new Date()) };
+      list.push(rec); write(LS_TNOTES, list);
+      return delay(rec);
+    },
+    update: function (id, data) {
+      var list = read(LS_TNOTES, []);
+      var rec = list.filter(function (n) { return n.id === id; })[0];
+      if (!rec) return fail('Комментарий не найден');
+      ['studentId','type','text','author','date'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      write(LS_TNOTES, list);
+      return delay(rec);
+    },
+    remove: function (id) {
+      write(LS_TNOTES, read(LS_TNOTES, []).filter(function (n) { return n.id !== id; }));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     ADMIN — parent accounts management  [v0.5]
+     ================================================================= */
+  admin.parents = function () {
+    var users = read(LS_USERS, []);
+    var list = users.filter(function (u) { return u.role === 'parent'; }).map(function (u) {
+      var names = (u.childrenIds || []).map(function (cid) {
+        var c = users.filter(function (x) { return x.id === cid; })[0];
+        return c ? c.name : null;
+      }).filter(Boolean);
+      return { id: u.id, name: u.name, email: u.email, phone: u.phone,
+        childrenIds: (u.childrenIds || []).slice(), children: names };
+    });
+    list.sort(function (a, b) { return a.name.localeCompare(b.name, 'ru'); });
+    return delay(list);
+  };
+  admin.createParent = function (data) {
+    var users = read(LS_USERS, []);
+    var login = norm(data.email || data.phone);
+    if (!data.name || !data.name.trim()) return fail('Введите имя родителя');
+    if (!login) return fail('Укажите телефон или email');
+    if (users.some(function (u) { return matches(u, login); })) return fail('Пользователь с такими данными уже существует');
+    var user = { id: uid('par'), name: data.name.trim(),
+      email: (data.email || '').trim(), phone: (data.phone || '').trim(),
+      password: data.password || 'parent1234', role: 'parent',
+      childrenIds: parseChildren(data.childrenIds) };
+    users.push(user); write(LS_USERS, users);
+    return delay(publicUser(user));
+  };
+  admin.updateParent = function (id, data) {
+    var users = read(LS_USERS, []);
+    var u = users.filter(function (x) { return x.id === id && x.role === 'parent'; })[0];
+    if (!u) return fail('Родитель не найден');
+    ['name','email','phone'].forEach(function (k) { if (data[k] != null) u[k] = data[k]; });
+    if (data.password) u.password = data.password;
+    if (data.childrenIds != null) u.childrenIds = parseChildren(data.childrenIds);
+    write(LS_USERS, users);
+    return delay(publicUser(u));
+  };
+  admin.removeParent = function (id) {
+    write(LS_USERS, read(LS_USERS, []).filter(function (u) { return u.id !== id; }));
+    return delay({ ok: true });
+  };
+  function parseChildren(input) {
+    if (Array.isArray(input)) return input.filter(Boolean);
+    if (!input) return [];
+    return String(input).split(/[\s,]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  /* =================================================================
+     INTEGRATIONS — scaffolding for Telegram / push / email / SMS  [v0.5]
+     Not implemented yet; channels disabled. notify() is a no-op.
+     ================================================================= */
+  var integrations = {
+    channels: function () { return delay(clone(notifyChannels)); },
+    send: function () {
+      return fail('Внешние уведомления (Telegram, push, email, SMS) появятся в следующей версии');
+    }
+  };
+
+  /* Reserved namespace — future version. */
+  var tests = { list: function () { return fail('Тесты появятся в следующей версии'); } };
 
   global.API = {
     auth: auth, student: student, schedule: schedule,
     subscriptions: subscriptions, payments: payments,
     courses: courses, lms: lms, notifications: notifications, admin: admin,
     parent: parent, attendance: attendance, homework: homework,
-    certificates: certificates, tests: tests, comments: comments
+    certificates: certificates, achievements: achievements,
+    comments: comments, integrations: integrations, tests: tests
   };
 })(window);
