@@ -69,6 +69,13 @@
   var LS_SCHEDULE_SLOTS = 'sas_schedule_slots';
   var LS_TG_PENDING = 'sas_tg_pending_link';
   var LS_PAY_CONFIG = 'sas_pay_config';
+  /* v1.1 */
+  var LS_JOURNAL    = 'sas_journal';
+  var LS_GROUPS     = 'sas_groups';
+  var LS_RECALC     = 'sas_recalculations';
+  var LS_REHEARSALS = 'sas_rehearsals';
+  var LS_TICKETS    = 'sas_tickets';
+  var LS_BRAND      = 'sas_brand';
 
   /* ---- storage ---- */
   function read(key, fallback) {
@@ -508,6 +515,56 @@
     ];
   }
 
+  /* ---- v1.1 seed data ---- */
+  function seedGroups() {
+    return [
+      { id: 'grp-1', name: 'Гитара — Начинающие', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+        studentIds: ['stu-demo', 'stu-demo2'], createdAt: '2026-01-01' },
+      { id: 'grp-2', name: 'Вокал — Основной', direction: 'Вокал', teacher: 'Мария Лебедева',
+        studentIds: ['stu-demo'], createdAt: '2026-01-01' }
+    ];
+  }
+
+  function seedJournal() {
+    var now = new Date();
+    return [
+      { id: 'jrn-1', date: ymd(addDays(now, -7)), time: '17:00',
+        teacher: 'Антон Шпигоцкий', direction: 'Гитара',
+        groupId: 'grp-1', groupName: 'Гитара — Начинающие',
+        topic: 'Аккорды Am, Dm, E. Бой 6/8',
+        homeworkText: 'Отработать смену Am→Dm 60 раз. Темп = 80 bpm.',
+        teacherComment: 'Алина хорошо освоила Am, Dm даётся труднее. Обратить внимание на положение запястья.',
+        studentIds: ['stu-demo', 'stu-demo2'],
+        createdAt: new Date(now.getTime() - 7 * 86400000).toISOString() },
+      { id: 'jrn-2', date: ymd(addDays(now, -14)), time: '17:00',
+        teacher: 'Антон Шпигоцкий', direction: 'Гитара',
+        groupId: 'grp-1', groupName: 'Гитара — Начинающие',
+        topic: 'Строй гитары. Нотная грамота — ноты первой позиции',
+        homeworkText: 'Выучить расположение нот на 1–3 ладах.',
+        teacherComment: 'Все ученики справились с заданием по строю. Нотная грамота усваивается постепенно.',
+        studentIds: ['stu-demo', 'stu-demo2'],
+        createdAt: new Date(now.getTime() - 14 * 86400000).toISOString() }
+    ];
+  }
+
+  function seedRehearsals() {
+    var now = new Date();
+    return [
+      { id: 'reh-1', eventId: 'ev-1', eventTitle: 'Отчётный концерт студии',
+        date: ymd(addDays(now, 5)), time: '17:00', place: 'Большой зал',
+        teacher: 'Антон Шпигоцкий',
+        participants: ['stu-demo', 'stu-demo2'],
+        comment: 'Прогон первого отделения. Принести ноты.',
+        attendance: [] },
+      { id: 'reh-2', eventId: 'ev-1', eventTitle: 'Отчётный концерт студии',
+        date: ymd(addDays(now, 7)), time: '17:00', place: 'Большой зал',
+        teacher: 'Антон Шпигоцкий',
+        participants: ['stu-demo', 'stu-demo2'],
+        comment: 'Генеральная репетиция. Концертные костюмы.',
+        attendance: [] }
+    ];
+  }
+
   /* ---- CRM seed data ---- */
   var LEAD_STATUSES = ['new','processing','no_answer','trial_scheduled','trial_done','purchased','active','lost'];
   var LEAD_SOURCES  = ['trial','course','callback','event','store'];
@@ -630,6 +687,12 @@
     if (!read(LS_SKILL_MAP, null))  write(LS_SKILL_MAP,  seedSkillMap());
     if (!read(LS_BROADCASTS, null)) write(LS_BROADCASTS, seedBroadcasts());
     if (!read(LS_CHURN, null))      write(LS_CHURN,      []);
+    if (!read(LS_JOURNAL, null))    write(LS_JOURNAL,    seedJournal());
+    if (!read(LS_GROUPS, null))     write(LS_GROUPS,     seedGroups());
+    if (!read(LS_RECALC, null))     write(LS_RECALC,     []);
+    if (!read(LS_REHEARSALS, null)) write(LS_REHEARSALS, seedRehearsals());
+    if (!read(LS_TICKETS, null))    write(LS_TICKETS,    []);
+    if (!read(LS_BRAND, null))      write(LS_BRAND,      {});
   })();
 
   var PLANS = [
@@ -1569,12 +1632,13 @@
   }
   function attendanceStats(id) {
     var list = read(LS_ATTEND, []).filter(function (a) { return a.studentId === id; });
-    var c = { present: 0, excused: 0, unexcused: 0, absent: 0 };
+    var c = { present: 0, excused: 0, unexcused: 0, absent: 0, sick: 0, makeup: 0 };
     list.forEach(function (a) { if (c[a.status] != null) c[a.status]++; });
     var total = list.length;
+    var attended = c.present + c.makeup;
     return { total: total, present: c.present, excused: c.excused,
-      unexcused: c.unexcused, absent: c.absent, missed: total - c.present,
-      rate: total ? Math.round((c.present / total) * 100) : 0 };
+      unexcused: c.unexcused, absent: c.absent, sick: c.sick, makeup: c.makeup,
+      missed: total - attended, rate: total ? Math.round((attended / total) * 100) : 0 };
   }
   function coursesDoneFor(id) {
     return read(LS_COURSES, []).filter(function (c) { return c.enrollments && c.enrollments[id]; })
@@ -1704,10 +1768,13 @@
     create: function (data) {
       if (!data.studentId) return fail('Выберите ученика');
       if (!data.date) return fail('Укажите дату');
+      var VALID = ['present','excused','unexcused','absent','sick','makeup'];
       var list = read(LS_ATTEND, []);
       var rec = { id: uid('att'), studentId: data.studentId, date: data.date,
         direction: (data.direction || '').trim() || academicFor(data.studentId).direction,
-        status: data.status || 'present' };
+        teacher: (data.teacher || '').trim(),
+        journalId: data.journalId || null,
+        status: VALID.indexOf(data.status) !== -1 ? data.status : 'present' };
       list.push(rec); write(LS_ATTEND, list);
       return delay(rec);
     },
@@ -1715,7 +1782,7 @@
       var list = read(LS_ATTEND, []);
       var rec = list.filter(function (a) { return a.id === id; })[0];
       if (!rec) return fail('Запись не найдена');
-      ['studentId','date','direction','status'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      ['studentId','date','direction','teacher','journalId','status'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
       write(LS_ATTEND, list);
       return delay(rec);
     },
@@ -1947,7 +2014,12 @@
       var list = read(LS_EVENTS, []);
       var rec = { id: uid('ev'), type: data.type || 'concert', title: data.title.trim(),
         date: data.date, time: (data.time || '').trim(), place: (data.place || '').trim(),
-        description: (data.description || '').trim() };
+        description: (data.description || '').trim(),
+        participants: data.participants || [],
+        teachers: data.teachers || [],
+        ticketPrice: data.ticketPrice || 0,
+        maxSeats: data.maxSeats || 0,
+        registrations: [] };
       list.push(rec); write(LS_EVENTS, list);
       notify('student', 'Новое мероприятие: ' + rec.title,
         { type: 'event', pref: 'events', title: 'Новое мероприятие', href: 'schedule.html' });
@@ -1957,7 +2029,8 @@
       var list = read(LS_EVENTS, []);
       var rec = list.filter(function (e) { return e.id === id; })[0];
       if (!rec) return fail('Мероприятие не найдено');
-      ['type','title','date','time','place','description'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      ['type','title','date','time','place','description',
+       'participants','teachers','ticketPrice','maxSeats'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
       write(LS_EVENTS, list);
       return delay(rec);
     },
@@ -1997,6 +2070,352 @@
       });
       list.sort(function (a, b) { return parseYmd(a.date) - parseYmd(b.date); });
       return delay(list.map(clone));
+    }
+  };
+
+  /* =================================================================
+     JOURNAL — electronic lesson log  [v1.1]
+     Each entry = one lesson session with topic, HW text, attendance,
+     teacher comments. Linked to a group; attendance records reference
+     the journalId for traceability.
+     ================================================================= */
+  var journal = {
+    list: function (filters) {
+      var me = auth.current();
+      if (!me) return fail('Не авторизован');
+      var list = read(LS_JOURNAL, []);
+      filters = filters || {};
+      if (filters.studentId) {
+        var sid = filters.studentId;
+        list = list.filter(function (e) { return (e.studentIds || []).indexOf(sid) !== -1; });
+      }
+      if (filters.teacher) list = list.filter(function (e) { return e.teacher === filters.teacher; });
+      if (filters.direction) list = list.filter(function (e) { return e.direction === filters.direction; });
+      if (filters.groupId) list = list.filter(function (e) { return e.groupId === filters.groupId; });
+      if (me.role === 'student') {
+        list = list.filter(function (e) { return (e.studentIds || []).indexOf(me.id) !== -1; });
+      } else if (me.role === 'teacher') {
+        list = list.filter(function (e) { return e.teacher === me.name; });
+      } else if (me.role === 'parent') {
+        var kids = (read(LS_USERS,[]).filter(function(u){return u.id===me.id;})[0]||{}).childrenIds||[];
+        list = list.filter(function(e){ return kids.some(function(k){ return (e.studentIds||[]).indexOf(k)!==-1; }); });
+      }
+      list.sort(byDateDesc('date'));
+      return delay(list.map(clone));
+    },
+    get: function (id) {
+      var e = read(LS_JOURNAL, []).filter(function (x) { return x.id === id; })[0];
+      return e ? delay(clone(e)) : fail('Запись не найдена');
+    },
+    create: function (data) {
+      if (!data.date) return fail('Укажите дату занятия');
+      if (!data.direction) return fail('Укажите направление');
+      var me = auth.current();
+      if (!me) return fail('Не авторизован');
+      var list = read(LS_JOURNAL, []);
+      var entry = {
+        id: uid('jrn'), date: data.date, time: (data.time || '').trim(),
+        teacher: data.teacher || me.name, direction: data.direction,
+        groupId: data.groupId || null, groupName: data.groupName || '',
+        topic: (data.topic || '').trim(),
+        homeworkText: (data.homeworkText || '').trim(),
+        teacherComment: (data.teacherComment || '').trim(),
+        studentIds: data.studentIds || [],
+        createdAt: new Date().toISOString()
+      };
+      list.push(entry); write(LS_JOURNAL, list);
+      notify('student', 'Новая запись в журнале: ' + entry.direction + ' — ' + entry.topic,
+        { type: 'homework', pref: 'lessons', title: 'Журнал занятий', href: 'journal.html' });
+      return delay(entry);
+    },
+    update: function (id, data) {
+      var list = read(LS_JOURNAL, []);
+      var e = list.filter(function (x) { return x.id === id; })[0];
+      if (!e) return fail('Запись не найдена');
+      ['date','time','teacher','direction','groupId','groupName',
+       'topic','homeworkText','teacherComment','studentIds'].forEach(function(k){ if(data[k]!=null) e[k]=data[k]; });
+      write(LS_JOURNAL, list);
+      return delay(clone(e));
+    },
+    remove: function (id) {
+      write(LS_JOURNAL, read(LS_JOURNAL,[]).filter(function(e){ return e.id!==id; }));
+      return delay({ ok: true });
+    },
+    /* Attendance snapshot for a journal entry: who was there. */
+    attendance: function (journalId) {
+      var recs = read(LS_ATTEND,[]).filter(function(a){ return a.journalId===journalId; });
+      return delay(recs.map(function(a){ var c=clone(a); c.studentName=userName(a.studentId); return c; }));
+    }
+  };
+
+  /* =================================================================
+     GROUPS — student groups for the journal  [v1.1]
+     A group belongs to a direction + teacher; holds an array of
+     studentIds. Groups are used in journal entries and rehearsals.
+     ================================================================= */
+  var groups = {
+    list: function (filters) {
+      var list = read(LS_GROUPS, []);
+      filters = filters || {};
+      var me = auth.current();
+      if (me && me.role === 'teacher') list = list.filter(function(g){ return g.teacher===me.name; });
+      if (filters.direction) list = list.filter(function(g){ return g.direction===filters.direction; });
+      return delay(list.map(clone));
+    },
+    get: function (id) {
+      var g = read(LS_GROUPS,[]).filter(function(x){return x.id===id;})[0];
+      return g ? delay(clone(g)) : fail('Группа не найдена');
+    },
+    create: function (data) {
+      if (!data.name || !data.name.trim()) return fail('Укажите название группы');
+      var me = auth.current();
+      var list = read(LS_GROUPS, []);
+      var g = { id: uid('grp'), name: data.name.trim(), direction: data.direction||'',
+        teacher: data.teacher||(me&&me.name)||'', studentIds: data.studentIds||[],
+        createdAt: ymd(new Date()) };
+      list.push(g); write(LS_GROUPS, list);
+      return delay(g);
+    },
+    update: function (id, data) {
+      var list = read(LS_GROUPS, []);
+      var g = list.filter(function(x){return x.id===id;})[0];
+      if (!g) return fail('Группа не найдена');
+      ['name','direction','teacher','studentIds'].forEach(function(k){ if(data[k]!=null) g[k]=data[k]; });
+      write(LS_GROUPS, list);
+      return delay(clone(g));
+    },
+    remove: function (id) {
+      write(LS_GROUPS, read(LS_GROUPS,[]).filter(function(g){return g.id!==id;}));
+      return delay({ ok: true });
+    }
+  };
+
+  /* =================================================================
+     RECALCULATIONS — sick-leave compensation requests  [v1.1]
+     Flow: parent creates (with absence date + certificate URL) →
+     admin reviews → approved: compensation credited / rejected.
+     Status: pending → approved | rejected
+     ================================================================= */
+  var recalculations = {
+    list: function (filters) {
+      var me = auth.current();
+      if (!me) return fail('Не авторизован');
+      var list = read(LS_RECALC, []);
+      if (me.role === 'parent') {
+        var kids = (read(LS_USERS,[]).filter(function(u){return u.id===me.id;})[0]||{}).childrenIds||[];
+        list = list.filter(function(r){ return kids.indexOf(r.studentId)!==-1; });
+      } else if (me.role === 'student') {
+        list = list.filter(function(r){ return r.studentId===me.id; });
+      }
+      filters = filters || {};
+      if (filters.status) list = list.filter(function(r){ return r.status===filters.status; });
+      list.sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
+      return delay(list.map(clone));
+    },
+    create: function (data) {
+      if (!data.studentId) return fail('Укажите ученика');
+      if (!data.absenceDate) return fail('Укажите дату пропуска');
+      var list = read(LS_RECALC, []);
+      var rec = {
+        id: uid('rc'), studentId: data.studentId,
+        studentName: userName(data.studentId) || data.studentName || '',
+        parentId: curId(),
+        absenceDate: data.absenceDate,
+        attendanceId: data.attendanceId || null,
+        certificateUrl: data.certificateUrl || '',
+        comment: (data.comment || '').trim(),
+        status: 'pending',
+        adminComment: '', compensationAmount: 0,
+        createdAt: new Date().toISOString(), resolvedAt: null
+      };
+      list.push(rec); write(LS_RECALC, list);
+      notify('admin', 'Заявка на перерасчёт от ' + rec.studentName,
+        { type: 'payment', title: 'Перерасчёт', href: 'admin-recalculations.html' });
+      return delay(rec);
+    },
+    review: function (id, decision) {
+      /* decision: { status: 'approved'|'rejected', adminComment, compensationAmount } */
+      if (!curId()) return fail('Не авторизован');
+      var list = read(LS_RECALC, []);
+      var rec = list.filter(function(r){return r.id===id;})[0];
+      if (!rec) return fail('Заявка не найдена');
+      if (rec.status !== 'pending') return fail('Заявка уже рассмотрена');
+      rec.status = decision.status || 'rejected';
+      rec.adminComment = (decision.adminComment||'').trim();
+      rec.compensationAmount = decision.compensationAmount || 0;
+      rec.resolvedAt = new Date().toISOString();
+      write(LS_RECALC, list);
+      var msg = rec.status === 'approved'
+        ? 'Перерасчёт за ' + rec.absenceDate + ' одобрен. Компенсация: ' + rec.compensationAmount + ' ₸'
+        : 'Перерасчёт за ' + rec.absenceDate + ' отклонён. ' + rec.adminComment;
+      notify(rec.studentId, msg, { type: 'payment', title: 'Перерасчёт', href: 'subscriptions.html' });
+      notify(rec.parentId,  msg, { type: 'payment', title: 'Перерасчёт', href: 'parent.html' });
+      return delay(clone(rec));
+    },
+    all: function (filters) {
+      var list = read(LS_RECALC, []).map(function(r){ return clone(r); });
+      filters = filters || {};
+      if (filters.status) list = list.filter(function(r){ return r.status===filters.status; });
+      list.sort(function(a,b){ return (b.createdAt||'').localeCompare(a.createdAt||''); });
+      return delay(list);
+    }
+  };
+
+  /* =================================================================
+     REHEARSALS — schedules per event  [v1.1]
+     Each rehearsal links to an eventId. Attendance is tracked like
+     regular attendance but stored separately.
+     ================================================================= */
+  var rehearsals = {
+    list: function (eventId) {
+      var list = read(LS_REHEARSALS, []);
+      if (eventId) list = list.filter(function(r){ return r.eventId===eventId; });
+      else {
+        var me = auth.current();
+        if (me && me.role === 'teacher') {
+          list = list.filter(function(r){ return r.teacher===me.name; });
+        }
+      }
+      list.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+      return delay(list.map(clone));
+    },
+    create: function (data) {
+      if (!data.eventId) return fail('Укажите мероприятие');
+      if (!data.date) return fail('Укажите дату репетиции');
+      var list = read(LS_REHEARSALS, []);
+      var me = auth.current();
+      var r = { id: uid('reh'), eventId: data.eventId, eventTitle: data.eventTitle||'',
+        date: data.date, time: (data.time||'').trim(), place: (data.place||'').trim(),
+        teacher: data.teacher||(me&&me.name)||'',
+        participants: data.participants||[], comment: (data.comment||'').trim(),
+        attendance: [] };
+      list.push(r); write(LS_REHEARSALS, list);
+      notify('student', 'Назначена репетиция: ' + (data.eventTitle||'') + ' · ' + data.date,
+        { type: 'event', pref: 'events', title: 'Репетиция', href: 'schedule.html' });
+      return delay(r);
+    },
+    update: function (id, data) {
+      var list = read(LS_REHEARSALS, []);
+      var r = list.filter(function(x){return x.id===id;})[0];
+      if (!r) return fail('Репетиция не найдена');
+      ['date','time','place','teacher','participants','comment'].forEach(function(k){ if(data[k]!=null) r[k]=data[k]; });
+      write(LS_REHEARSALS, list);
+      return delay(clone(r));
+    },
+    remove: function (id) {
+      write(LS_REHEARSALS, read(LS_REHEARSALS,[]).filter(function(r){return r.id!==id;}));
+      return delay({ ok: true });
+    },
+    markAttendance: function (rehearsalId, attendanceMap) {
+      /* attendanceMap: { studentId: 'present'|'absent' } */
+      var list = read(LS_REHEARSALS, []);
+      var r = list.filter(function(x){return x.id===rehearsalId;})[0];
+      if (!r) return fail('Репетиция не найдена');
+      r.attendance = Object.keys(attendanceMap).map(function(sid){
+        return { studentId: sid, status: attendanceMap[sid] };
+      });
+      write(LS_REHEARSALS, list);
+      return delay(clone(r));
+    }
+  };
+
+  /* =================================================================
+     TICKETS — electronic tickets with unique number  [v1.1]
+     Tickets are issued for events (paid or free). Each ticket has a
+     unique number used for QR validation. Status: issued→used|cancelled
+     ================================================================= */
+  function generateTicketNumber() {
+    var chars = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    var n = 'TKT-';
+    for (var i = 0; i < 8; i++) n += chars[Math.floor(Math.random() * chars.length)];
+    return n;
+  }
+  var tickets = {
+    list: function (eventId) {
+      var me = auth.current();
+      if (!me) return fail('Не авторизован');
+      var list = read(LS_TICKETS, []);
+      if (eventId) list = list.filter(function(t){ return t.eventId===eventId; });
+      if (me.role !== 'admin' && me.role !== 'teacher') {
+        list = list.filter(function(t){ return t.userId===me.id; });
+      }
+      return delay(list.map(clone));
+    },
+    issue: function (data) {
+      /* data: { eventId, userId, holderName, holderPhone } */
+      if (!data.eventId || !data.userId) return fail('Не указано мероприятие или пользователь');
+      var list = read(LS_TICKETS, []);
+      /* prevent duplicate */
+      var dup = list.filter(function(t){ return t.eventId===data.eventId&&t.userId===data.userId&&t.status!=='cancelled'; })[0];
+      if (dup) return delay(clone(dup));
+      var ev = (read(LS_EVENTS,[])||[]).filter(function(e){return e.id===data.eventId;})[0];
+      var t = {
+        id: uid('tkt'), number: generateTicketNumber(),
+        eventId: data.eventId, eventTitle: ev ? ev.title : '',
+        eventDate: ev ? ev.date : '', eventTime: ev ? ev.time : '',
+        eventPlace: ev ? ev.place : '',
+        userId: data.userId, holderName: data.holderName || userName(data.userId),
+        holderPhone: data.holderPhone || '',
+        price: data.price || (ev ? ev.ticketPrice : 0) || 0,
+        status: 'issued', issuedAt: new Date().toISOString(), usedAt: null
+      };
+      list.push(t); write(LS_TICKETS, list);
+      notify(data.userId, 'Ваш билет на «' + t.eventTitle + '»: ' + t.number,
+        { type: 'event', title: 'Билет получен', href: 'schedule.html' });
+      return delay(t);
+    },
+    validate: function (number) {
+      /* Scan QR → validate; marks ticket as used. */
+      var list = read(LS_TICKETS, []);
+      var t = list.filter(function(x){ return x.number===number; })[0];
+      if (!t) return fail('Билет не найден: ' + number);
+      if (t.status === 'used') return fail('Билет уже использован (' + t.number + ')');
+      if (t.status === 'cancelled') return fail('Билет аннулирован');
+      t.status = 'used'; t.usedAt = new Date().toISOString();
+      write(LS_TICKETS, list);
+      return delay(clone(t));
+    },
+    cancel: function (id) {
+      var list = read(LS_TICKETS, []);
+      var t = list.filter(function(x){ return x.id===id; })[0];
+      if (!t) return fail('Билет не найден');
+      t.status = 'cancelled'; write(LS_TICKETS, list);
+      return delay(clone(t));
+    },
+    all: function () {
+      return delay(read(LS_TICKETS,[]).map(clone));
+    }
+  };
+
+  /* =================================================================
+     BRAND — centralised branding config  [v1.1]
+     Stores school name, logo URL, favicon URL, tagline, etc.
+     The logo is uploaded via admin panel (URL stored here);
+     no base64 blobs — reference URLs only.
+     ================================================================= */
+  var brand = {
+    get: function () {
+      var defaults = {
+        schoolName: 'Shpigotskiy Art Space',
+        tagline: 'Студия искусств',
+        logoUrl: '',
+        faviconUrl: '',
+        primaryColor: '#c0392b',
+        accentColor: '#8e1a0e',
+        directorName: 'Антон Шпигоцкий',
+        contactPhone: '+7 777 123-45-67',
+        contactEmail: 'info@shpigotskiy.art',
+        address: 'ул. Абая 12, Алматы'
+      };
+      return delay(Object.assign({}, defaults, read(LS_BRAND, {})));
+    },
+    update: function (data) {
+      var current = read(LS_BRAND, {});
+      var allowed = ['schoolName','tagline','logoUrl','faviconUrl','primaryColor',
+        'accentColor','directorName','contactPhone','contactEmail','address'];
+      allowed.forEach(function(k){ if(data[k]!=null) current[k]=data[k]; });
+      write(LS_BRAND, current);
+      return delay(current);
     }
   };
 
@@ -2808,8 +3227,31 @@
     removeHomework:   function (id)          { return homework.remove(id); },
     reviewHomework:   function (id, payload) { return homework.review(id, payload); },
     addComment:       function (data)        { return comments.create(data); },
-    schedule:         function (year, month) { return schedule.month(year, month); }
+    schedule:         function (year, month) { return schedule.month(year, month); },
+    /* Journal delegates */
+    journalEntries:   function (f)           { return journal.list(f); },
+    createJournalEntry: function (data)      { return journal.create(data); },
+    updateJournalEntry: function (id, data)  { return journal.update(id, data); },
+    removeJournalEntry: function (id)        { return journal.remove(id); },
+    /* Rehearsal delegates */
+    myRehearsals:     function (eventId)     { return rehearsals.list(eventId); },
+    createRehearsal:  function (data)        { return rehearsals.create(data); },
+    /* Groups */
+    myGroups:         function ()            { return groups.list(); }
   };
+
+  /* Extend parent namespace with recalculation access. */
+  var _parentChildren = parent.children.bind(parent);
+  var _parentChild    = parent.child.bind(parent);
+  parent.children         = _parentChildren;
+  parent.child            = _parentChild;
+  parent.recalculations   = function()       { return recalculations.list(); };
+  parent.requestRecalc    = function(data)   { return recalculations.create(data); };
+  parent.childAttendance  = function(childId){ return attendance.list(childId); };
+  parent.childHomework    = function(childId){ return homework.list(childId); };
+  parent.childAchievements= function(childId){ return achievements.list(childId); };
+  parent.childCerts       = function(childId){ return certificates.list(childId); };
+  parent.childPortfolio   = function(childId){ return portfolio.list(childId); };
 
   /* =================================================================
      LEADS — CRM for incoming leads  [v0.9]
@@ -3284,6 +3726,10 @@
     churn: churn, broadcast: broadcast, analytics: analytics,
     /* funnel / ads v1.0-1.1 */
     tracking: tracking, telegram: telegram, reminders: reminders,
+    /* educational system v1.1 */
+    journal: journal, groups: groups,
+    recalculations: recalculations,
+    rehearsals: rehearsals, tickets: tickets, brand: brand,
     /* reserved (next versions) */
     tests: tests, gamification: gamification, wallet: wallet,
     ratings: ratings, seasons: seasons

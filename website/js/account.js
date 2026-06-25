@@ -155,7 +155,9 @@
     present:   { label: 'Присутствовал',  cls: 'badge-green' },
     excused:   { label: 'Уважительная',   cls: 'badge-gold'  },
     unexcused: { label: 'Неуважительная', cls: 'badge-red'   },
-    absent:    { label: 'Отсутствовал',   cls: 'badge-gray'  }
+    absent:    { label: 'Отсутствовал',   cls: 'badge-gray'  },
+    sick:      { label: 'По болезни',     cls: 'badge-blue'  },
+    makeup:    { label: 'Отработка',      cls: 'badge-teal'  }
   };
   var NOTE_TYPE = {
     recommendation: { label: 'Рекомендация', cls: 'badge-blue'  },
@@ -172,6 +174,7 @@
     { href: 'schedule.html',      label: 'Календарь',         icon: ICON.calendar },
     { href: 'courses.html',       label: 'Мои курсы',         icon: ICON.book     },
     { href: 'attendance.html',    label: 'Посещаемость',      icon: ICON.check2   },
+    { href: 'journal.html',       label: 'Журнал занятий',    icon: ICON.book     },
     { href: 'homework.html',      label: 'Домашние задания',  icon: ICON.hw       },
     { href: 'achievements.html',  label: 'Достижения',        icon: ICON.star     },
     { href: 'certificates.html',  label: 'Сертификаты',       icon: ICON.cert     },
@@ -213,6 +216,12 @@
     { href: 'admin-attendance.html',    label: 'Посещаемость',     icon: ICON.check2    },
     { href: 'admin-homework.html',      label: 'Домашние задания', icon: ICON.hw        },
     { href: 'admin-skillmap.html',      label: 'Карта развития',   icon: ICON.star      },
+    /* --- Образование v1.1 --- */
+    { href: 'admin-journal.html',        label: 'Эл. журнал',       icon: ICON.book      },
+    { href: 'admin-recalculations.html', label: 'Перерасчёты',      icon: ICON.card      },
+    { href: 'admin-rehearsals.html',     label: 'Репетиции',        icon: ICON.calendar  },
+    { href: 'admin-tickets.html',        label: 'Билеты',           icon: ICON.ticket    },
+    { href: 'admin-branding.html',       label: 'Брендинг',         icon: ICON.gear      },
     /* --- Контент --- */
     { href: 'admin-certificates.html',  label: 'Сертификаты',      icon: ICON.cert      },
     { href: 'admin-achievements.html',  label: 'Достижения',       icon: ICON.star      },
@@ -359,7 +368,14 @@
     'admin-reports.html':     { title: 'Отчёты' },
     'admin-orders.html':      { title: 'Заказы' },
     'admin-ads.html':         { title: 'Реклама и лиды' },
-    'director.html':          { title: 'Панель директора' }
+    'director.html':          { title: 'Панель директора' },
+    /* v1.1 educational */
+    'journal.html':              { title: 'Журнал занятий' },
+    'admin-journal.html':        { title: 'Электронный журнал' },
+    'admin-recalculations.html': { title: 'Перерасчёты по болезни' },
+    'admin-rehearsals.html':     { title: 'Репетиции' },
+    'admin-tickets.html':        { title: 'Билеты на мероприятия' },
+    'admin-branding.html':       { title: 'Брендинг' }
   };
 
   function roleHome() {
@@ -1538,7 +1554,32 @@
           '<div id="teacher-attendance">' + renderTeacherAttendance(attendance, students) + '</div>';
       }
 
+      html += '<h2 class="cab-section-title">Электронный журнал' +
+        '<button class="btn btn-outline btn-sm" style="float:right" data-add-journal-entry>+ Запись в журнал</button></h2>' +
+        '<div id="teacher-journal-list"><p class="cab-empty">Загрузка…</p></div>';
+
       teacherRoot.innerHTML = html;
+
+      API.teacher.journalEntries().then(function (entries) {
+        var jl = $('#teacher-journal-list', teacherRoot);
+        if (!jl) return;
+        if (!entries.length) { jl.innerHTML = '<p class="cab-empty">Записей в журнале пока нет.</p>'; return; }
+        jl.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+          '<thead><tr><th>Дата</th><th>Направление</th><th>Тема</th><th>Комментарий</th><th></th></tr></thead><tbody>' +
+          entries.map(function (e) {
+            return '<tr>' +
+              '<td data-th="Дата">' + fmtDate(e.date) + (e.time ? ' ' + e.time : '') + '</td>' +
+              '<td data-th="Направление">' + escapeHtml(e.direction) + '</td>' +
+              '<td data-th="Тема"><strong>' + escapeHtml(e.topic) + '</strong></td>' +
+              '<td data-th="Комментарий">' + escapeHtml(e.teacherComment || '—') + '</td>' +
+              '<td data-th=""><div class="cab-row-actions">' +
+                '<button class="btn-icon" data-edit-journal="' + e.id + '" title="Редактировать">✎</button>' +
+                '<button class="btn-icon danger" data-del-journal="' + e.id + '" title="Удалить">✕</button>' +
+              '</div></td></tr>';
+          }).join('') +
+          '</tbody></table></div>';
+        bindTeacherJournalActions(teacherRoot, students);
+      });
 
       var searchInput = $('#teacher-student-search', teacherRoot);
       if (searchInput) {
@@ -1554,6 +1595,61 @@
 
       var addHwBtn = $('[data-add-teacher-hw]', teacherRoot);
       if (addHwBtn) addHwBtn.addEventListener('click', function () { editTeacherHomework(null, students); });
+
+      var addJournalBtn = $('[data-add-journal-entry]', teacherRoot);
+      if (addJournalBtn) addJournalBtn.addEventListener('click', function () { editJournalEntry(null, students); });
+    });
+  }
+  function bindTeacherJournalActions(root, students) {
+    $all('[data-edit-journal]', root).forEach(function (b) {
+      b.addEventListener('click', function () { editJournalEntry(b.getAttribute('data-edit-journal'), students); });
+    });
+    $all('[data-del-journal]', root).forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (confirm('Удалить запись?')) API.teacher.removeJournalEntry(b.getAttribute('data-del-journal')).then(function () {
+          toast('Запись удалена');
+          API.teacher.journalEntries().then(function (entries) {
+            var jl = $('#teacher-journal-list', root);
+            if (jl) jl.innerHTML = entries.length ? entries.map(function(e){
+              return '<tr><td>' + fmtDate(e.date) + '</td><td>' + escapeHtml(e.direction) + '</td><td>' + escapeHtml(e.topic) + '</td><td>' + escapeHtml(e.teacherComment||'—') + '</td><td></td></tr>';
+            }).join('') : '<p class="cab-empty">Записей пока нет.</p>';
+          });
+        });
+      });
+    });
+  }
+  function editJournalEntry(id, students) {
+    var me = API.auth.current();
+    var p = id ? API.journal.get(id) : Promise.resolve({});
+    p.then(function (e) {
+      e = e || {};
+      var studs = (students || []).map(function (s) { return { value: s.id, label: s.name }; });
+      var studsChecks = (students || []).map(function (s) {
+        var on = (e.studentIds || []).indexOf(s.id) !== -1;
+        return '<label class="check-row"><input type="checkbox" value="' + s.id + '" data-jrn-student' + (on?' checked':'') + '> ' + escapeHtml(s.name) + '</label>';
+      }).join('');
+      var html = '<form data-form>' +
+        row(field('Дата', input('date', e.date || new Date().toISOString().slice(0,10), 'date')), field('Время', input('time', e.time || ''))) +
+        field('Направление', input('direction', e.direction || (me && me.direction) || '')) +
+        field('Тема занятия', input('topic', e.topic)) +
+        field('Домашнее задание', textarea('homeworkText', e.homeworkText)) +
+        field('Комментарий преподавателя', textarea('teacherComment', e.teacherComment)) +
+        (studsChecks ? field('Ученики на занятии', '<div class="check-list">' + studsChecks + '</div>') : '') +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать запись' : 'Новая запись в журнал', html, true);
+      var form = m.body.querySelector('[data-form]');
+      m.body.querySelector('[data-cancel]').addEventListener('click', m.close);
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var err = form.querySelector('[data-err]'); hide(err);
+        var data = {};
+        $all('input[name], select[name], textarea[name]', form).forEach(function (el) { if (el.name) data[el.name] = el.value; });
+        data.studentIds = $all('[data-jrn-student]', form).filter(function(c){return c.checked;}).map(function(c){return c.value;});
+        var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
+        var op = id ? API.teacher.updateJournalEntry(id, data) : API.teacher.createJournalEntry(data);
+        op.then(function () { m.close(); toast(id ? 'Запись обновлена' : 'Запись добавлена'); loadTeacherCabinet(); })
+          .catch(function (ex) { setFormError(err, ex.message); btn.disabled = false; });
+      });
     });
   }
   function renderTeacherStudents(students) {
@@ -1596,7 +1692,9 @@
       { value: 'present',   label: 'Присутствовал' },
       { value: 'excused',   label: 'Уважительная причина' },
       { value: 'unexcused', label: 'Неуважительная причина' },
-      { value: 'absent',    label: 'Отсутствовал' }
+      { value: 'absent',    label: 'Отсутствовал' },
+      { value: 'sick',      label: 'По болезни' },
+      { value: 'makeup',    label: 'Отработка' }
     ];
     if (!list.length) return '<p class="cab-empty">Занятий сегодня нет.</p>';
     return '<div class="cab-table-wrap"><table class="cab-table">' +
@@ -2085,6 +2183,8 @@
               attLegend('Уважительная причина', st.excused, 'badge-gold') +
               attLegend('Неуважительная причина', st.unexcused, 'badge-red') +
               attLegend('Отсутствовал', st.absent, 'badge-gray') +
+              attLegend('По болезни', st.sick || 0, 'badge-blue') +
+              attLegend('Отработка', st.makeup || 0, 'badge-teal') +
             '</div>' +
           '</div>' +
         '</div>';
@@ -2292,13 +2392,55 @@
      ================================================================= */
   var parentRoot = $('#parent-root');
   if (parentRoot) {
-    API.parent.children().then(function (kids) {
+    Promise.all([API.parent.children(), API.recalculations.list()]).then(function (res) {
+      var kids = res[0], recalcs = res[1];
       if (!kids.length) {
         parentRoot.innerHTML = '<p class="cab-empty">К вашему аккаунту пока не привязаны ученики. Обратитесь к администратору студии.</p>';
         return;
       }
-      parentRoot.innerHTML = kids.map(renderChildCard).join('');
+      var recalcSection = '<h2 class="cab-section-title" style="margin-top:36px">Перерасчёты по болезни' +
+        '<button class="btn btn-outline btn-sm" style="float:right" data-add-recalc>+ Подать заявку</button></h2>' +
+        renderParentRecalcList(recalcs);
+      parentRoot.innerHTML = kids.map(renderChildCard).join('') + recalcSection;
       bindMockDownloads(parentRoot);
+      var addRecalcBtn = $('[data-add-recalc]', parentRoot);
+      if (addRecalcBtn) addRecalcBtn.addEventListener('click', function () { openRecalcForm(kids); });
+    });
+  }
+  function renderParentRecalcList(list) {
+    var RECALC_STATUS = { pending: { label: 'На рассмотрении', cls: 'badge-gold' }, approved: { label: 'Одобрено', cls: 'badge-green' }, rejected: { label: 'Отклонено', cls: 'badge-red' } };
+    if (!list.length) return '<p class="cab-empty">Заявок на перерасчёт пока нет.</p>';
+    return '<div class="cab-table-wrap"><table class="cab-table">' +
+      '<thead><tr><th>Ученик</th><th>Дата пропуска</th><th>Комментарий</th><th>Статус</th><th>Ответ</th></tr></thead><tbody>' +
+      list.map(function (r) {
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(r.studentName) + '</td>' +
+          '<td data-th="Дата пропуска">' + fmtDate(r.absenceDate) + '</td>' +
+          '<td data-th="Комментарий">' + escapeHtml(r.comment || '—') + '</td>' +
+          '<td data-th="Статус">' + badge(RECALC_STATUS, r.status) + '</td>' +
+          '<td data-th="Ответ">' + escapeHtml(r.adminComment || '—') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+  function openRecalcForm(kids) {
+    var kidOpts = kids.map(function (k) { return { value: k.id, label: k.name }; });
+    var html = '<form data-form>' +
+      field('Ученик', selectCtrl('studentId', kidOpts, kidOpts[0] && kidOpts[0].value)) +
+      field('Дата пропуска (по болезни)', input('absenceDate', '', 'date')) +
+      field('Ссылка на справку / файл', input('certificateUrl', '')) +
+      field('Комментарий', textarea('comment', '')) +
+      formActions() + '</form>';
+    var m = openModal('Заявка на перерасчёт по болезни', html);
+    var form = m.body.querySelector('[data-form]');
+    m.body.querySelector('[data-cancel]').addEventListener('click', m.close);
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var err = form.querySelector('[data-err]'); hide(err);
+      var data = {}; $all('input[name],select[name],textarea[name]', form).forEach(function(el){ if(el.name) data[el.name]=el.value; });
+      var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
+      var kid = kids.filter(function(k){return k.id===data.studentId;})[0];
+      data.studentName = kid ? kid.name : '';
+      API.recalculations.create(data).then(function () { m.close(); toast('Заявка подана'); location.reload(); })
+        .catch(function (ex) { setFormError(err, ex.message); btn.disabled = false; });
     });
   }
   function pcTile(label, value) {
@@ -2458,10 +2600,12 @@
       var students = res[0].map(function (s) { return { value: s.id, label: s.name }; });
       var rec = id ? (res[1].filter(function (a) { return a.id === id; })[0] || {}) : {};
       var statusOpts = [
-        { value: 'present', label: 'Присутствовал' },
-        { value: 'excused', label: 'Уважительная причина' },
+        { value: 'present',   label: 'Присутствовал' },
+        { value: 'excused',   label: 'Уважительная причина' },
         { value: 'unexcused', label: 'Неуважительная причина' },
-        { value: 'absent', label: 'Отсутствовал' }
+        { value: 'absent',    label: 'Отсутствовал' },
+        { value: 'sick',      label: 'По болезни' },
+        { value: 'makeup',    label: 'Отработка' }
       ];
       var html = '<form data-form>' +
         field('Ученик', selectCtrl('studentId', students, rec.studentId)) +
@@ -3741,7 +3885,9 @@
   function loadDirectorDashboard() {
     if (!directorRoot) return;
     directorRoot.innerHTML = '<p class="cab-empty">Загрузка данных…</p>';
-    API.analytics.summary().then(function (s) {
+    Promise.all([API.analytics.summary(), API.recalculations.all()]).then(function (res) {
+      var s = res[0], recalcs = res[1];
+      var pendingRecalc = recalcs.filter(function(r){return r.status==='pending';}).length;
       var teacherRows = Object.keys(s.teacherWorkload).map(function (t) {
         return '<tr><td>' + escapeHtml(t) + '</td><td>' + s.teacherWorkload[t] + ' учеников</td></tr>';
       }).join('') || '<tr><td colspan="2" class="cab-empty">Нет данных</td></tr>';
@@ -3762,6 +3908,7 @@
           dStat('Ожидают оплаты', s.awaitingOrders != null ? s.awaitingOrders : 0, s.awaitingOrders ? 'badge-gold' : '') +
           dStat('Занятий за неделю', s.upcomingLessons != null ? s.upcomingLessons : 0, '') +
           dStat('Предстоящих событий', s.upcomingEvents, '') +
+          dStat('Перерасчётов на рассмотрении', pendingRecalc, pendingRecalc ? 'badge-gold' : '') +
         '</div>' +
         '<h3 style="margin:24px 0 12px">Нагрузка преподавателей</h3>' +
         '<div class="cab-table-wrap"><table class="cab-table"><thead><tr><th>Преподаватель</th><th>Учеников</th></tr></thead><tbody>' + teacherRows + '</tbody></table></div>' +
@@ -3773,11 +3920,311 @@
           '<a href="admin-orders.html" class="btn-secondary">Заказы</a>' +
           '<a href="admin-analytics.html" class="btn-secondary">Аналитика</a>' +
           '<a href="admin-reports.html" class="btn-secondary">Отчёты</a>' +
+          '<a href="admin-journal.html" class="btn-secondary">Электронный журнал</a>' +
+          '<a href="admin-recalculations.html" class="btn-secondary">Перерасчёты</a>' +
+          '<a href="admin-tickets.html" class="btn-secondary">Билеты</a>' +
+          '<a href="admin-branding.html" class="btn-secondary">Брендинг</a>' +
         '</div>';
     });
     function dStat(label, val, cls) {
       return '<div class="cab-stat-card"><div class="cab-stat-val' + (cls ? ' ' + cls : '') + '">' + val + '</div><div class="cab-stat-label">' + escapeHtml(label) + '</div></div>';
     }
+  }
+
+  /* =================================================================
+     STUDENT — Журнал занятий  [v1.1]
+     ================================================================= */
+  var journalRoot = $('#journal-root');
+  if (journalRoot) { loadStudentJournal(); }
+  function loadStudentJournal() {
+    API.journal.list().then(function (entries) {
+      if (!entries.length) { journalRoot.innerHTML = '<p class="cab-empty">Записей в журнале пока нет.</p>'; return; }
+      journalRoot.innerHTML = entries.map(function (e) {
+        var hw = e.homeworkText
+          ? '<div class="jrn-block"><div class="jrn-block-label">Домашнее задание</div><p>' + escapeHtml(e.homeworkText) + '</p></div>'
+          : '';
+        var comment = e.teacherComment
+          ? '<div class="jrn-block"><div class="jrn-block-label">Комментарий преподавателя</div><p>' + escapeHtml(e.teacherComment) + '</p></div>'
+          : '';
+        return '<div class="jrn-card">' +
+          '<div class="jrn-head">' +
+            '<div><strong>' + escapeHtml(e.topic) + '</strong>' +
+              '<div class="jrn-meta">' + escapeHtml(e.direction) + ' · ' + escapeHtml(e.teacher) + '</div></div>' +
+            '<div class="jrn-date">' + fmtDate(e.date) + (e.time ? ' ' + escapeHtml(e.time) : '') + '</div>' +
+          '</div>' +
+          hw + comment +
+        '</div>';
+      }).join('');
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Электронный журнал  [v1.1]
+     ================================================================= */
+  var adminJournalRoot = $('#admin-journal-root');
+  if (adminJournalRoot) {
+    var addJournalBtn2 = $('[data-add-journal]');
+    if (addJournalBtn2) addJournalBtn2.addEventListener('click', function () { editAdminJournal(null); });
+    loadAdminJournal();
+  }
+  function loadAdminJournal() {
+    if (!adminJournalRoot) return;
+    API.journal.list().then(function (entries) {
+      if (!entries.length) { adminJournalRoot.innerHTML = '<p class="cab-empty">Записей пока нет.</p>'; return; }
+      var rows = entries.map(function (e) {
+        return '<tr>' +
+          '<td data-th="Дата">' + fmtDate(e.date) + (e.time ? ' ' + e.time : '') + '</td>' +
+          '<td data-th="Направление">' + escapeHtml(e.direction) + '</td>' +
+          '<td data-th="Преподаватель">' + escapeHtml(e.teacher) + '</td>' +
+          '<td data-th="Тема"><strong>' + escapeHtml(e.topic) + '</strong></td>' +
+          '<td data-th="Учеников">' + (e.studentIds ? e.studentIds.length : 0) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + e.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + e.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminJournalRoot.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Дата</th><th>Направление</th><th>Преподаватель</th><th>Тема</th><th>Учеников</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminJournalRoot).forEach(function (b) { b.addEventListener('click', function () { editAdminJournal(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminJournalRoot).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить запись?')) API.journal.remove(b.getAttribute('data-del')).then(function () { toast('Запись удалена'); loadAdminJournal(); });
+        });
+      });
+    });
+  }
+  function editAdminJournal(id) {
+    Promise.all([API.admin.studentOptions(), id ? API.journal.get(id) : Promise.resolve({})]).then(function (res) {
+      var students = res[0], e = res[1] || {};
+      var studsChecks = students.map(function (s) {
+        var on = (e.studentIds || []).indexOf(s.id) !== -1;
+        return '<label class="check-row"><input type="checkbox" value="' + s.id + '" data-jrn-s' + (on ? ' checked' : '') + '> ' + escapeHtml(s.name) + '</label>';
+      }).join('');
+      var html = '<form data-form>' +
+        row(field('Дата', input('date', e.date || new Date().toISOString().slice(0,10), 'date')), field('Время', input('time', e.time || ''))) +
+        row(field('Направление', input('direction', e.direction || '')), field('Преподаватель', input('teacher', e.teacher || ''))) +
+        field('Тема занятия', input('topic', e.topic || '')) +
+        field('Домашнее задание', textarea('homeworkText', e.homeworkText || '')) +
+        field('Комментарий преподавателя', textarea('teacherComment', e.teacherComment || '')) +
+        (studsChecks ? field('Ученики', '<div class="check-list">' + studsChecks + '</div>') : '') +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать запись' : 'Новая запись в журнал', html, true);
+      var form = m.body.querySelector('[data-form]');
+      m.body.querySelector('[data-cancel]').addEventListener('click', m.close);
+      form.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        var err = form.querySelector('[data-err]'); hide(err);
+        var data = {};
+        $all('input[name], select[name], textarea[name]', form).forEach(function (el) { if (el.name) data[el.name] = el.value; });
+        data.studentIds = $all('[data-jrn-s]', form).filter(function(c){return c.checked;}).map(function(c){return c.value;});
+        var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
+        var op = id ? API.journal.update(id, data) : API.journal.create(data);
+        op.then(function () { m.close(); toast(id ? 'Сохранено' : 'Запись добавлена'); loadAdminJournal(); })
+          .catch(function (ex) { setFormError(err, ex.message); btn.disabled = false; });
+      });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Перерасчёты по болезни  [v1.1]
+     ================================================================= */
+  var adminRecalcRoot = $('#admin-recalculations-root');
+  if (adminRecalcRoot) { loadAdminRecalculations(); }
+  function loadAdminRecalculations() {
+    if (!adminRecalcRoot) return;
+    var RECALC_STATUS = { pending: { label: 'На рассмотрении', cls: 'badge-gold' }, approved: { label: 'Одобрено', cls: 'badge-green' }, rejected: { label: 'Отклонено', cls: 'badge-red' } };
+    API.recalculations.all().then(function (list) {
+      if (!list.length) { adminRecalcRoot.innerHTML = '<p class="cab-empty">Заявок на перерасчёт пока нет.</p>'; return; }
+      var rows = list.map(function (r) {
+        var actions = r.status === 'pending'
+          ? '<button class="btn btn-outline btn-sm" data-recalc-approve="' + r.id + '">Одобрить</button>' +
+            '<button class="btn btn-outline btn-sm" style="color:var(--red)" data-recalc-reject="' + r.id + '">Отклонить</button>'
+          : '';
+        return '<tr>' +
+          '<td data-th="Ученик">' + escapeHtml(r.studentName) + '</td>' +
+          '<td data-th="Дата пропуска">' + fmtDate(r.absenceDate) + '</td>' +
+          '<td data-th="Справка">' + (r.certificateUrl ? '<a href="' + escapeHtml(r.certificateUrl) + '" target="_blank" class="btn-secondary" style="font-size:.8rem">Открыть</a>' : '—') + '</td>' +
+          '<td data-th="Комментарий">' + escapeHtml(r.comment || '—') + '</td>' +
+          '<td data-th="Статус">' + badge(RECALC_STATUS, r.status) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' + actions + '</div></td></tr>';
+      }).join('');
+      adminRecalcRoot.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Ученик</th><th>Дата пропуска</th><th>Справка</th><th>Комментарий</th><th>Статус</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-recalc-approve]', adminRecalcRoot).forEach(function (b) {
+        b.addEventListener('click', function () { reviewRecalc(b.getAttribute('data-recalc-approve'), 'approved'); });
+      });
+      $all('[data-recalc-reject]', adminRecalcRoot).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var comment = prompt('Причина отклонения (необязательно):');
+          reviewRecalc(b.getAttribute('data-recalc-reject'), 'rejected', comment);
+        });
+      });
+    });
+  }
+  function reviewRecalc(id, status, comment) {
+    API.recalculations.review(id, { status: status, adminComment: comment || '' }).then(function () {
+      toast(status === 'approved' ? 'Одобрено' : 'Отклонено');
+      loadAdminRecalculations();
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Репетиции  [v1.1]
+     ================================================================= */
+  var adminRehearsalsRoot = $('#admin-rehearsals-root');
+  if (adminRehearsalsRoot) {
+    var addRehearsalBtn = $('[data-add-rehearsal]');
+    if (addRehearsalBtn) addRehearsalBtn.addEventListener('click', function () { editRehearsal(null); });
+    loadAdminRehearsals();
+  }
+  function loadAdminRehearsals() {
+    if (!adminRehearsalsRoot) return;
+    API.rehearsals.list().then(function (list) {
+      if (!list.length) { adminRehearsalsRoot.innerHTML = '<p class="cab-empty">Репетиций пока нет.</p>'; return; }
+      var rows = list.map(function (r) {
+        return '<tr>' +
+          '<td data-th="Дата">' + fmtDate(r.date) + (r.time ? ' ' + escapeHtml(r.time) : '') + '</td>' +
+          '<td data-th="Мероприятие"><strong>' + escapeHtml(r.eventTitle || r.eventId) + '</strong></td>' +
+          '<td data-th="Место">' + escapeHtml(r.place || '—') + '</td>' +
+          '<td data-th="Преподаватель">' + escapeHtml(r.teacher || '—') + '</td>' +
+          '<td data-th="Участников">' + (r.participants ? r.participants.length : 0) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + r.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + r.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminRehearsalsRoot.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Дата</th><th>Мероприятие</th><th>Место</th><th>Преподаватель</th><th>Участников</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminRehearsalsRoot).forEach(function (b) { b.addEventListener('click', function () { editRehearsal(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminRehearsalsRoot).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить репетицию?')) API.rehearsals.remove(b.getAttribute('data-del')).then(function () { toast('Репетиция удалена'); loadAdminRehearsals(); });
+        });
+      });
+    });
+  }
+  function editRehearsal(id) {
+    Promise.all([API.events.list(), id ? API.rehearsals.list() : Promise.resolve([])]).then(function (res) {
+      var evts = res[0].map(function (e) { return { value: e.id, label: e.title }; });
+      var r = id ? (res[1].filter(function(x){return x.id===id;})[0]||{}) : {};
+      var html = '<form data-form>' +
+        field('Мероприятие', selectCtrl('eventId', evts, r.eventId)) +
+        row(field('Дата', input('date', r.date || '', 'date')), field('Время', input('time', r.time || ''))) +
+        row(field('Место', input('place', r.place || '')), field('Преподаватель', input('teacher', r.teacher || ''))) +
+        field('Комментарий', textarea('comment', r.comment || '')) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать репетицию' : 'Новая репетиция', html);
+      bindCrudForm(m, function (data) { return id ? API.rehearsals.update(id, data) : API.rehearsals.create(data); },
+        function () { toast(id ? 'Сохранено' : 'Репетиция добавлена'); loadAdminRehearsals(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Билеты  [v1.1]
+     ================================================================= */
+  var adminTicketsRoot = $('#admin-tickets-root');
+  if (adminTicketsRoot) {
+    var issueTicketBtn = $('[data-issue-ticket]');
+    if (issueTicketBtn) issueTicketBtn.addEventListener('click', function () { issueTicket(); });
+    loadAdminTickets();
+  }
+  function loadAdminTickets() {
+    if (!adminTicketsRoot) return;
+    var TKT_STATUS = { issued: { label: 'Выдан', cls: 'badge-green' }, used: { label: 'Использован', cls: 'badge-gray' }, cancelled: { label: 'Аннулирован', cls: 'badge-red' } };
+    API.tickets.all().then(function (list) {
+      if (!list.length) { adminTicketsRoot.innerHTML = '<p class="cab-empty">Билетов пока нет.</p>'; return; }
+      var rows = list.map(function (t) {
+        return '<tr>' +
+          '<td data-th="Номер"><code class="tkt-number">' + escapeHtml(t.number) + '</code></td>' +
+          '<td data-th="Мероприятие"><strong>' + escapeHtml(t.eventTitle) + '</strong></td>' +
+          '<td data-th="Дата">' + fmtDate(t.eventDate) + (t.eventTime ? ' ' + escapeHtml(t.eventTime) : '') + '</td>' +
+          '<td data-th="Владелец">' + escapeHtml(t.holderName || '—') + '</td>' +
+          '<td data-th="Телефон">' + escapeHtml(t.holderPhone || '—') + '</td>' +
+          '<td data-th="Цена">' + (t.price ? fmtMoney(t.price) : 'Бесплатно') + '</td>' +
+          '<td data-th="Статус">' + badge(TKT_STATUS, t.status) + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            (t.status === 'issued' ? '<button class="btn btn-outline btn-sm" data-validate-ticket="' + escapeHtml(t.number) + '">Отметить исп.</button>' : '') +
+            (t.status === 'issued' ? '<button class="btn-icon danger" data-cancel-ticket="' + t.id + '" title="Аннулировать">✕</button>' : '') +
+          '</div></td></tr>';
+      }).join('');
+      adminTicketsRoot.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Номер</th><th>Мероприятие</th><th>Дата</th><th>Владелец</th><th>Телефон</th><th>Цена</th><th>Статус</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-validate-ticket]', adminTicketsRoot).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var num = b.getAttribute('data-validate-ticket');
+          if (!confirm('Отметить билет ' + num + ' как использованный?')) return;
+          API.tickets.validate(num).then(function (t) { toast('Билет ' + t.number + ' — использован'); loadAdminTickets(); })
+            .catch(function (ex) { toast('Ошибка: ' + ex.message); });
+        });
+      });
+      $all('[data-cancel-ticket]', adminTicketsRoot).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Аннулировать билет?')) API.tickets.cancel(b.getAttribute('data-cancel-ticket')).then(function () { toast('Билет аннулирован'); loadAdminTickets(); });
+        });
+      });
+    });
+  }
+  function issueTicket() {
+    Promise.all([API.events.list(), API.admin.studentOptions()]).then(function (res) {
+      var evts = res[0], students = res[1];
+      var evtOpts = evts.map(function (e) { return { value: e.id, label: e.title + (e.date ? ' · ' + fmtDate(e.date) : '') }; });
+      var stuOpts = [{ value: '', label: '— гость (без аккаунта) —' }].concat(
+        students.map(function (s) { return { value: s.id, label: s.name }; })
+      );
+      var html = '<form data-form>' +
+        field('Мероприятие', selectCtrl('eventId', evtOpts, evtOpts[0] && evtOpts[0].value)) +
+        field('Ученик (или оставьте пустым для гостя)', selectCtrl('userId', stuOpts, '')) +
+        row(field('Имя владельца (для гостя)', input('holderName', '')), field('Телефон', input('holderPhone', ''))) +
+        field('Цена билета (0 = бесплатно)', input('price', '0', 'number')) +
+        formActions('Выдать билет') + '</form>';
+      var m = openModal('Выдать билет', html);
+      bindCrudForm(m, function (data) {
+        data.price = parseFloat(data.price) || 0;
+        if (!data.userId) data.userId = 'guest-' + Date.now();
+        return API.tickets.issue(data);
+      }, function () { toast('Билет выдан'); loadAdminTickets(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — Брендинг  [v1.1]
+     ================================================================= */
+  var adminBrandRoot = $('#admin-branding-root');
+  if (adminBrandRoot) { loadAdminBranding(); }
+  function loadAdminBranding() {
+    if (!adminBrandRoot) return;
+    API.brand.get().then(function (b) {
+      var html = '<form id="brand-form" style="max-width:600px">' +
+        '<h2 class="cab-section-title">Идентификация школы</h2>' +
+        row(field('Название школы', input('schoolName', b.schoolName || '')), field('Слоган', input('tagline', b.tagline || ''))) +
+        row(field('Директор', input('directorName', b.directorName || '')), field('Телефон', input('contactPhone', b.contactPhone || ''))) +
+        row(field('Email', input('contactEmail', b.contactEmail || '')), field('Адрес', input('address', b.address || ''))) +
+        '<h2 class="cab-section-title">Визуальный стиль</h2>' +
+        row(field('URL логотипа', input('logoUrl', b.logoUrl || '')), field('URL фавикона', input('faviconUrl', b.faviconUrl || ''))) +
+        row(field('Основной цвет', '<input class="form-control" type="color" name="primaryColor" value="' + escapeHtml(b.primaryColor || '#c0392b') + '">'),
+            field('Акцентный цвет', '<input class="form-control" type="color" name="accentColor" value="' + escapeHtml(b.accentColor || '#8e1a0e') + '">')) +
+        '<div class="form-error" data-err></div>' +
+        '<div class="cab-form-actions">' +
+          '<button type="submit" class="btn btn-primary">Сохранить настройки</button>' +
+        '</div>' +
+      '</form>';
+      adminBrandRoot.innerHTML = html;
+      var form = document.getElementById('brand-form');
+      if (!form) return;
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var err = form.querySelector('[data-err]'); hide(err);
+        var data = {};
+        $all('input[name], select[name], textarea[name]', form).forEach(function (el) { if (el.name) data[el.name] = el.value; });
+        var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
+        API.brand.update(data).then(function () { toast('Настройки брендинга сохранены'); btn.disabled = false; })
+          .catch(function (ex) { setFormError(err, ex.message); btn.disabled = false; });
+      });
+    });
   }
 
   /* shared CRUD form binder */
