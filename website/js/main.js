@@ -30,6 +30,10 @@ function bootPixel() {
   try {
     const cfg = JSON.parse(localStorage.getItem('sas_meta_config') || '{}');
     if (cfg.enabled && cfg.pixelId) pixelId = cfg.pixelId;
+    /* Director panel can supply the Pixel ID; only accept a real numeric id,
+       never the XXXXXXXXXXXXXXXX placeholder, so we don't init a dead pixel. */
+    const dc = JSON.parse(localStorage.getItem('sas_director_contacts') || '{}');
+    if (dc.pixelId && /^\d{6,}$/.test(String(dc.pixelId).trim())) pixelId = String(dc.pixelId).trim();
   } catch (e) { /* ignore */ }
   if (pixelId) {
     const s = document.createElement('script');
@@ -123,15 +127,15 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
 });
 
-/* ===== FORM CHIPS ===== */
-document.querySelectorAll('.form-chips').forEach(group => {
-  group.querySelectorAll('.form-chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const multi = group.dataset.multi === 'true';
-      if (!multi) group.querySelectorAll('.form-chip').forEach(c => c.classList.remove('selected'));
-      chip.classList.toggle('selected');
-    });
-  });
+/* ===== FORM CHIPS (delegated so dynamically-rendered slot chips also work) ===== */
+document.addEventListener('click', e => {
+  const chip = e.target.closest('.form-chip');
+  if (!chip) return;
+  const group = chip.closest('.form-chips');
+  if (!group) return;
+  const multi = group.dataset.multi === 'true';
+  if (!multi) group.querySelectorAll('.form-chip').forEach(c => c.classList.remove('selected'));
+  chip.classList.toggle('selected');
 });
 
 /* ===== TRIAL FORM ===== */
@@ -152,9 +156,11 @@ function setupForm(formId, onSuccess) {
       if (!ok) { valid = false; input.classList.add('error'); if (err) err.classList.add('show'); }
       else { input.classList.remove('error'); if (err) err.classList.remove('show'); }
     });
-    const chip = form.querySelector('.form-chips .form-chip.selected');
+    /* Only the direction chip group is required; the slot group is optional. */
+    const dirGroup = form.querySelector('.form-chips:not([data-chip-role="slot"])');
+    const chip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
     const chipErr = form.querySelector('.chip-err');
-    if (form.querySelector('.form-chips') && !chip) {
+    if (dirGroup && !chip) {
       valid = false;
       if (chipErr) chipErr.classList.add('show');
     } else if (chipErr) chipErr.classList.remove('show');
@@ -167,7 +173,12 @@ function setupForm(formId, onSuccess) {
     if (success) success.classList.add('show');
     if (onSuccess) onSuccess(form);
 
+    /* Keep the CRM lead (existing behaviour) AND route the parent to WhatsApp
+       with their details pre-filled, after the success screen is shown. */
     submitLead(formId, form);
+    if (FORM_SOURCE[formId] === 'trial') {
+      window.open(buildWhatsAppFromForm(form), '_blank');
+    }
   });
 }
 
@@ -188,9 +199,12 @@ const FORM_SOURCE = {
 function submitLead(formId, form) {
   const data = {};
   form.querySelectorAll('[name]').forEach(inp => { data[inp.name] = (inp.value || '').trim(); });
-  const chip = form.querySelector('.form-chip.selected');
-  const direction = chip ? (CHIP_DIRECTION[chip.dataset.value] !== undefined
+  const dirGroup = form.querySelector('.form-chips:not([data-chip-role="slot"])');
+  const chip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
+  const direction = chip ? (CHIP_DIRECTION[chip.dataset.value] !== undefined && CHIP_DIRECTION[chip.dataset.value] !== ''
     ? CHIP_DIRECTION[chip.dataset.value] : chip.textContent.trim()) : '';
+  const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
+  const slot = slotChip ? slotChip.textContent.trim() : '';
 
   const utm = getUTM();
   const payload = {
@@ -201,7 +215,7 @@ function submitLead(formId, form) {
     direction: direction,
     source: FORM_SOURCE[formId] || 'callback',
     preferredDate: data.date || '',
-    preferredTime: data.time || '',
+    preferredTime: slot || data.time || '',
     comment: data.comment || data.message || '',
     utm: {
       source: utm.source || '', medium: utm.medium || '', campaign: utm.campaign || '',
@@ -220,7 +234,133 @@ function submitLead(formId, form) {
 
 document.addEventListener('DOMContentLoaded', () => {
   ['trial-form', 'callback-form', 'course-form', 'modal-form'].forEach(id => setupForm(id));
+  applyDirectorSlots();
+  applyDirectorPricing();
+  applyDirectorContacts();
+  renderReviews();
 });
+
+/* ===== WHATSAPP ROUTING [v1.1] =====
+   The studio is lead-gen, not e-commerce: every booking funnels into WhatsApp.
+   buildWhatsAppLink() makes a generic link; buildWhatsAppFromForm() pre-fills
+   the parent's submitted details so the chat opens ready to send. */
+const WA_NUMBER = '77086366351';
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+function buildWhatsAppLink(direction) {
+  let text = 'Здравствуйте! Хочу записать на пробное занятие';
+  if (direction) text += ' (' + direction + ')';
+  return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(text);
+}
+window.buildWhatsAppLink = buildWhatsAppLink;
+
+function buildWhatsAppFromForm(form) {
+  const data = {};
+  form.querySelectorAll('[name]').forEach(i => { data[i.name] = (i.value || '').trim(); });
+  const dirGroup = form.querySelector('.form-chips:not([data-chip-role="slot"])');
+  const dirChip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
+  const direction = dirChip ? (CHIP_DIRECTION[dirChip.dataset.value] !== undefined && CHIP_DIRECTION[dirChip.dataset.value] !== ''
+    ? CHIP_DIRECTION[dirChip.dataset.value] : dirChip.textContent.trim()) : '';
+  const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
+  const lines = ['Здравствуйте! Хочу записаться на бесплатное пробное занятие.'];
+  if (data.name) lines.push('Имя: ' + data.name);
+  if (data.phone) lines.push('Телефон: ' + data.phone);
+  if (data.age) lines.push('Возраст: ' + data.age);
+  if (direction) lines.push('Направление: ' + direction);
+  if (slotChip) lines.push('Удобно: ' + slotChip.textContent.trim());
+  else if (data.date) lines.push('Дата: ' + data.date);
+  return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(lines.join('\n'));
+}
+
+/* Floating navbar "Записаться" opens the trial modal directly. */
+function openTrialModal() {
+  if (document.getElementById('modal-trial')) openModal('modal-trial');
+  else location.href = 'index.html#trial';
+}
+window.openTrialModal = openTrialModal;
+document.querySelectorAll('.nav-cta, .mob-cta').forEach(btn => {
+  const href = btn.getAttribute('href') || '';
+  if (href.endsWith('#trial')) {
+    btn.addEventListener('click', e => {
+      if (document.getElementById('modal-trial')) { e.preventDefault(); openTrialModal(); }
+    });
+  }
+});
+
+/* ===== DIRECTOR-MANAGED CONTENT [v1.1] =====
+   The public site reads content the director edits in admin-director.html.
+   Each reader degrades to the page's static fallback when no data is set. */
+function readDirector(key) {
+  try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; }
+}
+
+function applyDirectorSlots() {
+  const slots = readDirector('sas_director_slots');
+  if (!Array.isArray(slots)) return;
+  const active = slots.filter(s => s && s.active !== false && (s.label || '').trim());
+  if (!active.length) return;
+  document.querySelectorAll('[data-chip-role="slot"]').forEach(group => {
+    group.innerHTML = active.map(s =>
+      '<button type="button" class="form-chip" data-value="' +
+      escapeHtml(s.value || s.id || '') + '">' + escapeHtml(s.label) + '</button>'
+    ).join('');
+  });
+}
+
+function applyDirectorPricing() {
+  const p = readDirector('sas_director_pricing');
+  if (!p) return;
+  const sub = document.getElementById('price-subscription');
+  const single = document.getElementById('price-single');
+  if (sub && p.subscription) sub.textContent = p.subscription;
+  if (single && p.single) single.textContent = p.single;
+}
+
+function applyDirectorContacts() {
+  const c = readDirector('sas_director_contacts');
+  if (!c) return;
+  document.querySelectorAll('[data-sas-contact]').forEach(el => {
+    const key = el.getAttribute('data-sas-contact');
+    const val = (c[key] || '').trim();
+    if (!val) return;
+    if (el.tagName === 'A') {
+      if (key === 'phone') el.href = 'tel:' + val.replace(/[^\d+]/g, '');
+      else if (key === 'whatsapp') el.href = 'https://wa.me/' + val.replace(/\D/g, '');
+      else if (key === 'email') el.href = 'mailto:' + val;
+      else if (key === 'instagram') el.href = 'https://instagram.com/' + val.replace(/^@/, '');
+      else if (key === 'telegram') el.href = 'https://t.me/' + val.replace(/^@/, '');
+    }
+    if (el.dataset.sasContactText !== 'keep') el.textContent = val;
+  });
+}
+
+function renderReviews() {
+  const grid = document.getElementById('reviews-grid');
+  if (!grid) return;
+  const list = readDirector('sas_director_reviews');
+  if (!Array.isArray(list)) return;            /* keep static fallback markup */
+  const active = list.filter(r => r && r.active !== false);
+  if (!active.length) return;                  /* keep static fallback markup */
+  grid.innerHTML = active.map(r => {
+    const n = Math.max(1, Math.min(5, parseInt(r.stars, 10) || 5));
+    const stars = '★★★★★'.slice(0, n);
+    const name = (r.author || 'Родитель').trim();
+    const avatar = name.charAt(0).toUpperCase();
+    return '<div class="review-card fade-up">' +
+      '<div class="review-stars">' + stars + '</div>' +
+      '<p class="review-text">' + escapeHtml(r.text || '') + '</p>' +
+      '<div class="review-author">' +
+      '<div class="review-author-avatar">' + escapeHtml(avatar) + '</div>' +
+      '<div><div class="review-author-name">' + escapeHtml(name) + '</div>' +
+      '<div class="review-author-role">' + escapeHtml(r.direction || '') + '</div></div>' +
+      '</div></div>';
+  }).join('');
+}
 
 /* ===== ACTIVE NAV LINK ===== */
 const path = location.pathname;

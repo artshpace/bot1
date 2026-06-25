@@ -748,3 +748,19 @@ p { font-size: 1rem; line-height: 1.7; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ===== HERO TRUST BAR (conversion v1.1) ===== */
+.hero-trust { display: flex; gap: 16px; flex-wrap: wrap; font-size: .85rem; color: rgba(255,255,255,.75); margin-top: 16px; }
+.hero-trust span { display: inline-flex; align-items: center; gap: 4px; }
+
+/* ===== PRICING ===== */
+.pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+.pricing-card { border: 1px solid var(--border); border-radius: 16px; padding: 32px 24px; display: flex; flex-direction: column; gap: 12px; background: var(--bg); }
+.pricing-card--featured { background: var(--primary); color: #fff; border-color: var(--primary); }
+.pricing-tag { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); }
+.pricing-card--featured .pricing-tag { color: rgba(255,255,255,.7); }
+.pricing-price { font-family: 'Playfair Display', Georgia, serif; font-size: 1.75rem; font-weight: 700; color: var(--dark); }
+.pricing-card--featured .pricing-price { color: #fff; }
+.pricing-desc { font-size: .92rem; color: var(--muted); line-height: 1.6; flex: 1; }
+.pricing-card--featured .pricing-desc { color: rgba(255,255,255,.85); }
+.pricing-card .btn { margin-top: auto; }
