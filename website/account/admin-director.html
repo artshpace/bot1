@@ -208,7 +208,8 @@
     { id: 'pricing', label: '💰 Цены', render: renderPricing },
     { id: 'reviews', label: '⭐ Отзывы', render: renderReviews },
     { id: 'teachers', label: '🎓 Преподаватели', render: renderTeachers },
-    { id: 'contacts', label: '⚙️ Контакты и настройки', render: renderContacts }
+    { id: 'contacts', label: '⚙️ Контакты и настройки', render: renderContacts },
+    { id: 'broadcast', label: '📢 Рассылка WhatsApp', render: renderBroadcast }
   ];
   var current = 'dashboard';
 
@@ -233,6 +234,20 @@
     var slots = load('slots').filter(function (s) { return s.active !== false; });
     var last = localStorage.getItem(K.lastEdit);
 
+    /* 14-day histogram */
+    var days14 = [];
+    for (var di = 13; di >= 0; di--) {
+      var dayTs = today - di * 864e5;
+      var count = leads.filter(function (l) { return startOfDay(leadDate(l)).getTime() === dayTs; }).length;
+      var dt = new Date(dayTs);
+      days14.push({ label: ('0' + dt.getDate()).slice(-2) + '.' + ('0' + (dt.getMonth() + 1)).slice(-2), count: count });
+    }
+    var max14 = days14.reduce(function (m, d) { return Math.max(m, d.count); }, 1);
+
+    /* Conversion: trial_scheduled / total */
+    var nScheduled = leads.filter(function (l) { return l.status === 'trial_scheduled' || l.status === 'trial_done' || l.status === 'purchased' || l.status === 'active'; }).length;
+    var conversion = leads.length ? Math.round(nScheduled / leads.length * 100) : 0;
+
     var dirKeys = Object.keys(byDir).sort(function (a, b) { return byDir[b] - byDir[a]; });
     var maxDir = dirKeys.reduce(function (m, k) { return Math.max(m, byDir[k]); }, 1);
 
@@ -245,7 +260,21 @@
         stat(nWeek, 'За 7 дней') +
         stat(leads.length, 'Всего заявок') +
         stat(slots.length, 'Активных слотов') +
+        stat(conversion + '%', 'Конверсия в запись') +
       '</div>';
+
+    /* 14-day bar chart */
+    h += '<div class="ad-card"><h3>Заявки за 14 дней</h3>' +
+      '<div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-bottom:8px;">';
+    days14.forEach(function (d) {
+      var pct = Math.round(d.count / max14 * 100);
+      var color = d.count ? 'var(--primary)' : 'var(--border)';
+      h += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+        '<div style="width:100%;background:' + color + ';height:' + pct + '%;min-height:' + (d.count ? 4 : 0) + 'px;border-radius:3px 3px 0 0;" title="' + d.count + '"></div>' +
+        '<div style="font-size:.6rem;color:var(--muted);transform:rotate(-45deg);transform-origin:center top;margin-top:2px;">' + d.label + '</div>' +
+        '</div>';
+    });
+    h += '</div></div>';
 
     h += '<div class="ad-card"><h3>Заявки по направлениям</h3>';
     if (!dirKeys.length) h += '<div class="ad-empty">Пока нет заявок.</div>';
@@ -535,6 +564,60 @@
     };
   }
 
+  /* ---------- BROADCAST ---------- */
+  function renderBroadcast() {
+    var leads = get(K.leads, []);
+    var dirs = {};
+    leads.forEach(function (l) { if ((l.direction || '').trim()) dirs[(l.direction || '').trim()] = 1; });
+    var dirOpts = '<option value="">Все контакты</option>' +
+      '<option value="__new__">Только новые (статус «Новая»)</option>' +
+      Object.keys(dirs).map(function (d) { return '<option value="dir:' + esc(d) + '">' + esc(d) + '</option>'; }).join('');
+
+    return '<div class="ad-h">Рассылка в WhatsApp</div>' +
+      '<div class="ad-sub">Генерирует список ссылок wa.me для ручной рассылки. Открывайте по очереди — каждая ссылка откроет готовое сообщение в WhatsApp.</div>' +
+      '<div class="ad-card ad-grid">' +
+        '<div><label class="fl">Кому отправить</label><select class="fc" id="bc-filter">' + dirOpts + '</select></div>' +
+        '<div><label class="fl">Текст сообщения</label><textarea class="fc" id="bc-text" style="min-height:100px;" placeholder="Здравствуйте, {имя}! Приглашаем вас..."></textarea>' +
+        '<p style="font-size:.78rem;color:var(--muted);margin-top:4px;">Используйте <code>{имя}</code> — заменится именем контакта из заявки.</p></div>' +
+        '<button class="ad-btn primary" id="bc-generate">Сформировать ссылки</button>' +
+      '</div>' +
+      '<div class="ad-card" id="bc-result" style="display:none;">' +
+        '<h3>Ссылки для рассылки</h3>' +
+        '<div id="bc-links" style="display:flex;flex-direction:column;gap:8px;"></div>' +
+      '</div>';
+  }
+  function bindBroadcast() {
+    document.getElementById('bc-generate').onclick = function () {
+      var filter = document.getElementById('bc-filter').value;
+      var tmpl = document.getElementById('bc-text').value.trim();
+      if (!tmpl) { alert('Введите текст сообщения.'); return; }
+      var leads = get(K.leads, []);
+      var selected = leads.filter(function (l) {
+        if (!l.phone) return false;
+        if (filter === '__new__') return l.status === 'new';
+        if (filter.startsWith('dir:')) return (l.direction || '').trim() === filter.slice(4);
+        return true;
+      });
+      var resultEl = document.getElementById('bc-result');
+      var linksEl = document.getElementById('bc-links');
+      if (!selected.length) {
+        linksEl.innerHTML = '<div class="ad-empty">Нет контактов по выбранному фильтру.</div>';
+        resultEl.style.display = '';
+        return;
+      }
+      linksEl.innerHTML = selected.map(function (l) {
+        var msg = tmpl.replace(/\{имя\}/gi, (l.name || '').split(' ')[0] || 'Здравствуйте');
+        var phone = digits(l.phone);
+        var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+        return '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span style="font-size:.88rem;color:var(--dark);min-width:160px;">' + esc(l.name || '—') + ' · ' + esc(l.phone || '') + '</span>' +
+          '<a class="ad-btn sm ad-wa" href="' + url + '" target="_blank" rel="noopener">Написать в WA</a>' +
+          '</div>';
+      }).join('');
+      resultEl.style.display = '';
+    };
+  }
+
   /* ---------- shared array-row controls (up/down/delete) ---------- */
   function arrayRowCtrls(listSel, reader, key) {
     function move(arr, from, to) { var x = arr.splice(from, 1)[0]; arr.splice(to, 0, x); }
@@ -572,7 +655,7 @@
     var sec = SECTIONS.filter(function (s) { return s.id === current; })[0] || SECTIONS[0];
     document.getElementById('ad-content').innerHTML = sec.render();
     renderNav();
-    var binders = { leads: bindLeads, slots: bindSlots, pricing: bindPricing, reviews: bindReviews, teachers: bindTeachers, contacts: bindContacts };
+    var binders = { leads: bindLeads, slots: bindSlots, pricing: bindPricing, reviews: bindReviews, teachers: bindTeachers, contacts: bindContacts, broadcast: bindBroadcast };
     if (binders[current]) binders[current]();
   }
 

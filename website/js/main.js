@@ -228,6 +228,18 @@ function submitLead(formId, form) {
   } else {
     console.log('Lead (no API on page):', formId, payload);
   }
+  /* Forward to Cloudflare Worker → Telegram. Fires silently; never breaks UX. */
+  if (WORKER_URL && !WORKER_URL.includes('ТВОЙ_АККАУНТ') && payload.phone) {
+    fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: payload.name, phone: payload.phone, age: payload.age,
+        direction: payload.direction, slot: payload.preferredTime,
+        utm: { campaign: payload.utm.campaign, source: payload.utm.source }
+      })
+    }).catch(() => { /* silent — lead already saved locally */ });
+  }
   /* Mark a completed registration for the Pixel even if no real id is set. */
   if (window.fbq) window.fbq('track', 'CompleteRegistration', { content_name: direction || 'Заявка' });
 }
@@ -245,6 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
    buildWhatsAppLink() makes a generic link; buildWhatsAppFromForm() pre-fills
    the parent's submitted details so the chat opens ready to send. */
 const WA_NUMBER = '77086366351';
+/* Replace with your actual Worker URL after deploying workers/lead-forwarder.js */
+const WORKER_URL = 'https://sas-lead-forwarder.ТВОЙ_АККАУНТ.workers.dev/submit-lead';
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
