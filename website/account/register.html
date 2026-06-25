@@ -51,6 +51,14 @@
           <p class="form-hint">Укажите телефон или email (можно оба).</p>
         </div>
         <div class="form-group">
+          <label for="reg-role">Кто регистрируется</label>
+          <select class="form-control" id="reg-role" name="role">
+            <option value="student">Ученик</option>
+            <option value="parent">Родитель</option>
+          </select>
+          <p class="form-hint">Преподавателей и администраторов добавляет студия.</p>
+        </div>
+        <div class="form-group">
           <label for="reg-password">Пароль</label>
           <input class="form-control" id="reg-password" name="password" type="password" placeholder="Не короче 6 символов" autocomplete="new-password">
         </div>

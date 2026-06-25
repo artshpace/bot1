@@ -43,14 +43,33 @@
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function norm(v) { return (v || '').toString().trim().toLowerCase(); }
 
-  /* Write the cabinet's expected session/user records for a Supabase user. */
-  function syncMockSession(supaUser) {
+  /* Read the authoritative role/name/phone from the `profiles` table (RLS
+     lets a signed-in user read their own row). This is the SOURCE OF TRUTH:
+     when the owner changes a role in Supabase Table Editor, the next login
+     picks it up here — user_metadata is only a fallback. */
+  function fetchProfile(userId) {
+    if (!client || !userId) return Promise.resolve(null);
+    return client.from('profiles').select('role,name,phone').eq('id', userId).maybeSingle()
+      .then(function (r) { return (r && r.data) ? r.data : null; })
+      .catch(function () { return null; });
+  }
+
+  /* Fetch the profile, then write the mock session. Resolves to the mock
+     user (with the real role). Use this everywhere instead of the bare sync. */
+  function bridge(supaUser) {
+    if (!supaUser) return Promise.resolve(null);
+    return fetchProfile(supaUser.id).then(function (p) { return syncMockSession(supaUser, p); });
+  }
+
+  /* Write the cabinet's expected session/user records for a Supabase user.
+     `profile` (from the profiles table) overrides metadata when present. */
+  function syncMockSession(supaUser, profile) {
     if (!supaUser) return null;
     var meta = supaUser.user_metadata || {};
     var email = supaUser.email || '';
-    var phone = meta.phone || supaUser.phone || '';
-    var name = meta.name || '';
-    var role = meta.role || 'student';
+    var phone = (profile && profile.phone) || meta.phone || supaUser.phone || '';
+    var name = (profile && profile.name) || meta.name || '';
+    var role = (profile && profile.role) || meta.role || 'student';
     var login = norm(email || phone);
 
     var users = lsGet(LS_USERS, []);
@@ -110,18 +129,21 @@
       return client.auth.signInWithPassword({ email: email, password: password })
         .then(function (res) {
           if (res.error) throw new Error(translate(res.error.message));
-          syncMockSession(res.data.user);
-          return res.data.user;
+          return bridge(res.data.user); // resolves to the mock user w/ real role
         });
     },
 
     signUp: function (payload) {
       payload = payload || {};
+      // Self-registration is limited to student/parent. teacher/admin are
+      // assigned by the owner in Supabase — and the DB trigger clamps anything
+      // else to 'student', so this can't be abused even via a crafted request.
+      var wanted = (payload.role === 'parent') ? 'parent' : 'student';
       return client.auth.signUp({
         email: (payload.email || '').trim(),
         password: payload.password,
         options: {
-          data: { name: payload.name || '', phone: payload.phone || '', role: 'student' },
+          data: { name: payload.name || '', phone: payload.phone || '', role: wanted },
           emailRedirectTo: location.origin + location.pathname.replace(/register\.html$/, 'login.html')
         }
       }).then(function (res) {
@@ -129,8 +151,9 @@
         // If email confirmation is ON, res.data.session is null → user must
         // confirm via email. If OFF, a session is returned → bridge it.
         if (res.data.session && res.data.user) {
-          syncMockSession(res.data.user);
-          return { confirmed: true, user: res.data.user };
+          return bridge(res.data.user).then(function (mu) {
+            return { confirmed: true, user: res.data.user, mockUser: mu };
+          });
         }
         return { confirmed: false, user: res.data.user };
       });
@@ -190,7 +213,7 @@
     if ((loginForm || registerForm) && client) {
       client.auth.getSession().then(function (r) {
         var u = r && r.data && r.data.session && r.data.session.user;
-        if (u) { var mu = syncMockSession(u); location.replace(home(mu && mu.role)); }
+        if (u) { bridge(u).then(function (mu) { location.replace(home(mu && mu.role)); }); }
       });
     }
 
@@ -204,9 +227,8 @@
         var btn = loginForm.querySelector('button[type="submit"]');
         clearError(err); busy(btn, true, 'Входим…');
         SUPA.signIn(idVal, (byId('login-password') || {}).value || '')
-          .then(function (user) {
-            var role = (user.user_metadata || {}).role || 'student';
-            location.replace(home(role));
+          .then(function (mockUser) {
+            location.replace(home(mockUser && mockUser.role));
           })
           .catch(function (ex) { busy(btn, false); showError(err, ex.message); });
       }, true);
@@ -229,11 +251,11 @@
         SUPA.signUp({
           name: (byId('reg-name') || {}).value || '',
           phone: (byId('reg-phone') || {}).value || '',
-          email: emailVal, password: pass
+          email: emailVal, password: pass,
+          role: (byId('reg-role') || {}).value || 'student'
         }).then(function (res) {
           if (res.confirmed) {
-            var role = (res.user.user_metadata || {}).role || 'student';
-            location.replace(home(role));
+            location.replace(home(res.mockUser && res.mockUser.role));
           } else {
             // Email confirmation required.
             registerForm.style.display = 'none';
