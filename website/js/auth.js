@@ -92,6 +92,15 @@
 
   // Expose a global sign-out used by the sidebar button.
   window.signOut = function () {
+    // Also drop any Supabase session token from this browser. Without this
+    // the mock logout clears only sas_session, the Supabase session stays
+    // alive, and supa.js silently re-bridges the user straight back into the
+    // cabinet on the next page load (i.e. "logout does nothing"). [v1.1.1]
+    try {
+      Object.keys(localStorage).forEach(function (k) {
+        if (/^sb-.*-auth-token$/.test(k)) localStorage.removeItem(k);
+      });
+    } catch (e) { /* ignore storage errors */ }
     API.auth.logout().then(function () { location.replace('login.html'); });
   };
 })();
