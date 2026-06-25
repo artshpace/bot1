@@ -17,6 +17,6 @@
    are filled in, login / register / recover switch to real Supabase Auth.
    ===================================================================== */
 window.SUPA_CONFIG = {
-  url:     'YOUR_SUPABASE_URL',       // e.g. https://abcdefgh.supabase.co
-  anonKey: 'YOUR_SUPABASE_ANON_KEY'   // long "anon public" JWT
+  url:     'https://wislternhhcaqdnvcbba.supabase.co',
+  anonKey: 'sb_publishable_N2bSPrjCuUGYyhmXAfxbKg_-mP2bXnA'
 };
