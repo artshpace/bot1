@@ -1,0 +1,294 @@
+/* =====================================================================
+   SUPABASE AUTH BRIDGE  (Phase 0 — parallel layer)
+   ---------------------------------------------------------------------
+   Load order on the auth pages (login / register / recover / reset):
+       <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+       <script src="../js/supa-config.js"></script>
+       <script src="../js/supa.js"></script>
+       <script src="../js/api.js"></script>
+       <script src="../js/auth.js"></script>
+       <script src="../js/account.js"></script>
+
+   What it does:
+     * If SUPA_CONFIG is filled in, it takes over the login / register /
+       recover / reset forms and talks to real Supabase Auth (hashed
+       passwords, email confirmation, real reset emails — JWT in a
+       Supabase-managed cookie/localStorage handled by supabase-js).
+     * On a successful Supabase sign-in it writes a *mock* session into
+       the localStorage keys the existing cabinet (api.js / auth.js /
+       account.js) already reads — so the 268 KB cabinet keeps working
+       unchanged. This is the "bridge".
+     * If SUPA_CONFIG still has placeholders, supa.js does NOTHING and the
+       old localStorage flow (incl. demo accounts) handles the forms.
+
+   Roles: a brand-new sign-up is `student`. To make someone an admin /
+   teacher / parent, set their `role` in Supabase (profiles table or the
+   user's user_metadata) — see PHASE0_SUPABASE.md.
+   ===================================================================== */
+(function () {
+  'use strict';
+
+  var CFG = window.SUPA_CONFIG || {};
+  var CONFIGURED = !!(CFG.url && CFG.anonKey &&
+    CFG.url.indexOf('YOUR_') === -1 && CFG.anonKey.indexOf('YOUR_') === -1 &&
+    window.supabase && typeof window.supabase.createClient === 'function');
+
+  var client = CONFIGURED ? window.supabase.createClient(CFG.url, CFG.anonKey) : null;
+
+  /* ---- mock-session keys (must match api.js) ---- */
+  var LS_USERS = 'sas_users';
+  var LS_SESSION = 'sas_session';
+
+  function lsGet(k, d) { try { return JSON.parse(localStorage.getItem(k)) || d; } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function norm(v) { return (v || '').toString().trim().toLowerCase(); }
+
+  /* Write the cabinet's expected session/user records for a Supabase user. */
+  function syncMockSession(supaUser) {
+    if (!supaUser) return null;
+    var meta = supaUser.user_metadata || {};
+    var email = supaUser.email || '';
+    var phone = meta.phone || supaUser.phone || '';
+    var name = meta.name || '';
+    var role = meta.role || 'student';
+    var login = norm(email || phone);
+
+    var users = lsGet(LS_USERS, []);
+    var u = users.filter(function (x) {
+      return x.supaId === supaUser.id ||
+        (email && norm(x.email) === norm(email)) ||
+        (phone && x.phone === phone);
+    })[0];
+
+    if (u) {
+      u.supaId = supaUser.id;
+      if (name) u.name = name;
+      if (email) u.email = email;
+      if (phone) u.phone = phone;
+      u.role = role;
+    } else {
+      u = { id: 'sb-' + supaUser.id.slice(0, 8), supaId: supaUser.id,
+        name: name, email: email, phone: phone, role: role };
+      users.push(u);
+    }
+    lsSet(LS_USERS, users);
+    lsSet(LS_SESSION, { login: login, at: Date.now(), supa: true });
+    return u;
+  }
+
+  function home(role) {
+    if (role === 'admin') return 'admin.html';
+    if (role === 'parent') return 'parent.html';
+    if (role === 'teacher') return 'teacher.html';
+    return 'dashboard.html';
+  }
+
+  /* ---- small DOM helpers reused across the auth pages ---- */
+  function showError(el, msg) {
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+  function clearError(el) { if (el) el.classList.remove('show'); }
+  function busy(btn, on, label) {
+    if (!btn) return;
+    if (on) { btn.dataset._label = btn.textContent; btn.disabled = true; btn.textContent = label || 'Подождите…'; }
+    else { btn.disabled = false; if (btn.dataset._label) btn.textContent = btn.dataset._label; }
+  }
+
+  /* =================================================================
+     PUBLIC API  (window.SUPA)
+     ================================================================= */
+  var SUPA = {
+    enabled: function () { return CONFIGURED; },
+    client: client,
+    syncMockSession: syncMockSession,
+
+    signIn: function (loginValue, password) {
+      // Supabase email/password. Phone-only logins fall back to the mock.
+      var email = (loginValue || '').trim();
+      return client.auth.signInWithPassword({ email: email, password: password })
+        .then(function (res) {
+          if (res.error) throw new Error(translate(res.error.message));
+          syncMockSession(res.data.user);
+          return res.data.user;
+        });
+    },
+
+    signUp: function (payload) {
+      payload = payload || {};
+      return client.auth.signUp({
+        email: (payload.email || '').trim(),
+        password: payload.password,
+        options: {
+          data: { name: payload.name || '', phone: payload.phone || '', role: 'student' },
+          emailRedirectTo: location.origin + location.pathname.replace(/register\.html$/, 'login.html')
+        }
+      }).then(function (res) {
+        if (res.error) throw new Error(translate(res.error.message));
+        // If email confirmation is ON, res.data.session is null → user must
+        // confirm via email. If OFF, a session is returned → bridge it.
+        if (res.data.session && res.data.user) {
+          syncMockSession(res.data.user);
+          return { confirmed: true, user: res.data.user };
+        }
+        return { confirmed: false, user: res.data.user };
+      });
+    },
+
+    recover: function (email) {
+      var redirect = location.origin + location.pathname.replace(/recover\.html$/, 'reset.html');
+      return client.auth.resetPasswordForEmail((email || '').trim(), { redirectTo: redirect })
+        .then(function (res) {
+          if (res.error) throw new Error(translate(res.error.message));
+          return { ok: true };
+        });
+    },
+
+    // For reset.html: complete the password change using the recovery token
+    // that supabase-js parses out of the URL hash automatically.
+    updatePassword: function (newPassword) {
+      return client.auth.updateUser({ password: newPassword })
+        .then(function (res) {
+          if (res.error) throw new Error(translate(res.error.message));
+          return { ok: true };
+        });
+    }
+  };
+
+  /* Friendlier RU messages for the common Supabase auth errors. */
+  function translate(msg) {
+    msg = msg || '';
+    if (/Invalid login credentials/i.test(msg)) return 'Неверный email или пароль';
+    if (/Email not confirmed/i.test(msg)) return 'Email не подтверждён — проверьте почту';
+    if (/User already registered/i.test(msg)) return 'Пользователь с таким email уже зарегистрирован';
+    if (/Password should be at least/i.test(msg)) return 'Пароль слишком короткий (минимум 6 символов)';
+    if (/rate limit|too many/i.test(msg)) return 'Слишком много попыток. Попробуйте позже';
+    return msg;
+  }
+
+  window.SUPA = SUPA;
+
+  /* =================================================================
+     FORM TAKEOVER  — only when Supabase is configured.
+     Attached in the CAPTURE phase + stopImmediatePropagation so we run
+     before account.js's own handler and fully own the submit.
+     ================================================================= */
+  if (!CONFIGURED) return;
+
+  function byId(id) { return document.getElementById(id); }
+  var isEmail = function (v) { return /\S+@\S+\.\S+/.test(v || ''); };
+
+  function wire() {
+    var loginForm = byId('login-form');
+    var registerForm = byId('register-form');
+    var recoverForm = byId('recover-form');
+    var resetForm = byId('reset-form');
+
+    /* If the visitor already has a live Supabase session, bridge it and
+       send them into the cabinet (handles "already logged in"). */
+    if ((loginForm || registerForm) && client) {
+      client.auth.getSession().then(function (r) {
+        var u = r && r.data && r.data.session && r.data.session.user;
+        if (u) { var mu = syncMockSession(u); location.replace(home(mu && mu.role)); }
+      });
+    }
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', function (e) {
+        var idVal = (byId('login-id') || {}).value || '';
+        // Phone-only login → let the mock handle it (Supabase needs email).
+        if (!isEmail(idVal)) return;
+        e.preventDefault(); e.stopImmediatePropagation();
+        var err = byId('login-error');
+        var btn = loginForm.querySelector('button[type="submit"]');
+        clearError(err); busy(btn, true, 'Входим…');
+        SUPA.signIn(idVal, (byId('login-password') || {}).value || '')
+          .then(function (user) {
+            var role = (user.user_metadata || {}).role || 'student';
+            location.replace(home(role));
+          })
+          .catch(function (ex) { busy(btn, false); showError(err, ex.message); });
+      }, true);
+    }
+
+    if (registerForm) {
+      registerForm.addEventListener('submit', function (e) {
+        var emailVal = (byId('reg-email') || {}).value || '';
+        // Supabase sign-up requires an email. No email → fall back to mock.
+        if (!isEmail(emailVal)) return;
+        e.preventDefault(); e.stopImmediatePropagation();
+        var err = byId('register-error');
+        var btn = registerForm.querySelector('button[type="submit"]');
+        var pass = (byId('reg-password') || {}).value || '';
+        var pass2 = (byId('reg-password2') || {}).value || '';
+        clearError(err);
+        if (pass.length < 6) { showError(err, 'Пароль должен быть не короче 6 символов'); return; }
+        if (pass !== pass2) { showError(err, 'Пароли не совпадают'); return; }
+        busy(btn, true, 'Создаём…');
+        SUPA.signUp({
+          name: (byId('reg-name') || {}).value || '',
+          phone: (byId('reg-phone') || {}).value || '',
+          email: emailVal, password: pass
+        }).then(function (res) {
+          if (res.confirmed) {
+            var role = (res.user.user_metadata || {}).role || 'student';
+            location.replace(home(role));
+          } else {
+            // Email confirmation required.
+            registerForm.style.display = 'none';
+            var wrap = registerForm.parentNode;
+            var note = document.createElement('div');
+            note.className = 'form-success show';
+            note.innerHTML = '<h3>Почти готово!</h3><p style="color:var(--muted);margin-top:8px;">' +
+              'Мы отправили письмо на <strong>' + emailVal + '</strong>. ' +
+              'Откройте его и подтвердите регистрацию, затем войдите.</p>' +
+              '<a href="login.html" class="btn btn-primary" style="margin-top:24px;">Перейти ко входу</a>';
+            wrap.appendChild(note);
+          }
+        }).catch(function (ex) { busy(btn, false); showError(err, ex.message); });
+      }, true);
+    }
+
+    if (recoverForm) {
+      recoverForm.addEventListener('submit', function (e) {
+        var idVal = (byId('recover-id') || {}).value || '';
+        if (!isEmail(idVal)) return; // mock fallback for phone
+        e.preventDefault(); e.stopImmediatePropagation();
+        var err = byId('recover-error');
+        var btn = recoverForm.querySelector('button[type="submit"]');
+        clearError(err); busy(btn, true, 'Отправляем…');
+        SUPA.recover(idVal).then(function () {
+          var body = byId('recover-body'); var ok = byId('recover-success');
+          if (body) body.style.display = 'none';
+          if (ok) ok.classList.add('show');
+        }).catch(function (ex) { busy(btn, false); showError(err, ex.message); });
+      }, true);
+    }
+
+    if (resetForm) {
+      resetForm.addEventListener('submit', function (e) {
+        e.preventDefault(); e.stopImmediatePropagation();
+        var err = byId('reset-error');
+        var btn = resetForm.querySelector('button[type="submit"]');
+        var p1 = (byId('reset-password') || {}).value || '';
+        var p2 = (byId('reset-password2') || {}).value || '';
+        clearError(err);
+        if (p1.length < 6) { showError(err, 'Пароль должен быть не короче 6 символов'); return; }
+        if (p1 !== p2) { showError(err, 'Пароли не совпадают'); return; }
+        busy(btn, true, 'Сохраняем…');
+        SUPA.updatePassword(p1).then(function () {
+          var body = byId('reset-body'); var ok = byId('reset-success');
+          if (body) body.style.display = 'none';
+          if (ok) ok.classList.add('show');
+        }).catch(function (ex) { busy(btn, false); showError(err, ex.message); });
+      }, true);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', wire);
+  } else {
+    wire();
+  }
+})();

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Восстановление доступа — Shpigotskiy Art Space</title>
-  <meta name="description" content="Восстановление доступа к личному кабинету Shpigotskiy Art Space.">
+  <title>Новый пароль — Shpigotskiy Art Space</title>
+  <meta name="description" content="Установка нового пароля для личного кабинета Shpigotskiy Art Space.">
   <meta name="robots" content="noindex">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,37 +20,41 @@
       <div class="tagline-small">Студия творческого развития</div>
     </a>
     <div>
-      <h2>Восстановление доступа</h2>
-      <p>Укажите телефон или email, привязанный к аккаунту — мы отправим инструкцию по восстановлению.</p>
+      <h2>Новый пароль</h2>
+      <p>Придумайте новый пароль для входа в личный кабинет.</p>
     </div>
     <a href="login.html" class="back-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>Вернуться ко входу</a>
   </aside>
 
   <main class="auth-main">
     <div class="auth-form-wrap">
-      <div id="recover-body">
-        <h1>Забыли пароль?</h1>
-        <p class="sub">Введите телефон или email — пришлём ссылку для сброса.</p>
+      <div id="reset-body">
+        <h1>Установите новый пароль</h1>
+        <p class="sub">Введите новый пароль — он заменит старый.</p>
 
-        <form id="recover-form" novalidate>
+        <form id="reset-form" novalidate>
           <div class="form-group">
-            <label for="recover-id">Телефон или email</label>
-            <input class="form-control" id="recover-id" name="login" placeholder="+7 ... или email" autocomplete="username">
+            <label for="reset-password">Новый пароль</label>
+            <input class="form-control" id="reset-password" name="password" type="password" placeholder="Не короче 6 символов" autocomplete="new-password">
           </div>
-          <div class="form-error" id="recover-error">Ошибка</div>
-          <button type="submit" class="btn btn-primary btn-full btn-lg">Восстановить доступ</button>
+          <div class="form-group">
+            <label for="reset-password2">Повторите пароль</label>
+            <input class="form-control" id="reset-password2" name="password2" type="password" placeholder="Ещё раз" autocomplete="new-password">
+          </div>
+          <div class="form-error" id="reset-error">Ошибка</div>
+          <button type="submit" class="btn btn-primary btn-full btn-lg">Сохранить пароль</button>
         </form>
 
         <p class="auth-alt">Вспомнили пароль? <a href="login.html">Войти</a></p>
       </div>
 
-      <div class="form-success" id="recover-success">
+      <div class="form-success" id="reset-success">
         <div class="success-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>
         </div>
-        <h3>Инструкция отправлена</h3>
-        <p style="color:var(--muted);margin-top:8px;">Если аккаунт существует, вы получите ссылку для восстановления доступа. Проверьте сообщения.</p>
-        <a href="login.html" class="btn btn-primary" style="margin-top:24px;">Вернуться ко входу</a>
+        <h3>Пароль обновлён</h3>
+        <p style="color:var(--muted);margin-top:8px;">Теперь вы можете войти с новым паролем.</p>
+        <a href="login.html" class="btn btn-primary" style="margin-top:24px;">Войти</a>
       </div>
     </div>
   </main>

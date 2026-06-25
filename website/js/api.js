@@ -159,23 +159,29 @@
   };
 
   /* Shop catalogue — v0.7 */
+  /* Catalog status (SPEC_SHOP §2): only 'active' products are shown in the
+     shop and can be ordered. 'inactive' / 'draft' are hidden + un-orderable.
+     [v1.1.1] */
   var GIFT_CERTS = [
     { id: 'gc-5000',  name: 'Подарочный сертификат 5 000 ₸',  value: 5000,  price: 5000,
+      status: 'active',
       description: 'Универсальный подарок — на занятия, абонемент или онлайн-курс.' },
     { id: 'gc-10000', name: 'Подарочный сертификат 10 000 ₸', value: 10000, price: 10000,
+      status: 'active',
       description: 'Отличный подарок для любителей музыки, пения или живописи.' },
     { id: 'gc-20000', name: 'Подарочный сертификат 20 000 ₸', value: 20000, price: 20000,
+      status: 'active',
       description: 'Максимальный сертификат — покроет полный онлайн-курс.' }
   ];
   var INTENSIVES = [
     { id: 'int-guitar', name: 'Интенсив «Гитара за 5 дней»',   direction: 'Гитара',
-      lessons: 10, durationDays: 5, price: 25000,
+      lessons: 10, durationDays: 5, price: 25000, status: 'active',
       description: '10 занятий за 5 дней — ускоренный старт для начинающих гитаристов.' },
     { id: 'int-vocal',  name: 'Интенсив «Вокал: базовый курс»', direction: 'Вокал',
-      lessons: 8,  durationDays: 4, price: 22000,
+      lessons: 8,  durationDays: 4, price: 22000, status: 'active',
       description: 'Базовые техники пения и постановка голоса за 4 дня.' },
     { id: 'int-paint',  name: 'Интенсив «Акварель за выходные»', direction: 'Живопись',
-      lessons: 6,  durationDays: 2, price: 18000,
+      lessons: 6,  durationDays: 2, price: 18000, status: 'active',
       description: 'Быстрый старт в акварели — от нуля до первого этюда за два дня.' }
   ];
 
@@ -2889,9 +2895,21 @@
      SHOP — catalogue with categories: subscriptions / courses /
      masterclasses / intensives / gift certificates  [v0.7]
      ================================================================= */
+  /* Status of a catalog product the shop knows about, or null if unknown
+     (subscriptions/courses/masterclasses manage their own visibility). Used
+     to keep inactive/draft items out of the shop and un-orderable. [v1.1.1] */
+  function catalogStatus(type, productId) {
+    var rec = null;
+    if (type === 'intensive') rec = INTENSIVES.filter(function (x) { return x.id === productId; })[0];
+    else if (type === 'certificate' || type === 'gift' || type === 'gift-cert')
+      rec = GIFT_CERTS.filter(function (x) { return x.id === productId; })[0];
+    return rec ? (rec.status || 'active') : null;
+  }
+  function isActive(p) { return (p.status || 'active') === 'active'; }
+
   var shop = {
-    giftCertificates: function () { return delay(GIFT_CERTS.map(clone)); },
-    intensives: function () { return delay(INTENSIVES.map(clone)); },
+    giftCertificates: function () { return delay(GIFT_CERTS.filter(isActive).map(clone)); },
+    intensives: function () { return delay(INTENSIVES.filter(isActive).map(clone)); },
     /* Upcoming masterclasses from the events catalogue. */
     masterclasses: function () {
       var today = ymd(new Date());
@@ -3012,19 +3030,26 @@
      Items: { id, type, productId, name, price, qty }
      Types: 'subscription-plan' | 'course' | 'gift-cert' | 'intensive' | 'masterclass'
      ================================================================= */
+  /* Cart is scoped to the signed-in user (or a shared "guest" bucket when
+     signed out) so one browser used by several accounts never leaks items
+     between them. [v1.1.1] */
+  function cartKey() { return LS_CART + '_' + (curId() || 'guest'); }
+
   var cart = {
-    items: function () { return delay(read(LS_CART, []).map(clone)); },
+    items: function () { return delay(read(cartKey(), []).map(clone)); },
     count: function () {
-      var n = read(LS_CART, []).reduce(function (s, x) { return s + (x.qty || 1); }, 0);
+      var n = read(cartKey(), []).reduce(function (s, x) { return s + (x.qty || 1); }, 0);
       return delay(n);
     },
     total: function () {
-      var t = read(LS_CART, []).reduce(function (s, x) { return s + (x.price || 0) * (x.qty || 1); }, 0);
+      var t = read(cartKey(), []).reduce(function (s, x) { return s + (x.price || 0) * (x.qty || 1); }, 0);
       return delay(t);
     },
     add: function (item) {
       if (!item || !item.name || !item.price) return fail('Неверные данные товара');
-      var items = read(LS_CART, []);
+      var st = catalogStatus(item.type, item.productId || item.id);
+      if (st && st !== 'active') return fail('Этот товар сейчас недоступен');
+      var items = read(cartKey(), []);
       var existing = items.filter(function (x) { return x.productId === item.productId && x.type === item.type; })[0];
       if (existing) {
         existing.qty = (existing.qty || 1) + 1;
@@ -3033,15 +3058,15 @@
           productId: item.productId || item.id, name: item.name,
           price: +item.price, qty: 1 });
       }
-      write(LS_CART, items);
+      write(cartKey(), items);
       trackEvent('AddToCart', { content_name: item.name, value: +item.price || 0, currency: 'KZT' });
       return delay(items.map(clone));
     },
     remove: function (itemId) {
-      write(LS_CART, read(LS_CART, []).filter(function (x) { return x.id !== itemId; }));
+      write(cartKey(), read(cartKey(), []).filter(function (x) { return x.id !== itemId; }));
       return delay({ ok: true });
     },
-    clear: function () { write(LS_CART, []); return delay({ ok: true }); },
+    clear: function () { write(cartKey(), []); return delay({ ok: true }); },
     /* DEPRECATED back-compat: instant create+pay through the mock gateway.
        The UI now uses the explicit orders.create → orders.pay flow so the
        user picks a payment method and access is granted only after payment. */
@@ -3065,7 +3090,7 @@
        is granted here. Moves the cart snapshot into the order. */
     create: function (data) {
       data = data || {};
-      var items = (data.items && data.items.length) ? data.items : read(LS_CART, []);
+      var items = (data.items && data.items.length) ? data.items : read(cartKey(), []);
       if (!items.length) return fail('Корзина пуста');
       var total = items.reduce(function (s, x) { return s + (x.price || 0) * (x.qty || 1); }, 0);
       var me = auth.current();
@@ -3086,7 +3111,7 @@
         paidAt: null, txnId: null
       };
       var all = read(LS_ORDERS, []); all.push(order); write(LS_ORDERS, all);
-      write(LS_CART, []);
+      write(cartKey(), []);
       trackEvent('InitiateCheckout', { value: total, currency: 'KZT', num_items: items.length });
       return delay(clone(order));
     },
@@ -3150,6 +3175,10 @@
     get: function (id) {
       var o = read(LS_ORDERS, []).filter(function (x) { return x.id === id; })[0];
       if (!o) return fail('Заказ не найден');
+      // Ownership guard: only the order's owner (or an admin) may read it.
+      // Mirrors the orders RLS policy on the Supabase side. [v1.1.1]
+      var me = auth.current();
+      if (!me || (o.userId !== me.id && me.role !== 'admin')) return fail('Нет доступа к заказу');
       return delay(clone(o));
     },
     all: function () {

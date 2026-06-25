@@ -19,7 +19,7 @@
   'use strict';
 
   // Auth pages a signed-OUT visitor is allowed to see.
-  var PUBLIC_PAGES = ['login.html', 'register.html', 'recover.html'];
+  var PUBLIC_PAGES = ['login.html', 'register.html', 'recover.html', 'reset.html'];
   // Pages that require the Admin role.
   var ADMIN_PAGES = ['admin.html', 'admin-subscriptions.html', 'admin-courses.html',
     'admin-payments.html', 'admin-parents.html', 'admin-attendance.html',
