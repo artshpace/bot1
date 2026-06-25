@@ -1556,9 +1556,26 @@
 
       html += '<h2 class="cab-section-title">Электронный журнал' +
         '<button class="btn btn-outline btn-sm" style="float:right" data-add-journal-entry>+ Запись в журнал</button></h2>' +
-        '<div id="teacher-journal-list"><p class="cab-empty">Загрузка…</p></div>';
+        '<div id="teacher-journal-list"><p class="cab-empty">Загрузка…</p></div>' +
+        '<h2 class="cab-section-title">Мои репетиции</h2>' +
+        '<div id="teacher-rehearsals-list"><p class="cab-empty">Загрузка…</p></div>';
 
       teacherRoot.innerHTML = html;
+
+      API.teacher.myRehearsals().then(function (rlist) {
+        var rl = $('#teacher-rehearsals-list', teacherRoot);
+        if (!rl) return;
+        if (!rlist.length) { rl.innerHTML = '<p class="cab-empty">Репетиций пока нет.</p>'; return; }
+        rl.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+          '<thead><tr><th>Дата</th><th>Мероприятие</th><th>Место</th><th>Участников</th></tr></thead><tbody>' +
+          rlist.map(function (r) {
+            return '<tr>' +
+              '<td data-th="Дата">' + fmtDate(r.date) + (r.time ? ' ' + escapeHtml(r.time) : '') + '</td>' +
+              '<td data-th="Мероприятие"><strong>' + escapeHtml(r.eventTitle || r.eventId) + '</strong></td>' +
+              '<td data-th="Место">' + escapeHtml(r.place || '—') + '</td>' +
+              '<td data-th="Участников">' + (r.participants ? r.participants.length : 0) + '</td></tr>';
+          }).join('') + '</tbody></table></div>';
+      });
 
       API.teacher.journalEntries().then(function (entries) {
         var jl = $('#teacher-journal-list', teacherRoot);
@@ -2228,7 +2245,11 @@
   function hwFiles(files) {
     if (!files || !files.length) return '';
     return '<div class="hw-materials">' + files.map(function (f) {
-      return '<span class="hw-file">' + ICON.file + escapeHtml(f.name) + '</span>';
+      if (f.kind === 'url' || /^https?:\/\//.test(f.name)) {
+        return '<a class="hw-file hw-link" href="' + escapeHtml(f.name) + '" target="_blank" rel="noopener">' + ICON.download + escapeHtml(f.name) + '</a>';
+      }
+      var icon = /^image\//.test(f.kind) ? ICON.image : /^audio\//.test(f.kind) ? ICON.note : /^video\//.test(f.kind) ? ICON.play : ICON.file;
+      return '<span class="hw-file">' + icon + escapeHtml(f.name) + '</span>';
     }).join('') + '</div>';
   }
   function renderHwCard(h) {
@@ -2265,9 +2286,11 @@
   function openSubmitHw(id) {
     API.homework.get(id).then(function (h) {
       var html = '<form data-form>' +
-        '<p class="cab-muted" style="margin-bottom:16px;">Прикрепите файл (видео, изображение или документ) и при необходимости добавьте комментарий преподавателю.</p>' +
-        field('Файл с работой', '<input class="form-control" type="file" name="file" accept="image/*,video/*,.pdf,.doc,.docx">') +
-        field('Комментарий (опционально)', textarea('comment', '')) +
+        '<p class="cab-muted" style="margin-bottom:16px;">Прикрепите файл или вставьте ссылку. Поддерживаются изображения, PDF, видео, аудио и ссылки на YouTube, Google Drive и т.д.</p>' +
+        field('Файл с работой (изображение / PDF / видео / аудио)',
+          '<input class="form-control" type="file" name="file" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.mp3,.mp4,.wav,.ogg">') +
+        field('Или ссылка (URL на видео, Google Drive, SoundCloud…)', input('url', '')) +
+        field('Текстовый ответ (опционально)', textarea('comment', '')) +
         '<div class="form-error" data-err></div>' +
         '<div class="cab-modal-actions">' +
           '<button type="button" class="btn btn-outline btn-sm" data-cancel>Отмена</button>' +
@@ -2284,8 +2307,10 @@
         if (fileInput && fileInput.files && fileInput.files.length) {
           files = Array.prototype.slice.call(fileInput.files).map(function (f) { return { name: f.name, kind: f.type }; });
         }
-        if (!files.length) { setFormError(err, 'Выберите файл с работой'); return; }
+        var urlVal = (form.querySelector('input[name=url]') || {}).value || '';
+        if (urlVal) files.push({ name: urlVal, kind: 'url' });
         var comment = form.querySelector('textarea[name=comment]').value;
+        if (!files.length && !comment.trim()) { setFormError(err, 'Прикрепите файл, вставьте ссылку или напишите ответ'); return; }
         var btn = form.querySelector('button[type=submit]'); btn.disabled = true;
         API.homework.submit(id, { comment: comment, files: files }).then(function () {
           m.close(); toast('Работа отправлена на проверку'); loadStudentHomework();
@@ -2469,6 +2494,14 @@
       ? '<div class="cert-grid">' + c.certificates.map(renderCertCard).join('') + '</div>'
       : '<p class="cab-empty">Сертификатов пока нет.</p>';
     var notes = c.notes.length ? c.notes.slice(0, 3).map(renderNote).join('') : '<p class="cab-empty">Комментариев пока нет.</p>';
+    var att = c.attendance || {};
+    var attBreakdown =
+      attLegend('Присутствовал', att.present || 0, 'badge-green') +
+      attLegend('Уважительная', att.excused || 0, 'badge-gold') +
+      attLegend('По болезни', att.sick || 0, 'badge-blue') +
+      attLegend('Отработка', att.makeup || 0, 'badge-teal') +
+      attLegend('Неуважительная', att.unexcused || 0, 'badge-red') +
+      attLegend('Отсутствовал', att.absent || 0, 'badge-gray');
     return '<section class="pc-child">' +
       '<div class="pc-head">' +
         '<div class="cab-avatar pc-avatar">' + escapeHtml(c.name.charAt(0)) + '</div>' +
@@ -2478,7 +2511,7 @@
       '<div class="pc-tiles">' +
         pcTile('Ближайшее занятие', escapeHtml(next)) +
         pcTile('Осталось занятий', c.lessonsTotal ? (c.lessonsLeft + ' из ' + c.lessonsTotal) : 'нет абонемента') +
-        pcTile('Посещаемость', c.attendance.rate + '%') +
+        pcTile('Посещаемость', (att.rate || 0) + '%') +
         pcTile('Оплата', '<span class="cab-badge ' + pay.cls + '">' + pay.label + '</span>') +
       '</div>' +
       '<div class="pc-cols">' +
@@ -2487,6 +2520,9 @@
           (c.homeworkPending ? ' <span class="pc-badge">' + c.homeworkPending + '</span>' : '') +
           '</h3><ul class="pc-hw-list">' + hw + '</ul></div>' +
       '</div>' +
+      '<h3 class="pc-col-title">Статистика посещаемости</h3>' +
+      '<div class="att-legend">' + attBreakdown + '</div>' +
+      '<div class="cab-progress" style="margin-top:8px"><div class="cab-progress-bar" style="width:' + (att.rate || 0) + '%;"></div></div>' +
       '<h3 class="pc-col-title">Достижения</h3>' + ach +
       '<h3 class="pc-col-title">Сертификаты</h3>' + certs +
       '<h3 class="pc-col-title">Комментарии преподавателей</h3><div class="note-list">' + notes + '</div>' +
@@ -2738,14 +2774,18 @@
         { value: 'linear-gradient(135deg,#0d0d1a,#151530)', label: 'Синий' },
         { value: 'linear-gradient(135deg,#1a0a15,#2d0d28)', label: 'Фиолетовый' }
       ];
+      var certNum = c.number || ('CERT-' + Date.now().toString(36).toUpperCase());
       var html = '<form data-form>' +
         field('Ученик', selectCtrl('studentId', students, c.studentId)) +
         field('Название', input('title', c.title)) +
-        field('Дата выдачи', input('date', c.date, 'date')) +
+        row(field('Дата выдачи', input('date', c.date, 'date')),
+            field('Уникальный номер', input('number', certNum))) +
         field('Описание', textarea('description', c.description)) +
-        field('Оформление', selectCtrl('gradient', gradOpts, c.gradient)) +
+        row(field('Оформление', selectCtrl('gradient', gradOpts, c.gradient)),
+            field('Подпись (директор)', input('signedBy', c.signedBy || ''))) +
+        field('URL логотипа на сертификате', input('logoUrl', c.logoUrl || '')) +
         formActions() + '</form>';
-      var m = openModal(id ? 'Редактировать сертификат' : 'Новый сертификат', html);
+      var m = openModal(id ? 'Редактировать сертификат' : 'Новый сертификат', html, true);
       bindCrudForm(m, function (data) { return id ? API.certificates.update(id, data) : API.certificates.create(data); },
         function () { toast(id ? 'Сохранено' : 'Сертификат создан'); loadAdminCerts(); });
     });
@@ -3255,10 +3295,16 @@
         field('Название', input('title', e.title)) +
         row(field('Время', input('time', e.time)), field('Место', input('place', e.place))) +
         field('Описание', textarea('description', e.description)) +
+        '<h4 style="margin:16px 0 8px;font-size:.9rem;color:var(--text-muted)">Билеты</h4>' +
+        row(field('Цена билета (0 = бесплатно)', input('ticketPrice', e.ticketPrice || 0, 'number')),
+            field('Макс. мест (0 = без ограничений)', input('maxSeats', e.maxSeats || 0, 'number'))) +
         formActions() + '</form>';
-      var m = openModal(id ? 'Редактировать мероприятие' : 'Новое мероприятие', html);
-      bindCrudForm(m, function (data) { return id ? API.events.update(id, data) : API.events.create(data); },
-        function () { toast(id ? 'Сохранено' : 'Мероприятие создано'); loadAdminEvents(); });
+      var m = openModal(id ? 'Редактировать мероприятие' : 'Новое мероприятие', html, true);
+      bindCrudForm(m, function (data) {
+        data.ticketPrice = parseFloat(data.ticketPrice) || 0;
+        data.maxSeats = parseInt(data.maxSeats) || 0;
+        return id ? API.events.update(id, data) : API.events.create(data);
+      }, function () { toast(id ? 'Сохранено' : 'Мероприятие создано'); loadAdminEvents(); });
     });
   }
 
