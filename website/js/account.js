@@ -304,6 +304,28 @@
 
   renderSidebar();
 
+  /* Apply brand colours + dynamic school name/logo after sidebar is painted */
+  if (API.brand) {
+    API.brand.get().then(function (br) {
+      if (br.primaryColor) document.documentElement.style.setProperty('--accent', br.primaryColor);
+      if (br.accentColor)  document.documentElement.style.setProperty('--accent-dark', br.accentColor);
+      var nameEl = $('.cab-logo .name');
+      if (nameEl && br.schoolName) nameEl.textContent = br.schoolName;
+      var taglineEl = $('.cab-logo .tagline-small');
+      if (taglineEl && br.tagline) taglineEl.textContent = br.tagline;
+      if (br.logoUrl) {
+        var cabLogo = $('.cab-logo');
+        if (cabLogo && !cabLogo.querySelector('.cab-logo-img')) {
+          var img = document.createElement('img');
+          img.className = 'cab-logo-img';
+          img.src = br.logoUrl; img.alt = br.schoolName || 'Logo';
+          img.onerror = function () { img.remove(); };
+          cabLogo.insertBefore(img, cabLogo.firstChild);
+        }
+      }
+    });
+  }
+
   var sbToggle = $('[data-sidebar-toggle]');
   var sidebar  = $('.cab-sidebar');
   if (sbToggle && sidebar) {
@@ -1440,9 +1462,10 @@
      SCHEDULE / UNIFIED CALENDAR  [v0.6 — lessons + events + deadlines]
      ================================================================= */
   var CAL_KIND = {
-    lesson:   { label: 'Занятие',   cls: 'ck-lesson' },
-    event:    { label: 'Мероприятие', cls: 'ck-event' },
-    deadline: { label: 'Дедлайн ДЗ', cls: 'ck-deadline' }
+    lesson:    { label: 'Занятие',    cls: 'ck-lesson'    },
+    event:     { label: 'Мероприятие', cls: 'ck-event'   },
+    deadline:  { label: 'Дедлайн ДЗ', cls: 'ck-deadline' },
+    rehearsal: { label: 'Репетиция',  cls: 'ck-rehearsal' }
   };
   var CAL_EVENT_KIND = {
     concert: 'Концерт', performance: 'Спектакль', exhibition: 'Выставка', masterclass: 'Мастер-класс'
@@ -2888,15 +2911,21 @@
      NOTIFICATION CENTER  [v0.6]
      ================================================================= */
   var NOTICE_META = {
-    lesson:       { label: 'Занятие',          icon: ICON.calendar },
-    payment:      { label: 'Платёж',           icon: ICON.receipt  },
-    homework:     { label: 'Домашнее задание', icon: ICON.hw       },
-    certificate:  { label: 'Сертификат',       icon: ICON.cert     },
-    achievement:  { label: 'Достижение',       icon: ICON.star     },
-    event:        { label: 'Мероприятие',      icon: ICON.ticket   },
-    comment:      { label: 'Комментарий',      icon: ICON.note     },
-    subscription: { label: 'Абонемент',        icon: ICON.card     },
-    system:       { label: 'Система',          icon: ICON.bell     }
+    lesson:        { label: 'Занятие',          icon: ICON.calendar },
+    payment:       { label: 'Платёж',           icon: ICON.receipt  },
+    homework:      { label: 'Домашнее задание', icon: ICON.hw       },
+    certificate:   { label: 'Сертификат',       icon: ICON.cert     },
+    achievement:   { label: 'Достижение',       icon: ICON.star     },
+    event:         { label: 'Мероприятие',      icon: ICON.ticket   },
+    comment:       { label: 'Комментарий',      icon: ICON.note     },
+    subscription:  { label: 'Абонемент',        icon: ICON.card     },
+    system:        { label: 'Система',          icon: ICON.bell     },
+    /* v1.1 educational types */
+    journal:       { label: 'Журнал занятий',   icon: ICON.book     },
+    recalculation: { label: 'Перерасчёт',       icon: ICON.card     },
+    rehearsal:     { label: 'Репетиция',        icon: ICON.calendar },
+    ticket:        { label: 'Билет',            icon: ICON.ticket   },
+    portfolio:     { label: 'Портфолио',        icon: ICON.folder   }
   };
   var notifRoot = $('#notifications-root');
   if (notifRoot) {
@@ -3037,14 +3066,36 @@
     resolveViewer().then(function (ctx) {
       if (!ctx.id) { pfRoot.innerHTML = '<p class="cab-empty">Нет данных для отображения.</p>'; return; }
       API.portfolio.list(ctx.id).then(function (list) {
-        var grid = list.length
-          ? '<div class="pf-grid">' + list.map(renderPortfolioItem).join('') + '</div>'
-          : '<p class="cab-empty">Портфолио пока пустое. Материалы добавляет преподаватель.</p>';
-        pfRoot.innerHTML = viewerPicker(ctx, 'portfolio.html', 'Ученик') + grid;
-        bindViewerPicker(pfRoot);
-        $all('[data-pf-open]', pfRoot).forEach(function (b) {
-          b.addEventListener('click', function () { toast('Просмотр материала доступен в полной версии'); });
-        });
+        if (!list.length) {
+          pfRoot.innerHTML = viewerPicker(ctx, 'portfolio.html', 'Ученик') +
+            '<p class="cab-empty">Портфолио пока пустое. Материалы добавляет преподаватель.</p>';
+          bindViewerPicker(pfRoot);
+          return;
+        }
+        /* collect unique kinds for filter tabs */
+        var kinds = ['all'];
+        list.forEach(function (p) { if (kinds.indexOf(p.kind) === -1) kinds.push(p.kind); });
+        var pfFilter = 'all';
+        function renderPfGrid() {
+          var visible = pfFilter === 'all' ? list : list.filter(function (p) { return p.kind === pfFilter; });
+          var grid = visible.length
+            ? '<div class="pf-grid">' + visible.map(renderPortfolioItem).join('') + '</div>'
+            : '<p class="cab-empty">Нет материалов этого типа.</p>';
+          var tabs = '<div class="cab-tabs pf-filter-tabs">' +
+            kinds.map(function (k) {
+              var lbl = k === 'all' ? 'Все' : ((PF_KIND[k] || {}).label || k);
+              return '<button class="cab-tab' + (pfFilter === k ? ' active' : '') + '" data-pf-filter="' + k + '">' + lbl + '</button>';
+            }).join('') + '</div>';
+          pfRoot.innerHTML = viewerPicker(ctx, 'portfolio.html', 'Ученик') + tabs + grid;
+          bindViewerPicker(pfRoot);
+          $all('[data-pf-filter]', pfRoot).forEach(function (b) {
+            b.addEventListener('click', function () { pfFilter = b.getAttribute('data-pf-filter'); renderPfGrid(); });
+          });
+          $all('[data-pf-open]', pfRoot).forEach(function (b) {
+            b.addEventListener('click', function () { toast('Просмотр материала доступен в полной версии'); });
+          });
+        }
+        renderPfGrid();
       });
     });
   }
@@ -3053,6 +3104,7 @@
     return '<div class="pf-card pf-' + p.kind + '">' +
       '<div class="pf-thumb">' + k.icon + '<span class="pf-kind">' + k.label + '</span></div>' +
       '<div class="pf-body"><strong>' + escapeHtml(p.title) + '</strong>' +
+        (p.direction ? '<div class="pf-direction">' + escapeHtml(p.direction) + '</div>' : '') +
         (p.note ? '<p>' + escapeHtml(p.note) + '</p>' : '') +
         '<div class="pf-meta">' + escapeHtml(p.addedBy || '') + ' · ' + fmtDate(p.date) + '</div>' +
         '<button class="btn btn-outline btn-sm" data-pf-open>Открыть</button>' +
@@ -3354,9 +3406,10 @@
       var html = '<form data-form>' +
         row(field('Ученик', selectCtrl('studentId', students, p.studentId)),
             field('Тип материала', selectCtrl('kind', PF_KIND_OPTS, p.kind || 'photo'))) +
+        row(field('Направление', input('direction', p.direction || '')), field('Дата', input('date', p.date, 'date'))) +
         field('Название', input('title', p.title)) +
         field('Комментарий', textarea('note', p.note)) +
-        row(field('Кто добавил', input('addedBy', p.addedBy)), field('Дата', input('date', p.date, 'date'))) +
+        field('Кто добавил', input('addedBy', p.addedBy)) +
         formActions() + '</form>';
       var m = openModal(id ? 'Редактировать материал' : 'Новый материал портфолио', html);
       bindCrudForm(m, function (data) { return id ? API.portfolio.update(id, data) : API.portfolio.create(data); },
@@ -4192,6 +4245,7 @@
           '<td data-th="Цена">' + (t.price ? fmtMoney(t.price) : 'Бесплатно') + '</td>' +
           '<td data-th="Статус">' + badge(TKT_STATUS, t.status) + '</td>' +
           '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn btn-outline btn-sm" data-view-ticket="' + t.id + '">Просмотр</button>' +
             (t.status === 'issued' ? '<button class="btn btn-outline btn-sm" data-validate-ticket="' + escapeHtml(t.number) + '">Отметить исп.</button>' : '') +
             (t.status === 'issued' ? '<button class="btn-icon danger" data-cancel-ticket="' + t.id + '" title="Аннулировать">✕</button>' : '') +
           '</div></td></tr>';
@@ -4199,6 +4253,25 @@
       adminTicketsRoot.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
         '<thead><tr><th>Номер</th><th>Мероприятие</th><th>Дата</th><th>Владелец</th><th>Телефон</th><th>Цена</th><th>Статус</th><th></th></tr></thead>' +
         '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-view-ticket]', adminTicketsRoot).forEach(function (b) {
+        b.addEventListener('click', function () {
+          var tid = b.getAttribute('data-view-ticket');
+          var t = list.filter(function (x) { return x.id === tid; })[0]; if (!t) return;
+          var qrHtml = '<div class="tkt-qr-placeholder" title="QR-код">' +
+            '<div class="tkt-qr-grid">' + Array(16).fill('<span></span>').join('') + '</div>' +
+            '<code class="tkt-number" style="display:block;text-align:center;margin-top:8px;font-size:1.1rem">' + escapeHtml(t.number) + '</code></div>';
+          openModal('Билет · ' + escapeHtml(t.eventTitle),
+            '<div style="text-align:center">' + qrHtml + '</div>' +
+            '<table class="cab-table" style="margin-top:16px"><tbody>' +
+            '<tr><td><strong>Мероприятие</strong></td><td>' + escapeHtml(t.eventTitle) + '</td></tr>' +
+            '<tr><td><strong>Дата</strong></td><td>' + fmtDate(t.eventDate) + (t.eventTime ? ' ' + escapeHtml(t.eventTime) : '') + '</td></tr>' +
+            (t.holderName ? '<tr><td><strong>Владелец</strong></td><td>' + escapeHtml(t.holderName) + '</td></tr>' : '') +
+            (t.holderPhone ? '<tr><td><strong>Телефон</strong></td><td>' + escapeHtml(t.holderPhone) + '</td></tr>' : '') +
+            '<tr><td><strong>Цена</strong></td><td>' + (t.price ? fmtMoney(t.price) : 'Бесплатно') + '</td></tr>' +
+            '<tr><td><strong>Статус</strong></td><td>' + badge(TKT_STATUS, t.status) + '</td></tr>' +
+            '</tbody></table>');
+        });
+      });
       $all('[data-validate-ticket]', adminTicketsRoot).forEach(function (b) {
         b.addEventListener('click', function () {
           var num = b.getAttribute('data-validate-ticket');

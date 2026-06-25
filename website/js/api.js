@@ -475,18 +475,18 @@
   function seedPortfolio() {
     var now = new Date();
     return [
-      { id: 'pf-1', studentId: 'stu-demo', kind: 'video', title: 'Выступление на концерте',
+      { id: 'pf-1', studentId: 'stu-demo', kind: 'video', direction: 'Фортепиано', title: 'Выступление на концерте',
         note: 'Кавер «Город которого нет», апрель.', addedBy: 'Антон Шпигоцкий',
         date: ymd(addDays(now, -40)) },
-      { id: 'pf-2', studentId: 'stu-demo', kind: 'audio', title: 'Запись этюда №3',
+      { id: 'pf-2', studentId: 'stu-demo', kind: 'audio', direction: 'Фортепиано', title: 'Запись этюда №3',
         note: 'Домашняя запись, чистое исполнение.', addedBy: 'Антон Шпигоцкий',
         date: ymd(addDays(now, -14)) },
-      { id: 'pf-3', studentId: 'stu-demo', kind: 'photo', title: 'Фото с открытого урока',
+      { id: 'pf-3', studentId: 'stu-demo', kind: 'photo', direction: 'Вокал', title: 'Фото с открытого урока',
         note: '', addedBy: 'Администратор', date: ymd(addDays(now, -8)) },
-      { id: 'pf-4', studentId: 'stu-demo', kind: 'diploma', title: 'Диплом за участие в конкурсе',
+      { id: 'pf-4', studentId: 'stu-demo', kind: 'diploma', direction: 'Фортепиано', title: 'Диплом за участие в конкурсе',
         note: 'Городской конкурс юных исполнителей, 2 место.', addedBy: 'Администратор',
         date: ymd(addDays(now, -30)) },
-      { id: 'pf-5', studentId: 'stu-max', kind: 'video', title: 'Дебютное выступление',
+      { id: 'pf-5', studentId: 'stu-max', kind: 'video', direction: 'Вокал', title: 'Дебютное выступление',
         note: 'Отчётный концерт, вокал.', addedBy: 'Мария Лебедева', date: ymd(addDays(now, -20)) }
     ];
   }
@@ -2444,6 +2444,7 @@
       var me = auth.current();
       var list = read(LS_PORTFOLIO, []);
       var rec = { id: uid('pf'), studentId: data.studentId, kind: data.kind || 'photo',
+        direction: (data.direction || '').trim() || 'Общее',
         title: data.title.trim(), note: (data.note || '').trim(),
         addedBy: (data.addedBy || '').trim() || (me ? me.name : 'Преподаватель'),
         date: data.date || ymd(new Date()) };
@@ -2456,7 +2457,7 @@
       var list = read(LS_PORTFOLIO, []);
       var rec = list.filter(function (p) { return p.id === id; })[0];
       if (!rec) return fail('Материал не найден');
-      ['studentId','kind','title','note','addedBy','date'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      ['studentId','kind','direction','title','note','addedBy','date'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
       write(LS_PORTFOLIO, list);
       return delay(rec);
     },
@@ -2500,6 +2501,20 @@
         if (d.getFullYear() === year && d.getMonth() === month) {
           out.push({ kind: 'deadline', date: h.dueDate, time: '',
             title: 'Дедлайн ДЗ: ' + h.title, status: h.status });
+        }
+      });
+      // rehearsals visible to all roles
+      var me2 = auth.current();
+      read(LS_REHEARSALS, []).forEach(function (r) {
+        if (!r.date) return;
+        var d = parseYmd(r.date);
+        if (d.getFullYear() !== year || d.getMonth() !== month) return;
+        var visible = !me2 || me2.role === 'admin' ||
+          (me2.role === 'teacher' && r.teacherId === me2.id) ||
+          (Array.isArray(r.participants) && r.participants.indexOf(id) !== -1);
+        if (visible) {
+          out.push({ kind: 'rehearsal', date: r.date, time: r.time || '',
+            title: 'Репетиция: ' + (r.eventTitle || r.eventId), place: r.place });
         }
       });
       out.sort(function (a, b) { return parseYmd(a.date) - parseYmd(b.date); });

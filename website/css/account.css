@@ -1209,3 +1209,41 @@ input[type="color"].form-control {
 .check-list { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; padding: 8px; background: var(--bg-muted, rgba(0,0,0,.03)); border-radius: 6px; border: 1px solid var(--border); }
 .check-row { display: flex; align-items: center; gap: 8px; font-size: .9rem; cursor: pointer; padding: 2px 0; }
 .check-row input { accent-color: var(--accent); }
+
+/* Calendar rehearsal dot */
+.ck-rehearsal { background: var(--accent-teal, #009688); }
+.cal-item.ck-rehearsal .cal-item-kind { color: var(--accent-teal, #009688); }
+
+/* Portfolio direction label & filter tabs */
+.pf-direction {
+  font-size: .78rem; font-weight: 600; color: var(--accent);
+  text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px;
+}
+.pf-filter-tabs { margin-bottom: 20px; }
+
+/* Ticket QR placeholder */
+.tkt-qr-placeholder {
+  display: inline-block; padding: 16px;
+  background: var(--card-bg); border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.tkt-qr-grid {
+  display: grid; grid-template-columns: repeat(4, 20px); gap: 3px;
+  width: fit-content; margin: 0 auto;
+}
+.tkt-qr-grid span {
+  width: 20px; height: 20px; border-radius: 2px;
+  background: var(--text, #111);
+  opacity: 0;
+  animation: tkt-flicker 0s both;
+}
+.tkt-qr-grid span:nth-child(odd)  { opacity: 1; }
+.tkt-qr-grid span:nth-child(3n)   { opacity: .4; }
+.tkt-qr-grid span:nth-child(5n)   { opacity: .8; }
+.tkt-qr-grid span:nth-child(7n)   { opacity: .2; }
+
+/* Sidebar branding logo image */
+.cab-logo-img {
+  max-height: 36px; width: auto; display: block;
+  margin-bottom: 4px; border-radius: 4px;
+}
