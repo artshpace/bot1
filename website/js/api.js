@@ -2641,7 +2641,7 @@
      Architecture-ready: notify() already fans out through these channels
      (see dispatchExternal). They stay disabled until a backend is wired.
      ================================================================= */
-  var BOT_USERNAME = 'shpigotskiy_art_bot'; // placeholder; set to the real bot
+  var BOT_USERNAME = 'artshpacebot'; // real studio bot (@artshpacebot)
   var integrations = {
     channels: function () { return delay(clone(notifyChannels)); },
     /* Telegram Bot descriptor + the notification topics it will deliver. */
