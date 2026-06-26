@@ -43,6 +43,20 @@
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function norm(v) { return (v || '').toString().trim().toLowerCase(); }
 
+  /* Short, unambiguous one-time code for Telegram deep-link binding.
+     Excludes look-alike chars (0/O, 1/I/L) so it reads cleanly. */
+  function randCode(n) {
+    var chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+    var out = '';
+    var arr = new Uint32Array(n || 8);
+    if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(arr);
+    for (var i = 0; i < (n || 8); i++) {
+      var x = arr[i] || Math.floor(Math.random() * 0xffffffff);
+      out += chars[x % chars.length];
+    }
+    return out;
+  }
+
   /* Read the authoritative role/name/phone from the `profiles` table (RLS
      lets a signed-in user read their own row). This is the SOURCE OF TRUTH:
      when the owner changes a role in Supabase Table Editor, the next login
@@ -273,6 +287,55 @@
         return u ? fetchProfile(u.id).then(function (p) {
           return p ? { id: u.id, role: p.role, name: p.name, phone: p.phone } : null;
         }) : null;
+      });
+    },
+
+    // ---- Telegram account binding (settings.html) -------------------------
+    // Link status for the signed-in user. The bot writes telegram_chat_id via
+    // the service-role key (server side); the client only reads its own row.
+    myTelegram: function () {
+      if (!client) return Promise.resolve({ linked: false });
+      return client.auth.getUser().then(function (r) {
+        var u = r && r.data && r.data.user;
+        if (!u) return { linked: false };
+        return client.from('profiles')
+          .select('telegram_chat_id,telegram_linked_at').eq('id', u.id).maybeSingle()
+          .then(function (res) {
+            if (res.error) throw new Error(translate(res.error.message));
+            var d = res.data || {};
+            return { linked: !!d.telegram_chat_id, chatId: d.telegram_chat_id || null, linkedAt: d.telegram_linked_at || null };
+          });
+      });
+    },
+
+    // Create a fresh one-time binding code (10-min TTL, set by the DB default)
+    // and return it. The user opens t.me/<bot>?start=<code>; the bot consumes it.
+    createTelegramCode: function () {
+      if (!client) return Promise.reject(new Error('Supabase не настроен'));
+      return client.auth.getUser().then(function (r) {
+        var u = r && r.data && r.data.user;
+        if (!u) throw new Error('Нужно войти в аккаунт');
+        var code = randCode(8);
+        return client.from('telegram_codes').insert({ code: code, user_id: u.id })
+          .then(function (res) {
+            if (res.error) throw new Error(translate(res.error.message));
+            return code;
+          });
+      });
+    },
+
+    // Unlink Telegram from the signed-in user's own profile (update_own RLS).
+    unlinkTelegram: function () {
+      if (!client) return Promise.reject(new Error('Supabase не настроен'));
+      return client.auth.getUser().then(function (r) {
+        var u = r && r.data && r.data.user;
+        if (!u) throw new Error('Нужно войти в аккаунт');
+        return client.from('profiles')
+          .update({ telegram_chat_id: null, telegram_linked_at: null }).eq('id', u.id)
+          .then(function (res) {
+            if (res.error) throw new Error(translate(res.error.message));
+            return { ok: true };
+          });
       });
     }
   };
