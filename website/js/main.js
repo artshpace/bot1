@@ -177,6 +177,7 @@ function setupForm(formId, onSuccess) {
        with their details pre-filled, after the success screen is shown. */
     submitLead(formId, form);
     if (FORM_SOURCE[formId] === 'trial') {
+      injectCalendarButtons(form);
       window.open(buildWhatsAppFromForm(form), '_blank');
     }
   });
@@ -374,6 +375,114 @@ function buildWhatsAppFromForm(form) {
   if (preferredSlot) lines.push('Удобно: ' + preferredSlot);
   else if (data.date) lines.push('Дата: ' + data.date);
   return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(lines.join('\n'));
+}
+
+/* ===== CALENDAR REMINDER FOR THE VISITOR [Phase 2 P2] =====
+   After a trial booking with a concrete day + time, offer "Add to calendar"
+   so the parent/student doesn't forget. Pure client-side: a Google Calendar
+   template link + a downloadable .ics (Apple/other). Times are pinned to
+   Asia/Almaty (UTC+5, no DST) so they don't drift on out-of-town devices. */
+const STUDIO_ADDRESS = 'ул. Интернациональная, 63, 5 этаж, Петропавловск';
+const RU_WEEKDAYS = {
+  'воскресенье': 0, 'понедельник': 1, 'вторник': 2, 'среда': 3,
+  'четверг': 4, 'пятница': 5, 'суббота': 6
+};
+
+/* Next calendar date (Y/M/D) for a Russian weekday name, strictly in the future. */
+function nextDateForWeekday(ruDay) {
+  const target = RU_WEEKDAYS[(ruDay || '').trim().toLowerCase()];
+  if (target === undefined) return null;
+  const d = new Date();
+  let add = (target - d.getDay() + 7) % 7;
+  if (add === 0) add = 7;            // "today" → push to next week
+  d.setDate(d.getDate() + add);
+  return d;
+}
+
+/* Parse "17:00–18:00" / "20:00-21:00 (18+)" → {sh,sm,eh,em}. */
+function parseTimeRange(s) {
+  const m = (s || '').match(/(\d{1,2}):(\d{2})\D+?(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  return { sh: +m[1], sm: +m[2], eh: +m[3], em: +m[4] };
+}
+
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+/* Local "floating" stamp YYYYMMDDTHHMMSS (no Z — interpreted in TZID/ctz). */
+function calStamp(date, h, m) {
+  return date.getFullYear() + pad2(date.getMonth() + 1) + pad2(date.getDate()) +
+    'T' + pad2(h) + pad2(m) + '00';
+}
+
+/* Build the Google Calendar "add event" URL. */
+function googleCalUrl(title, date, r, details) {
+  const dates = calStamp(date, r.sh, r.sm) + '/' + calStamp(date, r.eh, r.em);
+  const q = new URLSearchParams({
+    action: 'TEMPLATE', text: title, dates: dates,
+    details: details || '', location: STUDIO_ADDRESS, ctz: 'Asia/Almaty'
+  });
+  return 'https://calendar.google.com/calendar/render?' + q.toString();
+}
+
+/* Build a downloadable .ics (with a minimal Asia/Almaty VTIMEZONE). */
+function icsDataUri(title, date, r, details) {
+  const dtStart = calStamp(date, r.sh, r.sm);
+  const dtEnd = calStamp(date, r.eh, r.em);
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const lines = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Shpigotskiy Art Space//trial//RU',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE', 'TZID:Asia/Almaty',
+    'BEGIN:STANDARD', 'DTSTART:19700101T000000',
+    'TZOFFSETFROM:+0500', 'TZOFFSETTO:+0500', 'TZNAME:+05', 'END:STANDARD',
+    'END:VTIMEZONE',
+    'BEGIN:VEVENT',
+    'UID:' + stamp + '-' + Math.random().toString(36).slice(2) + '@artshpace',
+    'DTSTAMP:' + stamp,
+    'DTSTART;TZID=Asia/Almaty:' + dtStart,
+    'DTEND;TZID=Asia/Almaty:' + dtEnd,
+    'SUMMARY:' + title,
+    'DESCRIPTION:' + (details || ''),
+    'LOCATION:' + STUDIO_ADDRESS,
+    'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY',
+    'DESCRIPTION:' + title, 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR'
+  ];
+  return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(lines.join('\r\n'));
+}
+
+/* Inject the two "Add to calendar" buttons into a trial form's success panel,
+   but only when a concrete day + time slot were chosen. */
+function injectCalendarButtons(form) {
+  const success = form.querySelector('.form-success');
+  if (!success || success.querySelector('.cal-reminder')) return; // no dupes
+  const dayChip = form.querySelector('[data-chip-role="day"] .form-chip.selected');
+  const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
+  if (!dayChip || !slotChip) return;                              // nothing to schedule
+  const date = nextDateForWeekday(dayChip.textContent);
+  const range = parseTimeRange(slotChip.textContent);
+  if (!date || !range) return;
+
+  const dirGroup = form.querySelector('[data-chip-role="direction"]');
+  const dirChip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
+  const direction = dirChip ? (CHIP_DIRECTION[dirChip.dataset.value] || dirChip.textContent.trim()) : '';
+  const title = 'Пробное занятие' + (direction ? ' — ' + direction : '');
+  const details = 'Бесплатное пробное занятие в Shpigotskiy Art Space. ' +
+    'Если планы изменятся — напишите нам: https://wa.me/' + WA_NUMBER;
+
+  const gUrl = googleCalUrl(title, date, range, details);
+  const ics = icsDataUri(title, date, range, details);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'cal-reminder';
+  wrap.style.cssText = 'margin-top:20px;display:flex;flex-direction:column;gap:10px;';
+  wrap.innerHTML =
+    '<p style="font-size:0.85rem;color:var(--muted);margin:0;">Добавьте занятие в календарь, чтобы не забыть:</p>' +
+    '<a href="' + gUrl + '" target="_blank" rel="noopener" class="btn btn-white btn-full">📅 Google Календарь</a>' +
+    '<a href="' + ics + '" download="probnoe-zanyatie.ics" class="btn btn-white btn-full">📲 Скачать для телефона (.ics)</a>';
+
+  const closeBtn = success.querySelector('button');
+  if (closeBtn) success.insertBefore(wrap, closeBtn);
+  else success.appendChild(wrap);
 }
 
 /* Floating navbar "Записаться" opens the trial modal directly. */

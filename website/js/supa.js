@@ -125,13 +125,25 @@
     syncMockSession: syncMockSession,
 
     signIn: function (loginValue, password) {
-      // Supabase email/password. Phone-only logins fall back to the mock.
-      var email = (loginValue || '').trim();
-      return client.auth.signInWithPassword({ email: email, password: password })
-        .then(function (res) {
-          if (res.error) throw new Error(translate(res.error.message));
-          return bridge(res.data.user); // resolves to the mock user w/ real role
-        });
+      // Accepts an email OR a full name (ФИО). Phone-only logins are handled
+      // by the mock upstream (the form takeover skips them). For a name we
+      // first resolve it to an email via the email_by_name RPC, then do the
+      // standard Supabase email/password sign-in.
+      var v = (loginValue || '').trim();
+      var resolveEmail = /\S+@\S+\.\S+/.test(v)
+        ? Promise.resolve(v)
+        : client.rpc('email_by_name', { p_name: v }).then(function (r) {
+            if (r.error) throw new Error(translate(r.error.message));
+            if (!r.data) throw new Error('Не нашли уникальный аккаунт по ФИО — войдите по email');
+            return r.data;
+          });
+      return resolveEmail.then(function (email) {
+        return client.auth.signInWithPassword({ email: email, password: password })
+          .then(function (res) {
+            if (res.error) throw new Error(translate(res.error.message));
+            return bridge(res.data.user); // resolves to the mock user w/ real role
+          });
+      });
     },
 
     signUp: function (payload) {
@@ -240,6 +252,9 @@
 
   function byId(id) { return document.getElementById(id); }
   var isEmail = function (v) { return /\S+@\S+\.\S+/.test(v || ''); };
+  // A phone-ish value is digits/+/()/-/space only — these stay on the mock,
+  // because Supabase here is configured for email/name, not phone auth.
+  var isPhoneOnly = function (v) { return /^[\d\s+()\-]{5,}$/.test((v || '').trim()); };
 
   function wire() {
     var loginForm = byId('login-form');
@@ -259,8 +274,9 @@
     if (loginForm) {
       loginForm.addEventListener('submit', function (e) {
         var idVal = (byId('login-id') || {}).value || '';
-        // Phone-only login → let the mock handle it (Supabase needs email).
-        if (!isEmail(idVal)) return;
+        // Phone-only login → let the mock handle it (Supabase needs email/ФИО).
+        // Email and full-name logins are both owned by Supabase here.
+        if (isPhoneOnly(idVal)) return;
         e.preventDefault(); e.stopImmediatePropagation();
         var err = byId('login-error');
         var btn = loginForm.querySelector('button[type="submit"]');
