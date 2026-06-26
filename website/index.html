@@ -799,26 +799,6 @@
           <div class="form-error" id="err-modal-phone">Введите телефон</div>
         </div>
         <div class="form-group">
-          <label>Возраст ученика</label>
-          <input class="form-control" name="age" placeholder="Например: 8 лет">
-        </div>
-        <div class="form-group">
-          <label>Удобная дата</label>
-          <input class="form-control" name="date" type="date">
-        </div>
-        <div class="form-group">
-          <label>Выберите удобный вариант</label>
-          <div class="form-chips" id="slot-chips" data-chip-role="slot">
-            <button type="button" class="form-chip" data-value="sat-11">Суббота 11:00</button>
-            <button type="button" class="form-chip" data-value="sat-13">Суббота 13:00</button>
-            <button type="button" class="form-chip" data-value="sun-12">Воскресенье 12:00</button>
-            <button type="button" class="form-chip" data-value="weekday">Будни (уточним)</button>
-          </div>
-          <p style="font-size:0.8rem;color:var(--muted);margin-top:6px;">
-            Точное время согласуем после заявки
-          </p>
-        </div>
-        <div class="form-group">
           <label>Направление</label>
           <div class="form-chips" id="modal-chips" data-chip-role="direction">
             <button type="button" class="form-chip" data-value="guitar">Гитара</button>
@@ -829,6 +809,19 @@
             <button type="button" class="form-chip" data-value="any">Не знаю</button>
           </div>
           <div class="form-error chip-err" style="display:none;">Выберите направление</div>
+        </div>
+        <div class="form-group">
+          <label>Возраст ученика</label>
+          <input class="form-control" id="modal-age" name="age" placeholder="Например: 8 лет">
+        </div>
+        <div class="form-group" id="modal-day-section" style="display:none;">
+          <label>День занятий</label>
+          <div class="form-chips" id="modal-day-chips" data-chip-role="day"></div>
+        </div>
+        <div class="form-group" id="modal-time-section" style="display:none;">
+          <label>Удобное время</label>
+          <div class="form-chips" id="slot-chips" data-chip-role="slot" data-schedule-driven="true"></div>
+          <p id="modal-schedule-note" style="font-size:0.8rem;color:var(--muted);margin-top:6px;display:none;">Точное время согласуем после звонка</p>
         </div>
         <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;">
           Отправить заявку

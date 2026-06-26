@@ -156,8 +156,8 @@ function setupForm(formId, onSuccess) {
       if (!ok) { valid = false; input.classList.add('error'); if (err) err.classList.add('show'); }
       else { input.classList.remove('error'); if (err) err.classList.remove('show'); }
     });
-    /* Only the direction chip group is required; the slot group is optional. */
-    const dirGroup = form.querySelector('.form-chips:not([data-chip-role="slot"])');
+    /* Only the direction chip group is required; day/slot groups are optional. */
+    const dirGroup = form.querySelector('[data-chip-role="direction"]');
     const chip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
     const chipErr = form.querySelector('.chip-err');
     if (dirGroup && !chip) {
@@ -199,12 +199,13 @@ const FORM_SOURCE = {
 function submitLead(formId, form) {
   const data = {};
   form.querySelectorAll('[name]').forEach(inp => { data[inp.name] = (inp.value || '').trim(); });
-  const dirGroup = form.querySelector('.form-chips:not([data-chip-role="slot"])');
+  const dirGroup = form.querySelector('[data-chip-role="direction"]');
   const chip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
   const direction = chip ? (CHIP_DIRECTION[chip.dataset.value] !== undefined && CHIP_DIRECTION[chip.dataset.value] !== ''
     ? CHIP_DIRECTION[chip.dataset.value] : chip.textContent.trim()) : '';
+  const dayChip = form.querySelector('[data-chip-role="day"] .form-chip.selected');
   const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
-  const slot = slotChip ? slotChip.textContent.trim() : '';
+  const slot = [dayChip ? dayChip.textContent.trim() : '', slotChip ? slotChip.textContent.trim() : ''].filter(Boolean).join(', ');
 
   const utm = getUTM();
   const payload = {
@@ -244,12 +245,94 @@ function submitLead(formId, form) {
   if (window.fbq) window.fbq('track', 'CompleteRegistration', { content_name: direction || 'Заявка' });
 }
 
+/* ===== SCHEDULE-DRIVEN TRIAL FORM [v1.2] =====
+   Direction chip drives which days and time slots are shown.
+   Source: real studio timetable supplied by owner 2026-06. */
+const SCHEDULE = {
+  guitar: {
+    days: ['Понедельник', 'Среда', 'Пятница'],
+    slots: function (age) {
+      var s = ['9:00–10:00', '10:00–11:00', '11:00–12:00',
+               '16:00–17:00', '17:00–18:00', '18:00–19:00', '19:00–20:00'];
+      if (parseInt(age) >= 18) s.push('20:00–21:00 (18+)');
+      return s;
+    }
+  },
+  painting: {
+    days: ['Суббота', 'Воскресенье'],
+    slots: function () { return ['10:00–12:00']; }
+  },
+  vocals: {
+    days: ['Суббота', 'Воскресенье'],
+    slots: function (age) {
+      return parseInt(age) >= 11 ? ['13:00–14:00'] : ['12:00–13:00'];
+    }
+  }
+};
+
+function initScheduleForm(formId) {
+  var form = document.getElementById(formId);
+  if (!form) return;
+  var dirChipsEl = form.querySelector('[data-chip-role="direction"]');
+  var ageInput   = form.querySelector('[name="age"]');
+  var daySection = document.getElementById('modal-day-section');
+  var dayChipsEl = document.getElementById('modal-day-chips');
+  var timeSection = document.getElementById('modal-time-section');
+  var slotChipsEl = document.getElementById('slot-chips');
+  var schedNote  = document.getElementById('modal-schedule-note');
+
+  function makeChips(el, items) {
+    el.innerHTML = items.map(function (v) {
+      return '<button type="button" class="form-chip" data-value="' + v + '">' + v + '</button>';
+    }).join('');
+  }
+
+  function update() {
+    var sel = dirChipsEl && dirChipsEl.querySelector('.form-chip.selected');
+    var dir = sel ? sel.dataset.value : null;
+    var age = ageInput ? ageInput.value : '';
+    var sched = dir ? SCHEDULE[dir] : null;
+
+    if (!sched) {
+      if (daySection) daySection.style.display = 'none';
+      if (timeSection) {
+        if (dir && dir !== 'any') {
+          timeSection.style.display = '';
+          if (slotChipsEl) slotChipsEl.innerHTML = '';
+          if (schedNote) { schedNote.textContent = 'Расписание уточним при звонке'; schedNote.style.display = ''; }
+        } else {
+          timeSection.style.display = 'none';
+        }
+      }
+      return;
+    }
+
+    if (daySection && dayChipsEl) {
+      makeChips(dayChipsEl, sched.days);
+      daySection.style.display = '';
+    }
+    if (timeSection && slotChipsEl) {
+      makeChips(slotChipsEl, sched.slots(age));
+      timeSection.style.display = '';
+      if (schedNote) schedNote.style.display = 'none';
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    var chip = e.target.closest('.form-chip');
+    if (!chip || !dirChipsEl || !dirChipsEl.contains(chip)) return;
+    setTimeout(update, 0);
+  });
+  if (ageInput) ageInput.addEventListener('input', update);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   ['trial-form', 'callback-form', 'course-form', 'modal-form'].forEach(id => setupForm(id));
   applyDirectorSlots();
   applyDirectorPricing();
   applyDirectorContacts();
   renderReviews();
+  initScheduleForm('modal-form');
 });
 
 /* ===== WHATSAPP ROUTING [v1.1] =====
@@ -276,17 +359,19 @@ window.buildWhatsAppLink = buildWhatsAppLink;
 function buildWhatsAppFromForm(form) {
   const data = {};
   form.querySelectorAll('[name]').forEach(i => { data[i.name] = (i.value || '').trim(); });
-  const dirGroup = form.querySelector('.form-chips:not([data-chip-role="slot"])');
+  const dirGroup = form.querySelector('[data-chip-role="direction"]');
   const dirChip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
   const direction = dirChip ? (CHIP_DIRECTION[dirChip.dataset.value] !== undefined && CHIP_DIRECTION[dirChip.dataset.value] !== ''
     ? CHIP_DIRECTION[dirChip.dataset.value] : dirChip.textContent.trim()) : '';
+  const dayChip = form.querySelector('[data-chip-role="day"] .form-chip.selected');
   const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
   const lines = ['Здравствуйте! Хочу записаться на бесплатное пробное занятие.'];
   if (data.name) lines.push('Имя: ' + data.name);
   if (data.phone) lines.push('Телефон: ' + data.phone);
   if (data.age) lines.push('Возраст: ' + data.age);
   if (direction) lines.push('Направление: ' + direction);
-  if (slotChip) lines.push('Удобно: ' + slotChip.textContent.trim());
+  const preferredSlot = [dayChip ? dayChip.textContent.trim() : '', slotChip ? slotChip.textContent.trim() : ''].filter(Boolean).join(', ');
+  if (preferredSlot) lines.push('Удобно: ' + preferredSlot);
   else if (data.date) lines.push('Дата: ' + data.date);
   return 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(lines.join('\n'));
 }
@@ -318,7 +403,7 @@ function applyDirectorSlots() {
   if (!Array.isArray(slots)) return;
   const active = slots.filter(s => s && s.active !== false && (s.label || '').trim());
   if (!active.length) return;
-  document.querySelectorAll('[data-chip-role="slot"]').forEach(group => {
+  document.querySelectorAll('[data-chip-role="slot"]:not([data-schedule-driven])').forEach(group => {
     group.innerHTML = active.map(s =>
       '<button type="button" class="form-chip" data-value="' +
       escapeHtml(s.value || s.id || '') + '">' + escapeHtml(s.label) + '</button>'
