@@ -251,11 +251,11 @@ function submitLead(formId, form) {
 const SCHEDULE = {
   guitar: {
     days: ['Понедельник', 'Среда', 'Пятница'],
-    slots: function (age) {
-      var s = ['9:00–10:00', '10:00–11:00', '11:00–12:00',
-               '16:00–17:00', '17:00–18:00', '18:00–19:00', '19:00–20:00'];
-      if (parseInt(age) >= 18) s.push('20:00–21:00 (18+)');
-      return s;
+    slots: function () {
+      /* Group 8 (20:00–21:00) is the adult 18+ group — always offered. */
+      return ['9:00–10:00', '10:00–11:00', '11:00–12:00',
+              '16:00–17:00', '17:00–18:00', '18:00–19:00', '19:00–20:00',
+              '20:00–21:00 (18+)'];
     }
   },
   painting: {
