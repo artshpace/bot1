@@ -21,6 +21,7 @@
 
   var ROOT_ID = 'telegram-link-root';
   var pollTimer = null;
+  var isDirector = false; // test button is director-only
 
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -72,7 +73,7 @@
         '<div class="tg-status on"><span class="tg-dot"></span>Подключён' + esc(when) + '</div>' +
         '<p class="tg-sub">Бот будет присылать вам напоминания о занятиях и статус заявок.</p>' +
         '<div class="tg-actions">' +
-          '<button type="button" class="btn btn-primary btn-sm" id="tg-test">Отправить тест</button>' +
+          (isDirector ? '<button type="button" class="btn btn-primary btn-sm" id="tg-test">Отправить тест</button>' : '') +
           '<button type="button" class="btn btn-ghost btn-sm" id="tg-unlink">Отключить</button>' +
         '</div>' +
         '<div class="tg-msg" id="tg-msg"></div>' +
@@ -213,7 +214,12 @@
     watchMockTelegram();
     injectStyles();
     root.innerHTML = '<div class="tg-card"><p class="tg-sub">Загрузка…</p></div>';
-    window.SUPA.myTelegram().then(function (info) {
+    Promise.all([
+      window.SUPA.myProfile().catch(function () { return null; }),
+      window.SUPA.myTelegram()
+    ]).then(function (arr) {
+      var me = arr[0], info = arr[1];
+      isDirector = !!(me && me.role === 'director');
       if (info && info.linked) renderLinked(root, info);
       else renderUnlinked(root);
     }).catch(function () { renderUnlinked(root); });
