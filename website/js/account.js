@@ -255,7 +255,8 @@
     var file = location.pathname.split('/').pop() || 'dashboard.html';
     // Director is the owner superuser → treated as admin for nav/label. [Phase 2 P0]
     var isAdmin = me && (me.role === 'admin' || me.role === 'director');
-    var roleLabel = isAdmin ? 'Администратор'
+    var roleLabel = (me && me.role === 'director') ? 'Директор'
+      : isAdmin ? 'Администратор'
       : kind === 'parent' ? 'Родитель'
       : kind === 'teacher' ? 'Преподаватель'
       : 'Ученик';
