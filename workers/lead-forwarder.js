@@ -28,6 +28,11 @@ export default {
       return handleBotWebhook(request, env);
     }
 
+    // --- Test notification: cabinet → Worker → user's Telegram ---------------
+    if (url.pathname === '/notify-test') {
+      return handleNotifyTest(request, env);
+    }
+
     // --- Lead forwarding (default, unchanged behaviour) -----------------------
     return handleLead(request, env);
   }
@@ -152,6 +157,59 @@ async function handleBotWebhook(request, env) {
 }
 
 function ok() { return new Response('OK', { status: 200 }); }
+
+/* =============================================================================
+   TEST NOTIFICATION  — proves the chain site → Worker → user's Telegram.
+   The cabinet calls this with the user's Supabase access token. We validate
+   the token (→ user id), read that user's telegram_chat_id (service-role) and
+   send them a test message. Token + chat_id never leave the server.
+   ============================================================================= */
+async function handleNotifyTest(request, env) {
+  const cors = {
+    'Access-Control-Allow-Origin': 'https://artshpace.github.io',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+  if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+  if (request.method !== 'POST') return jsonRes({ ok: false, error: 'method' }, 405, cors);
+
+  const token = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token) return jsonRes({ ok: false, error: 'no_token' }, 401, cors);
+
+  const base = env.SUPABASE_URL.replace(/\/+$/, '');
+
+  // Validate the user's token → resolve their id.
+  const uRes = await fetch(base + '/auth/v1/user', {
+    headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + token }
+  });
+  if (!uRes.ok) return jsonRes({ ok: false, error: 'invalid_token' }, 401, cors);
+  const user = await uRes.json();
+  const uid = user && user.id;
+  if (!uid) return jsonRes({ ok: false, error: 'no_user' }, 401, cors);
+
+  // Read their chat id with the service-role key.
+  const svc = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY };
+  const pRes = await fetch(base + '/rest/v1/profiles?select=telegram_chat_id,name&id=eq.' +
+                           encodeURIComponent(uid) + '&limit=1', { headers: svc });
+  if (!pRes.ok) return jsonRes({ ok: false, error: 'lookup_failed' }, 502, cors);
+  const rows = await pRes.json();
+  const row = (Array.isArray(rows) && rows[0]) || {};
+  if (!row.telegram_chat_id) return jsonRes({ ok: false, error: 'not_linked' }, 200, cors);
+
+  const firstName = (row.name || '').trim().split(/\s+/)[1] || (row.name || '').trim();
+  await reply(env, row.telegram_chat_id,
+    '🔔 *Тестовое уведомление*\n' + (firstName ? (firstName + ', ') : '') +
+    'связь работает! Бот *Shpigotskiy Art Space* готов присылать вам напоминания о занятиях и статусе заявок.');
+
+  return jsonRes({ ok: true }, 200, cors);
+}
+
+function jsonRes(obj, status, cors) {
+  return new Response(JSON.stringify(obj), {
+    status: status,
+    headers: Object.assign({ 'Content-Type': 'application/json' }, cors || {})
+  });
+}
 
 // Look up + consume a binding code via the service-role key (bypasses RLS).
 // Returns 'ok' | 'expired' | 'invalid'.

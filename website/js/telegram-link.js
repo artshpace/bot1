@@ -16,6 +16,8 @@
 
   // ⚠️ ПРОВЕРЬ имя бота у @BotFather (без @). По умолчанию из роадмапа.
   var BOT_USERNAME = 'artshpacebot';
+  // Same Worker that forwards leads now also exposes /notify-test.
+  var NOTIFY_URL = 'https://sas-lead-forwarder.artshpace.workers.dev/notify-test';
 
   var ROOT_ID = 'telegram-link-root';
   var pollTimer = null;
@@ -70,10 +72,29 @@
         '<div class="tg-status on"><span class="tg-dot"></span>Подключён' + esc(when) + '</div>' +
         '<p class="tg-sub">Бот будет присылать вам напоминания о занятиях и статус заявок.</p>' +
         '<div class="tg-actions">' +
+          '<button type="button" class="btn btn-primary btn-sm" id="tg-test">Отправить тест</button>' +
           '<button type="button" class="btn btn-ghost btn-sm" id="tg-unlink">Отключить</button>' +
         '</div>' +
         '<div class="tg-msg" id="tg-msg"></div>' +
       '</div>';
+
+    var testBtn = document.getElementById('tg-test');
+    if (testBtn) testBtn.addEventListener('click', function () {
+      testBtn.disabled = true; setMsg('Отправляем тест…', 'wait');
+      window.SUPA.client.auth.getSession().then(function (s) {
+        var token = s && s.data && s.data.session && s.data.session.access_token;
+        if (!token) throw new Error('Сессия не найдена — войдите заново');
+        return fetch(NOTIFY_URL, { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; });
+      }).then(function (res) {
+        if (res && res.ok) setMsg('Отправлено — проверьте Telegram ✓', 'ok');
+        else if (res && res.error === 'not_linked') setMsg('Аккаунт не привязан.', 'err');
+        else setMsg('Не удалось отправить' + (res && res.error ? ' (' + res.error + ')' : ''), 'err');
+      }).catch(function (ex) {
+        setMsg('Ошибка: ' + (ex && ex.message ? ex.message : 'сбой запроса'), 'err');
+      }).then(function () { testBtn.disabled = false; });
+    });
 
     var btn = document.getElementById('tg-unlink');
     if (btn) btn.addEventListener('click', function () {
