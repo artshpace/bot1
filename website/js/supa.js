@@ -106,8 +106,21 @@
   /* ---- small DOM helpers reused across the auth pages ---- */
   function showError(el, msg) {
     if (!el) return;
-    el.textContent = msg;
+    if (msg && typeof msg === 'object') {
+      msg = msg.message || msg.error_description || msg.error || JSON.stringify(msg);
+    }
+    el.textContent = msg || 'Произошла ошибка. Попробуйте ещё раз.';
     el.classList.add('show');
+  }
+  // Pull a readable string out of any Supabase / fetch error shape.
+  function errMsg(e) {
+    if (!e) return 'Неизвестная ошибка';
+    var raw = e.message || e.msg || e.error_description || e.error || '';
+    if (!raw && typeof e === 'object') { try { raw = JSON.stringify(e); } catch (x) { raw = String(e); } }
+    if (/sending|smtp|email/i.test(raw)) {
+      return 'Не удалось отправить письмо. Проверьте настройки SMTP в Supabase.';
+    }
+    return translate(raw) || 'Произошла ошибка. Попробуйте ещё раз.';
   }
   function clearError(el) { if (el) el.classList.remove('show'); }
   function busy(btn, on, label) {
@@ -174,11 +187,24 @@
 
     recover: function (email) {
       var redirect = location.origin + location.pathname.replace(/recover\.html$/, 'reset.html');
-      return client.auth.resetPasswordForEmail((email || '').trim(), { redirectTo: redirect })
+      // Guard against a hanging request (e.g. SMTP misconfigured on the
+      // server): if Supabase doesn't answer within 20s, fail with a clear
+      // message instead of leaving the button stuck on "Отправляем…".
+      var timeout = new Promise(function (_, reject) {
+        setTimeout(function () {
+          reject(new Error('Сервер не отвечает. Похоже, не настроена отправка писем (SMTP) в Supabase.'));
+        }, 20000);
+      });
+      var call = client.auth.resetPasswordForEmail((email || '').trim(), { redirectTo: redirect })
         .then(function (res) {
-          if (res.error) throw new Error(translate(res.error.message));
+          if (res.error) {
+            // eslint-disable-next-line no-console
+            console.error('[recover] Supabase error:', res.error);
+            throw new Error(errMsg(res.error));
+          }
           return { ok: true };
         });
+      return Promise.race([call, timeout]);
     },
 
     // For reset.html: complete the password change using the recovery token
