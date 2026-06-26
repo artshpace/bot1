@@ -244,6 +244,27 @@
         });
     },
 
+    // Update editable profile fields (name / phone / role) in one shot. RLS
+    // (profiles_admin_all) lets only admin/director write other rows; the
+    // prevent_role_change guard still clamps an unauthorised role change while
+    // letting name/phone through. We re-read the row so the UI shows exactly
+    // what the DB kept. `fields` may contain any of: name, phone, role.
+    updateProfile: function (userId, fields) {
+      if (!client) return Promise.reject(new Error('Supabase не настроен'));
+      fields = fields || {};
+      var patch = {};
+      if (fields.name  !== undefined) patch.name  = (fields.name  == null ? null : String(fields.name).trim());
+      if (fields.phone !== undefined) patch.phone = (fields.phone == null ? null : String(fields.phone).trim());
+      if (fields.role  !== undefined) patch.role  = fields.role;
+      if (!Object.keys(patch).length) return Promise.reject(new Error('Нет изменений'));
+      return client.from('profiles').update(patch).eq('id', userId)
+        .select('id,name,phone,role').maybeSingle()
+        .then(function (r) {
+          if (r.error) throw new Error(translate(r.error.message));
+          return r.data; // actual row after RLS + guard
+        });
+    },
+
     // The signed-in user's own profile (incl. real role) — for gating UI.
     myProfile: function () {
       if (!client) return Promise.resolve(null);
