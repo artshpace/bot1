@@ -30,6 +30,7 @@
     if (document.getElementById('tg-link-styles')) return;
     var css =
       '.tg-card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:20px 22px;margin-top:24px;max-width:560px;}' +
+      '#' + ROOT_ID + '[data-in-grid] .tg-card{max-width:none;margin-top:0;height:100%;box-sizing:border-box;}' +
       '.tg-card h2{margin:0 0 4px;font-size:1.15rem;display:flex;align-items:center;gap:8px;}' +
       '.tg-sub{color:var(--text-muted);font-size:.86rem;margin:0 0 16px;line-height:1.5;}' +
       '.tg-ico{width:22px;height:22px;color:#229ED9;flex:0 0 auto;}' +
@@ -157,7 +158,15 @@
     var marker = settings.querySelector('[data-tg-status], [data-tg-link]');
     if (!marker) return false;
     var section = marker.closest('.settings-card') || marker.closest('section');
-    if (section && section.style.display !== 'none') section.style.display = 'none';
+    if (!section) return true;
+    // Move our real card into the grid, right where the mock block was, then
+    // hide the mock — so there's no empty gap and the layout stays consistent.
+    var root = document.getElementById(ROOT_ID);
+    if (root && section.parentNode && root.parentNode !== section.parentNode) {
+      section.parentNode.insertBefore(root, section);
+      root.setAttribute('data-in-grid', '1');
+    }
+    if (section.style.display !== 'none') section.style.display = 'none';
     return true;
   }
 

@@ -138,7 +138,9 @@ async function handleBotWebhook(request, env) {
         await reply(env, chatId, '⚠️ Код недействителен. Сгенерируйте новый в кабинете: Настройки → «Подключить Telegram».');
       }
     } catch (e) {
-      await reply(env, chatId, '⚠️ Не удалось привязать аккаунт. Попробуйте ещё раз чуть позже.');
+      // Surface the reason (status / message) so misconfig is easy to spot.
+      console.error('bindCode error:', e && e.message);
+      await reply(env, chatId, '⚠️ Не удалось привязать аккаунт.\n\n_Причина:_ `' + ((e && e.message) || 'неизвестно') + '`\n\nПроверьте переменные SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в Worker.');
     }
     return ok();
   }
