@@ -29,10 +29,12 @@
     'admin-leads.html', 'admin-trials.html', 'admin-teachers.html',
     'admin-funnel.html', 'admin-analytics.html', 'admin-broadcast.html',
     'admin-skillmap.html', 'admin-churn.html', 'admin-reports.html',
-    'admin-orders.html', 'admin-ads.html', 'director.html',
+    'admin-orders.html', 'admin-ads.html',
     /* Educational v1.1 */
     'admin-journal.html', 'admin-recalculations.html', 'admin-rehearsals.html',
     'admin-tickets.html', 'admin-branding.html'];
+  // Pages reserved for the Director (owner superuser) only. [Phase 2 P0]
+  var DIRECTOR_PAGES = ['director.html'];
   // Pages that belong to the Parent cabinet.
   var PARENT_PAGES = ['parent.html'];
   // Pages that belong to the Teacher cabinet.
@@ -45,17 +47,21 @@
 
   var file = (location.pathname.split('/').pop() || 'dashboard.html');
   var isPublic = PUBLIC_PAGES.indexOf(file) !== -1;
+  var isDirectorPage = DIRECTOR_PAGES.indexOf(file) !== -1;
   var isAdminPage = ADMIN_PAGES.indexOf(file) !== -1;
   var isParentPage = PARENT_PAGES.indexOf(file) !== -1;
   var isTeacherPage = TEACHER_PAGES.indexOf(file) !== -1;
   var isSharedPage = SHARED_PAGES.indexOf(file) !== -1;
   // Anything left over (and not public/shared) is a student cabinet page.
-  var isStudentPage = !isPublic && !isAdminPage && !isParentPage && !isTeacherPage && !isSharedPage;
+  var isStudentPage = !isPublic && !isDirectorPage && !isAdminPage && !isParentPage && !isTeacherPage && !isSharedPage;
   var user = (window.API && API.auth) ? API.auth.current() : null;
   var role = user ? user.role : null;
+  // Director is the owner superuser: inherits every admin/staff privilege.
+  var isPriv = (role === 'admin' || role === 'director');
 
   function home(u) {
     if (!u) return 'login.html';
+    if (u.role === 'director') return 'director.html';
     if (u.role === 'admin') return 'admin.html';
     if (u.role === 'parent') return 'parent.html';
     if (u.role === 'teacher') return 'teacher.html';
@@ -72,19 +78,24 @@
     location.replace(home(user));
     return;
   }
-  if (isAdminPage && role !== 'admin') {
+  if (isDirectorPage && role !== 'director') {
+    // Director-only area (e.g. access management) — admins are bounced.
     location.replace(home(user));
     return;
   }
-  if (isParentPage && role !== 'parent' && role !== 'admin') {
+  if (isAdminPage && !isPriv) {
     location.replace(home(user));
     return;
   }
-  if (isTeacherPage && role !== 'teacher' && role !== 'admin') {
+  if (isParentPage && role !== 'parent' && !isPriv) {
     location.replace(home(user));
     return;
   }
-  if (isStudentPage && role !== 'student' && role !== 'admin') {
+  if (isTeacherPage && role !== 'teacher' && !isPriv) {
+    location.replace(home(user));
+    return;
+  }
+  if (isStudentPage && role !== 'student' && !isPriv) {
     // e.g. a parent or teacher trying to open a student cabinet page.
     location.replace(home(user));
     return;

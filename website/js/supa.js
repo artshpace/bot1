@@ -96,6 +96,7 @@
   }
 
   function home(role) {
+    if (role === 'director') return 'director.html';
     if (role === 'admin') return 'admin.html';
     if (role === 'parent') return 'parent.html';
     if (role === 'teacher') return 'teacher.html';
@@ -176,6 +177,44 @@
           if (res.error) throw new Error(translate(res.error.message));
           return { ok: true };
         });
+    },
+
+    // ---- Role management (director only; RLS enforces who may read/write) ----
+    // Returns every profile. RLS lets only admin/director read all rows; for a
+    // normal user this resolves to just their own row.
+    listProfiles: function () {
+      if (!client) return Promise.resolve([]);
+      return client.from('profiles')
+        .select('id,name,phone,role,created_at')
+        .order('created_at', { ascending: true })
+        .then(function (r) {
+          if (r.error) throw new Error(translate(r.error.message));
+          return r.data || [];
+        });
+    },
+
+    // Update one profile's role. The DB guard (prevent_role_change) is the real
+    // authority: a non-director who tries to grant admin/director is silently
+    // reverted, so we re-read the row and report the role that actually stuck.
+    setRole: function (userId, role) {
+      if (!client) return Promise.reject(new Error('Supabase не настроен'));
+      return client.from('profiles').update({ role: role }).eq('id', userId)
+        .select('id,role').maybeSingle()
+        .then(function (r) {
+          if (r.error) throw new Error(translate(r.error.message));
+          return r.data; // { id, role } — actual role after the guard
+        });
+    },
+
+    // The signed-in user's own profile (incl. real role) — for gating UI.
+    myProfile: function () {
+      if (!client) return Promise.resolve(null);
+      return client.auth.getUser().then(function (r) {
+        var u = r && r.data && r.data.user;
+        return u ? fetchProfile(u.id).then(function (p) {
+          return p ? { id: u.id, role: p.role, name: p.name, phone: p.phone } : null;
+        }) : null;
+      });
     }
   };
 

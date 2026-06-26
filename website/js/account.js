@@ -250,10 +250,11 @@
     // Shared pages declare data-cab-sidebar="auto" → pick nav by role.  [v0.7]
     if (kind === 'auto') {
       var r = me && me.role;
-      kind = r === 'admin' ? 'admin' : r === 'parent' ? 'parent' : r === 'teacher' ? 'teacher' : 'student';
+      kind = (r === 'admin' || r === 'director') ? 'admin' : r === 'parent' ? 'parent' : r === 'teacher' ? 'teacher' : 'student';
     }
     var file = location.pathname.split('/').pop() || 'dashboard.html';
-    var isAdmin = me && me.role === 'admin';
+    // Director is the owner superuser → treated as admin for nav/label. [Phase 2 P0]
+    var isAdmin = me && (me.role === 'admin' || me.role === 'director');
     var roleLabel = isAdmin ? 'Администратор'
       : kind === 'parent' ? 'Родитель'
       : kind === 'teacher' ? 'Преподаватель'
@@ -271,7 +272,11 @@
 
     var nav = '';
     if (kind === 'admin') {
-      nav += ADMIN_NAV.map(link).join('');
+      // "Панель директора" is director-only; hide it from plain admins. [Phase 2 P0]
+      var isDirector = me && me.role === 'director';
+      nav += ADMIN_NAV.filter(function (it) {
+        return it.href !== 'director.html' || isDirector;
+      }).map(link).join('');
     } else if (kind === 'parent') {
       nav += PARENT_NAV.map(link).join('');
     } else if (kind === 'teacher') {
@@ -402,6 +407,7 @@
 
   function roleHome() {
     var me = API.auth.current();
+    if (me && me.role === 'director') return { href: 'director.html',  label: 'Панель директора' };
     if (me && me.role === 'admin')   return { href: 'admin.html',    label: 'Админ-панель' };
     if (me && me.role === 'parent')  return { href: 'parent.html',   label: 'Кабинет родителя' };
     if (me && me.role === 'teacher') return { href: 'teacher.html',  label: 'Кабинет преподавателя' };
@@ -559,7 +565,8 @@
       API.auth.login(login, password).then(function (user) {
         var dest = getNextParam();
         if (dest === 'dashboard.html') {
-          if (user.role === 'admin') dest = 'admin.html';
+          if (user.role === 'director') dest = 'director.html';
+          else if (user.role === 'admin') dest = 'admin.html';
           else if (user.role === 'parent') dest = 'parent.html';
           else if (user.role === 'teacher') dest = 'teacher.html';
         }
