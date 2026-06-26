@@ -257,8 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
    buildWhatsAppLink() makes a generic link; buildWhatsAppFromForm() pre-fills
    the parent's submitted details so the chat opens ready to send. */
 const WA_NUMBER = '77086366351';
-/* Replace with your actual Worker URL after deploying workers/lead-forwarder.js */
-const WORKER_URL = 'https://sas-lead-forwarder.ТВОЙ_АККАУНТ.workers.dev/submit-lead';
+/* Cloudflare Worker (workers/lead-forwarder.js) → Telegram. */
+const WORKER_URL = 'https://sas-lead-forwarder.artshpace.workers.dev/submit-lead';
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
