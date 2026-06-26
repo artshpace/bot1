@@ -147,6 +147,32 @@
   }
   function stopPoll() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
 
+  // account.js renders an older MOCK Telegram block (button "Привязать
+  // Telegram" + a code to copy) inside #settings-root. That mock writes to
+  // localStorage and does NOT reach the real bot, so we hide it and keep only
+  // this real card. account.js renders asynchronously, so we watch for it.
+  function hideMockTelegram() {
+    var settings = document.getElementById('settings-root');
+    if (!settings) return;
+    var marker = settings.querySelector('[data-tg-status], [data-tg-link]');
+    if (!marker) return false;
+    var section = marker.closest('.settings-card') || marker.closest('section');
+    if (section && section.style.display !== 'none') section.style.display = 'none';
+    return true;
+  }
+
+  function watchMockTelegram() {
+    var settings = document.getElementById('settings-root');
+    if (!settings) return;
+    if (hideMockTelegram()) return; // already there
+    var obs = new MutationObserver(function () {
+      if (hideMockTelegram()) obs.disconnect();
+    });
+    obs.observe(settings, { childList: true, subtree: true });
+    // Safety: stop observing after 10s regardless.
+    setTimeout(function () { obs.disconnect(); }, 10000);
+  }
+
   function mount() {
     var root = document.getElementById(ROOT_ID);
     if (!root) return;
@@ -154,6 +180,7 @@
       // Supabase not configured — this feature can't work; stay silent.
       return;
     }
+    watchMockTelegram();
     injectStyles();
     root.innerHTML = '<div class="tg-card"><p class="tg-sub">Загрузка…</p></div>';
     window.SUPA.myTelegram().then(function (info) {
