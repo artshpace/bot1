@@ -78,6 +78,18 @@ returns boolean language sql stable security definer set search_path = public as
   select exists (select 1 from public.student_guardians g where g.student_id = p_student and g.parent_id = auth.uid());
 $$;
 
+-- is the current user the teacher of any group that contains this roster student?
+-- (was meant to live in 0011 but was missing — defined here so the write
+--  policies below resolve.)
+create or replace function public.is_student_teacher(p_student uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.group_members gm
+    join public.study_groups g on g.id = gm.group_id
+    where gm.student_id = p_student and g.teacher_id = auth.uid()
+  );
+$$;
+
 -- ── RLS: skills (каталог) ────────────────────────────────────────────
 drop policy if exists "skills_select" on public.skills;
 create policy "skills_select" on public.skills for select using ( auth.uid() is not null );
