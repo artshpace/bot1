@@ -236,9 +236,10 @@ function submitLead(formId, form) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: payload.name, phone: payload.phone, age: payload.age,
+        name: payload.name, phone: payload.phone, email: payload.email, age: payload.age,
         direction: payload.direction, slot: payload.preferredTime,
-        utm: { campaign: payload.utm.campaign, source: payload.utm.source }
+        source: payload.source, comment: payload.comment,
+        utm: payload.utm
       })
     }).catch(() => { /* silent — lead already saved locally */ });
   }

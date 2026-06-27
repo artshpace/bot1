@@ -62,6 +62,30 @@ async function handleLead(request, env) {
 
   const { name, phone, age, direction, slot, utm } = body;
 
+  // Persist the lead to Supabase (service-role) so the CRM/funnel has real
+  // data. Best-effort: never block the Telegram notification on it.
+  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY && (name || phone)) {
+    try {
+      const u = utm || {};
+      await fetch(env.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1/leads', {
+        method: 'POST',
+        headers: {
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({
+          name: name || null, phone: phone || null, email: body.email || null,
+          age: age || null, direction: direction || null, slot: slot || null,
+          source: body.source || null, comment: body.comment || null,
+          utm_source: u.source || null, utm_medium: u.medium || null,
+          utm_campaign: u.campaign || null, utm_content: u.content || null, utm_term: u.term || null
+        })
+      });
+    } catch (e) { /* swallow — Telegram still fires below */ }
+  }
+
   const text = [
     '🎨 *Новая заявка — Shpigotskiy Art Space*',
     '',
