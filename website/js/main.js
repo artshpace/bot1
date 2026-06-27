@@ -293,6 +293,7 @@ function submitLead(formId, form) {
       body: JSON.stringify({
         name: payload.name, phone: payload.phone, email: payload.email, age: payload.age,
         direction: payload.direction, slot: payload.preferredTime,
+        slotDate: payload.preferredDate,
         source: payload.source, comment: payload.comment,
         utm: payload.utm
       })

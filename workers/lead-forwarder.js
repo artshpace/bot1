@@ -103,8 +103,8 @@ async function handleLead(request, env) {
       console.log('calendar: skipped — missing env: ' + miss.join(', '));
     } else {
       try {
-        await createCalendarEvent(env, { name, phone, direction, slot });
-        console.log('calendar: event created (slot: ' + (slot || '—') + ')');
+        await createCalendarEvent(env, { name, phone, direction, slot, slotDate: body.slotDate });
+        console.log('calendar: event created (slot: ' + (slot || '—') + ', date: ' + (body.slotDate || '—') + ')');
       } catch (e) {
         console.error('calendar error: ' + (e && e.message ? e.message : e));
       }
@@ -378,10 +378,11 @@ async function reply(env, chatId, text) {
 const ALMATY_TZ = 'Asia/Almaty';
 const ALMATY_OFFSET = '+05:00';
 const RU_DOW = { 'воскресенье': 0, 'понедельник': 1, 'вторник': 2, 'среда': 3, 'четверг': 4, 'пятница': 5, 'суббота': 6 };
+const RU_DOW_SHORT = { 'вс': 0, 'пн': 1, 'вт': 2, 'ср': 3, 'чт': 4, 'пт': 5, 'сб': 6 };
 
 async function createCalendarEvent(env, lead) {
   const token = await getGoogleAccessToken(env);
-  const when = parseSlot(lead.slot);
+  const when = parseSlot(lead.slot, lead.slotDate);
   const dir = lead.direction || 'занятие';
   const summary = 'Пробное — ' + dir + (lead.name ? ', ' + lead.name : '');
   const description = [
@@ -400,13 +401,17 @@ async function createCalendarEvent(env, lead) {
       end:   { dateTime: when.endISO,   timeZone: ALMATY_TZ }
     };
   } else {
-    // Слот не распознан — событие на весь завтрашний день с пометкой согласовать.
-    const d = new Date(Date.now() + 86400000);
-    const day = d.toISOString().slice(0, 10);
+    // Слот не распознан — событие на весь день с пометкой согласовать.
+    // Для all-day end.date ДОЛЖЕН быть следующим днём (иначе Google прячет событие).
+    const base = (lead.slotDate && /^\d{4}-\d{2}-\d{2}$/.test(lead.slotDate))
+      ? new Date(lead.slotDate + 'T00:00:00Z')
+      : new Date(Date.now() + 86400000);
+    const startDay = base.toISOString().slice(0, 10);
+    const endDay = new Date(base.getTime() + 86400000).toISOString().slice(0, 10);
     event = {
       summary: 'Пробное (согласовать время) — ' + (lead.name || dir),
       description, location,
-      start: { date: day }, end: { date: day }
+      start: { date: startDay }, end: { date: endDay }
     };
   }
 
@@ -419,27 +424,34 @@ async function createCalendarEvent(env, lead) {
   if (!r.ok) throw new Error('calendar insert failed: ' + r.status + ' ' + (await r.text()));
 }
 
-// "Среда, 17:00–18:00 (18+)" → ближайшая среда, 17:00–18:00 в Asia/Almaty.
-function parseSlot(slot) {
-  if (!slot) return null;
-  const lower = slot.toLowerCase();
-  let dow = null;
-  for (const k in RU_DOW) { if (lower.indexOf(k) !== -1) { dow = RU_DOW[k]; break; } }
-  const times = slot.match(/(\d{1,2}):(\d{2})/g);
-  if (dow === null || !times || !times.length) return null;
-
+// Build the event datetimes. The CONCRETE date picked in the form (slotDate,
+// ISO yyyy-mm-dd) is authoritative — we no longer guess from the weekday text.
+// Times are parsed from the slot label ("...20:00–21:00 (18+)").
+function parseSlot(slot, slotDate) {
+  const times = (slot || '').match(/(\d{1,2}):(\d{2})/g);
+  if (!times || !times.length) return null;
   const start = times[0];
   const end = times[1] || addHour(start);
 
-  // Ближайшая дата с нужным днём недели (в Almaty-времени). Берём «сегодня» в
-  // Almaty, ищем первый день >= завтра с этим днём недели.
-  const nowAlmaty = new Date(Date.now() + 5 * 3600 * 1000); // сдвиг в UTC+5
-  let d = new Date(Date.UTC(nowAlmaty.getUTCFullYear(), nowAlmaty.getUTCMonth(), nowAlmaty.getUTCDate()));
-  for (let i = 1; i <= 7; i++) {
-    const cand = new Date(d.getTime() + i * 86400000);
-    if (cand.getUTCDay() === dow) { d = cand; break; }
+  let dayStr = null;
+  if (slotDate && /^\d{4}-\d{2}-\d{2}$/.test(slotDate)) {
+    dayStr = slotDate;                       // exact date from the form
+  } else {
+    // Fallback: derive the next matching weekday from the label (full OR short).
+    const lower = (slot || '').toLowerCase();
+    let dow = null;
+    for (const k in RU_DOW) { if (lower.indexOf(k) !== -1) { dow = RU_DOW[k]; break; } }
+    if (dow === null) for (const k in RU_DOW_SHORT) { if (lower.indexOf(k) !== -1) { dow = RU_DOW_SHORT[k]; break; } }
+    if (dow === null) return null;
+    const nowAlmaty = new Date(Date.now() + 5 * 3600 * 1000);
+    let d = new Date(Date.UTC(nowAlmaty.getUTCFullYear(), nowAlmaty.getUTCMonth(), nowAlmaty.getUTCDate()));
+    for (let i = 1; i <= 7; i++) {
+      const cand = new Date(d.getTime() + i * 86400000);
+      if (cand.getUTCDay() === dow) { d = cand; break; }
+    }
+    dayStr = d.toISOString().slice(0, 10);
   }
-  const dayStr = d.toISOString().slice(0, 10);
+
   return {
     startISO: dayStr + 'T' + pad2(start) + ':00' + ALMATY_OFFSET,
     endISO:   dayStr + 'T' + pad2(end) + ':00' + ALMATY_OFFSET
