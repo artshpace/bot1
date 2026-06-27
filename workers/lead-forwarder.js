@@ -33,6 +33,11 @@ export default {
       return handleNotifyTest(request, env);
     }
 
+    // --- Staff notification: remind a group / student in Telegram ------------
+    if (url.pathname === '/notify') {
+      return handleNotify(request, env);
+    }
+
     // --- Lead forwarding (default, unchanged behaviour) -----------------------
     return handleLead(request, env);
   }
@@ -84,6 +89,13 @@ async function handleLead(request, env) {
         })
       });
     } catch (e) { /* swallow — Telegram still fires below */ }
+  }
+
+  // Create an event in the director's Google Calendar (Задача 5). Best-effort:
+  // only runs if the Google service-account env is configured.
+  if (env.GOOGLE_SA_EMAIL && env.GOOGLE_SA_PRIVATE_KEY && env.GOOGLE_CALENDAR_ID) {
+    try { await createCalendarEvent(env, { name, phone, direction, slot }); }
+    catch (e) { /* swallow — never block the lead on calendar */ }
   }
 
   const text = [
@@ -235,6 +247,67 @@ function jsonRes(obj, status, cors) {
   });
 }
 
+/* =============================================================================
+   STAFF NOTIFICATION (Задача 3) — преподаватель/админ шлёт напоминание в
+   Telegram ученикам группы (и их родителям). Body: { groupId | studentId, text }.
+   Авторизация — Supabase-токен сотрудника; рассылка только привязанным чатам.
+   ============================================================================= */
+async function handleNotify(request, env) {
+  const cors = {
+    'Access-Control-Allow-Origin': 'https://artshpace.github.io',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+  if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
+  if (request.method !== 'POST') return jsonRes({ ok: false, error: 'method' }, 405, cors);
+
+  const token = (request.headers.get('Authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token) return jsonRes({ ok: false, error: 'no_token' }, 401, cors);
+
+  let body; try { body = await request.json(); } catch { return jsonRes({ ok: false, error: 'bad_json' }, 400, cors); }
+  const text = (body.text || '').trim();
+  if (!text) return jsonRes({ ok: false, error: 'no_text' }, 400, cors);
+
+  const base = env.SUPABASE_URL.replace(/\/+$/, '');
+  const svc = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY };
+
+  // 1) verify caller + that they are staff
+  const uRes = await fetch(base + '/auth/v1/user', { headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + token } });
+  if (!uRes.ok) return jsonRes({ ok: false, error: 'invalid_token' }, 401, cors);
+  const uid = (await uRes.json()).id;
+  const roleRes = await fetch(base + '/rest/v1/profiles?select=role&id=eq.' + encodeURIComponent(uid) + '&limit=1', { headers: svc });
+  const role = ((await roleRes.json())[0] || {}).role;
+  if (['admin', 'director', 'teacher'].indexOf(role) === -1) return jsonRes({ ok: false, error: 'forbidden' }, 403, cors);
+
+  // 2) resolve target roster student ids
+  let studentIds = [];
+  if (body.studentId) studentIds = [body.studentId];
+  else if (body.groupId) {
+    const mRes = await fetch(base + '/rest/v1/group_members?select=student_id&group_id=eq.' + encodeURIComponent(body.groupId), { headers: svc });
+    studentIds = (await mRes.json()).map(m => m.student_id);
+  }
+  if (!studentIds.length) return jsonRes({ ok: false, error: 'no_targets' }, 200, cors);
+
+  // 3) collect bound chat ids: student's own account + guardians
+  const inList = studentIds.map(encodeURIComponent).join(',');
+  const sRes = await fetch(base + '/rest/v1/students?select=user_id&id=in.(' + inList + ')', { headers: svc });
+  const userIds = (await sRes.json()).map(s => s.user_id).filter(Boolean);
+  const gRes = await fetch(base + '/rest/v1/student_guardians?select=parent_id&student_id=in.(' + inList + ')', { headers: svc });
+  (await gRes.json()).forEach(g => { if (g.parent_id) userIds.push(g.parent_id); });
+
+  const uniqUsers = Array.from(new Set(userIds));
+  if (!uniqUsers.length) return jsonRes({ ok: true, sent: 0, note: 'no_bound_telegram' }, 200, cors);
+
+  const pRes = await fetch(base + '/rest/v1/profiles?select=telegram_chat_id&id=in.(' + uniqUsers.map(encodeURIComponent).join(',') + ')', { headers: svc });
+  const chatIds = Array.from(new Set((await pRes.json()).map(p => p.telegram_chat_id).filter(Boolean)));
+
+  let sent = 0;
+  for (const chatId of chatIds) {
+    try { await reply(env, chatId, '🔔 *Shpigotskiy Art Space*\n\n' + text); sent++; } catch (e) { /* skip */ }
+  }
+  return jsonRes({ ok: true, sent: sent }, 200, cors);
+}
+
 // Look up + consume a binding code via the service-role key (bypasses RLS).
 // Returns 'ok' | 'expired' | 'invalid'.
 async function bindCode(env, code, chatId) {
@@ -281,4 +354,121 @@ async function reply(env, chatId, text) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' })
   });
+}
+
+/* =============================================================================
+   GOOGLE CALENDAR  — событие в календаре директора на каждый лид (Задача 5)
+   Авторизация: сервисный аккаунт (JWT RS256 → access_token). Календарь Антона
+   расшарен на email сервисного аккаунта с правом редактирования. Время — в
+   Asia/Almaty (UTC+5, без перехода на летнее).
+   ============================================================================= */
+const ALMATY_TZ = 'Asia/Almaty';
+const ALMATY_OFFSET = '+05:00';
+const RU_DOW = { 'воскресенье': 0, 'понедельник': 1, 'вторник': 2, 'среда': 3, 'четверг': 4, 'пятница': 5, 'суббота': 6 };
+
+async function createCalendarEvent(env, lead) {
+  const token = await getGoogleAccessToken(env);
+  const when = parseSlot(lead.slot);
+  const dir = lead.direction || 'занятие';
+  const summary = 'Пробное — ' + dir + (lead.name ? ', ' + lead.name : '');
+  const description = [
+    lead.name ? 'Имя: ' + lead.name : null,
+    lead.phone ? 'Телефон: ' + lead.phone : null,
+    lead.direction ? 'Направление: ' + lead.direction : null,
+    lead.slot ? 'Слот: ' + lead.slot : null
+  ].filter(Boolean).join('\n');
+  const location = 'ул. Интернациональная, 63, 5 этаж';
+
+  let event;
+  if (when) {
+    event = {
+      summary, description, location,
+      start: { dateTime: when.startISO, timeZone: ALMATY_TZ },
+      end:   { dateTime: when.endISO,   timeZone: ALMATY_TZ }
+    };
+  } else {
+    // Слот не распознан — событие на весь завтрашний день с пометкой согласовать.
+    const d = new Date(Date.now() + 86400000);
+    const day = d.toISOString().slice(0, 10);
+    event = {
+      summary: 'Пробное (согласовать время) — ' + (lead.name || dir),
+      description, location,
+      start: { date: day }, end: { date: day }
+    };
+  }
+
+  const calId = encodeURIComponent(env.GOOGLE_CALENDAR_ID);
+  const r = await fetch('https://www.googleapis.com/calendar/v3/calendars/' + calId + '/events', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify(event)
+  });
+  if (!r.ok) throw new Error('calendar insert failed: ' + r.status + ' ' + (await r.text()));
+}
+
+// "Среда, 17:00–18:00 (18+)" → ближайшая среда, 17:00–18:00 в Asia/Almaty.
+function parseSlot(slot) {
+  if (!slot) return null;
+  const lower = slot.toLowerCase();
+  let dow = null;
+  for (const k in RU_DOW) { if (lower.indexOf(k) !== -1) { dow = RU_DOW[k]; break; } }
+  const times = slot.match(/(\d{1,2}):(\d{2})/g);
+  if (dow === null || !times || !times.length) return null;
+
+  const start = times[0];
+  const end = times[1] || addHour(start);
+
+  // Ближайшая дата с нужным днём недели (в Almaty-времени). Берём «сегодня» в
+  // Almaty, ищем первый день >= завтра с этим днём недели.
+  const nowAlmaty = new Date(Date.now() + 5 * 3600 * 1000); // сдвиг в UTC+5
+  let d = new Date(Date.UTC(nowAlmaty.getUTCFullYear(), nowAlmaty.getUTCMonth(), nowAlmaty.getUTCDate()));
+  for (let i = 1; i <= 7; i++) {
+    const cand = new Date(d.getTime() + i * 86400000);
+    if (cand.getUTCDay() === dow) { d = cand; break; }
+  }
+  const dayStr = d.toISOString().slice(0, 10);
+  return {
+    startISO: dayStr + 'T' + pad2(start) + ':00' + ALMATY_OFFSET,
+    endISO:   dayStr + 'T' + pad2(end) + ':00' + ALMATY_OFFSET
+  };
+}
+function pad2(t) { const p = t.split(':'); return (p[0].length < 2 ? '0' + p[0] : p[0]) + ':' + p[1]; }
+function addHour(t) { const p = t.split(':'); let h = (parseInt(p[0], 10) + 1) % 24; return h + ':' + p[1]; }
+
+// --- Service-account OAuth: signed JWT → access_token ---
+async function getGoogleAccessToken(env) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const claim = {
+    iss: env.GOOGLE_SA_EMAIL,
+    scope: 'https://www.googleapis.com/auth/calendar',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now, exp: now + 3600
+  };
+  const unsigned = b64url(JSON.stringify(header)) + '.' + b64url(JSON.stringify(claim));
+  const key = await importPkcs8(env.GOOGLE_SA_PRIVATE_KEY);
+  const sig = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(unsigned));
+  const jwt = unsigned + '.' + b64urlBytes(new Uint8Array(sig));
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=' + jwt
+  });
+  if (!res.ok) throw new Error('token failed: ' + res.status + ' ' + (await res.text()));
+  return (await res.json()).access_token;
+}
+
+async function importPkcs8(pem) {
+  const clean = pem.replace(/\\n/g, '\n')
+    .replace(/-----BEGIN PRIVATE KEY-----/, '').replace(/-----END PRIVATE KEY-----/, '').replace(/\s+/g, '');
+  const der = Uint8Array.from(atob(clean), c => c.charCodeAt(0));
+  return crypto.subtle.importKey('pkcs8', der.buffer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
+}
+
+function b64url(str) { return b64urlBytes(new TextEncoder().encode(str)); }
+function b64urlBytes(bytes) {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }

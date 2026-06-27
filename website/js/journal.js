@@ -16,6 +16,7 @@
   'use strict';
 
   var ROOT_ID = 'attendance-journal-root';
+  var NOTIFY_URL = 'https://sas-lead-forwarder.artshpace.workers.dev/notify';
 
   var DIRECTIONS = [
     { value: 'guitar',   label: 'Гитара / укулеле' },
@@ -310,7 +311,10 @@
             '<div class="jr-inline" style="justify-content:space-between">' +
               '<div><strong>' + esc(g.name) + '</strong> · ' + esc(dirLabel(g.direction)) +
                 ' · ' + (g.schedule || []).map(function (s) { return DOW[s.day] + ' ' + s.start; }).join(', ') + '</div>' +
-              '<button class="btn btn-outline btn-sm" id="jr-gen">Сгенерировать занятия за месяц</button>' +
+              '<div class="jr-inline">' +
+                '<button class="btn btn-ghost btn-sm" id="jr-notify" title="Напоминание в Telegram ученикам/родителям">📨 Напомнить</button>' +
+                '<button class="btn btn-outline btn-sm" id="jr-gen">Сгенерировать занятия за месяц</button>' +
+              '</div>' +
             '</div>' +
             '<div class="jr-members">' + chips + '</div>' +
             (canManage
@@ -328,6 +332,8 @@
               : '') +
           '</div>';
         document.getElementById('jr-gen').addEventListener('click', function () { generateLessons(g); });
+        var notifyBtn = document.getElementById('jr-notify');
+        if (notifyBtn) notifyBtn.addEventListener('click', function () { sendReminder(g); });
         if (canManage) wireAddStudent(members);
         box.querySelectorAll('[data-rm]').forEach(function (b) {
           b.addEventListener('click', function () {
@@ -434,6 +440,29 @@
       sb.from('lessons').upsert(rows, { onConflict: 'group_id,date,start_time', ignoreDuplicates: true })
         .then(function (r) { if (r.error) throw r.error; msg('Готово: занятий в месяце — ' + rows.length + '.', 'ok'); renderGrid(); })
         .catch(function (e) { msg('Ошибка генерации: ' + (e.message || e), 'err'); });
+    }
+
+    /* ---- send a Telegram reminder to the group (Задача 3) ---- */
+    function sendReminder(g) {
+      var def = 'Напоминаем о занятии: ' + dirLabel(g.direction) + ' (' + g.name + '). Ждём вас в студии! 🎨';
+      var txt = window.prompt('Текст напоминания — придёт в Telegram ученикам группы и их родителям (у кого привязан бот):', def);
+      if (txt == null) return;
+      txt = txt.trim(); if (!txt) return;
+      msg('Отправляем напоминание…', 'wait');
+      window.SUPA.client.auth.getSession().then(function (s) {
+        var token = s && s.data && s.data.session && s.data.session.access_token;
+        if (!token) throw new Error('Сессия не найдена — войдите заново');
+        return fetch(NOTIFY_URL, {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ groupId: state.gid, text: txt })
+        });
+      }).then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (res) {
+          if (res && res.ok) {
+            msg(res.sent ? ('Отправлено: ' + res.sent + ' получателям.') : 'Ни у кого в группе не привязан Telegram.', res.sent ? 'ok' : 'err');
+          } else { msg('Не отправилось' + (res && res.error ? ' (' + res.error + ')' : ''), 'err'); }
+        }).catch(function (ex) { msg('Ошибка: ' + (ex && ex.message ? ex.message : 'сбой запроса'), 'err'); });
     }
 
     /* ---- attendance grid ---- */
