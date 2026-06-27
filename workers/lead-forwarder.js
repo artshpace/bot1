@@ -92,10 +92,23 @@ async function handleLead(request, env) {
   }
 
   // Create an event in the director's Google Calendar (Задача 5). Best-effort:
-  // only runs if the Google service-account env is configured.
-  if (env.GOOGLE_SA_EMAIL && env.GOOGLE_SA_PRIVATE_KEY && env.GOOGLE_CALENDAR_ID) {
-    try { await createCalendarEvent(env, { name, phone, direction, slot }); }
-    catch (e) { /* swallow — never block the lead on calendar */ }
+  // we log the outcome (missing env / error / success) so failures are visible
+  // in the Worker logs, but never block the lead on it.
+  {
+    const miss = [];
+    if (!env.GOOGLE_SA_EMAIL) miss.push('GOOGLE_SA_EMAIL');
+    if (!env.GOOGLE_SA_PRIVATE_KEY) miss.push('GOOGLE_SA_PRIVATE_KEY');
+    if (!env.GOOGLE_CALENDAR_ID) miss.push('GOOGLE_CALENDAR_ID');
+    if (miss.length) {
+      console.log('calendar: skipped — missing env: ' + miss.join(', '));
+    } else {
+      try {
+        await createCalendarEvent(env, { name, phone, direction, slot });
+        console.log('calendar: event created (slot: ' + (slot || '—') + ')');
+      } catch (e) {
+        console.error('calendar error: ' + (e && e.message ? e.message : e));
+      }
+    }
   }
 
   const text = [
