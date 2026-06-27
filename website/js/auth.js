@@ -34,7 +34,7 @@
     'admin-journal.html', 'admin-recalculations.html', 'admin-rehearsals.html',
     'admin-tickets.html', 'admin-branding.html'];
   // Pages reserved for the Director (owner superuser) only. [Phase 2 P0]
-  var DIRECTOR_PAGES = ['director.html'];
+  var DIRECTOR_PAGES = ['director.html', 'admin-payroll.html'];
   // Pages that belong to the Parent cabinet.
   var PARENT_PAGES = ['parent.html'];
   // Pages that belong to the Teacher cabinet.
@@ -45,7 +45,9 @@
     /* Educational v1.1 */
     'journal.html',
     /* Phase 3: развитие/прогресс — ученик видит своё, родитель — ребёнка */
-    'progress.html'];
+    'progress.html',
+    /* Зарплата сотрудника — каждый видит только свою (RLS) */
+    'payroll.html'];
 
   var file = (location.pathname.split('/').pop() || 'dashboard.html');
   var isPublic = PUBLIC_PAGES.indexOf(file) !== -1;

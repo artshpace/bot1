@@ -198,6 +198,7 @@
   ];
   var TEACHER_NAV = [
     { href: 'teacher.html',       label: 'Кабинет',           icon: ICON.home     },
+    { href: 'payroll.html',       label: 'Моя зарплата',      icon: ICON.card     },
     { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     },
     { href: 'cart.html',          label: 'Корзина',           icon: ICON.receipt  },
     { href: 'notifications.html', label: 'Уведомления',       icon: ICON.bell     },
@@ -221,6 +222,7 @@
     /* --- Образование v1.1 --- */
     { href: 'admin-journal.html',        label: 'Эл. журнал',       icon: ICON.book      },
     { href: 'admin-recalculations.html', label: 'Перерасчёты',      icon: ICON.card      },
+    { href: 'admin-payroll.html',        label: 'Зарплаты',         icon: ICON.card      },
     { href: 'admin-rehearsals.html',     label: 'Репетиции',        icon: ICON.calendar  },
     { href: 'admin-tickets.html',        label: 'Билеты',           icon: ICON.ticket    },
     { href: 'admin-branding.html',       label: 'Брендинг',         icon: ICON.gear      },
@@ -278,7 +280,9 @@
       // "Панель директора" is director-only; hide it from plain admins. [Phase 2 P0]
       var isDirector = me && me.role === 'director';
       nav += ADMIN_NAV.filter(function (it) {
-        return it.href !== 'director.html' || isDirector;
+        // Director-only items hidden from plain admins.
+        if ((it.href === 'director.html' || it.href === 'admin-payroll.html') && !isDirector) return false;
+        return true;
       }).map(link).join('');
     } else if (kind === 'parent') {
       nav += PARENT_NAV.map(link).join('');
