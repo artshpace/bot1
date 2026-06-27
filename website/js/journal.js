@@ -118,7 +118,13 @@
     return sb.from('profiles').select('id,name,role').in('role', ['teacher', 'admin', 'director'])
       .then(function (r) { if (r.error) throw r.error; return r.data || []; });
   }
-  function loadStudents() {
+  function loadRoster() {
+    return sb.from('students').select('id,name,phone,user_id')
+      .order('name', { ascending: true })
+      .then(function (r) { if (r.error) throw r.error; return r.data || []; });
+  }
+  function loadAccounts() {
+    // Registered student accounts (to optionally link a roster entry to a login).
     return sb.from('profiles').select('id,name,phone').eq('role', 'student')
       .order('name', { ascending: true })
       .then(function (r) { if (r.error) throw r.error; return r.data || []; });
@@ -129,7 +135,7 @@
         if (r.error) throw r.error;
         var ids = (r.data || []).map(function (m) { return m.student_id; });
         if (!ids.length) return [];
-        return sb.from('profiles').select('id,name').in('id', ids)
+        return sb.from('students').select('id,name').in('id', ids)
           .then(function (p) { if (p.error) throw p.error; return p.data || []; });
       });
   }
@@ -307,7 +313,19 @@
               '<button class="btn btn-outline btn-sm" id="jr-gen">Сгенерировать занятия за месяц</button>' +
             '</div>' +
             '<div class="jr-members">' + chips + '</div>' +
-            (canManage ? '<div class="jr-inline"><select class="form-control" id="jr-addstu"><option value="">+ добавить ученика…</option></select></div>' : '') +
+            (canManage
+              ? '<div class="jr-inline" style="gap:14px;align-items:flex-end;margin-top:6px">' +
+                  '<div class="form-group"><label style="font-size:.72rem;text-transform:uppercase;color:var(--text-muted)">Новый ученик</label>' +
+                    '<div class="jr-inline"><input class="form-control" id="jr-newstu-name" placeholder="Имя ученика" style="min-width:160px">' +
+                    '<input class="form-control" id="jr-newstu-phone" placeholder="Телефон (необяз.)" style="min-width:140px">' +
+                    '<button class="btn btn-primary btn-sm" id="jr-newstu-add" type="button">Добавить</button></div>' +
+                  '</div>' +
+                  '<div class="form-group"><label style="font-size:.72rem;text-transform:uppercase;color:var(--text-muted)">Из ростера</label>' +
+                    '<select class="form-control" id="jr-addstu"><option value="">— выбрать ученика —</option></select></div>' +
+                  '<div class="form-group"><label style="font-size:.72rem;text-transform:uppercase;color:var(--text-muted)">Привязать аккаунт</label>' +
+                    '<select class="form-control" id="jr-addacc"><option value="">— из аккаунтов —</option></select></div>' +
+                '</div>'
+              : '') +
           '</div>';
         document.getElementById('jr-gen').addEventListener('click', function () { generateLessons(g); });
         if (canManage) wireAddStudent(members);
@@ -322,23 +340,79 @@
       }).catch(function (e) { box.innerHTML = '<p class="jr-msg err">Состав не загрузился: ' + esc(e.message || e) + '</p>'; });
     }
 
+    function addMember(studentId) {
+      return sb.from('group_members').insert({ group_id: state.gid, student_id: studentId })
+        .then(function (r) { if (r.error && r.error.code !== '23505') throw r.error; renderManage(); renderGrid(); });
+    }
+
     function wireAddStudent(members) {
-      var sel = document.getElementById('jr-addstu');
-      if (!sel) return;
       var have = {}; members.forEach(function (m) { have[m.id] = 1; });
-      loadStudents().then(function (all) {
-        all.filter(function (s) { return !have[s.id]; }).forEach(function (s) {
-          var o = document.createElement('option'); o.value = s.id; o.textContent = (s.name || s.id) + (s.phone ? ' · ' + s.phone : '');
-          sel.appendChild(o);
+
+      // 1) Create a brand-new roster student by name (+ optional phone).
+      var addBtn = document.getElementById('jr-newstu-add');
+      if (addBtn) addBtn.addEventListener('click', function () {
+        var nameEl = document.getElementById('jr-newstu-name');
+        var phoneEl = document.getElementById('jr-newstu-phone');
+        var name = (nameEl.value || '').trim();
+        if (!name) { msg('Введите имя ученика.', 'err'); nameEl.focus(); return; }
+        addBtn.disabled = true; msg('Добавляем…', 'wait');
+        sb.from('students').insert({ name: name, phone: (phoneEl.value || '').trim() || null })
+          .select('id').single()
+          .then(function (r) { if (r.error) throw r.error; return addMember(r.data.id); })
+          .then(function () { msg('Ученик добавлен.', 'ok'); })
+          .catch(function (e) { addBtn.disabled = false; msg('Ошибка: ' + (e.message || e), 'err'); });
+      });
+
+      // 2) Add an existing roster student not yet in this group.
+      var sel = document.getElementById('jr-addstu');
+      if (sel) {
+        loadRoster().then(function (all) {
+          all.filter(function (s) { return !have[s.id]; }).forEach(function (s) {
+            var o = document.createElement('option'); o.value = s.id;
+            o.textContent = (s.name || s.id) + (s.phone ? ' · ' + s.phone : '') + (s.user_id ? ' · 🔗' : '');
+            sel.appendChild(o);
+          });
         });
-      });
-      sel.addEventListener('change', function () {
-        if (!sel.value) return;
-        sel.disabled = true;
-        sb.from('group_members').insert({ group_id: state.gid, student_id: sel.value })
-          .then(function (r) { if (r.error) throw r.error; renderManage(); renderGrid(); })
-          .catch(function (e) { sel.disabled = false; msg('Ошибка: ' + (e.message || e), 'err'); });
-      });
+        sel.addEventListener('change', function () {
+          if (!sel.value) return;
+          sel.disabled = true; msg('Добавляем…', 'wait');
+          addMember(sel.value).then(function () { msg('Добавлен.', 'ok'); })
+            .catch(function (e) { sel.disabled = false; msg('Ошибка: ' + (e.message || e), 'err'); });
+        });
+      }
+
+      // 3) Add a registered student account (creates a linked roster entry so
+      //    that person sees their own journal).
+      var acc = document.getElementById('jr-addacc');
+      if (acc) {
+        Promise.all([loadAccounts(), loadRoster()]).then(function (res) {
+          var accounts = res[0], roster = res[1];
+          var linked = {}; roster.forEach(function (s) { if (s.user_id) linked[s.user_id] = s.id; });
+          accounts.forEach(function (a) {
+            var o = document.createElement('option');
+            o.value = a.id; o.setAttribute('data-name', a.name || '');
+            o.textContent = (a.name || a.id) + (a.phone ? ' · ' + a.phone : '') + (linked[a.id] ? ' · уже в ростере' : '');
+            o.setAttribute('data-roster', linked[a.id] || '');
+            acc.appendChild(o);
+          });
+        });
+        acc.addEventListener('change', function () {
+          if (!acc.value) return;
+          var opt = acc.options[acc.selectedIndex];
+          var existingRoster = opt.getAttribute('data-roster');
+          acc.disabled = true; msg('Добавляем…', 'wait');
+          var p;
+          if (existingRoster) {
+            p = addMember(existingRoster);
+          } else {
+            p = sb.from('students').insert({ name: opt.getAttribute('data-name') || 'Без имени', user_id: acc.value })
+              .select('id').single()
+              .then(function (r) { if (r.error) throw r.error; return addMember(r.data.id); });
+          }
+          p.then(function () { msg('Аккаунт привязан и добавлен.', 'ok'); })
+            .catch(function (e) { acc.disabled = false; msg('Ошибка: ' + (e.message || e), 'err'); });
+        });
+      }
     }
 
     /* ---- generate lessons from the group's schedule for the current month ---- */
@@ -456,9 +530,13 @@
   function studentView(root) {
     var now = new Date();
     var y = now.getFullYear(), m = now.getMonth();
+    var myStudentIds = {};
     root.innerHTML = '<div class="jr-card"><p class="jr-empty">Загрузка журнала…</p></div>';
 
-    loadGroups().then(function (groups) {
+    sb.from('students').select('id').eq('user_id', me.id).then(function (r) {
+      (r.data || []).forEach(function (s) { myStudentIds[s.id] = 1; });
+      return loadGroups();
+    }).then(function (groups) {
       if (!groups.length) { root.innerHTML = '<div class="jr-card"><p class="jr-empty">Вы пока не записаны в учебную группу. Обратитесь к администратору студии.</p></div>'; return; }
       var b = monthBounds(y, m);
       var blocks = [];
@@ -468,7 +546,7 @@
           return loadLessons(g.id, b.start, b.end).then(function (lessons) {
             if (!lessons.length) { blocks.push(groupBlock(g, lessons, {})); return; }
             return loadAttendance(lessons.map(function (l) { return l.id; })).then(function (att) {
-              var amap = {}; att.forEach(function (a) { if (a.student_id === me.id) amap[a.lesson_id] = a.status; });
+              var amap = {}; att.forEach(function (a) { if (myStudentIds[a.student_id]) amap[a.lesson_id] = a.status; });
               blocks.push(groupBlock(g, lessons, amap));
             });
           });
