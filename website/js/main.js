@@ -102,11 +102,33 @@ document.querySelectorAll('.faq-question').forEach(btn => {
 function openModal(id) {
   const m = document.getElementById(id);
   if (!m) return;
+  // If a form inside was already submitted (showing the success panel), reset
+  // it so the visitor can book AGAIN — e.g. another child or another direction.
+  m.querySelectorAll('form').forEach(resetPublicForm);
   m.classList.add('open');
   document.body.style.overflow = 'hidden';
   m.addEventListener('click', e => {
     if (e.target === m) closeModal(id);
   }, { once: false });
+}
+
+/* Bring a public form back to its blank state, but ONLY when it is currently
+   showing its success panel (i.e. after a previous submission). This fixes the
+   "stuck on Заявка отправлена" effect while preserving any in-progress typing. */
+function resetPublicForm(form) {
+  const success = form.querySelector('.form-success');
+  const body = form.querySelector('.form-body');
+  if (!success || !success.classList.contains('show')) return;
+  success.classList.remove('show');
+  if (body) body.style.display = '';
+  form.querySelectorAll('input, textarea').forEach(i => { if (i.type !== 'hidden') i.value = ''; });
+  form.querySelectorAll('.form-chip.selected').forEach(c => c.classList.remove('selected'));
+  form.querySelectorAll('.form-error').forEach(e => e.classList.remove('show'));
+  form.querySelectorAll('.form-control').forEach(e => e.classList.remove('error'));
+  const cal = success.querySelector('.cal-reminder'); if (cal) cal.remove();
+  const acct = success.querySelector('.acct-offer'); if (acct) acct.remove();
+  const ds = document.getElementById('modal-day-section'); if (ds) ds.style.display = 'none';
+  const ts = document.getElementById('modal-time-section'); if (ts) ts.style.display = 'none';
 }
 function closeModal(id) {
   const m = document.getElementById(id);
@@ -178,9 +200,42 @@ function setupForm(formId, onSuccess) {
     submitLead(formId, form);
     if (FORM_SOURCE[formId] === 'trial') {
       injectCalendarButtons(form);
+      injectAccountOffer(form);
       window.open(buildWhatsAppFromForm(form), '_blank');
     }
   });
+}
+
+/* Already signed into the cabinet? (mock session written by api.js / supa.js) */
+function isLoggedIn() {
+  try { return !!JSON.parse(localStorage.getItem('sas_session')); } catch (e) { return false; }
+}
+
+/* Offer to turn the trial submission into a real cabinet account — prefilled
+   with the name/phone the visitor just typed. We OFFER (not auto-create) so we
+   don't litter the system with empty accounts. Hidden for already-signed-in
+   users (they may just be booking another child). */
+function injectAccountOffer(form) {
+  if (isLoggedIn()) return;
+  const success = form.querySelector('.form-success');
+  if (!success || success.querySelector('.acct-offer')) return;
+  const data = {};
+  form.querySelectorAll('[name]').forEach(i => { data[i.name] = (i.value || '').trim(); });
+  const params = new URLSearchParams();
+  if (data.name) params.set('name', data.name);
+  if (data.phone) params.set('phone', data.phone);
+  const href = 'account/register.html' + (params.toString() ? '?' + params.toString() : '');
+
+  const wrap = document.createElement('div');
+  wrap.className = 'acct-offer';
+  wrap.style.cssText = 'margin-top:18px;padding-top:16px;border-top:1px solid rgba(0,0,0,.08);';
+  wrap.innerHTML =
+    '<p style="font-size:0.85rem;color:var(--muted);margin:0 0 10px;">Хотите видеть расписание, посещаемость и прогресс? Заведите личный кабинет — имя и телефон уже подставлены.</p>' +
+    '<a href="' + href + '" class="btn btn-primary btn-full">Создать личный кабинет</a>';
+
+  const closeBtn = success.querySelector('button');
+  if (closeBtn) success.insertBefore(wrap, closeBtn);
+  else success.appendChild(wrap);
 }
 
 /* Map the public direction chips to the canonical direction names used by
@@ -216,7 +271,7 @@ function submitLead(formId, form) {
     age: data.age || '',
     direction: direction,
     source: FORM_SOURCE[formId] || 'callback',
-    preferredDate: data.date || '',
+    preferredDate: (dayChip && dayChip.getAttribute('data-date')) || data.date || '',
     preferredTime: slot || data.time || '',
     comment: data.comment || data.message || '',
     utm: {
@@ -310,7 +365,7 @@ function initScheduleForm(formId) {
     }
 
     if (daySection && dayChipsEl) {
-      makeChips(dayChipsEl, sched.days);
+      renderDateChips(dayChipsEl, sched.days);
       daySection.style.display = '';
     }
     if (timeSection && slotChipsEl) {
@@ -388,6 +443,33 @@ const RU_WEEKDAYS = {
   'воскресенье': 0, 'понедельник': 1, 'вторник': 2, 'среда': 3,
   'четверг': 4, 'пятница': 5, 'суббота': 6
 };
+const RU_SHORT_DOW = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+const RU_MONTHS_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+function fmtDateChip(d) { return RU_SHORT_DOW[d.getDay()] + ', ' + d.getDate() + ' ' + RU_MONTHS_GEN[d.getMonth()]; }
+
+/* Upcoming concrete dates (next ~4 weeks) that fall on the given Russian
+   weekday names, soonest first. Drives the date picker in the trial form. */
+function upcomingDates(days, weeks) {
+  const wanted = {};
+  (days || []).forEach(name => { const n = RU_WEEKDAYS[(name || '').toLowerCase()]; if (n !== undefined) wanted[n] = 1; });
+  const out = [];
+  const base = new Date(); base.setHours(0, 0, 0, 0);
+  const max = (weeks || 4) * 7;
+  for (let i = 1; i <= max && out.length < 8; i++) {
+    const c = new Date(base); c.setDate(base.getDate() + i);
+    if (wanted[c.getDay()]) out.push(c);
+  }
+  return out;
+}
+function renderDateChips(el, days) {
+  const dates = upcomingDates(days, 4);
+  if (!dates.length) { el.innerHTML = ''; return; }
+  el.innerHTML = dates.map(c => {
+    const iso = c.getFullYear() + '-' + pad2(c.getMonth() + 1) + '-' + pad2(c.getDate());
+    return '<button type="button" class="form-chip" data-value="' + iso + '" data-date="' + iso + '">' + fmtDateChip(c) + '</button>';
+  }).join('');
+}
 
 /* Next calendar date (Y/M/D) for a Russian weekday name, strictly in the future. */
 function nextDateForWeekday(ruDay) {
@@ -459,7 +541,9 @@ function injectCalendarButtons(form) {
   const dayChip = form.querySelector('[data-chip-role="day"] .form-chip.selected');
   const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
   if (!dayChip || !slotChip) return;                              // nothing to schedule
-  const date = nextDateForWeekday(dayChip.textContent);
+  // The day chip now carries a concrete ISO date; fall back to weekday parsing.
+  const iso = dayChip.getAttribute('data-date');
+  const date = iso ? new Date(iso + 'T00:00:00') : nextDateForWeekday(dayChip.textContent);
   const range = parseTimeRange(slotChip.textContent);
   if (!date || !range) return;
 
