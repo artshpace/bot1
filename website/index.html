@@ -789,9 +789,29 @@
     <form id="modal-form">
       <div class="form-body">
         <div class="form-group">
-          <label>Имя ребёнка или своё имя</label>
-          <input class="form-control" name="name" placeholder="Например: Иван или Иванов Иван" required data-err="err-modal-name">
-          <div class="form-error" id="err-modal-name">Введите имя</div>
+          <label>Кто будет заниматься?</label>
+          <div class="form-chips" id="modal-who" data-chip-role="who">
+            <button type="button" class="form-chip" data-value="adult">Взрослый (18+)</button>
+            <button type="button" class="form-chip" data-value="child">Ребёнок</button>
+          </div>
+          <div class="form-error chip-err-who" style="display:none;">Выберите, кто будет заниматься</div>
+        </div>
+        <div class="form-group" id="modal-name-adult" style="display:none;">
+          <label>Ваше ФИО</label>
+          <input class="form-control" name="adultName" placeholder="Фамилия Имя Отчество" data-err="err-modal-adultname" data-fullname="true">
+          <div class="form-error" id="err-modal-adultname">Введите полное ФИО (фамилия и имя)</div>
+        </div>
+        <div id="modal-name-child" style="display:none;">
+          <div class="form-group">
+            <label>ФИО ребёнка</label>
+            <input class="form-control" name="childName" placeholder="Фамилия Имя (Отчество)" data-err="err-modal-childname" data-fullname="true">
+            <div class="form-error" id="err-modal-childname">Введите полное ФИО ребёнка</div>
+          </div>
+          <div class="form-group">
+            <label>ФИО родителя</label>
+            <input class="form-control" name="parentName" placeholder="Фамилия Имя (Отчество)" data-err="err-modal-parentname" data-fullname="true">
+            <div class="form-error" id="err-modal-parentname">Введите полное ФИО родителя</div>
+          </div>
         </div>
         <div class="form-group">
           <label>Телефон</label>
@@ -810,8 +830,8 @@
           </div>
           <div class="form-error chip-err" style="display:none;">Выберите направление</div>
         </div>
-        <div class="form-group">
-          <label>Возраст ученика</label>
+        <div class="form-group" id="modal-age-group">
+          <label>Возраст ребёнка</label>
           <input class="form-control" id="modal-age" name="age" placeholder="Например: 8 лет">
         </div>
         <div class="form-group" id="modal-day-section" style="display:none;">

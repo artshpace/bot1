@@ -129,6 +129,11 @@ function resetPublicForm(form) {
   const acct = success.querySelector('.acct-offer'); if (acct) acct.remove();
   const ds = document.getElementById('modal-day-section'); if (ds) ds.style.display = 'none';
   const ts = document.getElementById('modal-time-section'); if (ts) ts.style.display = 'none';
+  // Reset the who/name conditional blocks back to the initial state.
+  const na = document.getElementById('modal-name-adult'); if (na) na.style.display = 'none';
+  const nc = document.getElementById('modal-name-child'); if (nc) nc.style.display = 'none';
+  const ag = document.getElementById('modal-age-group'); if (ag) ag.style.display = '';
+  form.querySelectorAll('.chip-err-who, .chip-err').forEach(e => e.classList.remove('show'));
 }
 function closeModal(id) {
   const m = document.getElementById(id);
@@ -163,6 +168,14 @@ document.addEventListener('click', e => {
 /* ===== TRIAL FORM ===== */
 function validatePhone(v) { return /[\d\s\-\+\(\)]{7,}/.test(v.trim()); }
 function validateName(v) { return v.trim().length >= 2; }
+/* Full name: at least two words (Фамилия + Имя). Отчество optional — so a
+   Kazakh two-part name passes. Each word ≥2 letters (RU/KZ/Latin, hyphen ok). */
+function validateFullName(v) {
+  var words = (v || '').trim().split(/\s+/).filter(Boolean);
+  if (words.length < 2) return false;
+  var re = /^[A-Za-zА-Яа-яЁёӘәҒғҚқҢңӨөҰұҮүҺһІі''\-]{2,}$/;
+  return words.every(function (w) { return re.test(w); });
+}
 
 function setupForm(formId, onSuccess) {
   const form = document.getElementById(formId);
@@ -170,15 +183,28 @@ function setupForm(formId, onSuccess) {
   form.addEventListener('submit', e => {
     e.preventDefault();
     let valid = true;
-    form.querySelectorAll('[required]').forEach(input => {
+    const isVisible = el => el && el.offsetParent !== null;
+    /* Validate required + full-name inputs, but skip inputs inside hidden
+       conditional sections (e.g. the child/adult ФИО block not in use). */
+    form.querySelectorAll('input[required], input[data-fullname]').forEach(input => {
+      if (!isVisible(input)) return;
       const err = document.getElementById(input.dataset.err);
-      let ok = true;
+      let ok;
       if (input.type === 'tel') ok = validatePhone(input.value);
+      else if (input.dataset.fullname) ok = validateFullName(input.value);
       else ok = validateName(input.value);
       if (!ok) { valid = false; input.classList.add('error'); if (err) err.classList.add('show'); }
       else { input.classList.remove('error'); if (err) err.classList.remove('show'); }
     });
-    /* Only the direction chip group is required; day/slot groups are optional. */
+    /* "Кто будет заниматься?" — required when present (trial form). */
+    const whoGroup = form.querySelector('[data-chip-role="who"]');
+    if (whoGroup) {
+      const whoSel = whoGroup.querySelector('.form-chip.selected');
+      const whoErr = form.querySelector('.chip-err-who');
+      if (!whoSel) { valid = false; if (whoErr) whoErr.classList.add('show'); }
+      else if (whoErr) whoErr.classList.remove('show');
+    }
+    /* Direction chip group is required; day/slot groups are optional. */
     const dirGroup = form.querySelector('[data-chip-role="direction"]');
     const chip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
     const chipErr = form.querySelector('.chip-err');
@@ -219,11 +245,12 @@ function injectAccountOffer(form) {
   if (isLoggedIn()) return;
   const success = form.querySelector('.form-success');
   if (!success || success.querySelector('.acct-offer')) return;
-  const data = {};
-  form.querySelectorAll('[name]').forEach(i => { data[i.name] = (i.value || '').trim(); });
+  const id = trialIdentity(form);
   const params = new URLSearchParams();
-  if (data.name) params.set('name', data.name);
-  if (data.phone) params.set('phone', data.phone);
+  // For a child booking, the cabinet account belongs to the PARENT.
+  const acctName = id.who === 'child' ? id.parentName : id.name;
+  if (acctName) params.set('name', acctName);
+  if (id.phone) params.set('phone', id.phone);
   const href = 'account/register.html' + (params.toString() ? '?' + params.toString() : '');
 
   const wrap = document.createElement('div');
@@ -250,11 +277,27 @@ const FORM_SOURCE = {
   'callback-form': 'callback', 'course-form': 'course'
 };
 
+/* Resolve who is attending and the relevant name(s) from the trial form.
+   adult → name = ФИО взрослого. child → name = ФИО ребёнка + parentName.
+   Other forms (callback/course) just use a single name="name". */
+function trialIdentity(form) {
+  const data = {};
+  form.querySelectorAll('[name]').forEach(i => { data[i.name] = (i.value || '').trim(); });
+  const whoSel = form.querySelector('[data-chip-role="who"] .form-chip.selected');
+  const who = whoSel ? whoSel.dataset.value : '';
+  let name = '', parentName = '';
+  if (who === 'child') { name = data.childName || ''; parentName = data.parentName || ''; }
+  else if (who === 'adult') { name = data.adultName || ''; }
+  else { name = data.name || data.adultName || data.childName || ''; }
+  return { who: who, name: name, parentName: parentName, phone: data.phone || '',
+    email: data.email || '', age: data.age || '', data: data };
+}
+
 /* Persist a public-site submission as a CRM lead (with UTM + Pixel events).
    Degrades gracefully if the API layer isn't present on a given page. */
 function submitLead(formId, form) {
-  const data = {};
-  form.querySelectorAll('[name]').forEach(inp => { data[inp.name] = (inp.value || '').trim(); });
+  const id = trialIdentity(form);
+  const data = id.data;
   const dirGroup = form.querySelector('[data-chip-role="direction"]');
   const chip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
   const direction = chip ? (CHIP_DIRECTION[chip.dataset.value] !== undefined && CHIP_DIRECTION[chip.dataset.value] !== ''
@@ -263,17 +306,23 @@ function submitLead(formId, form) {
   const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
   const slot = [dayChip ? dayChip.textContent.trim() : '', slotChip ? slotChip.textContent.trim() : ''].filter(Boolean).join(', ');
 
+  const ageVal = id.who === 'adult' ? '18+' : (id.age || '');
+  const extra = [];
+  if (id.parentName) extra.push('Родитель: ' + id.parentName);
+  if (id.who) extra.push(id.who === 'child' ? 'Ученик: ребёнок' : 'Ученик: взрослый');
+  const comment = [data.comment || data.message || '', extra.join(' · ')].filter(Boolean).join(' | ');
+
   const utm = getUTM();
   const payload = {
-    name: data.name || '',
-    phone: data.phone || '',
-    email: data.email || '',
-    age: data.age || '',
+    name: id.name,
+    phone: id.phone,
+    email: id.email,
+    age: ageVal,
     direction: direction,
     source: FORM_SOURCE[formId] || 'callback',
     preferredDate: (dayChip && dayChip.getAttribute('data-date')) || data.date || '',
     preferredTime: slot || data.time || '',
-    comment: data.comment || data.message || '',
+    comment: comment,
     utm: {
       source: utm.source || '', medium: utm.medium || '', campaign: utm.campaign || '',
       content: utm.content || '', term: utm.term || ''
@@ -334,7 +383,11 @@ function initScheduleForm(formId) {
   var form = document.getElementById(formId);
   if (!form) return;
   var dirChipsEl = form.querySelector('[data-chip-role="direction"]');
+  var whoChipsEl = form.querySelector('[data-chip-role="who"]');
   var ageInput   = form.querySelector('[name="age"]');
+  var ageGroup   = document.getElementById('modal-age-group');
+  var nameAdult  = document.getElementById('modal-name-adult');
+  var nameChild  = document.getElementById('modal-name-child');
   var daySection = document.getElementById('modal-day-section');
   var dayChipsEl = document.getElementById('modal-day-chips');
   var timeSection = document.getElementById('modal-time-section');
@@ -347,10 +400,26 @@ function initScheduleForm(formId) {
     }).join('');
   }
 
+  function currentWho() {
+    var s = whoChipsEl && whoChipsEl.querySelector('.form-chip.selected');
+    return s ? s.dataset.value : null;
+  }
+  /* Adults are 18+ by definition → drives the age-gated slots without an age field. */
+  function effectiveAge() {
+    return currentWho() === 'adult' ? '99' : (ageInput ? ageInput.value : '');
+  }
+  function applyWho() {
+    var who = currentWho();
+    if (nameAdult) nameAdult.style.display = who === 'adult' ? '' : 'none';
+    if (nameChild) nameChild.style.display = who === 'child' ? '' : 'none';
+    if (ageGroup)  ageGroup.style.display  = who === 'child' ? '' : 'none';
+    update();
+  }
+
   function update() {
     var sel = dirChipsEl && dirChipsEl.querySelector('.form-chip.selected');
     var dir = sel ? sel.dataset.value : null;
-    var age = ageInput ? ageInput.value : '';
+    var age = effectiveAge();
     var sched = dir ? SCHEDULE[dir] : null;
 
     if (!sched) {
@@ -380,8 +449,9 @@ function initScheduleForm(formId) {
 
   document.addEventListener('click', function (e) {
     var chip = e.target.closest('.form-chip');
-    if (!chip || !dirChipsEl || !dirChipsEl.contains(chip)) return;
-    setTimeout(update, 0);
+    if (!chip) return;
+    if (dirChipsEl && dirChipsEl.contains(chip)) setTimeout(update, 0);
+    else if (whoChipsEl && whoChipsEl.contains(chip)) setTimeout(applyWho, 0);
   });
   if (ageInput) ageInput.addEventListener('input', update);
 }
@@ -417,8 +487,8 @@ function buildWhatsAppLink(direction) {
 window.buildWhatsAppLink = buildWhatsAppLink;
 
 function buildWhatsAppFromForm(form) {
-  const data = {};
-  form.querySelectorAll('[name]').forEach(i => { data[i.name] = (i.value || '').trim(); });
+  const id = trialIdentity(form);
+  const data = id.data;
   const dirGroup = form.querySelector('[data-chip-role="direction"]');
   const dirChip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
   const direction = dirChip ? (CHIP_DIRECTION[dirChip.dataset.value] !== undefined && CHIP_DIRECTION[dirChip.dataset.value] !== ''
@@ -426,9 +496,15 @@ function buildWhatsAppFromForm(form) {
   const dayChip = form.querySelector('[data-chip-role="day"] .form-chip.selected');
   const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
   const lines = ['Здравствуйте! Хочу записаться на бесплатное пробное занятие.'];
-  if (data.name) lines.push('Имя: ' + data.name);
-  if (data.phone) lines.push('Телефон: ' + data.phone);
-  if (data.age) lines.push('Возраст: ' + data.age);
+  if (id.who === 'child') {
+    if (id.name) lines.push('Ребёнок: ' + id.name);
+    if (id.parentName) lines.push('Родитель: ' + id.parentName);
+  } else if (id.name) {
+    lines.push('Имя: ' + id.name);
+  }
+  if (id.phone) lines.push('Телефон: ' + id.phone);
+  if (id.who === 'adult') lines.push('Возраст: 18+');
+  else if (id.age) lines.push('Возраст: ' + id.age);
   if (direction) lines.push('Направление: ' + direction);
   const preferredSlot = [dayChip ? dayChip.textContent.trim() : '', slotChip ? slotChip.textContent.trim() : ''].filter(Boolean).join(', ');
   if (preferredSlot) lines.push('Удобно: ' + preferredSlot);
