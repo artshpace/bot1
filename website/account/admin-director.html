@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Панель директора · Shpigotskiy Art Space</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body { background: var(--bg-alt); }
+    .ad-shell { display: flex; min-height: 100vh; }
+    .ad-sidebar {
+      width: 248px; flex-shrink: 0; background: var(--dark); color: #fff;
+      display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh;
+    }
+    .ad-brand { padding: 22px 22px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .ad-brand .name { font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.05rem; }
+    .ad-brand .sub { font-size: .72rem; color: rgba(255,255,255,.55); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+    .ad-nav { padding: 12px 0; overflow-y: auto; flex: 1; }
+    .ad-nav button {
+      display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+      padding: 11px 22px; background: none; border: none; color: rgba(255,255,255,.78);
+      font-size: .92rem; cursor: pointer; border-left: 3px solid transparent;
+    }
+    .ad-nav button:hover { background: rgba(255,255,255,.06); color: #fff; }
+    .ad-nav button.active { background: rgba(227,6,19,.16); color: #fff; border-left-color: var(--primary); font-weight: 600; }
+    .ad-nav .badge { margin-left: auto; background: var(--primary); color: #fff; border-radius: 20px; font-size: .7rem; padding: 1px 8px; }
+    .ad-main { flex: 1; padding: 28px 32px 64px; max-width: 1100px; }
+    .ad-topbar { display: none; align-items: center; gap: 12px; padding: 12px 16px; background: var(--dark); color: #fff; position: sticky; top: 0; z-index: 30; }
+    .ad-burger { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; line-height: 1; }
+    .ad-h { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; margin-bottom: 4px; }
+    .ad-sub { color: var(--muted); margin-bottom: 24px; }
+    .ad-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 18px; }
+    .ad-card h3 { font-size: 1.05rem; margin-bottom: 14px; }
+    .ad-grid { display: grid; gap: 14px; }
+    .ad-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 18px; }
+    .ad-stat { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .ad-stat .n { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .ad-stat .l { font-size: .82rem; color: var(--muted); margin-top: 2px; }
+    label.fl { display: block; font-size: .82rem; font-weight: 600; color: var(--dark); margin-bottom: 5px; }
+    .fc { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 9px; font-size: .92rem; background: #fff; }
+    textarea.fc { min-height: 64px; resize: vertical; }
+    .ad-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .ad-row > div { flex: 1; min-width: 160px; }
+    table.ad-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+    .ad-table th { text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--border); font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    .ad-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .ad-table select { padding: 5px 8px; border: 1px solid var(--border); border-radius: 7px; font-size: .82rem; }
+    .ad-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 9px; border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: .85rem; font-weight: 500; }
+    .ad-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .ad-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .ad-btn.primary:hover { background: var(--primary-dark); color: #fff; }
+    .ad-btn.sm { padding: 4px 9px; font-size: .8rem; }
+    .ad-wa { color: #25a366; border-color: #25a366; }
+    .ad-wa:hover { background: #25a366; color: #fff; }
+    .ed-row { border: 1px solid var(--border); border-radius: 11px; padding: 14px; margin-bottom: 12px; background: var(--bg-cream); }
+    .ed-row .ctrls { display: flex; gap: 6px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+    .ed-row .ctrls .spacer { flex: 1; }
+    .chk { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; cursor: pointer; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: .85rem; }
+    .bar-row .lbl { width: 130px; flex-shrink: 0; color: var(--dark); }
+    .bar-track { flex: 1; background: var(--bg-alt); border-radius: 6px; height: 18px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--gold); }
+    .bar-row .val { width: 28px; text-align: right; color: var(--muted); }
+    .ad-toast { position: fixed; bottom: 22px; right: 22px; background: var(--dark); color: #fff; padding: 12px 18px; border-radius: 10px; font-size: .9rem; opacity: 0; transform: translateY(10px); transition: .25s; z-index: 60; pointer-events: none; }
+    .ad-toast.show { opacity: 1; transform: translateY(0); }
+    .ad-empty { color: var(--muted); font-size: .9rem; padding: 16px 0; }
+    .ad-locked { max-width: 420px; margin: 80px auto; text-align: center; }
+    .hidden { display: none !important; }
+    @media (max-width: 860px) {
+      .ad-topbar { display: flex; }
+      .ad-sidebar { position: fixed; left: 0; top: 0; z-index: 40; transform: translateX(-100%); transition: transform .25s; }
+      .ad-sidebar.open { transform: translateX(0); }
+      .ad-main { padding: 18px 16px 48px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="ad-locked" class="ad-locked hidden">
+  <h2 class="ad-h">Доступ закрыт</h2>
+  <p class="ad-sub">Неверный PIN. Обновите страницу, чтобы попробовать снова.</p>
+</div>
+
+<div id="ad-app" class="hidden">
+  <div class="ad-topbar">
+    <button class="ad-burger" id="ad-burger" aria-label="Меню">☰</button>
+    <strong>Панель директора</strong>
+  </div>
+  <div class="ad-shell">
+    <aside class="ad-sidebar" id="ad-sidebar">
+      <div class="ad-brand">
+        <div class="name">Shpigotskiy Art Space</div>
+        <div class="sub">Панель директора</div>
+      </div>
+      <nav class="ad-nav" id="ad-nav"></nav>
+    </aside>
+    <main class="ad-main" id="ad-content"></main>
+  </div>
+</div>
+
+<div class="ad-toast" id="ad-toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var K = {
+    pin: 'sas_director_pin', leads: 'sas_leads', slots: 'sas_director_slots',
+    pricing: 'sas_director_pricing', reviews: 'sas_director_reviews',
+    teachers: 'sas_director_teachers', contacts: 'sas_director_contacts',
+    lastEdit: 'sas_director_lastEdit'
+  };
+
+  /* ---------- storage helpers ---------- */
+  function get(k, f) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? f : v; } catch (e) { return f; } }
+  function save(k, v) {
+    localStorage.setItem(k, JSON.stringify(v));
+    localStorage.setItem(K.lastEdit, new Date().toISOString());
+    toast('Сохранено ✓');
+  }
+  function uid() { return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function digits(s) { return String(s || '').replace(/\D/g, ''); }
+
+  var toastTimer;
+  function toast(m) {
+    var t = document.getElementById('ad-toast');
+    t.textContent = m; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+
+  /* ---------- defaults (used for rendering; persisted only on edit) ---------- */
+  var DEFAULTS = {
+    slots: [
+      { id: 'sat-11', label: 'Суббота 11:00', value: 'sat-11', active: true },
+      { id: 'sat-13', label: 'Суббота 13:00', value: 'sat-13', active: true },
+      { id: 'sun-12', label: 'Воскресенье 12:00', value: 'sun-12', active: true },
+      { id: 'weekday', label: 'Будни (уточним)', value: 'weekday', active: true }
+    ],
+    pricing: { subscription: '', single: '' },
+    reviews: [
+      { id: 'r1', author: 'Айгуль К.', direction: 'Мама ученицы · Вокал', stars: 5, active: true,
+        text: 'Дочь занимается вокалом уже полгода. Педагог очень внимательный, ребёнок прогрессирует на глазах. Уже выступила на концерте!' },
+      { id: 'r2', author: 'Наталья В.', direction: 'Мама ученика · Гитара', stars: 5, active: true,
+        text: 'Сын ходит на гитару. Никогда не думала, что он будет так увлечён! Уже через 3 месяца играл первые песни.' },
+      { id: 'r3', author: 'Марина Т.', direction: 'Мама ученика · Актёрское', stars: 5, active: true,
+        text: 'Записала ребёнка на актёрское мастерство. Раньше он был очень стеснительным. За один сезон выступил на сцене!' }
+    ],
+    teachers: [
+      { id: 't1', name: 'Антон Шпигоцкий', subject: 'Гитара · Основатель', credentials: 'Опыт 10+ лет · КазНУИ', bio: '', active: true },
+      { id: 't2', name: 'Захаров Георгий', subject: 'Гитара', credentials: 'Гитара · Укулеле · Домбра', bio: '', active: true },
+      { id: 't3', name: 'Ержакова Наталья', subject: 'Вокал', credentials: 'Классический и эстрадный вокал', bio: '', active: true },
+      { id: 't4', name: 'Клюк Дарья', subject: 'Танцы', credentials: '14 лет опыта · Ансамбль Arabesque', bio: '', active: true },
+      { id: 't5', name: 'Жуков Виталий', subject: 'Актёрское мастерство', credentials: 'Преподаёт с 2015 года', bio: '', active: true }
+    ],
+    contacts: {
+      whatsapp: '77086366351', instagram: 'artshpace', telegram: 'shpigotskiy_art',
+      email: 'info@shpigotskiy-art.kz', address: 'г. Петропавловск, ул. Интернациональная, 63, 5 этаж',
+      hours: 'Пн–Пт 10:00–20:00 · Сб 10:00–18:00 · Вс 11:00–16:00', pixelId: '', welcome: ''
+    }
+  };
+  function load(key) { return get(K[key], DEFAULTS[key]); }
+
+  /* ---------- lead status vocabulary (shared with admin-leads.html) ---------- */
+  var LEAD_STATUS = [
+    ['new', 'Новая'], ['processing', 'В работе'], ['trial_scheduled', 'Записан'],
+    ['trial_done', 'Пробное проведено'], ['purchased', 'Оплатил'], ['active', 'Учится'],
+    ['no_answer', 'Не дозвонились'], ['lost', 'Отказ']
+  ];
+  function statusLabel(s) { for (var i = 0; i < LEAD_STATUS.length; i++) if (LEAD_STATUS[i][0] === s) return LEAD_STATUS[i][1]; return s || '—'; }
+
+  /* ---------- PIN gate ---------- */
+  function gate() {
+    var saved = localStorage.getItem(K.pin);
+    if (!saved) {
+      var p = window.prompt('Первый вход. Придумайте 4-значный PIN для панели директора:');
+      if (p === null) return false;
+      if (!/^\d{4}$/.test(p)) { window.alert('PIN должен состоять из 4 цифр.'); return gate(); }
+      localStorage.setItem(K.pin, p);
+      window.alert('PIN установлен. Запомните его — он понадобится при следующем входе.');
+      return true;
+    }
+    for (var i = 0; i < 3; i++) {
+      var e = window.prompt('Введите PIN директора:');
+      if (e === null) return false;
+      if (e === saved) return true;
+      window.alert('Неверный PIN. Попыток осталось: ' + (2 - i));
+    }
+    return false;
+  }
+
+  /* ---------- date helpers ---------- */
+  function startOfDay(d) { var x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
+  function leadDate(l) { return new Date(l.createdAt || l.created || Date.now()); }
+
+  /* ====================================================================== */
+  /*  SECTIONS                                                              */
+  /* ====================================================================== */
+  var SECTIONS = [
+    { id: 'dashboard', label: '📊 Статистика', render: renderDashboard },
+    { id: 'leads', label: '📥 Заявки', render: renderLeads, badge: newLeadsCount },
+    { id: 'slots', label: '🗓 Расписание пробных', render: renderSlots },
+    { id: 'pricing', label: '💰 Цены', render: renderPricing },
+    { id: 'reviews', label: '⭐ Отзывы', render: renderReviews },
+    { id: 'teachers', label: '🎓 Преподаватели', render: renderTeachers },
+    { id: 'contacts', label: '⚙️ Контакты и настройки', render: renderContacts },
+    { id: 'broadcast', label: '📢 Рассылка WhatsApp', render: renderBroadcast }
+  ];
+  var current = 'dashboard';
+
+  function newLeadsCount() {
+    return get(K.leads, []).filter(function (l) { return l.status === 'new'; }).length;
+  }
+
+  /* ---------- DASHBOARD ---------- */
+  function renderDashboard() {
+    var leads = get(K.leads, []);
+    var today = startOfDay(new Date()).getTime();
+    var weekAgo = today - 6 * 864e5;
+    var nToday = 0, nWeek = 0;
+    var byDir = {};
+    leads.forEach(function (l) {
+      var t = startOfDay(leadDate(l)).getTime();
+      if (t === today) nToday++;
+      if (t >= weekAgo) nWeek++;
+      var d = (l.direction || '').trim() || 'Не указано';
+      byDir[d] = (byDir[d] || 0) + 1;
+    });
+    var slots = load('slots').filter(function (s) { return s.active !== false; });
+    var last = localStorage.getItem(K.lastEdit);
+
+    /* 14-day histogram */
+    var days14 = [];
+    for (var di = 13; di >= 0; di--) {
+      var dayTs = today - di * 864e5;
+      var count = leads.filter(function (l) { return startOfDay(leadDate(l)).getTime() === dayTs; }).length;
+      var dt = new Date(dayTs);
+      days14.push({ label: ('0' + dt.getDate()).slice(-2) + '.' + ('0' + (dt.getMonth() + 1)).slice(-2), count: count });
+    }
+    var max14 = days14.reduce(function (m, d) { return Math.max(m, d.count); }, 1);
+
+    /* Conversion: trial_scheduled / total */
+    var nScheduled = leads.filter(function (l) { return l.status === 'trial_scheduled' || l.status === 'trial_done' || l.status === 'purchased' || l.status === 'active'; }).length;
+    var conversion = leads.length ? Math.round(nScheduled / leads.length * 100) : 0;
+
+    var dirKeys = Object.keys(byDir).sort(function (a, b) { return byDir[b] - byDir[a]; });
+    var maxDir = dirKeys.reduce(function (m, k) { return Math.max(m, byDir[k]); }, 1);
+
+    var recent = leads.slice().sort(function (a, b) { return leadDate(b) - leadDate(a); }).slice(0, 5);
+
+    var h = '<div class="ad-h">Статистика</div>' +
+      '<div class="ad-sub">Обзор заявок и состояния сайта.</div>' +
+      '<div class="ad-stats">' +
+        stat(nToday, 'Заявок сегодня') +
+        stat(nWeek, 'За 7 дней') +
+        stat(leads.length, 'Всего заявок') +
+        stat(slots.length, 'Активных слотов') +
+        stat(conversion + '%', 'Конверсия в запись') +
+      '</div>';
+
+    /* 14-day bar chart */
+    h += '<div class="ad-card"><h3>Заявки за 14 дней</h3>' +
+      '<div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-bottom:8px;">';
+    days14.forEach(function (d) {
+      var pct = Math.round(d.count / max14 * 100);
+      var color = d.count ? 'var(--primary)' : 'var(--border)';
+      h += '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">' +
+        '<div style="width:100%;background:' + color + ';height:' + pct + '%;min-height:' + (d.count ? 4 : 0) + 'px;border-radius:3px 3px 0 0;" title="' + d.count + '"></div>' +
+        '<div style="font-size:.6rem;color:var(--muted);transform:rotate(-45deg);transform-origin:center top;margin-top:2px;">' + d.label + '</div>' +
+        '</div>';
+    });
+    h += '</div></div>';
+
+    h += '<div class="ad-card"><h3>Заявки по направлениям</h3>';
+    if (!dirKeys.length) h += '<div class="ad-empty">Пока нет заявок.</div>';
+    else dirKeys.forEach(function (k) {
+      h += '<div class="bar-row"><div class="lbl">' + esc(k) + '</div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:' + Math.round(byDir[k] / maxDir * 100) + '%"></div></div>' +
+        '<div class="val">' + byDir[k] + '</div></div>';
+    });
+    h += '</div>';
+
+    h += '<div class="ad-card"><h3>Последние заявки</h3>';
+    if (!recent.length) h += '<div class="ad-empty">Заявок пока нет. Они появятся здесь после отправки формы на сайте.</div>';
+    else {
+      h += '<table class="ad-table"><thead><tr><th>Дата</th><th>Имя</th><th>Телефон</th><th>Направление</th><th>Статус</th></tr></thead><tbody>';
+      recent.forEach(function (l) {
+        h += '<tr><td>' + esc(fmt(leadDate(l))) + '</td><td>' + esc(l.name || '—') + '</td>' +
+          '<td>' + esc(l.phone || '—') + '</td><td>' + esc(l.direction || '—') + '</td>' +
+          '<td>' + esc(statusLabel(l.status)) + '</td></tr>';
+      });
+      h += '</tbody></table>';
+    }
+    h += '</div>';
+
+    h += '<div class="ad-sub" style="margin-top:8px">Последнее изменение данных: ' +
+      (last ? esc(fmt(new Date(last), true)) : '—') + '</div>';
+    return h;
+  }
+  function stat(n, l) { return '<div class="ad-stat"><div class="n">' + n + '</div><div class="l">' + esc(l) + '</div></div>'; }
+  function fmt(d, withTime) {
+    if (isNaN(d)) return '—';
+    var s = ('0' + d.getDate()).slice(-2) + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + d.getFullYear();
+    if (withTime) s += ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    return s;
+  }
+
+  /* ---------- LEADS ---------- */
+  var leadFilter = { status: '', direction: '' };
+  function renderLeads() {
+    var leads = get(K.leads, []).slice().sort(function (a, b) { return leadDate(b) - leadDate(a); });
+    var dirs = {};
+    leads.forEach(function (l) { var d = (l.direction || '').trim(); if (d) dirs[d] = 1; });
+
+    var h = '<div class="ad-h">Заявки <span style="font-size:1rem;color:var(--muted)">(' + leads.length + ')</span></div>' +
+      '<div class="ad-sub">Новых: ' + newLeadsCount() + '. Меняйте статус прямо в таблице — сохраняется автоматически.</div>';
+
+    h += '<div class="ad-card"><div class="ad-row">' +
+      '<div><label class="fl">Фильтр по статусу</label><select class="fc" id="lf-status">' +
+      '<option value="">Все статусы</option>' +
+      LEAD_STATUS.map(function (s) { return '<option value="' + s[0] + '"' + (leadFilter.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') +
+      '</select></div>' +
+      '<div><label class="fl">Фильтр по направлению</label><select class="fc" id="lf-dir">' +
+      '<option value="">Все направления</option>' +
+      Object.keys(dirs).map(function (d) { return '<option value="' + esc(d) + '"' + (leadFilter.direction === d ? ' selected' : '') + '>' + esc(d) + '</option>'; }).join('') +
+      '</select></div></div></div>';
+
+    var rows = leads.filter(function (l) {
+      if (leadFilter.status && l.status !== leadFilter.status) return false;
+      if (leadFilter.direction && (l.direction || '').trim() !== leadFilter.direction) return false;
+      return true;
+    });
+
+    h += '<div class="ad-card">';
+    if (!rows.length) h += '<div class="ad-empty">Нет заявок по выбранным фильтрам.</div>';
+    else {
+      h += '<table class="ad-table"><thead><tr><th>Дата</th><th>Имя</th><th>Телефон</th><th>Возраст</th><th>Направление</th><th>Источник</th><th>Статус</th><th></th></tr></thead><tbody>';
+      rows.forEach(function (l) {
+        var utm = l.utm && l.utm.source ? l.utm.source : (l.source || '—');
+        h += '<tr>' +
+          '<td>' + esc(fmt(leadDate(l))) + '</td>' +
+          '<td>' + esc(l.name || '—') + '</td>' +
+          '<td>' + esc(l.phone || '—') + '</td>' +
+          '<td>' + esc(l.age || '—') + '</td>' +
+          '<td>' + esc(l.direction || '—') + '</td>' +
+          '<td>' + esc(utm) + '</td>' +
+          '<td><select data-lead="' + esc(l.id) + '">' +
+            LEAD_STATUS.map(function (s) { return '<option value="' + s[0] + '"' + (l.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>'; }).join('') +
+          '</select></td>' +
+          '<td><a class="ad-btn sm ad-wa" target="_blank" rel="noopener" href="https://wa.me/' + digits(l.phone) +
+            '?text=' + encodeURIComponent('Здравствуйте, ' + (l.name || '') + '! Вы оставляли заявку в Shpigotskiy Art Space.') + '">WA</a></td>' +
+          '</tr>';
+      });
+      h += '</tbody></table>';
+    }
+    h += '</div>';
+    return h;
+  }
+  function bindLeads() {
+    var sEl = document.getElementById('lf-status'), dEl = document.getElementById('lf-dir');
+    if (sEl) sEl.onchange = function () { leadFilter.status = this.value; rerender(); };
+    if (dEl) dEl.onchange = function () { leadFilter.direction = this.value; rerender(); };
+    document.querySelectorAll('select[data-lead]').forEach(function (sel) {
+      sel.onchange = function () {
+        var id = this.getAttribute('data-lead'), val = this.value;
+        var leads = get(K.leads, []);
+        var l = leads.filter(function (x) { return x.id === id; })[0];
+        if (l) { l.status = val; save(K.leads, leads); renderNav(); }
+      };
+    });
+  }
+
+  /* ---------- SLOTS ---------- */
+  function renderSlots() {
+    var slots = load('slots');
+    var h = '<div class="ad-h">Расписание пробных</div>' +
+      '<div class="ad-sub">Эти варианты показываются кнопками в форме записи на сайте. Отключённые слоты скрыты.</div>';
+    h += '<div class="ad-card" id="slots-list">';
+    slots.forEach(function (s, i) {
+      h += '<div class="ed-row" data-i="' + i + '">' +
+        '<label class="fl">Текст на кнопке</label>' +
+        '<input class="fc s-label" value="' + esc(s.label) + '">' +
+        '<div class="ctrls">' +
+          '<label class="chk"><input type="checkbox" class="s-active"' + (s.active !== false ? ' checked' : '') + '> Активен</label>' +
+          '<span class="spacer"></span>' +
+          '<button class="ad-btn sm" data-up="' + i + '">↑</button>' +
+          '<button class="ad-btn sm" data-down="' + i + '">↓</button>' +
+          '<button class="ad-btn sm" data-del="' + i + '">Удалить</button>' +
+        '</div></div>';
+    });
+    h += '</div><button class="ad-btn primary" id="slot-add">+ Добавить слот</button>';
+    return h;
+  }
+  function readSlots() {
+    var prev = load('slots');
+    return Array.prototype.map.call(document.querySelectorAll('#slots-list .ed-row'), function (row, i) {
+      var label = row.querySelector('.s-label').value.trim();
+      var old = prev[i] || {};
+      return { id: old.id || uid(), value: old.value || old.id || ('slot-' + i), label: label, active: row.querySelector('.s-active').checked };
+    });
+  }
+  function bindSlots() {
+    document.querySelectorAll('#slots-list .s-label, #slots-list .s-active').forEach(function (el) {
+      el.onchange = function () { save(K.slots, readSlots()); };
+    });
+    document.getElementById('slot-add').onclick = function () {
+      var s = readSlots(); s.push({ id: uid(), value: uid(), label: 'Новый слот', active: true }); save(K.slots, s); rerender();
+    };
+    arrayRowCtrls('#slots-list', readSlots, K.slots);
+  }
+
+  /* ---------- PRICING ---------- */
+  function renderPricing() {
+    var p = load('pricing');
+    return '<div class="ad-h">Цены</div>' +
+      '<div class="ad-sub">Текст подставляется в блок «Стоимость» на главной. Пример: «от 15 000 ₸ / мес (8 занятий)».</div>' +
+      '<div class="ad-card ad-grid">' +
+        '<div><label class="fl">Стоимость абонемента</label><textarea class="fc" id="p-sub">' + esc(p.subscription) + '</textarea></div>' +
+        '<div><label class="fl">Разовое занятие</label><textarea class="fc" id="p-single">' + esc(p.single) + '</textarea></div>' +
+      '</div>';
+  }
+  function bindPricing() {
+    function s() { save(K.pricing, { subscription: document.getElementById('p-sub').value.trim(), single: document.getElementById('p-single').value.trim() }); }
+    document.getElementById('p-sub').onchange = s;
+    document.getElementById('p-single').onchange = s;
+  }
+
+  /* ---------- REVIEWS ---------- */
+  function renderReviews() {
+    var list = load('reviews');
+    var h = '<div class="ad-h">Отзывы</div><div class="ad-sub">Показываются в блоке «Что говорят родители» на главной.</div>';
+    h += '<div class="ad-card" id="rev-list">';
+    list.forEach(function (r, i) {
+      h += '<div class="ed-row" data-i="' + i + '">' +
+        '<div class="ad-row">' +
+          '<div><label class="fl">Автор</label><input class="fc r-author" value="' + esc(r.author) + '"></div>' +
+          '<div><label class="fl">Подпись (направление)</label><input class="fc r-dir" value="' + esc(r.direction) + '"></div>' +
+          '<div style="max-width:120px"><label class="fl">Звёзд</label><select class="fc r-stars">' +
+            [5, 4, 3, 2, 1].map(function (n) { return '<option' + ((parseInt(r.stars, 10) || 5) === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+          '</select></div>' +
+        '</div>' +
+        '<label class="fl" style="margin-top:10px">Текст отзыва</label><textarea class="fc r-text">' + esc(r.text) + '</textarea>' +
+        '<div class="ctrls">' +
+          '<label class="chk"><input type="checkbox" class="r-active"' + (r.active !== false ? ' checked' : '') + '> Показывать</label>' +
+          '<span class="spacer"></span>' +
+          '<button class="ad-btn sm" data-up="' + i + '">↑</button>' +
+          '<button class="ad-btn sm" data-down="' + i + '">↓</button>' +
+          '<button class="ad-btn sm" data-del="' + i + '">Удалить</button>' +
+        '</div></div>';
+    });
+    h += '</div><button class="ad-btn primary" id="rev-add">+ Добавить отзыв</button>';
+    return h;
+  }
+  function readReviews() {
+    var prev = load('reviews');
+    return Array.prototype.map.call(document.querySelectorAll('#rev-list .ed-row'), function (row, i) {
+      return {
+        id: (prev[i] && prev[i].id) || uid(),
+        author: row.querySelector('.r-author').value.trim(),
+        direction: row.querySelector('.r-dir').value.trim(),
+        stars: parseInt(row.querySelector('.r-stars').value, 10) || 5,
+        text: row.querySelector('.r-text').value.trim(),
+        active: row.querySelector('.r-active').checked
+      };
+    });
+  }
+  function bindReviews() {
+    document.querySelectorAll('#rev-list input, #rev-list textarea, #rev-list select').forEach(function (el) {
+      el.onchange = function () { save(K.reviews, readReviews()); };
+    });
+    document.getElementById('rev-add').onclick = function () {
+      var l = readReviews(); l.push({ id: uid(), author: 'Имя', direction: '', stars: 5, text: '', active: true }); save(K.reviews, l); rerender();
+    };
+    arrayRowCtrls('#rev-list', readReviews, K.reviews);
+  }
+
+  /* ---------- TEACHERS ---------- */
+  function renderTeachers() {
+    var list = load('teachers');
+    var h = '<div class="ad-h">Преподаватели</div>' +
+      '<div class="ad-sub">Карточки команды. Отключённый преподаватель скрывается из публичного списка.</div>';
+    h += '<div class="ad-card" id="tch-list">';
+    list.forEach(function (t, i) {
+      h += '<div class="ed-row" data-i="' + i + '">' +
+        '<div class="ad-row">' +
+          '<div><label class="fl">Имя</label><input class="fc t-name" value="' + esc(t.name) + '"></div>' +
+          '<div><label class="fl">Направление</label><input class="fc t-subj" value="' + esc(t.subject) + '"></div>' +
+        '</div>' +
+        '<label class="fl" style="margin-top:10px">Регалии</label><input class="fc t-cred" value="' + esc(t.credentials) + '">' +
+        '<label class="fl" style="margin-top:10px">О преподавателе (необязательно)</label><textarea class="fc t-bio">' + esc(t.bio || '') + '</textarea>' +
+        '<div class="ctrls">' +
+          '<label class="chk"><input type="checkbox" class="t-active"' + (t.active !== false ? ' checked' : '') + '> Активен</label>' +
+          '<span class="spacer"></span>' +
+          '<button class="ad-btn sm" data-up="' + i + '">↑</button>' +
+          '<button class="ad-btn sm" data-down="' + i + '">↓</button>' +
+          '<button class="ad-btn sm" data-del="' + i + '">Удалить</button>' +
+        '</div></div>';
+    });
+    h += '</div><button class="ad-btn primary" id="tch-add">+ Добавить преподавателя</button>';
+    return h;
+  }
+  function readTeachers() {
+    var prev = load('teachers');
+    return Array.prototype.map.call(document.querySelectorAll('#tch-list .ed-row'), function (row, i) {
+      return {
+        id: (prev[i] && prev[i].id) || uid(),
+        name: row.querySelector('.t-name').value.trim(),
+        subject: row.querySelector('.t-subj').value.trim(),
+        credentials: row.querySelector('.t-cred').value.trim(),
+        bio: row.querySelector('.t-bio').value.trim(),
+        active: row.querySelector('.t-active').checked,
+        order: i
+      };
+    });
+  }
+  function bindTeachers() {
+    document.querySelectorAll('#tch-list input, #tch-list textarea').forEach(function (el) {
+      el.onchange = function () { save(K.teachers, readTeachers()); };
+    });
+    document.getElementById('tch-add').onclick = function () {
+      var l = readTeachers(); l.push({ id: uid(), name: 'Имя', subject: '', credentials: '', bio: '', active: true, order: l.length }); save(K.teachers, l); rerender();
+    };
+    arrayRowCtrls('#tch-list', readTeachers, K.teachers);
+  }
+
+  /* ---------- CONTACTS ---------- */
+  function renderContacts() {
+    var c = load('contacts');
+    return '<div class="ad-h">Контакты и настройки</div>' +
+      '<div class="ad-sub">Контактные данные и интеграции сайта. Сохраняются автоматически.</div>' +
+      '<div class="ad-card ad-grid">' +
+        cf('c-whatsapp', 'WhatsApp (номер)', c.whatsapp) +
+        cf('c-instagram', 'Instagram (логин без @)', c.instagram) +
+        cf('c-telegram', 'Telegram (логин без @)', c.telegram) +
+        cf('c-email', 'Email', c.email) +
+        cf('c-address', 'Адрес', c.address) +
+        cf('c-hours', 'Часы работы', c.hours) +
+        cf('c-pixel', 'Meta Pixel ID', c.pixelId) +
+        '<div><label class="fl">Текст «Добро пожаловать» (под заголовком на главной)</label><textarea class="fc" id="c-welcome">' + esc(c.welcome || '') + '</textarea></div>' +
+      '</div>' +
+      '<button class="ad-btn" id="copy-link">🔗 Копировать ссылку на эту страницу</button>';
+  }
+  function cf(id, label, val) { return '<div><label class="fl">' + esc(label) + '</label><input class="fc" id="' + id + '" value="' + esc(val || '') + '"></div>'; }
+  function bindContacts() {
+    function s() {
+      save(K.contacts, {
+        whatsapp: v('c-whatsapp'), instagram: v('c-instagram'), telegram: v('c-telegram'),
+        email: v('c-email'), address: v('c-address'), hours: v('c-hours'),
+        pixelId: v('c-pixel'), welcome: v('c-welcome')
+      });
+    }
+    function v(id) { return (document.getElementById(id).value || '').trim(); }
+    ['c-whatsapp', 'c-instagram', 'c-telegram', 'c-email', 'c-address', 'c-hours', 'c-pixel', 'c-welcome']
+      .forEach(function (id) { document.getElementById(id).onchange = s; });
+    document.getElementById('copy-link').onclick = function () {
+      var url = location.href;
+      if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () { toast('Ссылка скопирована ✓'); }, function () { window.prompt('Скопируйте ссылку:', url); });
+      else window.prompt('Скопируйте ссылку:', url);
+    };
+  }
+
+  /* ---------- BROADCAST ---------- */
+  function renderBroadcast() {
+    var leads = get(K.leads, []);
+    var dirs = {};
+    leads.forEach(function (l) { if ((l.direction || '').trim()) dirs[(l.direction || '').trim()] = 1; });
+    var dirOpts = '<option value="">Все контакты</option>' +
+      '<option value="__new__">Только новые (статус «Новая»)</option>' +
+      Object.keys(dirs).map(function (d) { return '<option value="dir:' + esc(d) + '">' + esc(d) + '</option>'; }).join('');
+
+    return '<div class="ad-h">Рассылка в WhatsApp</div>' +
+      '<div class="ad-sub">Генерирует список ссылок wa.me для ручной рассылки. Открывайте по очереди — каждая ссылка откроет готовое сообщение в WhatsApp.</div>' +
+      '<div class="ad-card ad-grid">' +
+        '<div><label class="fl">Кому отправить</label><select class="fc" id="bc-filter">' + dirOpts + '</select></div>' +
+        '<div><label class="fl">Текст сообщения</label><textarea class="fc" id="bc-text" style="min-height:100px;" placeholder="Здравствуйте, {имя}! Приглашаем вас..."></textarea>' +
+        '<p style="font-size:.78rem;color:var(--muted);margin-top:4px;">Используйте <code>{имя}</code> — заменится именем контакта из заявки.</p></div>' +
+        '<button class="ad-btn primary" id="bc-generate">Сформировать ссылки</button>' +
+      '</div>' +
+      '<div class="ad-card" id="bc-result" style="display:none;">' +
+        '<h3>Ссылки для рассылки</h3>' +
+        '<div id="bc-links" style="display:flex;flex-direction:column;gap:8px;"></div>' +
+      '</div>';
+  }
+  function bindBroadcast() {
+    document.getElementById('bc-generate').onclick = function () {
+      var filter = document.getElementById('bc-filter').value;
+      var tmpl = document.getElementById('bc-text').value.trim();
+      if (!tmpl) { alert('Введите текст сообщения.'); return; }
+      var leads = get(K.leads, []);
+      var selected = leads.filter(function (l) {
+        if (!l.phone) return false;
+        if (filter === '__new__') return l.status === 'new';
+        if (filter.startsWith('dir:')) return (l.direction || '').trim() === filter.slice(4);
+        return true;
+      });
+      var resultEl = document.getElementById('bc-result');
+      var linksEl = document.getElementById('bc-links');
+      if (!selected.length) {
+        linksEl.innerHTML = '<div class="ad-empty">Нет контактов по выбранному фильтру.</div>';
+        resultEl.style.display = '';
+        return;
+      }
+      linksEl.innerHTML = selected.map(function (l) {
+        var msg = tmpl.replace(/\{имя\}/gi, (l.name || '').split(' ')[0] || 'Здравствуйте');
+        var phone = digits(l.phone);
+        var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(msg);
+        return '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span style="font-size:.88rem;color:var(--dark);min-width:160px;">' + esc(l.name || '—') + ' · ' + esc(l.phone || '') + '</span>' +
+          '<a class="ad-btn sm ad-wa" href="' + url + '" target="_blank" rel="noopener">Написать в WA</a>' +
+          '</div>';
+      }).join('');
+      resultEl.style.display = '';
+    };
+  }
+
+  /* ---------- shared array-row controls (up/down/delete) ---------- */
+  function arrayRowCtrls(listSel, reader, key) {
+    function move(arr, from, to) { var x = arr.splice(from, 1)[0]; arr.splice(to, 0, x); }
+    document.querySelectorAll(listSel + ' [data-up]').forEach(function (b) {
+      b.onclick = function () { var i = +this.getAttribute('data-up'); if (i <= 0) return; var a = reader(); move(a, i, i - 1); save(key, a); rerender(); };
+    });
+    document.querySelectorAll(listSel + ' [data-down]').forEach(function (b) {
+      b.onclick = function () { var i = +this.getAttribute('data-down'); var a = reader(); if (i >= a.length - 1) return; move(a, i, i + 1); save(key, a); rerender(); };
+    });
+    document.querySelectorAll(listSel + ' [data-del]').forEach(function (b) {
+      b.onclick = function () { var i = +this.getAttribute('data-del'); var a = reader(); a.splice(i, 1); save(key, a); rerender(); };
+    });
+  }
+
+  /* ====================================================================== */
+  /*  SHELL                                                                 */
+  /* ====================================================================== */
+  function renderNav() {
+    var nav = document.getElementById('ad-nav');
+    nav.innerHTML = SECTIONS.map(function (s) {
+      var badge = s.badge ? s.badge() : 0;
+      return '<button data-sec="' + s.id + '" class="' + (current === s.id ? 'active' : '') + '">' +
+        '<span>' + s.label + '</span>' + (badge ? '<span class="badge">' + badge + '</span>' : '') + '</button>';
+    }).join('');
+    nav.querySelectorAll('button').forEach(function (b) {
+      b.onclick = function () {
+        current = this.getAttribute('data-sec');
+        document.getElementById('ad-sidebar').classList.remove('open');
+        rerender();
+      };
+    });
+  }
+
+  function rerender() {
+    var sec = SECTIONS.filter(function (s) { return s.id === current; })[0] || SECTIONS[0];
+    document.getElementById('ad-content').innerHTML = sec.render();
+    renderNav();
+    var binders = { leads: bindLeads, slots: bindSlots, pricing: bindPricing, reviews: bindReviews, teachers: bindTeachers, contacts: bindContacts, broadcast: bindBroadcast };
+    if (binders[current]) binders[current]();
+  }
+
+  function init() {
+    document.getElementById('ad-app').classList.remove('hidden');
+    document.getElementById('ad-burger').onclick = function () {
+      document.getElementById('ad-sidebar').classList.toggle('open');
+    };
+    rerender();
+  }
+
+  /* ---------- boot ---------- */
+  if (gate()) {
+    init();
+  } else {
+    document.getElementById('ad-locked').classList.remove('hidden');
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Лиды — Админ-панель</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/account.css">
+</head>
+<body class="cab-body">
+<div class="cab-shell">
+
+  <aside class="cab-sidebar" data-cab-sidebar="admin"></aside>
+
+  <div>
+    <div class="cab-topbar">
+      <span class="name">Админ · CRM Лиды</span>
+      <button class="cab-burger" data-sidebar-toggle aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+
+    <main class="cab-main">
+      <div class="cab-page-head">
+        <h1>CRM Лиды</h1>
+        <p class="sub">Все входящие заявки — с сайта, пробных занятий, мероприятий и магазина.</p>
+      </div>
+
+      <div class="cab-toolbar">
+        <select class="cab-input" data-leads-filter style="max-width:220px">
+          <option value="">Все статусы</option>
+          <option value="new">Новый</option>
+          <option value="processing">В работе</option>
+          <option value="no_answer">Не берёт трубку</option>
+          <option value="trial_scheduled">Записан на пробное</option>
+          <option value="trial_done">Пробное проведено</option>
+          <option value="purchased">Купил</option>
+          <option value="active">Активный ученик</option>
+          <option value="lost">Потерян</option>
+        </select>
+        <button class="btn btn-primary" data-add-lead>+ Новый лид</button>
+      </div>
+
+      <div id="leads-mount"></div>
+
+      <div id="admin-leads-root"></div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supa-config.js"></script>
+<script src="../js/supa.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/account.js"></script>
+<script src="../js/crm.js"></script>
+</body>
+</html>

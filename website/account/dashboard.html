@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Личный кабинет — Shpigotskiy Art Space</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/account.css">
+</head>
+<body class="cab-body">
+<div class="cab-shell">
+
+  <!-- ===== SIDEBAR (rendered by account.js) ===== -->
+  <aside class="cab-sidebar" data-cab-sidebar="student"></aside>
+
+  <!-- ===== MAIN ===== -->
+  <div>
+    <div class="cab-topbar">
+      <span class="name">Личный кабинет</span>
+      <button class="cab-burger" data-sidebar-toggle aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+
+    <main class="cab-main" id="dashboard-root">
+      <div class="cab-page-head">
+        <h1 data-dash="hello">Здравствуйте!</h1>
+        <p class="sub">Краткая сводка по вашему обучению.</p>
+      </div>
+
+      <div class="cab-notifications" data-notes></div>
+
+      <div class="cab-grid">
+
+        <!-- Next lesson -->
+        <div class="cab-card cab-next">
+          <div class="cab-card-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Ближайшее занятие</div>
+          <div class="big" data-dash="next-day">—</div>
+          <div class="mid" data-dash="next-time">—</div>
+          <div class="small" data-dash="next-dir">—</div>
+        </div>
+
+        <!-- Direction / teacher -->
+        <div class="cab-card">
+          <div class="cab-card-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 4-9 4-9-4 9-4z"/><path d="M21 10v6M7 12v5c0 1 2 3 5 3s5-2 5-3v-5"/></svg>Направление</div>
+          <div class="cab-strong" data-dash="direction">—</div>
+          <div class="cab-muted" data-dash="level">—</div>
+          <div style="margin-top:16px;" class="cab-card-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/></svg>Преподаватель</div>
+          <div class="cab-strong" data-dash="teacher">—</div>
+        </div>
+
+        <!-- Lessons left -->
+        <div class="cab-card">
+          <div class="cab-card-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Осталось занятий</div>
+          <div class="cab-stat"><span data-dash="lessons-left">—</span></div>
+          <div class="cab-stat-sub" data-dash="lessons-total">—</div>
+          <div class="cab-progress"><div class="cab-progress-bar" data-dash="lessons-bar" style="width:0;"></div></div>
+        </div>
+
+        <!-- Subscription / payment -->
+        <div class="cab-card">
+          <div class="cab-card-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Абонемент</div>
+          <div class="cab-strong" data-dash="sub-until">—</div>
+          <div class="cab-muted">Срок действия абонемента</div>
+          <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <span class="cab-badge badge-gold" data-dash="payment">—</span>
+            <a href="subscriptions.html" class="btn btn-outline btn-sm">Мои абонементы</a>
+            <a href="shop.html" class="btn btn-primary btn-sm">Продлить</a>
+          </div>
+        </div>
+
+        <!-- Weekly schedule -->
+        <div class="cab-card span-2">
+          <div class="cab-card-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Расписание на неделю</div>
+          <div data-dash="weekly"></div>
+          <a href="schedule.html" class="btn btn-outline btn-sm" style="margin-top:20px;">Открыть календарь</a>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/account.js"></script>
+</body>
+</html>

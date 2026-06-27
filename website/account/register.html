@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Регистрация — Shpigotskiy Art Space</title>
+  <meta name="description" content="Создайте личный кабинет ученика Shpigotskiy Art Space.">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/account.css">
+</head>
+<body>
+<div class="auth-page">
+  <aside class="auth-aside">
+    <a href="../index.html" class="auth-brand">
+      <div class="name">Shpigotskiy Art Space</div>
+      <div class="tagline-small">Студия творческого развития</div>
+    </a>
+    <div>
+      <h2>Создайте личный кабинет</h2>
+      <p>Регистрация по телефону или email. Это займёт меньше минуты.</p>
+      <div class="auth-points">
+        <div class="auth-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5 9-11"/></svg>Доступ к расписанию и абонементу</div>
+        <div class="auth-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5 9-11"/></svg>Онлайн-курсы и прогресс обучения</div>
+        <div class="auth-point"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5 9-11"/></svg>Уведомления о ближайших занятиях</div>
+      </div>
+    </div>
+    <a href="../index.html" class="back-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>На главную</a>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-form-wrap">
+      <h1>Регистрация</h1>
+      <p class="sub">Заполните данные, чтобы создать аккаунт.</p>
+
+      <form id="register-form" novalidate>
+        <div class="form-group">
+          <label for="reg-name">Имя и фамилия</label>
+          <input class="form-control" id="reg-name" name="name" placeholder="Например, Алина Ким" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label for="reg-phone">Телефон</label>
+          <input class="form-control" id="reg-phone" name="phone" type="tel" placeholder="+7 ..." autocomplete="tel">
+        </div>
+        <div class="form-group">
+          <label for="reg-email">Email</label>
+          <input class="form-control" id="reg-email" name="email" type="email" placeholder="you@example.com" autocomplete="email">
+          <p class="form-hint">Укажите телефон или email (можно оба).</p>
+        </div>
+        <div class="form-group">
+          <label for="reg-role">Кто регистрируется</label>
+          <select class="form-control" id="reg-role" name="role">
+            <option value="student">Ученик</option>
+            <option value="parent">Родитель</option>
+          </select>
+          <p class="form-hint">Преподавателей и администраторов добавляет студия.</p>
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Пароль</label>
+          <input class="form-control" id="reg-password" name="password" type="password" placeholder="Не короче 6 символов" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label for="reg-password2">Повторите пароль</label>
+          <input class="form-control" id="reg-password2" name="password2" type="password" placeholder="Ещё раз" autocomplete="new-password">
+        </div>
+        <div class="form-error" id="register-error">Ошибка</div>
+        <button type="submit" class="btn btn-primary btn-full btn-lg">Создать аккаунт</button>
+      </form>
+
+      <p class="auth-alt">Уже есть аккаунт? <a href="login.html">Войти</a></p>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supa-config.js"></script>
+<script src="../js/supa.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/account.js"></script>
+<script>
+  /* Prefill name/phone when arriving from the trial form ("Создать кабинет"). */
+  (function () {
+    try {
+      var p = new URLSearchParams(location.search);
+      var n = p.get('name'), ph = p.get('phone');
+      var en = document.getElementById('reg-name'), ep = document.getElementById('reg-phone');
+      if (n && en && !en.value) en.value = n;
+      if (ph && ep && !ep.value) ep.value = ph;
+    } catch (e) { /* ignore */ }
+  })();
+</script>
+</body>
+</html>

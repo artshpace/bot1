@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Галерея — Shpigotskiy Art Space</title>
+  <meta name="description" content="Фотографии и видео концертов, выставок, спектаклей и занятий студии Shpigotskiy Art Space в Петропавловске.">
+  <meta name="keywords" content="галерея, фото, видео, концерты, выставки, спектакли, Shpigotskiy Art Space, студия">
+  <link rel="canonical" href="https://artshpace.github.io/bot/gallery.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/gallery.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="name">Shpigotskiy Art Space</span><span class="tagline-small">Студия творческого развития</span></a>
+      <div class="nav-links"><a href="directions/index.html">Направления</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle active" aria-haspopup="true" aria-expanded="false">О школе <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="nav-dropdown-menu"><a href="teachers.html">Преподаватели</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="portfolio.html">Портфолио</a></div></div><a href="contacts.html">Контакты</a><a href="account/login.html">Кабинет</a><a href="index.html#trial" class="nav-cta">Записаться</a></div>
+      <button class="nav-hamburger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+<nav class="mobile-nav"><a href="directions/index.html">Направления</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><a href="teachers.html">Преподаватели</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="contacts.html">Контакты</a><a href="account/login.html">Личный кабинет</a><a href="index.html#trial" class="mob-cta">Записаться на пробное занятие</a></nav>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Галерея</span></div>
+      <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Жизнь студии</div>
+      <h1>Галерея</h1>
+      <p class="lead">Концерты, выставки, спектакли и занятия — смотрите, как живёт наша студия.</p>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div class="gallery-filters" style="display:flex;gap:8px;margin-bottom:48px;flex-wrap:wrap;">
+      <button class="form-chip selected" data-gallery-filter="all">Все</button>
+      <button class="form-chip" data-gallery-filter="concert">Концерты</button>
+      <button class="form-chip" data-gallery-filter="exhibition">Выставки</button>
+      <button class="form-chip" data-gallery-filter="spectacle">Спектакли</button>
+      <button class="form-chip" data-gallery-filter="class">Занятия</button>
+      <button class="form-chip" data-gallery-filter="masterclass">Мастер-классы</button>
+    </div>
+
+    <div class="gallery-grid" id="gallery-grid">
+
+      <div class="gallery-item fade-up" data-cat="concert">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#1a0808,#3d1010);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Концерт</span>
+              <h4>Летний концерт учеников</h4>
+              <p>Июль 2024 · Областной театр</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="exhibition">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#080f1a,#0d1a30);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Выставка</span>
+              <h4>Выставка живописи «Лето»</h4>
+              <p>Июль 2024 · Студия</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="spectacle">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#1a0a15,#2d0d28);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Спектакль</span>
+              <h4>«Алиса в Стране чудес»</h4>
+              <p>Май 2024 · Областной театр</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="class">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#0d1a0d,#102810);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Занятие</span>
+              <h4>Урок вокала</h4>
+              <p>Март 2024 · Студия</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up gallery-item--wide" data-cat="concert">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#0a1520,#10273a);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Концерт</span>
+              <h4>Новогодний концерт 2023</h4>
+              <p>Декабрь 2023 · Дом культуры</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="masterclass">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#1a1200,#302000);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Мастер-класс</span>
+              <h4>Мастер-класс по акварели</h4>
+              <p>Апрель 2024 · Студия</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="class">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#1a0808,#2d1010);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Занятие</span>
+              <h4>Урок живописи</h4>
+              <p>Февраль 2024 · Студия</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="exhibition">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#101a10,#1a2d1a);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Выставка</span>
+              <h4>Весенняя выставка работ</h4>
+              <p>Март 2024 · Арт-галерея</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up gallery-item--tall" data-cat="spectacle">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#1a100a,#2d1d0d);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Спектакль</span>
+              <h4>«Маленький принц»</h4>
+              <p>Декабрь 2023 · Областной театр</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="masterclass">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#0a0a1a,#0d0d2d);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Мастер-класс</span>
+              <h4>Открытый урок гитары</h4>
+              <p>Ноябрь 2023 · Студия</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="concert">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#1a0808,#3d1010);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Концерт</span>
+              <h4>День рождения студии</h4>
+              <p>Сентябрь 2023 · Студия</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-item fade-up" data-cat="class">
+        <div class="gallery-thumb" style="background:linear-gradient(135deg,#0d100d,#161e16);">
+          <div class="gallery-overlay">
+            <div class="gallery-info">
+              <span class="gallery-cat">Занятие</span>
+              <h4>Урок актёрского мастерства</h4>
+              <p>Октябрь 2023 · Студия</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- Video section -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-header">
+      <div class="eyebrow">Видео</div>
+      <h2>Выступления учеников</h2>
+      <p>Смотрите выступления наших учеников на концертах и фестивалях.</p>
+    </div>
+    <div class="video-grid">
+      <div class="video-card fade-up">
+        <div class="video-thumb" style="background:linear-gradient(135deg,#1a0808,#3d1010);">
+          <div class="video-play-btn" aria-label="Смотреть видео">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="video-info">
+          <h4>Летний концерт 2024 — Гитара</h4>
+          <p>Ученики класса гитары выступают на главной сцене</p>
+        </div>
+      </div>
+      <div class="video-card fade-up">
+        <div class="video-thumb" style="background:linear-gradient(135deg,#080f1a,#0d1a30);">
+          <div class="video-play-btn" aria-label="Смотреть видео">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="video-info">
+          <h4>Вокальный вечер — сольные выступления</h4>
+          <p>Лучшие номера осеннего вечера вокала 2023</p>
+        </div>
+      </div>
+      <div class="video-card fade-up">
+        <div class="video-thumb" style="background:linear-gradient(135deg,#1a0a15,#2d0d28);">
+          <div class="video-play-btn" aria-label="Смотреть видео">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="video-info">
+          <h4>«Алиса в Стране чудес» — фрагмент спектакля</h4>
+          <p>Сцена с Королевой из детского спектакля</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <div class="free-badge">Первое занятие бесплатно</div>
+    <h2>Станьте частью истории</h2>
+    <p>Начните заниматься сегодня — и уже через год ваши фотографии будут здесь.</p>
+    <div class="cta-banner-btns">
+      <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться</a>
+      <a href="events.html" class="btn btn-white btn-lg">Ближайшие события</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
+      <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
+      <div class="footer-col"><h4>Студия</h4><ul><li><a href="teachers.html">Преподаватели</a></li><li><a href="events.html">Мероприятия</a></li><li><a href="gallery.html">Галерея</a></li><li><a href="portfolio.html">Портфолио учеников</a></li><li><a href="materials.html">Статьи</a></li><li><a href="store.html">Магазин</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77086366351">+7 708 636-63-51</a></li><li><a href="https://wa.me/77086366351" target="_blank">WhatsApp</a></li><li><a href="https://t.me/shpigotskiy_art" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2024 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a></div>
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  var grid = document.getElementById('gallery-grid');
+  document.querySelectorAll('[data-gallery-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-gallery-filter]').forEach(function (b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      var cat = btn.getAttribute('data-gallery-filter');
+      grid.querySelectorAll('.gallery-item').forEach(function (item) {
+        item.style.display = (cat === 'all' || item.getAttribute('data-cat') === cat) ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

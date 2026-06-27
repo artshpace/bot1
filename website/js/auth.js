@@ -1,0 +1,119 @@
+/* =====================================================================
+   ROUTE GUARD + SESSION HELPERS — cabinet & admin (v0.7)
+   ---------------------------------------------------------------------
+   Include on every /account/ page AFTER api.js but BEFORE account.js:
+       <script src="../js/api.js"></script>
+       <script src="../js/auth.js"></script>
+       <script src="../js/account.js"></script>
+
+   Runs immediately (not on DOMContentLoaded) so protected pages redirect
+   before any private content is painted.
+
+   Roles: student → dashboard.html · parent → parent.html
+          teacher → teacher.html  · admin → admin.html
+   Admin is a superuser and may view student/parent/teacher pages too.
+   Shared pages (settings, notifications, portfolio, achievements, cart)
+   are open to every signed-in role.
+   ===================================================================== */
+(function () {
+  'use strict';
+
+  // Auth pages a signed-OUT visitor is allowed to see.
+  var PUBLIC_PAGES = ['login.html', 'register.html', 'recover.html', 'reset.html'];
+  // Pages that require the Admin role.
+  var ADMIN_PAGES = ['admin.html', 'admin-subscriptions.html', 'admin-courses.html',
+    'admin-payments.html', 'admin-parents.html', 'admin-attendance.html',
+    'admin-homework.html', 'admin-certificates.html', 'admin-achievements.html',
+    'admin-events.html', 'admin-portfolio.html',
+    /* CRM v0.9 */
+    'admin-leads.html', 'admin-trials.html', 'admin-teachers.html',
+    'admin-funnel.html', 'admin-analytics.html', 'admin-broadcast.html',
+    'admin-skillmap.html', 'admin-churn.html', 'admin-reports.html',
+    'admin-orders.html', 'admin-ads.html',
+    /* Educational v1.1 */
+    'admin-journal.html', 'admin-recalculations.html', 'admin-rehearsals.html',
+    'admin-tickets.html', 'admin-branding.html'];
+  // Pages reserved for the Director (owner superuser) only. [Phase 2 P0]
+  var DIRECTOR_PAGES = ['director.html'];
+  // Pages that belong to the Parent cabinet.
+  var PARENT_PAGES = ['parent.html'];
+  // Pages that belong to the Teacher cabinet.
+  var TEACHER_PAGES = ['teacher.html'];
+  // Pages any signed-in user may open (role-aware content inside).  [v0.7]
+  var SHARED_PAGES = ['settings.html', 'notifications.html', 'portfolio.html',
+    'achievements.html', 'cart.html', 'shop.html', 'checkout.html', 'orders.html',
+    /* Educational v1.1 */
+    'journal.html',
+    /* Phase 3: развитие/прогресс — ученик видит своё, родитель — ребёнка */
+    'progress.html'];
+
+  var file = (location.pathname.split('/').pop() || 'dashboard.html');
+  var isPublic = PUBLIC_PAGES.indexOf(file) !== -1;
+  var isDirectorPage = DIRECTOR_PAGES.indexOf(file) !== -1;
+  var isAdminPage = ADMIN_PAGES.indexOf(file) !== -1;
+  var isParentPage = PARENT_PAGES.indexOf(file) !== -1;
+  var isTeacherPage = TEACHER_PAGES.indexOf(file) !== -1;
+  var isSharedPage = SHARED_PAGES.indexOf(file) !== -1;
+  // Anything left over (and not public/shared) is a student cabinet page.
+  var isStudentPage = !isPublic && !isDirectorPage && !isAdminPage && !isParentPage && !isTeacherPage && !isSharedPage;
+  var user = (window.API && API.auth) ? API.auth.current() : null;
+  var role = user ? user.role : null;
+  // Director is the owner superuser: inherits every admin/staff privilege.
+  var isPriv = (role === 'admin' || role === 'director');
+
+  function home(u) {
+    if (!u) return 'login.html';
+    if (u.role === 'director') return 'director.html';
+    if (u.role === 'admin') return 'admin.html';
+    if (u.role === 'parent') return 'parent.html';
+    if (u.role === 'teacher') return 'teacher.html';
+    return 'dashboard.html';
+  }
+
+  if (!isPublic && !user) {
+    // Protected route, not signed in → bounce to login, remember target.
+    location.replace('login.html?next=' + encodeURIComponent(file));
+    return;
+  }
+  if (isPublic && user) {
+    // Already signed in → no need for the auth pages.
+    location.replace(home(user));
+    return;
+  }
+  if (isDirectorPage && role !== 'director') {
+    // Director-only area (e.g. access management) — admins are bounced.
+    location.replace(home(user));
+    return;
+  }
+  if (isAdminPage && !isPriv) {
+    location.replace(home(user));
+    return;
+  }
+  if (isParentPage && role !== 'parent' && !isPriv) {
+    location.replace(home(user));
+    return;
+  }
+  if (isTeacherPage && role !== 'teacher' && !isPriv) {
+    location.replace(home(user));
+    return;
+  }
+  if (isStudentPage && role !== 'student' && !isPriv) {
+    // e.g. a parent or teacher trying to open a student cabinet page.
+    location.replace(home(user));
+    return;
+  }
+
+  // Expose a global sign-out used by the sidebar button.
+  window.signOut = function () {
+    // Also drop any Supabase session token from this browser. Without this
+    // the mock logout clears only sas_session, the Supabase session stays
+    // alive, and supa.js silently re-bridges the user straight back into the
+    // cabinet on the next page load (i.e. "logout does nothing"). [v1.1.1]
+    try {
+      Object.keys(localStorage).forEach(function (k) {
+        if (/^sb-.*-auth-token$/.test(k)) localStorage.removeItem(k);
+      });
+    } catch (e) { /* ignore storage errors */ }
+    API.auth.logout().then(function () { location.replace('login.html'); });
+  };
+})();
