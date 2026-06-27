@@ -38,6 +38,11 @@ export default {
       return handleNotify(request, env);
     }
 
+    // --- Downloadable .ics (for "add to default calendar" buttons) -----------
+    if (url.pathname === '/ics') {
+      return handleIcs(request);
+    }
+
     // --- Lead forwarding (default, unchanged behaviour) -----------------------
     return handleLead(request, env);
   }
@@ -119,10 +124,23 @@ async function handleLead(request, env) {
     age ? `🎂 *Возраст:* ${age}` : null,
     direction ? `🎸 *Направление:* ${direction}` : null,
     slot ? `🕐 *Слот:* ${slot}` : null,
-    utm?.campaign ? `📊 *Кампания:* ${utm.campaign}` : null,
-    '',
-    `[Написать в WA](https://wa.me/${(phone || '').replace(/\D/g, '')})`
+    body.comment ? `📝 ${body.comment}` : null,
+    utm?.campaign ? `📊 *Кампания:* ${utm.campaign}` : null
   ].filter(Boolean).join('\n');
+
+  // Inline buttons: WhatsApp + "add to calendar" (Google + universal .ics).
+  // The .ics works on iPhone/Android/любой календарь — независимо от синка.
+  const rows = [];
+  const when = parseSlot(slot, body.slotDate);
+  if (when) {
+    const origin = new URL(request.url).origin;
+    const title = 'Пробное — ' + (direction || 'занятие') + (name ? ', ' + name : '');
+    const details = ['Телефон: ' + (phone || '—'), direction ? 'Направление: ' + direction : '', slot ? 'Слот: ' + slot : ''].filter(Boolean).join('\n');
+    const loc = 'ул. Интернациональная, 63, 5 этаж, Петропавловск';
+    rows.push([{ text: '📅 Google Календарь', url: gcalUrl(title, when, details, loc) }]);
+    rows.push([{ text: '📲 В календарь телефона (.ics)', url: icsLink(origin, title, when, details, loc) }]);
+  }
+  rows.push([{ text: '💬 Написать в WhatsApp', url: 'https://wa.me/' + (phone || '').replace(/\D/g, '') }]);
 
   const tgRes = await fetch(
     `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -133,6 +151,7 @@ async function handleLead(request, env) {
         chat_id: env.TELEGRAM_CHAT_ID,
         text,
         parse_mode: 'Markdown',
+        reply_markup: { inline_keyboard: rows },
       }),
     }
   );
@@ -459,6 +478,69 @@ function parseSlot(slot, slotDate) {
 }
 function pad2(t) { const p = t.split(':'); return (p[0].length < 2 ? '0' + p[0] : p[0]) + ':' + p[1]; }
 function addHour(t) { const p = t.split(':'); let h = (parseInt(p[0], 10) + 1) % 24; return h + ':' + p[1]; }
+
+/* =============================================================================
+   "ADD TO CALENDAR" buttons for the Telegram lead message.
+   gcalUrl → Google Calendar template; icsLink → our /ics endpoint (universal,
+   works on iPhone/Android/любой календарь).
+   ============================================================================= */
+// "2026-06-29T20:00:00+05:00" → "20260629T200000" (floating local stamp)
+function calStampFromISO(iso) { return (iso || '').slice(0, 19).replace(/[-:]/g, ''); }
+
+function gcalUrl(title, when, details, location) {
+  const dates = calStampFromISO(when.startISO) + '/' + calStampFromISO(when.endISO);
+  const q = new URLSearchParams({
+    action: 'TEMPLATE', text: title || 'Пробное занятие', dates: dates,
+    details: details || '', location: location || '', ctz: ALMATY_TZ
+  });
+  return 'https://calendar.google.com/calendar/render?' + q.toString();
+}
+
+function icsLink(origin, title, when, details, location) {
+  const q = new URLSearchParams({
+    t: title || 'Пробное занятие',
+    s: calStampFromISO(when.startISO), e: calStampFromISO(when.endISO),
+    d: details || '', l: location || ''
+  });
+  return origin + '/ics?' + q.toString();
+}
+
+function icsEsc(s) { return String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\r?\n/g, '\\n'); }
+
+function handleIcs(request) {
+  const u = new URL(request.url);
+  const t = u.searchParams.get('t') || 'Пробное занятие';
+  const s = u.searchParams.get('s');
+  const e = u.searchParams.get('e');
+  const d = u.searchParams.get('d') || '';
+  const l = u.searchParams.get('l') || '';
+  if (!s || !e) return new Response('bad request', { status: 400 });
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Shpigotskiy Art Space//trial//RU',
+    'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE', 'TZID:Asia/Almaty',
+    'BEGIN:STANDARD', 'DTSTART:19700101T000000', 'TZOFFSETFROM:+0500', 'TZOFFSETTO:+0500', 'TZNAME:+05', 'END:STANDARD',
+    'END:VTIMEZONE',
+    'BEGIN:VEVENT',
+    'UID:' + stamp + '-' + Math.random().toString(36).slice(2) + '@artshpace',
+    'DTSTAMP:' + stamp,
+    'DTSTART;TZID=Asia/Almaty:' + s,
+    'DTEND;TZID=Asia/Almaty:' + e,
+    'SUMMARY:' + icsEsc(t),
+    'DESCRIPTION:' + icsEsc(d),
+    'LOCATION:' + icsEsc(l),
+    'BEGIN:VALARM', 'TRIGGER:-PT2H', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc(t), 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR'
+  ].join('\r\n');
+  return new Response(ics, {
+    headers: {
+      'Content-Type': 'text/calendar; charset=utf-8',
+      'Content-Disposition': 'attachment; filename="probnoe.ics"',
+      'Access-Control-Allow-Origin': '*'
+    }
+  });
+}
 
 // --- Service-account OAuth: signed JWT → access_token ---
 async function getGoogleAccessToken(env) {
