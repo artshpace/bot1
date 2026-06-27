@@ -245,6 +245,9 @@
 
   /* ================= LEARNER VIEW (student / parent) ================== */
   function learnerView(root) {
+    // For a parent the student-oriented mock progress block is irrelevant —
+    // show only the child development map.
+    if (me && me.role === 'parent') { var dev = document.getElementById('development-root'); if (dev) dev.style.display = 'none'; }
     root.innerHTML = '<div class="sm-card"><p class="sm-empty">Загрузка карты развития…</p></div>';
     // Which roster students belong to me? self (user_id) OR my children (guardian).
     Promise.all([

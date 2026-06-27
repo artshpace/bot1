@@ -533,8 +533,12 @@
     var myStudentIds = {};
     root.innerHTML = '<div class="jr-card"><p class="jr-empty">Загрузка журнала…</p></div>';
 
-    sb.from('students').select('id').eq('user_id', me.id).then(function (r) {
-      (r.data || []).forEach(function (s) { myStudentIds[s.id] = 1; });
+    Promise.all([
+      sb.from('students').select('id').eq('user_id', me.id),
+      sb.from('student_guardians').select('student_id').eq('parent_id', me.id)
+    ]).then(function (res) {
+      (res[0].data || []).forEach(function (s) { myStudentIds[s.id] = 1; });        // сам ученик
+      (res[1].data || []).forEach(function (s) { myStudentIds[s.student_id] = 1; }); // дети-подопечные
       return loadGroups();
     }).then(function (groups) {
       if (!groups.length) { root.innerHTML = '<div class="jr-card"><p class="jr-empty">Вы пока не записаны в учебную группу. Обратитесь к администратору студии.</p></div>'; return; }

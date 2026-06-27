@@ -189,6 +189,8 @@
   ];
   var PARENT_NAV = [
     { href: 'parent.html',        label: 'Кабинет родителя',  icon: ICON.parents  },
+    { href: 'progress.html',      label: 'Развитие ребёнка',  icon: ICON.chart    },
+    { href: 'journal.html',       label: 'Журнал ребёнка',    icon: ICON.book     },
     { href: 'shop.html',          label: 'Оплата и покупки',  icon: ICON.cart     },
     { href: 'orders.html',        label: 'Мои заказы',        icon: ICON.receipt  },
     { href: 'notifications.html', label: 'Уведомления',       icon: ICON.bell     },

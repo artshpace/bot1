@@ -43,7 +43,9 @@
   var SHARED_PAGES = ['settings.html', 'notifications.html', 'portfolio.html',
     'achievements.html', 'cart.html', 'shop.html', 'checkout.html', 'orders.html',
     /* Educational v1.1 */
-    'journal.html'];
+    'journal.html',
+    /* Phase 3: развитие/прогресс — ученик видит своё, родитель — ребёнка */
+    'progress.html'];
 
   var file = (location.pathname.split('/').pop() || 'dashboard.html');
   var isPublic = PUBLIC_PAGES.indexOf(file) !== -1;
