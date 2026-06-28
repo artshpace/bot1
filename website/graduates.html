@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Выпускники и истории успеха — Shpigotskiy Art Space</title>
+  <meta name="description" content="Истории успеха учеников Shpigotskiy Art Space: победители конкурсов и выпускники, поступившие в ведущие консерватории. Детская студия творческого развития в Петропавловске.">
+  <link rel="canonical" href="https://artshpace.github.io/bot/graduates.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .grad-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px; }
+    .grad-card { background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-xl); padding:30px; transition:all var(--transition); display:flex; flex-direction:column; }
+    .grad-card:hover { box-shadow:var(--shadow-md); border-color:var(--gold-border); transform:translateY(-3px); }
+    .grad-top { display:flex; align-items:center; gap:16px; margin-bottom:16px; }
+    .grad-ava { width:60px; height:60px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--primary),var(--gold)); display:flex; align-items:center; justify-content:center; color:#fff; font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; }
+    .grad-name { font-family:'Playfair Display',serif; font-weight:700; font-size:1.15rem; line-height:1.2; }
+    .grad-dir { color:var(--primary); font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-top:3px; }
+    .grad-card p { color:var(--muted); line-height:1.7; font-size:.93rem; }
+    .grad-badge { display:inline-block; margin-top:auto; padding-top:16px; }
+    .grad-badge span { display:inline-block; background:rgba(201,168,76,.14); color:var(--gold-dark,#9c7d2e); border:1px solid var(--gold-border); border-radius:999px; padding:5px 12px; font-size:.78rem; font-weight:700; }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="name">Shpigotskiy Art Space</span><span class="tagline-small">Студия творческого развития</span></a>
+      <div class="nav-links"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle active" aria-haspopup="true" aria-expanded="false">О школе <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="nav-dropdown-menu"><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="graduates.html">Выпускники</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="portfolio.html">Портфолио</a></div></div><a href="contacts.html">Контакты</a><a href="account/login.html">Кабинет</a><a href="index.html#trial" class="nav-cta">Записаться</a></div>
+      <button class="nav-hamburger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+<nav class="mobile-nav"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="graduates.html">Выпускники</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="contacts.html">Контакты</a><a href="account/login.html">Личный кабинет</a><a href="index.html#trial" class="mob-cta">Записаться на пробное занятие</a></nav>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Выпускники</span></div>
+      <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Истории успеха</div>
+      <h1>Наши выпускники</h1>
+      <p class="lead">За годы работы наши педагоги воспитали победителей конкурсов и музыкантов, поступивших в ведущие консерватории России, Казахстана и Европы. Эти истории начинались так же, как может начаться история вашего ребёнка — с первого занятия.</p>
+    </div>
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item"><div class="num">50+</div><div class="label">лет опыта педагогов</div></div>
+      <div class="stat-item"><div class="num">160+</div><div class="label">учеников сегодня</div></div>
+      <div class="stat-item"><div class="num">9.7</div><div class="label">индекс NPS</div></div>
+      <div class="stat-item"><div class="num">Гран‑при</div><div class="label">на конкурсах</div></div>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:12px;">Лауреаты конкурсов</div>
+    <h2 style="margin-bottom:32px;">Победы на сцене</h2>
+    <div class="grad-grid">
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">Г</div><div><div class="grad-name">Геннадий Колосов</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Обладатель Гран‑при престижного конкурса «Звёзды Приишимья» (2005). Яркий пример того, как системная работа с голосом приводит к высшей награде.</p>
+        <div class="grad-badge"><span>★ Гран‑при «Звёзды Приишимья»</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">К</div><div><div class="grad-name">Ксения Маслова</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Лауреат I места конкурса «Звёзды Приишимья». Сегодня продолжает музыкальную карьеру в Праге.</p>
+        <div class="grad-badge"><span>★ I место · Прага</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">К</div><div><div class="grad-name">Кадыржан Мухаметжанов</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Победитель конкурса (I место, 2007). Один из ярких голосов своего выпуска.</p>
+        <div class="grad-badge"><span>★ I место (2007)</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">А</div><div><div class="grad-name">Александр Лысаков</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Лауреат I места конкурса «Минута славы». Уверенно показал себя на большой сцене.</p>
+        <div class="grad-badge"><span>★ I место «Минута славы»</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">Д</div><div><div class="grad-name">Дарья Колбасова</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Призёр республиканского конкурса «Менің Отаным» (2007).</p>
+        <div class="grad-badge"><span>★ Призёр «Менің Отаным»</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">В</div><div><div class="grad-name">Виктория Евдаева</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Призёр конкурса «Звёзды Приишимья». Одна из талантливых учениц вокального направления.</p>
+        <div class="grad-badge"><span>★ Призёр «Звёзды Приишимья»</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="eyebrow" style="margin-bottom:12px;">Поступили в консерватории</div>
+    <h2 style="margin-bottom:8px;">Музыка как профессия</h2>
+    <p style="color:var(--muted);max-width:680px;margin-bottom:32px;line-height:1.7;">Выпускники наших педагогов продолжили обучение в ведущих музыкальных вузах мира и вышли на профессиональную сцену.</p>
+    <div class="grad-grid">
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">К</div><div><div class="grad-name">Кирилл Капачинский</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Поступил в Московскую государственную консерваторию имени П. И. Чайковского — одно из самых престижных музыкальных учебных заведений мира.</p>
+        <div class="grad-badge"><span>🎓 Консерватория им. Чайковского</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">Д</div><div><div class="grad-name">Дмитрий Вальбауэр</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Выпускник Музыкального училища имени Гнесиных в Москве по специальности «вокал».</p>
+        <div class="grad-badge"><span>🎓 Училище им. Гнесиных</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">А</div><div><div class="grad-name">Асель Идейова</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Студентка Санкт‑Петербургской консерватории — продолжила академический путь в одном из старейших музыкальных вузов России.</p>
+        <div class="grad-badge"><span>🎓 СПб консерватория</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">А</div><div><div class="grad-name">Анастасия Клюшниченко</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Поступила в Академию музыки в Астане по специальности «вокал».</p>
+        <div class="grad-badge"><span>🎓 Академия музыки, Астана</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">Р</div><div><div class="grad-name">Руслан Веригин</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Продолжил профессиональное обучение в консерватории в Казани, сейчас живёт и работает в Германии.</p>
+        <div class="grad-badge"><span>🎓 Казань · Германия</span></div>
+      </div>
+      <div class="grad-card">
+        <div class="grad-top"><div class="grad-ava">В</div><div><div class="grad-name">Владимир Боровиков</div><div class="grad-dir">Вокал</div></div></div>
+        <p>Связал жизнь с профессиональным музыкальным искусством — Саратовский оперный театр.</p>
+        <div class="grad-badge"><span>🎓 Саратовский оперный театр</span></div>
+      </div>
+    </div>
+    <p style="color:var(--muted);font-size:.85rem;margin-top:24px;font-style:italic;">Эти выпускники — ученики нашего педагога по вокалу Натальи Николаевны Ерзаковой за годы её педагогической работы.</p>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <div class="free-badge">Первое занятие бесплатно</div>
+    <h2>Возможно, следующая история — про вашего ребёнка</h2>
+    <p>Большой путь начинается с первого занятия. Запишитесь на бесплатное пробное — и сделайте первый шаг.</p>
+    <div class="cta-banner-btns">
+      <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться на пробное</a>
+      <a href="teachers.html" class="btn btn-white btn-lg">Наши преподаватели</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
+      <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
+      <div class="footer-col"><h4>Студия</h4><ul><li><a href="teachers.html">Преподаватели</a></li><li><a href="parents.html">Родителям</a></li><li><a href="graduates.html">Выпускники</a></li><li><a href="schedule.html">Расписание</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77086366351">+7 708 636-63-51</a></li><li><a href="https://wa.me/77086366351" target="_blank">WhatsApp</a></li><li><a href="https://t.me/shpigotskiy_art" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2024 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a></div>
+  </div>
+</footer>
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
