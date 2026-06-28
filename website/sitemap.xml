@@ -56,6 +56,41 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
+    <loc>https://artshpace.github.io/bot/website/parents.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/graduates.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/schedule.html</loc>
+    <priority>0.8</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/materials.html</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/blog/kak-vybrat-pervuyu-gitaru.html</loc>
+    <priority>0.6</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/blog/kak-pobedit-strakh-stseny.html</loc>
+    <priority>0.6</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/blog/domashnie-zanyatiya-gitara.html</loc>
+    <priority>0.6</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
     <loc>https://artshpace.github.io/bot/website/privacy.html</loc>
     <priority>0.3</priority>
     <changefreq>yearly</changefreq>
