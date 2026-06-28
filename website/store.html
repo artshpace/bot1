@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Магазин — Shpigotskiy Art Space</title>
+  <meta name="description" content="Онлайн-магазин студии Shpigotskiy Art Space: абонементы, онлайн-курсы, мастер-классы, мерч, подарочные сертификаты и билеты на мероприятия.">
+  <meta name="keywords" content="магазин, абонемент, онлайн-курс, мастер-класс, подарочный сертификат, Shpigotskiy Art Space">
+  <link rel="canonical" href="https://artshpace.github.io/bot/store.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/store.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="name">Shpigotskiy Art Space</span><span class="tagline-small">Студия творческого развития</span></a>
+      <div class="nav-links"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html" class="active">Магазин</a><div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">О школе <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="nav-dropdown-menu"><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="graduates.html">Выпускники</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="portfolio.html">Портфолио</a></div></div><a href="contacts.html">Контакты</a><a href="account/login.html">Кабинет</a><a href="index.html#trial" class="nav-cta">Записаться</a></div>
+      <button class="nav-hamburger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+<nav class="mobile-nav"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="graduates.html">Выпускники</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="contacts.html">Контакты</a><a href="account/login.html">Личный кабинет</a><a href="index.html#trial" class="mob-cta">Записаться на пробное занятие</a></nav>
+
+<!-- Cart drawer -->
+<div class="store-cart-drawer" id="cart-drawer" aria-hidden="true">
+  <div class="scd-header">
+    <h3>Корзина</h3>
+    <button class="scd-close" id="cart-close" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="scd-items" id="cart-items">
+    <p class="scd-empty">Корзина пуста</p>
+  </div>
+  <div class="scd-footer" id="cart-footer" style="display:none;">
+    <div class="scd-total">Итого: <strong id="cart-total">0 ₸</strong></div>
+    <a href="account/cart.html" class="btn btn-primary btn-full btn-lg">Оформить заказ</a>
+    <p class="scd-note">Для оформления заказа войдите в личный кабинет.</p>
+  </div>
+</div>
+<div class="store-cart-backdrop" id="cart-backdrop"></div>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Магазин</span></div>
+      <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Купить</div>
+      <h1>Магазин студии</h1>
+      <p class="lead">Абонементы, онлайн-курсы, мастер-классы, мерч и подарочные сертификаты.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Search + Cart button bar -->
+<div class="store-bar">
+  <div class="container">
+    <div class="store-bar-inner">
+      <div class="store-search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="search" id="store-search" class="store-search" placeholder="Поиск по товарам…">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="form-chip selected" data-store-filter="all">Все</button>
+        <button class="form-chip" data-store-filter="subscription">Абонементы</button>
+        <button class="form-chip" data-store-filter="course">Онлайн-курсы</button>
+        <button class="form-chip" data-store-filter="masterclass">Мастер-классы</button>
+        <button class="form-chip" data-store-filter="merch">Мерч</button>
+        <button class="form-chip" data-store-filter="giftcert">Сертификаты</button>
+      </div>
+      <button class="store-cart-btn" id="open-cart-btn" aria-label="Корзина">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        Корзина
+        <span class="store-cart-count" id="store-cart-count" style="display:none;">0</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<section class="section section-sm">
+  <div class="container">
+    <div class="store-grid" id="store-grid">
+
+      <!-- Subscriptions -->
+      <div class="store-card fade-up" data-category="subscription">
+        <div class="store-card-img" style="background:linear-gradient(135deg,#1a0808,#3d1010);">
+          <span class="store-badge store-badge--popular">Популярный</span>
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Абонемент</span>
+          <h3>Абонемент «Старт» — 8 занятий</h3>
+          <p>8 индивидуальных занятий по выбранному направлению. Срок действия 60 дней.</p>
+          <ul class="store-feats">
+            <li>8 занятий</li><li>Срок 60 дней</li><li>Одно направление</li>
+          </ul>
+          <div class="store-price">24 000 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="subscription" data-id="plan-start" data-name="Абонемент «Старт» — 8 занятий" data-price="24000">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <div class="store-card fade-up" data-category="subscription">
+        <div class="store-card-img" style="background:linear-gradient(135deg,#080f1a,#0d1a30);">
+          <span class="store-badge store-badge--gold">Выгодно</span>
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Абонемент</span>
+          <h3>Абонемент «Стандарт» — 12 занятий</h3>
+          <p>12 занятий на 90 дней. Оптимальный вариант для стабильного прогресса.</p>
+          <ul class="store-feats">
+            <li>12 занятий</li><li>Срок 90 дней</li><li>Одно направление</li>
+          </ul>
+          <div class="store-price">32 000 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="subscription" data-id="plan-standard" data-name="Абонемент «Стандарт» — 12 занятий" data-price="32000">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <!-- Online Courses -->
+      <div class="store-card fade-up" data-category="course">
+        <div class="store-card-img" style="background:linear-gradient(135deg,#0d1a0d,#102810);">
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Онлайн-курс</span>
+          <h3>Гитара для начинающих — базовый курс</h3>
+          <p>24 урока с нуля до первых песен. Подходит для детей от 10 лет и взрослых. Бессрочный доступ.</p>
+          <ul class="store-feats">
+            <li>24 урока</li><li>Ирина Волошина</li><li>Бессрочный доступ</li>
+          </ul>
+          <div class="store-price">8 900 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="course" data-id="course-guitar-basics" data-name="Гитара для начинающих" data-price="8900">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <div class="store-card fade-up" data-category="course">
+        <div class="store-card-img" style="background:linear-gradient(135deg,#1a0a15,#2d0d28);">
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Онлайн-курс</span>
+          <h3>Вокал: постановка голоса</h3>
+          <p>16 видеоуроков по развитию голоса, дыхания и сценической уверенности. Уровень: начальный.</p>
+          <ul class="store-feats">
+            <li>16 уроков</li><li>Анна Смирнова</li><li>Бессрочный доступ</li>
+          </ul>
+          <div class="store-price">6 900 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="course" data-id="course-vocals" data-name="Вокал: постановка голоса" data-price="6900">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <!-- Masterclasses -->
+      <div class="store-card fade-up" data-category="masterclass">
+        <div class="store-card-img" style="background:linear-gradient(135deg,#1a1200,#302000);">
+          <span class="store-badge store-badge--date">5 авг</span>
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Мастер-класс</span>
+          <h3>Мастер-класс по импровизации</h3>
+          <p>Открытый мастер-класс по актёрской импровизации для возраста 12+. Студия Art Space, 15:00.</p>
+          <ul class="store-feats">
+            <li>5 августа 2024</li><li>15:00–17:00</li><li>Студия Art Space</li>
+          </ul>
+          <div class="store-price">3 500 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="masterclass" data-id="mc-improv" data-name="Мастер-класс по импровизации" data-price="3500">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <div class="store-card fade-up" data-category="masterclass">
+        <div class="store-card-img" style="background:linear-gradient(135deg,#101a10,#1a3020);">
+          <span class="store-badge store-badge--date">10 сен</span>
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Мастер-класс</span>
+          <h3>Мастер-класс по акварели</h3>
+          <p>Научитесь писать акварелью с нуля за 2 часа. Все материалы включены. Без опыта.</p>
+          <ul class="store-feats">
+            <li>10 сентября 2024</li><li>13:00–15:00</li><li>Студия Art Space</li>
+          </ul>
+          <div class="store-price">4 000 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="masterclass" data-id="mc-watercolor" data-name="Мастер-класс по акварели" data-price="4000">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <!-- Merch -->
+      <div class="store-card fade-up" data-category="merch">
+        <div class="store-card-img store-card-img--merch" style="background:linear-gradient(135deg,#0a0a1a,#10102d);">
+          <div class="store-merch-icon">
+            <svg viewBox="0 0 64 64" fill="none">
+              <path d="M20 12l-8 8 8 12h-8v20h40v-20h-8l8-12-8-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <text x="32" y="38" text-anchor="middle" fill="#C9A84C" font-size="10" font-weight="700">SAS</text>
+            </svg>
+          </div>
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Мерч</span>
+          <h3>Футболка Shpigotskiy Art Space</h3>
+          <p>Хлопковая футболка с лого студии. Цвет: чёрный. Размеры: S, M, L, XL.</p>
+          <ul class="store-feats">
+            <li>100% хлопок</li><li>4 размера</li><li>Унисекс</li>
+          </ul>
+          <div class="store-price">4 500 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="merch" data-id="merch-tshirt" data-name="Футболка Shpigotskiy Art Space" data-price="4500">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <div class="store-card fade-up" data-category="merch">
+        <div class="store-card-img store-card-img--merch" style="background:linear-gradient(135deg,#1a1200,#2d2000);">
+          <div class="store-merch-icon">
+            <svg viewBox="0 0 64 64" fill="none">
+              <rect x="12" y="12" width="40" height="40" rx="6" stroke="#fff" stroke-width="2.5"/>
+              <line x1="22" y1="24" x2="42" y2="24" stroke="#C9A84C" stroke-width="2"/>
+              <line x1="22" y1="32" x2="36" y2="32" stroke="#C9A84C" stroke-width="2"/>
+              <line x1="22" y1="40" x2="38" y2="40" stroke="#C9A84C" stroke-width="2"/>
+            </svg>
+          </div>
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Мерч</span>
+          <h3>Блокнот Art Space</h3>
+          <p>Брендированный блокнот А5 с плотными листами. 80 страниц. Обложка — матовый картон.</p>
+          <ul class="store-feats">
+            <li>80 страниц</li><li>Формат А5</li><li>Твёрдая обложка</li>
+          </ul>
+          <div class="store-price">1 800 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="merch" data-id="merch-notebook" data-name="Блокнот Art Space" data-price="1800">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <!-- Gift Certificates -->
+      <div class="store-card fade-up" data-category="giftcert">
+        <div class="store-card-img" style="background:linear-gradient(135deg,#1a1500,#2d2300);">
+          <div class="store-cert-icon">
+            <svg viewBox="0 0 64 64" fill="none">
+              <rect x="6" y="14" width="52" height="36" rx="6" fill="none" stroke="#C9A84C" stroke-width="2.5"/>
+              <circle cx="20" cy="32" r="8" fill="none" stroke="#C9A84C" stroke-width="2"/>
+              <path d="M32 24h16M32 32h12M32 40h14" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Подарок</span>
+          <h3>Подарочный сертификат на 10 000 ₸</h3>
+          <p>Электронный сертификат на любые занятия или товары студии. Срок действия 12 месяцев.</p>
+          <ul class="store-feats">
+            <li>Номинал 10 000 ₸</li><li>Срок 12 месяцев</li><li>Электронный</li>
+          </ul>
+          <div class="store-price">10 000 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="giftcert" data-id="gc-10000" data-name="Подарочный сертификат 10 000 ₸" data-price="10000">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+      <div class="store-card fade-up" data-category="giftcert">
+        <div class="store-card-img" style="background:linear-gradient(135deg,#0d1a0d,#102810);">
+          <div class="store-cert-icon">
+            <svg viewBox="0 0 64 64" fill="none">
+              <rect x="6" y="14" width="52" height="36" rx="6" fill="none" stroke="#C9A84C" stroke-width="2.5"/>
+              <circle cx="20" cy="32" r="8" fill="none" stroke="#C9A84C" stroke-width="2"/>
+              <path d="M32 24h16M32 32h12M32 40h14" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="store-card-body">
+          <span class="store-cat">Подарок</span>
+          <h3>Подарочный сертификат на 25 000 ₸</h3>
+          <p>Сертификат на абонемент занятий. Отличный подарок ребёнку или взрослому, который хочет начать.</p>
+          <ul class="store-feats">
+            <li>Номинал 25 000 ₸</li><li>Срок 12 месяцев</li><li>Электронный</li>
+          </ul>
+          <div class="store-price">25 000 ₸</div>
+          <button class="btn btn-primary btn-full store-add-btn"
+            data-type="giftcert" data-id="gc-25000" data-name="Подарочный сертификат 25 000 ₸" data-price="25000">
+            В корзину
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="store-empty" id="store-empty" style="display:none;">
+      <svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="28" fill="var(--bg-alt)"/><path d="M22 32h20M32 22v20" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <p>Ничего не найдено. Попробуйте другой запрос.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Benefits -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="benefits-grid">
+      <div class="benefit-card fade-up">
+        <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h4>Безопасная оплата</h4>
+        <p>Принимаем Kaspi Pay и банковские карты. Все транзакции защищены.</p>
+      </div>
+      <div class="benefit-card fade-up">
+        <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg></div>
+        <h4>Электронный чек</h4>
+        <p>После оплаты мгновенно получите электронный чек и подтверждение заказа.</p>
+      </div>
+      <div class="benefit-card fade-up">
+        <div class="benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <h4>Быстрая активация</h4>
+        <p>Абонементы и курсы активируются мгновенно после оплаты в личном кабинете.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <div class="free-badge">Первое занятие бесплатно</div>
+    <h2>Не знаете, что выбрать?</h2>
+    <p>Запишитесь на бесплатное пробное занятие — мы поможем определиться с направлением.</p>
+    <div class="cta-banner-btns">
+      <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться бесплатно</a>
+      <a href="contacts.html" class="btn btn-white btn-lg">Задать вопрос</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
+      <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
+      <div class="footer-col"><h4>Студия</h4><ul><li><a href="teachers.html">Преподаватели</a></li><li><a href="parents.html">Родителям</a></li><li><a href="graduates.html">Выпускники</a></li><li><a href="schedule.html">Расписание</a></li><li><a href="events.html">Мероприятия</a></li><li><a href="gallery.html">Галерея</a></li><li><a href="portfolio.html">Портфолио учеников</a></li><li><a href="materials.html">Статьи</a></li><li><a href="store.html">Магазин</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77086366351">+7 708 636-63-51</a></li><li><a href="https://wa.me/77086366351" target="_blank">WhatsApp</a></li><li><a href="https://t.me/shpigotskiy_art" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2024 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a></div>
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  var CART_KEY = 'sas_cart';
+
+  function getCart() {
+    try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch(e) { return []; }
+  }
+  function saveCart(items) {
+    localStorage.setItem(CART_KEY, JSON.stringify(items));
+  }
+  function uid() {
+    return 'itm_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  }
+  function fmtMoney(n) {
+    return Number(n).toLocaleString('ru-RU') + ' ₸';
+  }
+
+  function addToCart(item) {
+    var items = getCart();
+    var existing = items.filter(function (i) { return i.productId === item.productId && i.type === item.type; })[0];
+    if (existing) {
+      existing.qty = (existing.qty || 1) + 1;
+    } else {
+      items.push({ id: uid(), type: item.type, productId: item.productId, name: item.name, price: item.price, qty: 1 });
+    }
+    saveCart(items);
+    renderCartDrawer();
+    updateCartCount();
+    openCartDrawer();
+  }
+
+  function renderCartDrawer() {
+    var items = getCart();
+    var itemsEl = document.getElementById('cart-items');
+    var footer = document.getElementById('cart-footer');
+    if (!items.length) {
+      itemsEl.innerHTML = '<p class="scd-empty">Корзина пуста</p>';
+      footer.style.display = 'none';
+      return;
+    }
+    var total = items.reduce(function (s, i) { return s + (i.price * (i.qty || 1)); }, 0);
+    itemsEl.innerHTML = items.map(function (item) {
+      return '<div class="scd-item">' +
+        '<div class="scd-item-name">' + escapeHtml(item.name) + '</div>' +
+        '<div class="scd-item-row">' +
+          '<div class="scd-qty">' +
+            '<button class="scd-qty-btn" data-dec data-id="' + item.id + '">−</button>' +
+            '<span>' + (item.qty || 1) + '</span>' +
+            '<button class="scd-qty-btn" data-inc data-id="' + item.id + '">+</button>' +
+          '</div>' +
+          '<div class="scd-item-price">' + fmtMoney(item.price * (item.qty || 1)) + '</div>' +
+          '<button class="scd-remove" data-id="' + item.id + '" aria-label="Удалить">×</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('cart-total').textContent = fmtMoney(total);
+    footer.style.display = 'block';
+    itemsEl.querySelectorAll('[data-dec]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        var items2 = getCart();
+        var item = items2.filter(function (i) { return i.id === id; })[0];
+        if (!item) return;
+        if (item.qty > 1) { item.qty--; } else { items2 = items2.filter(function (i) { return i.id !== id; }); }
+        saveCart(items2); renderCartDrawer(); updateCartCount();
+      });
+    });
+    itemsEl.querySelectorAll('[data-inc]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        var items2 = getCart();
+        var item = items2.filter(function (i) { return i.id === id; })[0];
+        if (item) { item.qty = (item.qty || 1) + 1; }
+        saveCart(items2); renderCartDrawer(); updateCartCount();
+      });
+    });
+    itemsEl.querySelectorAll('.scd-remove').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var id = btn.getAttribute('data-id');
+        saveCart(getCart().filter(function (i) { return i.id !== id; }));
+        renderCartDrawer(); updateCartCount();
+      });
+    });
+  }
+
+  function updateCartCount() {
+    var count = getCart().reduce(function (s, i) { return s + (i.qty || 1); }, 0);
+    var el = document.getElementById('store-cart-count');
+    if (count > 0) { el.textContent = count; el.style.display = ''; }
+    else { el.style.display = 'none'; }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function openCartDrawer() {
+    document.getElementById('cart-drawer').setAttribute('aria-hidden', 'false');
+    document.getElementById('cart-drawer').classList.add('open');
+    document.getElementById('cart-backdrop').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeCartDrawer() {
+    document.getElementById('cart-drawer').setAttribute('aria-hidden', 'true');
+    document.getElementById('cart-drawer').classList.remove('open');
+    document.getElementById('cart-backdrop').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('open-cart-btn').addEventListener('click', function () {
+    renderCartDrawer();
+    openCartDrawer();
+  });
+  document.getElementById('cart-close').addEventListener('click', closeCartDrawer);
+  document.getElementById('cart-backdrop').addEventListener('click', closeCartDrawer);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeCartDrawer(); });
+
+  // Add to cart buttons
+  document.querySelectorAll('.store-add-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      addToCart({
+        type: btn.getAttribute('data-type'),
+        productId: btn.getAttribute('data-id'),
+        name: btn.getAttribute('data-name'),
+        price: parseFloat(btn.getAttribute('data-price')) || 0
+      });
+      var orig = btn.textContent;
+      btn.textContent = 'Добавлено!';
+      btn.disabled = true;
+      setTimeout(function () { btn.textContent = orig; btn.disabled = false; }, 1200);
+    });
+  });
+
+  // Filter
+  var grid = document.getElementById('store-grid');
+  var empty = document.getElementById('store-empty');
+  function applyFilter(cat, q) {
+    var cards = grid.querySelectorAll('.store-card');
+    var visible = 0;
+    cards.forEach(function (card) {
+      var catMatch = cat === 'all' || card.getAttribute('data-category') === cat;
+      var qMatch = !q || card.textContent.toLowerCase().indexOf(q.toLowerCase()) !== -1;
+      var show = catMatch && qMatch;
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    empty.style.display = visible === 0 ? 'flex' : 'none';
+  }
+
+  var activeFilter = 'all';
+  document.querySelectorAll('[data-store-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-store-filter]').forEach(function (b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      activeFilter = btn.getAttribute('data-store-filter');
+      applyFilter(activeFilter, document.getElementById('store-search').value);
+    });
+  });
+  document.getElementById('store-search').addEventListener('input', function () {
+    applyFilter(activeFilter, this.value);
+  });
+
+  // Init
+  updateCartCount();
+})();
+</script>
+</body>
+</html>

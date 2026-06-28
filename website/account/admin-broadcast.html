@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Рассылки — Админ-панель</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/account.css">
+</head>
+<body class="cab-body">
+<div class="cab-shell">
+
+  <aside class="cab-sidebar" data-cab-sidebar="admin"></aside>
+
+  <div>
+    <div class="cab-topbar">
+      <span class="name">Админ · Рассылки</span>
+      <button class="cab-burger" data-sidebar-toggle aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+
+    <main class="cab-main" id="admin-broadcast-root">
+      <div class="cab-page-head">
+        <h1>Центр рассылок</h1>
+        <p class="sub">Массовые уведомления ученикам, родителям и преподавателям по разным каналам.</p>
+      </div>
+
+      <div class="cab-toolbar">
+        <div></div>
+        <button class="btn btn-primary" data-send-broadcast>+ Новая рассылка</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px">
+        <div>
+          <h3 style="margin-bottom:12px">Шаблоны</h3>
+          <div data-broadcast-templates></div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:12px">История рассылок</h3>
+          <div data-broadcast-history></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/account.js"></script>
+</body>
+</html>

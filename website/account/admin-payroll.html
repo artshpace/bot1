@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Зарплаты педагогов — Директор</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/account.css">
+</head>
+<body class="cab-body">
+<div class="cab-shell">
+
+  <aside class="cab-sidebar" data-cab-sidebar="admin"></aside>
+
+  <div>
+    <div class="cab-topbar">
+      <span class="name">Директор · Зарплаты</span>
+      <button class="cab-burger" data-sidebar-toggle aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+
+    <main class="cab-main">
+      <div class="cab-page-head">
+        <h1>Зарплаты педагогов</h1>
+        <p class="sub">Табель по часам и дням, расчёт белой и серой ЗП с налогами (КЗ‑2026).</p>
+      </div>
+
+      <div id="payroll-root" data-view="director"></div>
+
+      <div class="cab-page-head" style="margin-top:28px"><h2>Отпускные</h2></div>
+      <div id="vacation-root" data-view="director"></div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supa-config.js"></script>
+<script src="../js/supa.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/account.js"></script>
+<script src="../js/payroll.js"></script>
+<script src="../js/vacation.js"></script>
+</body>
+</html>

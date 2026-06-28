@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Расписание занятий — Shpigotskiy Art Space</title>
+  <meta name="description" content="Расписание занятий студии Shpigotskiy Art Space в Петропавловске. Фильтр по направлению, преподавателю, возрасту, дню недели и времени. Запись на бесплатное пробное занятие.">
+  <link rel="canonical" href="https://artshpace.github.io/bot/schedule.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .sch-filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-xl); padding:24px; margin-bottom:12px; }
+    .sch-field label { display:block; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); margin-bottom:8px; }
+    .sch-field select { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:12px; background:#fff; font-family:inherit; font-size:.95rem; color:var(--ink,#1a1a1a); cursor:pointer; }
+    .sch-field select:focus { outline:none; border-color:var(--primary); }
+    .sch-meta { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin:18px 0 24px; }
+    .sch-count { color:var(--muted); font-size:.9rem; }
+    .sch-reset { background:none; border:none; color:var(--primary); font-weight:700; font-size:.9rem; cursor:pointer; padding:0; }
+    .day-block { margin-bottom:36px; }
+    .day-head { font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; margin-bottom:16px; padding-bottom:10px; border-bottom:2px solid var(--gold-border); }
+    .sch-row { display:grid; grid-template-columns:120px 1fr auto; gap:20px; align-items:center; background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-lg); padding:18px 22px; margin-bottom:12px; transition:all var(--transition); }
+    .sch-row:hover { box-shadow:var(--shadow-md); border-color:var(--gold-border); }
+    .sch-time { font-family:'Playfair Display',serif; font-weight:700; font-size:1.1rem; color:var(--primary); }
+    .sch-dir { font-weight:700; font-size:1.05rem; margin-bottom:4px; }
+    .sch-sub { color:var(--muted); font-size:.88rem; display:flex; flex-wrap:wrap; gap:14px; }
+    .sch-sub span { display:inline-flex; align-items:center; gap:5px; }
+    .sch-empty { text-align:center; padding:60px 20px; color:var(--muted); }
+    @media (max-width:640px){ .sch-row{ grid-template-columns:1fr; gap:10px; } .sch-row .btn{ justify-self:start; } }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="name">Shpigotskiy Art Space</span><span class="tagline-small">Студия творческого развития</span></a>
+      <div class="nav-links"><a href="directions/index.html">Направления</a><a href="schedule.html" class="active">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">О школе <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="nav-dropdown-menu"><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="graduates.html">Выпускники</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="portfolio.html">Портфолио</a></div></div><a href="contacts.html">Контакты</a><a href="account/login.html">Кабинет</a><a href="index.html#trial" class="nav-cta">Записаться</a></div>
+      <button class="nav-hamburger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+<nav class="mobile-nav"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="graduates.html">Выпускники</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="contacts.html">Контакты</a><a href="account/login.html">Личный кабинет</a><a href="index.html#trial" class="mob-cta">Записаться на пробное занятие</a></nav>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Расписание</span></div>
+      <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Расписание</div>
+      <h1>Когда проходят занятия</h1>
+      <p class="lead">Выберите направление, преподавателя, возраст или удобный день — и найдите подходящее время. Первое занятие на любом направлении бесплатное.</p>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div class="sch-filters">
+      <div class="sch-field"><label for="f-dir">Направление</label><select id="f-dir"></select></div>
+      <div class="sch-field"><label for="f-teacher">Преподаватель</label><select id="f-teacher"></select></div>
+      <div class="sch-field"><label for="f-age">Возраст</label><select id="f-age"></select></div>
+      <div class="sch-field"><label for="f-day">День недели</label><select id="f-day"></select></div>
+      <div class="sch-field"><label for="f-time">Время</label><select id="f-time"></select></div>
+    </div>
+
+    <div class="sch-meta">
+      <div class="sch-count" id="sch-count"></div>
+      <button class="sch-reset" id="sch-reset">Сбросить фильтры</button>
+    </div>
+
+    <div id="sch-results"></div>
+
+    <p style="color:var(--muted);font-size:.85rem;margin-top:28px;line-height:1.6;">
+      Расписание может меняться. Точное время и наличие свободных мест уточняйте у менеджера —
+      <a href="https://wa.me/77086366351?text=Здравствуйте!%20Подскажите%20актуальное%20расписание" target="_blank" style="color:var(--primary);font-weight:700;">напишите в WhatsApp</a>.
+    </p>
+
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <div class="free-badge">Первое занятие бесплатно</div>
+    <h2>Нашли удобное время?</h2>
+    <p>Запишитесь на бесплатное пробное занятие — мы подтвердим время и ответим на все вопросы.</p>
+    <div class="cta-banner-btns">
+      <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться на пробное</a>
+      <a href="https://wa.me/77086366351" target="_blank" class="btn btn-white btn-lg">Написать в WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
+      <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
+      <div class="footer-col"><h4>Студия</h4><ul><li><a href="teachers.html">Преподаватели</a></li><li><a href="parents.html">Родителям</a></li><li><a href="graduates.html">Выпускники</a></li><li><a href="schedule.html">Расписание</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77086366351">+7 708 636-63-51</a></li><li><a href="https://wa.me/77086366351" target="_blank">WhatsApp</a></li><li><a href="https://t.me/shpigotskiy_art" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2024 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a></div>
+  </div>
+</footer>
+
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function(){
+  // Примерное расписание. Времена/группы — заменяются на реальные владельцем.
+  // age: код возрастной группы; ageLabel — человекочитаемо.
+  var DAYS = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+  var AGES = [
+    {code:'4-6',  label:'4–6 лет'},
+    {code:'7-10', label:'7–10 лет'},
+    {code:'11-14',label:'11–14 лет'},
+    {code:'15-17',label:'15–17 лет'},
+    {code:'18+',  label:'Взрослые 18+'}
+  ];
+  function ageLabel(c){ for(var i=0;i<AGES.length;i++) if(AGES[i].code===c) return AGES[i].label; return c; }
+
+  var SESSIONS = [
+    // Гитара
+    {dir:'Гитара', teacher:'Антон Шпигоцкий', age:'7-10',  day:'Понедельник', time:'16:00'},
+    {dir:'Гитара', teacher:'Антон Шпигоцкий', age:'11-14', day:'Понедельник', time:'17:00'},
+    {dir:'Гитара', teacher:'Георгий Захаров',  age:'7-10',  day:'Вторник',     time:'16:00'},
+    {dir:'Гитара', teacher:'Георгий Захаров',  age:'11-14', day:'Четверг',     time:'17:00'},
+    {dir:'Гитара', teacher:'Виталий Жуков',    age:'7-10',  day:'Среда',       time:'16:00'},
+    {dir:'Гитара', teacher:'Виталий Жуков',    age:'15-17', day:'Среда',       time:'18:00'},
+    {dir:'Гитара', teacher:'Антон Шпигоцкий',  age:'18+',   day:'Вторник',     time:'20:00'},
+    {dir:'Гитара', teacher:'Антон Шпигоцкий',  age:'18+',   day:'Пятница',     time:'20:00'},
+    // Вокал
+    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'7-10',  day:'Понедельник', time:'15:00'},
+    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'11-14', day:'Среда',       time:'17:00'},
+    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'15-17', day:'Пятница',     time:'18:00'},
+    // Актёрское мастерство
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк',  age:'7-10',  day:'Вторник',  time:'16:00'},
+    {dir:'Актёрское мастерство', teacher:'Оксана Розанова', age:'11-14', day:'Четверг',  time:'17:00'},
+    {dir:'Актёрское мастерство', teacher:'Антон Шпигоцкий', age:'15-17', day:'Суббота',  time:'12:00'},
+    {dir:'Актёрское мастерство', teacher:'Антон Шпигоцкий', age:'18+',   day:'Суббота',  time:'19:00'},
+    // Современный танец
+    {dir:'Современный танец', teacher:'Дарья Клюк', age:'4-6',   day:'Понедельник', time:'17:00'},
+    {dir:'Современный танец', teacher:'Дарья Клюк', age:'7-10',  day:'Среда',       time:'16:00'},
+    {dir:'Современный танец', teacher:'Дарья Клюк', age:'11-14', day:'Пятница',     time:'17:00'},
+    // Живопись
+    {dir:'Живопись', teacher:'Педагог живописи', age:'4-6',   day:'Вторник',     time:'15:00'},
+    {dir:'Живопись', teacher:'Педагог живописи', age:'7-10',  day:'Четверг',     time:'16:00'},
+    {dir:'Живопись', teacher:'Педагог живописи', age:'11-14', day:'Суббота',     time:'11:00'}
+  ];
+
+  var dirSel=document.getElementById('f-dir'), tSel=document.getElementById('f-teacher'),
+      aSel=document.getElementById('f-age'), daySel=document.getElementById('f-day'),
+      timeSel=document.getElementById('f-time'), out=document.getElementById('sch-results'),
+      countEl=document.getElementById('sch-count');
+
+  function uniq(arr){ return arr.filter(function(v,i){return arr.indexOf(v)===i;}); }
+  function fill(sel, items, allLabel){
+    sel.innerHTML='';
+    var o=document.createElement('option'); o.value=''; o.textContent=allLabel; sel.appendChild(o);
+    items.forEach(function(it){ var op=document.createElement('option'); op.value=it.value; op.textContent=it.label; sel.appendChild(op); });
+  }
+
+  fill(dirSel, uniq(SESSIONS.map(function(s){return s.dir;})).sort().map(function(v){return {value:v,label:v};}), 'Все направления');
+  fill(tSel,   uniq(SESSIONS.map(function(s){return s.teacher;})).sort().map(function(v){return {value:v,label:v};}), 'Все преподаватели');
+  fill(aSel,   AGES.map(function(a){return {value:a.code,label:a.label};}), 'Любой возраст');
+  fill(daySel, DAYS.map(function(d){return {value:d,label:d};}), 'Любой день');
+  var times = uniq(SESSIONS.map(function(s){return s.time;})).sort();
+  fill(timeSel, times.map(function(t){
+    var h=parseInt(t,10);
+    var band = h<13?'утро/день':(h<17?'день':'вечер');
+    return {value:t,label:t+' ('+band+')'};
+  }), 'Любое время');
+
+  function render(){
+    var fd=dirSel.value, ft=tSel.value, fa=aSel.value, fday=daySel.value, ftime=timeSel.value;
+    var list=SESSIONS.filter(function(s){
+      return (!fd||s.dir===fd)&&(!ft||s.teacher===ft)&&(!fa||s.age===fa)&&(!fday||s.day===fday)&&(!ftime||s.time===ftime);
+    });
+    countEl.textContent = list.length ? ('Найдено занятий: '+list.length) : '';
+    if(!list.length){ out.innerHTML='<div class="sch-empty">По выбранным фильтрам занятий не нашлось.<br>Попробуйте сбросить фильтры или напишите нам — подберём время.</div>'; return; }
+    var html='';
+    DAYS.forEach(function(day){
+      var items=list.filter(function(s){return s.day===day;}).sort(function(a,b){return a.time.localeCompare(b.time);});
+      if(!items.length) return;
+      html+='<div class="day-block"><div class="day-head">'+day+'</div>';
+      items.forEach(function(s){
+        var msg='Здравствуйте!%20Хочу%20записаться%3A%20'+encodeURIComponent(s.dir+', '+s.teacher+', '+s.day+' '+s.time+' ('+ageLabel(s.age)+')');
+        html+='<div class="sch-row">'+
+          '<div class="sch-time">'+s.time+'</div>'+
+          '<div><div class="sch-dir">'+s.dir+'</div>'+
+          '<div class="sch-sub"><span>👤 '+s.teacher+'</span><span>🎂 '+ageLabel(s.age)+'</span></div></div>'+
+          '<a class="btn btn-primary btn-sm" href="index.html#trial" data-wa="'+msg+'">Записаться</a>'+
+        '</div>';
+      });
+      html+='</div>';
+    });
+    out.innerHTML=html;
+  }
+
+  [dirSel,tSel,aSel,daySel,timeSel].forEach(function(s){ s.addEventListener('change',render); });
+  document.getElementById('sch-reset').addEventListener('click',function(){
+    dirSel.value='';tSel.value='';aSel.value='';daySel.value='';timeSel.value='';render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
