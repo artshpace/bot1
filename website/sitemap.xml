@@ -76,6 +76,11 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
+    <loc>https://artshpace.github.io/bot/website/blog/muzyka-i-mozg.html</loc>
+    <priority>0.7</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
     <loc>https://artshpace.github.io/bot/website/blog/kak-vybrat-pervuyu-gitaru.html</loc>
     <priority>0.6</priority>
     <changefreq>yearly</changefreq>
