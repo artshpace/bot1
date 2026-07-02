@@ -31,9 +31,25 @@
       padding: 5px 12px; border-radius: 999px; font-size: .78rem; font-weight: 700;
       background: rgba(227,6,19,.08); color: var(--primary); margin-bottom: 12px;
     }
+    .inst-cloud { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 8px; }
+    .inst-cloud span {
+      display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: .8rem;
+      background: var(--bg-3, #f3efe6); color: var(--ink, #1a1a1a); border: 1px solid var(--border);
+    }
+    .inst-cloud span.key { background: rgba(227,6,19,.08); color: var(--primary); border-color: var(--gold-border); font-weight: 700; }
+    .edu-list { list-style: none; padding: 0; margin: 0; }
+    .edu-list li { position: relative; padding: 0 0 14px 22px; color: var(--muted); line-height: 1.6; border-left: 2px solid var(--gold-border); margin-left: 6px; }
+    .edu-list li:last-child { padding-bottom: 0; }
+    .edu-list li::before { content: ''; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
+    .edu-list .yrs { font-weight: 700; color: var(--ink, #1a1a1a); }
+    .teacher-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 24px; }
+    .teacher-gallery a { display: block; aspect-ratio: 3/4; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+    .teacher-gallery img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition); }
+    .teacher-gallery a:hover img { transform: scale(1.05); }
     @media (max-width: 768px) {
       .teacher-full { grid-template-columns: 1fr; }
       .teacher-full-photo { aspect-ratio: 1; max-width: 200px; margin: 0 auto; }
+      .teacher-gallery { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -66,7 +82,7 @@
     <div class="teacher-full fade-up">
       <div>
         <div class="teacher-full-photo">
-          <img src="../media/shpigotskiy.jpg" alt="Антон Шпигоцкий">
+          <img src="../media/teachers/shpigotskiy.jpg" alt="Антон Шпигоцкий">
         </div>
       </div>
       <div>
@@ -112,6 +128,53 @@
         <p style="color:var(--muted);line-height:1.8;">Его главное убеждение: <strong>научиться играть на гитаре может каждый</strong> — нужны лишь правильный подход, регулярная практика и искренний интерес к музыке. И собственная история Георгия — лучшее тому доказательство.</p>
         <div style="margin-top:28px;">
           <a href="index.html#trial" class="btn btn-primary">Записаться на гитару</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-full fade-up">
+      <div>
+        <div class="teacher-full-photo">
+          <img src="../media/teachers/zhukov-portrait.jpg" alt="Виталий Жуков">
+        </div>
+      </div>
+      <div>
+        <div class="teacher-spec-tag">Мультиинструменталист · Художник</div>
+        <h2 style="margin-bottom:4px;">Виталий Жуков</h2>
+        <div style="color:var(--primary);font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;">Гитара · Укулеле · Живопись</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+          <span class="tag tag-gold">30+ инструментов</span>
+          <span class="tag">Художник · 100+ выставок</span>
+          <span class="tag">Скульптор</span>
+          <span class="tag">Искусствовед</span>
+        </div>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Виталий — редкий по широте музыкант, профессионально владеющий более чем тридцатью инструментами: от гитары, укулеле и фортепиано до экзотических варгана, ханга, колёсной лиры, сякухати и домбры. Многие из них он освоил самостоятельно — живое доказательство того, что музыке можно научиться в любом возрасте. Играл в различных музыкальных коллективах и группах.</p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Помимо музыки, Виталий — профессиональный художник и скульптор с академическим образованием. Его работы выставлялись более чем на <strong>ста выставках</strong> на территории Казахстана и ближнего зарубежья.</p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:20px;">В студии Виталий ведёт гитару и укулеле, увлекательно раскрывая ученикам огромный мир музыки и находя подход к любому возрасту и уровню.</p>
+
+        <div style="font-weight:700;margin-bottom:10px;">Инструменты, которыми владеет</div>
+        <div class="inst-cloud">
+          <span class="key">Гитара</span><span class="key">Укулеле</span><span>Фортепиано</span><span>Банджо</span><span>Мандолина</span><span>Балалайка</span><span>Домбра</span><span>Жетыген</span><span>Гусли</span><span>Арфа</span><span>Дульцимер</span><span>Тальхарпа</span><span>Колёсная лира</span><span>Ситар</span><span>Сарод</span><span>Тампура</span><span>Чаранго</span><span>Аккордеон</span><span>Варган</span><span>Калимба</span><span>Беримбау</span><span>Ханг</span><span>Жалейка</span><span>Калюка</span><span>Фуяра</span><span>Вистл</span><span>Волынка</span><span>Бомбарда</span><span>Сякухати</span><span>Циттер</span><span>Тромбамарина</span><span>Равваст</span><span>Губная гармоника</span><span>и другие</span>
+        </div>
+
+        <div style="font-weight:700;margin:24px 0 12px;">Образование</div>
+        <ul class="edu-list">
+          <li><span class="yrs">2000–2004</span> — Школа одарённых детей (ШОД), специальность «Живопись»</li>
+          <li><span class="yrs">2004–2008</span> — Петропавловский колледж искусств, «Художник-преподаватель»</li>
+          <li><span class="yrs">2008–2014</span> — ОмГПУ, специальность «Скульптура»</li>
+          <li><span class="yrs">2012–2014</span> — ОмГПУ, магистратура «Искусствовед-критик»</li>
+        </ul>
+
+        <div class="teacher-gallery">
+          <a href="../media/teachers/zhukov-flute.jpg" target="_blank"><img src="../media/teachers/zhukov-flute.jpg" alt="Виталий Жуков играет на вистле" loading="lazy"></a>
+          <a href="../media/teachers/zhukov-handpan.jpg" target="_blank"><img src="../media/teachers/zhukov-handpan.jpg" alt="Виталий Жуков играет на ханге" loading="lazy"></a>
+          <a href="../media/teachers/zhukov-strings.jpg" target="_blank"><img src="../media/teachers/zhukov-strings.jpg" alt="Виталий Жуков со струнным инструментом" loading="lazy"></a>
+          <a href="../media/teachers/zhukov-painting.jpg" target="_blank"><img src="../media/teachers/zhukov-painting.jpg" alt="Виталий Жуков за написанием картины" loading="lazy"></a>
+          <a href="../media/teachers/zhukov-harmonica.jpg" target="_blank"><img src="../media/teachers/zhukov-harmonica.jpg" alt="Виталий Жуков играет на губной гармонике" loading="lazy"></a>
+        </div>
+
+        <div style="margin-top:28px;">
+          <a href="index.html#trial" class="btn btn-primary">Записаться к Виталию</a>
         </div>
       </div>
     </div>
