@@ -352,29 +352,39 @@ function submitLead(formId, form) {
   if (window.fbq) window.fbq('track', 'CompleteRegistration', { content_name: direction || 'Заявка' });
 }
 
-/* ===== SCHEDULE-DRIVEN TRIAL FORM [v1.2] =====
-   Direction chip drives which days and time slots are shown.
-   Source: real studio timetable supplied by owner 2026-06. */
+/* ===== SCHEDULE-DRIVEN TRIAL FORM [v1.3] =====
+   Direction chip → real groups (days + time bound to age) from the studio
+   timetable supplied by the owner (July 2026). The time chips depend on the
+   chosen day. Directions without a fixed timetable (guitar/ukulele, painting,
+   dance) fall through to the "группа формируется" note. */
+const RU_DOW_FULL = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
 const SCHEDULE = {
-  guitar: {
-    days: ['Понедельник', 'Среда', 'Пятница'],
-    slots: function (age) {
+  acting: {
+    groups: function (age) {
       var a = parseInt(age, 10);
-      /* Группа 18+ занимается ТОЛЬКО 20:00–21:00 — взрослым доступен лишь этот слот. */
-      if (a >= 18) return ['20:00–21:00 (18+)'];
-      /* Дети и подростки (<18) — дневные слоты, без взрослого 20:00. */
-      return ['9:00–10:00', '10:00–11:00', '11:00–12:00',
-              '16:00–17:00', '17:00–18:00', '18:00–19:00', '19:00–20:00'];
+      var G46  = [{ days: ['Суббота', 'Воскресенье'],    time: '15:45–16:45' }];
+      var G710 = [{ days: ['Понедельник', 'Среда'],      time: '15:00–16:00' },
+                  { days: ['Вторник', 'Четверг'],        time: '09:30–10:30' },
+                  { days: ['Суббота', 'Воскресенье'],    time: '14:45–15:45' }];
+      var G1114 = [{ days: ['Понедельник', 'Среда'],     time: '09:00–10:00' },
+                  { days: ['Понедельник', 'Среда'],      time: '16:00–17:00' },
+                  { days: ['Суббота', 'Воскресенье'],    time: '09:00–10:30' }];
+      var G14p = [{ days: ['Суббота', 'Воскресенье'],    time: '14:30–16:00' }];
+      if (isNaN(a)) return G46.concat(G710, G1114, G14p);
+      if (a <= 6)  return G46;
+      if (a <= 10) return G710;
+      if (a <= 13) return G1114;
+      if (a === 14) return G1114.concat(G14p); /* 14 лет — подходят обе группы */
+      return G14p;
     }
   },
-  painting: {
-    days: ['Суббота', 'Воскресенье'],
-    slots: function () { return ['10:00–12:00']; }
-  },
   vocals: {
-    days: ['Суббота', 'Воскресенье'],
-    slots: function (age) {
-      return parseInt(age) >= 11 ? ['13:00–14:00'] : ['12:00–13:00'];
+    groups: function (age) {
+      var a = parseInt(age, 10);
+      var v710 = [{ days: ['Суббота', 'Воскресенье'], time: '12:00–13:00' }];
+      var v11p = [{ days: ['Суббота', 'Воскресенье'], time: '13:00–14:00' }];
+      if (isNaN(a)) return v710.concat(v11p);
+      return a >= 11 ? v11p : v710;
     }
   }
 };
@@ -416,6 +426,26 @@ function initScheduleForm(formId) {
     update();
   }
 
+  var currentGroups = []; /* группы текущего направления/возраста — для фильтра слотов по дню */
+
+  function selectedDayName() {
+    var sel = dayChipsEl && dayChipsEl.querySelector('.form-chip.selected');
+    if (!sel || !sel.dataset.date) return null;
+    return RU_DOW_FULL[new Date(sel.dataset.date + 'T12:00:00').getDay()];
+  }
+
+  function renderSlots() {
+    if (!slotChipsEl) return;
+    var dayName = selectedDayName();
+    var list = [];
+    currentGroups.forEach(function (g) {
+      if (dayName && g.days.indexOf(dayName) === -1) return;
+      if (list.indexOf(g.time) === -1) list.push(g.time);
+    });
+    list.sort();
+    makeChips(slotChipsEl, list);
+  }
+
   function update() {
     var sel = dirChipsEl && dirChipsEl.querySelector('.form-chip.selected');
     var dir = sel ? sel.dataset.value : null;
@@ -423,12 +453,13 @@ function initScheduleForm(formId) {
     var sched = dir ? SCHEDULE[dir] : null;
 
     if (!sched) {
+      currentGroups = [];
       if (daySection) daySection.style.display = 'none';
       if (timeSection) {
         if (dir && dir !== 'any') {
           timeSection.style.display = '';
           if (slotChipsEl) slotChipsEl.innerHTML = '';
-          if (schedNote) { schedNote.textContent = 'Расписание уточним при звонке'; schedNote.style.display = ''; }
+          if (schedNote) { schedNote.textContent = 'Группа формируется — время подберём при звонке'; schedNote.style.display = ''; }
         } else {
           timeSection.style.display = 'none';
         }
@@ -436,12 +467,18 @@ function initScheduleForm(formId) {
       return;
     }
 
+    currentGroups = sched.groups(age);
+    var days = [];
+    currentGroups.forEach(function (g) {
+      g.days.forEach(function (d) { if (days.indexOf(d) === -1) days.push(d); });
+    });
+
     if (daySection && dayChipsEl) {
-      renderDateChips(dayChipsEl, sched.days);
+      renderDateChips(dayChipsEl, days);
       daySection.style.display = '';
     }
     if (timeSection && slotChipsEl) {
-      makeChips(slotChipsEl, sched.slots(age));
+      renderSlots();
       timeSection.style.display = '';
       if (schedNote) schedNote.style.display = 'none';
     }
@@ -452,6 +489,7 @@ function initScheduleForm(formId) {
     if (!chip) return;
     if (dirChipsEl && dirChipsEl.contains(chip)) setTimeout(update, 0);
     else if (whoChipsEl && whoChipsEl.contains(chip)) setTimeout(applyWho, 0);
+    else if (dayChipsEl && dayChipsEl.contains(chip)) setTimeout(renderSlots, 0);
   });
   if (ageInput) ageInput.addEventListener('input', update);
 }
