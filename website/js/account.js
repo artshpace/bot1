@@ -3156,7 +3156,7 @@
       var tgCodeHtml = tgPending
         ? '<div class="tg-link-code" data-tg-code-block>' +
             '<p style="margin:8px 0 4px">Отправьте этот код боту ' +
-              '<a href="https://t.me/' + escapeHtml(tgStatus.bot || 'shpigotskiy_art_bot') + '" target="_blank">@' + escapeHtml(tgStatus.bot || 'shpigotskiy_art_bot') + '</a>:</p>' +
+              '<a href="https://t.me/' + escapeHtml(tgStatus.bot || 'artshpacebot') + '" target="_blank">@' + escapeHtml(tgStatus.bot || 'artshpacebot') + '</a>:</p>' +
             '<div class="tg-code-display" data-tg-code>' + escapeHtml(tgPending.code) + '</div>' +
             '<p class="cab-muted" style="font-size:.8rem;margin:4px 0 0">Код действителен 15 минут. Ожидаем подтверждения…</p>' +
             '<div class="tg-link-spinner" data-tg-spinner>⏳</div>' +
@@ -3257,7 +3257,7 @@
       block.className = 'tg-link-code'; block.setAttribute('data-tg-code-block', '');
       block.innerHTML =
         '<p style="margin:8px 0 4px">Отправьте этот код боту ' +
-          '<a href="https://t.me/' + escapeHtml(res.bot || 'shpigotskiy_art_bot') + '" target="_blank">@' + escapeHtml(res.bot || 'shpigotskiy_art_bot') + '</a>:</p>' +
+          '<a href="https://t.me/' + escapeHtml(res.bot || 'artshpacebot') + '" target="_blank">@' + escapeHtml(res.bot || 'artshpacebot') + '</a>:</p>' +
         '<div class="tg-code-display" data-tg-code>' + escapeHtml(res.code) + '</div>' +
         '<p class="cab-muted" style="font-size:.8rem;margin:4px 0 0">Код действителен 15 минут. Ожидаем подтверждения…</p>' +
         '<div style="display:flex;gap:8px;margin-top:8px">' +

@@ -71,8 +71,12 @@
 
     <div id="sch-results"></div>
 
-    <p style="color:var(--muted);font-size:.85rem;margin-top:28px;line-height:1.6;">
-      Расписание может меняться. Точное время и наличие свободных мест уточняйте у менеджера —
+    <div style="margin-top:28px;padding:20px 24px;background:var(--bg-alt);border:1px solid var(--gold-border);border-radius:var(--radius-lg);">
+      <div style="font-weight:700;margin-bottom:6px;">Гитара · Укулеле · Живопись · Современный танец</div>
+      <p style="color:var(--muted);font-size:.9rem;line-height:1.7;margin:0;">По этим направлениям группы формируются, а время подбирается индивидуально. Напишите администратору — подберём удобный вариант: <a href="https://wa.me/77086366351?text=Здравствуйте!%20Интересует%20расписание%20по%20гитаре%2Fживописи%2Fтанцам" target="_blank" style="color:var(--primary);font-weight:700;">WhatsApp</a> · <a href="tel:+77013980019" style="color:var(--primary);font-weight:700;">+7 701 398-00-19</a></p>
+    </div>
+    <p style="color:var(--muted);font-size:.85rem;margin-top:16px;line-height:1.6;">
+      Расписание может меняться. Точное время и наличие свободных мест уточняйте у администратора —
       <a href="https://wa.me/77086366351?text=Здравствуйте!%20Подскажите%20актуальное%20расписание" target="_blank" style="color:var(--primary);font-weight:700;">напишите в WhatsApp</a>.
     </p>
 
@@ -97,7 +101,7 @@
       <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
       <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
       <div class="footer-col"><h4>Студия</h4><ul><li><a href="teachers.html">Преподаватели</a></li><li><a href="parents.html">Родителям</a></li><li><a href="graduates.html">Выпускники</a></li><li><a href="schedule.html">Расписание</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
-      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77086366351">+7 708 636-63-51</a></li><li><a href="https://wa.me/77086366351" target="_blank">WhatsApp</a></li><li><a href="https://t.me/shpigotskiy_art" target="_blank">Telegram</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77086366351">+7 708 636-63-51</a></li><li><a href="https://wa.me/77086366351" target="_blank">WhatsApp</a></li><li><a href="https://t.me/artshpacebot" target="_blank">Telegram</a></li></ul></div>
     </div>
     <div class="footer-bottom"><p>© 2024 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a></div>
   </div>
@@ -107,46 +111,45 @@
 <script src="js/main.js"></script>
 <script>
 (function(){
-  // Примерное расписание. Времена/группы — заменяются на реальные владельцем.
-  // age: код возрастной группы; ageLabel — человекочитаемо.
+  // Реальное расписание студии (актёрское мастерство и вокал).
+  // По гитаре, укулеле, живописи и танцам — группы формируются, см. примечание.
   var DAYS = ['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
   var AGES = [
     {code:'4-6',  label:'4–6 лет'},
     {code:'7-10', label:'7–10 лет'},
     {code:'11-14',label:'11–14 лет'},
-    {code:'15-17',label:'15–17 лет'},
-    {code:'18+',  label:'Взрослые 18+'}
+    {code:'14+',  label:'14+ лет'},
+    {code:'11+',  label:'11+ лет'}
   ];
   function ageLabel(c){ for(var i=0;i<AGES.length;i++) if(AGES[i].code===c) return AGES[i].label; return c; }
 
   var SESSIONS = [
-    // Гитара
-    {dir:'Гитара', teacher:'Виталий Жуков',    age:'7-10',  day:'Понедельник', time:'16:00'},
-    {dir:'Гитара', teacher:'Виталий Жуков',    age:'11-14', day:'Понедельник', time:'17:00'},
-    {dir:'Гитара', teacher:'Георгий Захаров',  age:'7-10',  day:'Вторник',     time:'16:00'},
-    {dir:'Гитара', teacher:'Георгий Захаров',  age:'11-14', day:'Четверг',     time:'17:00'},
-    {dir:'Гитара', teacher:'Виталий Жуков',    age:'7-10',  day:'Среда',       time:'16:00'},
-    {dir:'Гитара', teacher:'Виталий Жуков',    age:'15-17', day:'Среда',       time:'18:00'},
-    {dir:'Гитара', teacher:'Виталий Жуков',    age:'18+',   day:'Вторник',     time:'20:00'},
-    {dir:'Гитара', teacher:'Георгий Захаров',  age:'18+',   day:'Пятница',     time:'20:00'},
-    {dir:'Укулеле', teacher:'Виталий Жуков',   age:'7-10',  day:'Четверг',     time:'16:00'},
-    // Вокал
-    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'7-10',  day:'Понедельник', time:'15:00'},
-    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'11-14', day:'Среда',       time:'17:00'},
-    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'15-17', day:'Пятница',     time:'18:00'},
-    // Актёрское мастерство
-    {dir:'Актёрское мастерство', teacher:'Марина Черняк',  age:'7-10',  day:'Вторник',  time:'16:00'},
-    {dir:'Актёрское мастерство', teacher:'Оксана Розанова', age:'11-14', day:'Четверг',  time:'17:00'},
-    {dir:'Актёрское мастерство', teacher:'Антон Шпигоцкий', age:'15-17', day:'Суббота',  time:'12:00'},
-    {dir:'Актёрское мастерство', teacher:'Антон Шпигоцкий', age:'18+',   day:'Суббота',  time:'19:00'},
-    // Современный танец
-    {dir:'Современный танец', teacher:'Дарья Клюк', age:'4-6',   day:'Понедельник', time:'17:00'},
-    {dir:'Современный танец', teacher:'Дарья Клюк', age:'7-10',  day:'Среда',       time:'16:00'},
-    {dir:'Современный танец', teacher:'Дарья Клюк', age:'11-14', day:'Пятница',     time:'17:00'},
-    // Живопись
-    {dir:'Живопись', teacher:'Педагог живописи', age:'4-6',   day:'Вторник',     time:'15:00'},
-    {dir:'Живопись', teacher:'Педагог живописи', age:'7-10',  day:'Четверг',     time:'16:00'},
-    {dir:'Живопись', teacher:'Педагог живописи', age:'11-14', day:'Суббота',     time:'11:00'}
+    // ===== Актёрское мастерство =====
+    // 7–10 лет
+    {dir:'Актёрское мастерство', teacher:'Оксана Розанова', age:'7-10', day:'Понедельник', time:'15:00', end:'16:00'},
+    {dir:'Актёрское мастерство', teacher:'Оксана Розанова', age:'7-10', day:'Среда',       time:'15:00', end:'16:00'},
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк',   age:'7-10', day:'Вторник',     time:'09:30', end:'10:30'},
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк',   age:'7-10', day:'Четверг',     time:'09:30', end:'10:30'},
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк',   age:'7-10', day:'Суббота',     time:'14:45', end:'15:45'},
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк',   age:'7-10', day:'Воскресенье', time:'14:45', end:'15:45'},
+    // 11–14 лет
+    {dir:'Актёрское мастерство', teacher:'Оксана Розанова', age:'11-14', day:'Понедельник', time:'09:00', end:'10:00'},
+    {dir:'Актёрское мастерство', teacher:'Оксана Розанова', age:'11-14', day:'Среда',       time:'09:00', end:'10:00'},
+    {dir:'Актёрское мастерство', teacher:'Оксана Розанова', age:'11-14', day:'Понедельник', time:'16:00', end:'17:00'},
+    {dir:'Актёрское мастерство', teacher:'Оксана Розанова', age:'11-14', day:'Среда',       time:'16:00', end:'17:00'},
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк',   age:'11-14', day:'Суббота',     time:'09:00', end:'10:30'},
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк',   age:'11-14', day:'Воскресенье', time:'09:00', end:'10:30'},
+    // 14+
+    {dir:'Актёрское мастерство', teacher:'Антон Шпигоцкий', age:'14+', day:'Суббота',     time:'14:30', end:'16:00'},
+    {dir:'Актёрское мастерство', teacher:'Антон Шпигоцкий', age:'14+', day:'Воскресенье', time:'14:30', end:'16:00'},
+    // 4–6 лет
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк', age:'4-6', day:'Суббота',     time:'15:45', end:'16:45'},
+    {dir:'Актёрское мастерство', teacher:'Марина Черняк', age:'4-6', day:'Воскресенье', time:'15:45', end:'16:45'},
+    // ===== Вокал (ведёт Наталья Николаевна Ерзакова) =====
+    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'7-10', day:'Суббота',     time:'12:00', end:'13:00'},
+    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'7-10', day:'Воскресенье', time:'12:00', end:'13:00'},
+    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'11+',  day:'Суббота',     time:'13:00', end:'14:00'},
+    {dir:'Вокал', teacher:'Наталья Ерзакова', age:'11+',  day:'Воскресенье', time:'13:00', end:'14:00'}
   ];
 
   var dirSel=document.getElementById('f-dir'), tSel=document.getElementById('f-teacher'),
@@ -185,9 +188,10 @@
       if(!items.length) return;
       html+='<div class="day-block"><div class="day-head">'+day+'</div>';
       items.forEach(function(s){
-        var msg='Здравствуйте!%20Хочу%20записаться%3A%20'+encodeURIComponent(s.dir+', '+s.teacher+', '+s.day+' '+s.time+' ('+ageLabel(s.age)+')');
+        var range = s.end ? (s.time+'–'+s.end) : s.time;
+        var msg='Здравствуйте!%20Хочу%20записаться%3A%20'+encodeURIComponent(s.dir+', '+s.teacher+', '+s.day+' '+range+' ('+ageLabel(s.age)+')');
         html+='<div class="sch-row">'+
-          '<div class="sch-time">'+s.time+'</div>'+
+          '<div class="sch-time">'+range+'</div>'+
           '<div><div class="sch-dir">'+s.dir+'</div>'+
           '<div class="sch-sub"><span>👤 '+s.teacher+'</span><span>🎂 '+ageLabel(s.age)+'</span></div></div>'+
           '<a class="btn btn-primary btn-sm" href="index.html#trial" data-wa="'+msg+'">Записаться</a>'+
