@@ -148,7 +148,7 @@
   };
   /* Teacher demo accounts — v0.7 */
   var TEACHER_USER = {
-    id: 'tch-1', name: 'Антон Шпигоцкий',
+    id: 'tch-1', name: 'Виталий Жуков',
     email: 'teacher@shpigotskiy.art', phone: '+7 777 100-00-01',
     password: 'teacher1234', role: 'teacher'
   };
@@ -217,7 +217,7 @@
 
   function seedCourses() {
     return [
-      { id: 'c-guitar-basic', title: 'Гитара для начинающих', teacher: 'Антон Шпигоцкий',
+      { id: 'c-guitar-basic', title: 'Гитара для начинающих', teacher: 'Виталий Жуков',
         price: 12000, lessonsTotal: 10, gradient: 'linear-gradient(135deg,#1a0a0a,#3d1010)',
         published: true, enrollments: { 'stu-demo': {} } },
       { id: 'c-vocal-voice', title: 'Вокал: постановка голоса', teacher: 'Мария Лебедева',
@@ -352,7 +352,7 @@
   /* ---- v0.5 seeds ---- */
   function seedAcademics() {
     return {
-      'stu-demo': { direction: 'Гитара', teacher: 'Антон Шпигоцкий', level: 'Базовый уровень · 1 год обучения' },
+      'stu-demo': { direction: 'Гитара', teacher: 'Виталий Жуков', level: 'Базовый уровень · 1 год обучения' },
       'stu-max':  { direction: 'Вокал',  teacher: 'Мария Лебедева',   level: 'Начальный уровень · 4 месяца' }
     };
   }
@@ -377,27 +377,27 @@
   function seedHomework() {
     var now = new Date();
     return [
-      { id: 'hw-1', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+      { id: 'hw-1', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Виталий Жуков',
         title: 'Отработка перехода Am → Em',
         description: 'Записать видео плавной смены аккордов Am и Em в темпе 60 BPM — не менее 10 повторов без остановки.',
         assignedDate: ymd(addDays(now, -14)), dueDate: ymd(addDays(now, -7)),
         materials: [{ name: 'am-em-shema.pdf' }], status: 'reviewed',
         submission: { comment: 'Записал, местами сбивался ритм.', files: [{ name: 'perehod.mp4' }], submittedAt: ymd(addDays(now, -8)) },
         review: { comment: 'Хорошая работа! Темп держишь увереннее. Поработай над чёткостью последнего удара.', reviewedAt: ymd(addDays(now, -6)) } },
-      { id: 'hw-2', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+      { id: 'hw-2', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Виталий Жуков',
         title: 'Бой «шестёрка»',
         description: 'Освоить ритмический рисунок «шестёрка» и сыграть его под метроном 70 BPM.',
         assignedDate: ymd(addDays(now, -5)), dueDate: ymd(addDays(now, 2)),
         materials: [{ name: 'boy-shesterka.pdf' }], status: 'submitted',
         submission: { comment: 'Старался держать ровный ритм.', files: [{ name: 'boy.mp4' }], submittedAt: ymd(addDays(now, -1)) },
         review: null },
-      { id: 'hw-3', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+      { id: 'hw-3', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Виталий Жуков',
         title: 'Разбор первой песни',
         description: 'Разобрать аккорды первой песни по табулатуре из урока и прислать аудиозапись.',
         assignedDate: ymd(addDays(now, -2)), dueDate: ymd(addDays(now, 6)),
         materials: [{ name: 'pervaya-pesnya-tabs.pdf' }], status: 'assigned',
         submission: null, review: null },
-      { id: 'hw-4', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+      { id: 'hw-4', studentId: 'stu-demo', direction: 'Гитара', teacher: 'Виталий Жуков',
         title: 'Гамма до мажор',
         description: 'Сыграть гамму C-dur в две октавы восходяще и нисходяще под метроном.',
         assignedDate: ymd(addDays(now, -20)), dueDate: ymd(addDays(now, -13)),
@@ -445,13 +445,13 @@
   function seedTeacherNotes() {
     var now = new Date();
     return [
-      { id: 'tn-1', studentId: 'stu-demo', type: 'progress', author: 'Антон Шпигоцкий',
+      { id: 'tn-1', studentId: 'stu-demo', type: 'progress', author: 'Виталий Жуков',
         text: 'Заметный прогресс в ритмике за последний месяц — смена аккордов стала увереннее.',
         date: ymd(addDays(now, -6)) },
-      { id: 'tn-2', studentId: 'stu-demo', type: 'recommendation', author: 'Антон Шпигоцкий',
+      { id: 'tn-2', studentId: 'stu-demo', type: 'recommendation', author: 'Виталий Жуков',
         text: 'Рекомендую ежедневно уделять 10 минут упражнению на переходы между аккордами.',
         date: ymd(addDays(now, -6)) },
-      { id: 'tn-3', studentId: 'stu-demo', type: 'remark', author: 'Антон Шпигоцкий',
+      { id: 'tn-3', studentId: 'stu-demo', type: 'remark', author: 'Виталий Жуков',
         text: 'Были два пропуска подряд — важно не терять регулярность занятий.',
         date: ymd(addDays(now, -18)) },
       { id: 'tn-4', studentId: 'stu-max', type: 'progress', author: 'Мария Лебедева',
@@ -471,7 +471,7 @@
         description: 'Лучшие живописные и графические работы за сезон.' },
       { id: 'ev-3', type: 'masterclass', title: 'Мастер-класс по импровизации на гитаре',
         date: ymd(addDays(now, 4)), time: '19:00', place: 'Зал 1',
-        description: 'Открытый мастер-класс Антона Шпигоцкого.' },
+        description: 'Открытый мастер-класс Виталия Жукова.' },
       { id: 'ev-4', type: 'performance', title: 'Спектакль театральной студии «Маленький принц»',
         date: ymd(addDays(now, 23)), time: '17:00', place: 'Большой зал',
         description: 'Премьера учебного спектакля.' }
@@ -482,10 +482,10 @@
     var now = new Date();
     return [
       { id: 'pf-1', studentId: 'stu-demo', kind: 'video', direction: 'Фортепиано', title: 'Выступление на концерте',
-        note: 'Кавер «Город которого нет», апрель.', addedBy: 'Антон Шпигоцкий',
+        note: 'Кавер «Город которого нет», апрель.', addedBy: 'Виталий Жуков',
         date: ymd(addDays(now, -40)) },
       { id: 'pf-2', studentId: 'stu-demo', kind: 'audio', direction: 'Фортепиано', title: 'Запись этюда №3',
-        note: 'Домашняя запись, чистое исполнение.', addedBy: 'Антон Шпигоцкий',
+        note: 'Домашняя запись, чистое исполнение.', addedBy: 'Виталий Жуков',
         date: ymd(addDays(now, -14)) },
       { id: 'pf-3', studentId: 'stu-demo', kind: 'photo', direction: 'Вокал', title: 'Фото с открытого урока',
         note: '', addedBy: 'Администратор', date: ymd(addDays(now, -8)) },
@@ -508,7 +508,7 @@
         text: 'Этюд №5: отработать переходы между аккордами Am–Dm–E.',
         href: 'homework.html', date: ymd(addDays(now, -1)) }),
       rec({ id: 'nt-2', userId: 'stu-demo', type: 'comment', title: 'Комментарий преподавателя',
-        text: 'Антон Шпигоцкий оставил рекомендацию в вашем профиле развития.',
+        text: 'Виталий Жуков оставил рекомендацию в вашем профиле развития.',
         href: 'progress.html', date: ymd(addDays(now, -3)) }),
       rec({ id: 'nt-3', userId: 'stu-demo', type: 'lesson', title: 'Напоминание о занятии',
         text: 'Завтра в 17:00 — гитара, Зал 1.', href: 'schedule.html', date: ymd(addDays(now, -4)), read: true }),
@@ -524,7 +524,7 @@
   /* ---- v1.1 seed data ---- */
   function seedGroups() {
     return [
-      { id: 'grp-1', name: 'Гитара — Начинающие', direction: 'Гитара', teacher: 'Антон Шпигоцкий',
+      { id: 'grp-1', name: 'Гитара — Начинающие', direction: 'Гитара', teacher: 'Виталий Жуков',
         studentIds: ['stu-demo', 'stu-demo2'], createdAt: '2026-01-01' },
       { id: 'grp-2', name: 'Вокал — Основной', direction: 'Вокал', teacher: 'Мария Лебедева',
         studentIds: ['stu-demo'], createdAt: '2026-01-01' }
@@ -535,7 +535,7 @@
     var now = new Date();
     return [
       { id: 'jrn-1', date: ymd(addDays(now, -7)), time: '17:00',
-        teacher: 'Антон Шпигоцкий', direction: 'Гитара',
+        teacher: 'Виталий Жуков', direction: 'Гитара',
         groupId: 'grp-1', groupName: 'Гитара — Начинающие',
         topic: 'Аккорды Am, Dm, E. Бой 6/8',
         homeworkText: 'Отработать смену Am→Dm 60 раз. Темп = 80 bpm.',
@@ -543,7 +543,7 @@
         studentIds: ['stu-demo', 'stu-demo2'],
         createdAt: new Date(now.getTime() - 7 * 86400000).toISOString() },
       { id: 'jrn-2', date: ymd(addDays(now, -14)), time: '17:00',
-        teacher: 'Антон Шпигоцкий', direction: 'Гитара',
+        teacher: 'Виталий Жуков', direction: 'Гитара',
         groupId: 'grp-1', groupName: 'Гитара — Начинающие',
         topic: 'Строй гитары. Нотная грамота — ноты первой позиции',
         homeworkText: 'Выучить расположение нот на 1–3 ладах.',
@@ -558,13 +558,13 @@
     return [
       { id: 'reh-1', eventId: 'ev-1', eventTitle: 'Отчётный концерт студии',
         date: ymd(addDays(now, 5)), time: '17:00', place: 'Большой зал',
-        teacher: 'Антон Шпигоцкий',
+        teacher: 'Виталий Жуков',
         participants: ['stu-demo', 'stu-demo2'],
         comment: 'Прогон первого отделения. Принести ноты.',
         attendance: [] },
       { id: 'reh-2', eventId: 'ev-1', eventTitle: 'Отчётный концерт студии',
         date: ymd(addDays(now, 7)), time: '17:00', place: 'Большой зал',
-        teacher: 'Антон Шпигоцкий',
+        teacher: 'Виталий Жуков',
         participants: ['stu-demo', 'stu-demo2'],
         comment: 'Генеральная репетиция. Концертные костюмы.',
         attendance: [] }
@@ -623,7 +623,7 @@
         direction: 'Вокал', adminComment: 'Первый опыт пения', status: 'scheduled',
         result: null, teacherComment: '', recommendation: '' },
       { id: 'tr-2', leadId: 'ld-4', name: 'Сергей Попов', phone: '+7 707 444 5566',
-        date: ymd(addDays(now, -4)), time: '17:00', teacher: 'Антон Шпигоцкий',
+        date: ymd(addDays(now, -4)), time: '17:00', teacher: 'Виталий Жуков',
         direction: 'Гитара', adminComment: '', status: 'done',
         result: 'converted', teacherComment: 'Хороший слух, легко схватывает. Рекомендую записаться.',
         recommendation: 'Абонемент 8 занятий — гитара' },
@@ -633,7 +633,7 @@
         result: 'converted', teacherComment: 'Отличная пластика. Купила абонемент на месте.',
         recommendation: 'Абонемент 12 занятий — танец' },
       { id: 'tr-4', leadId: 'ld-2', name: 'Дмитрий Сейткали', phone: '+7 702 222 3344',
-        date: ymd(addDays(now, 5)), time: '10:00', teacher: 'Антон Шпигоцкий',
+        date: ymd(addDays(now, 5)), time: '10:00', teacher: 'Виталий Жуков',
         direction: 'Гитара', adminComment: 'Взрослый, с нуля', status: 'scheduled',
         result: null, teacherComment: '', recommendation: '' }
     ];
@@ -1002,15 +1002,15 @@
      STUDENT — academic profile
      ================================================================= */
   var WEEKLY = [
-    { weekday: 2, time: '17:00', direction: 'Гитара', teacher: 'Антон Шпигоцкий', room: 'Зал 1' },
-    { weekday: 4, time: '17:00', direction: 'Гитара', teacher: 'Антон Шпигоцкий', room: 'Зал 1' },
+    { weekday: 2, time: '17:00', direction: 'Гитара', teacher: 'Виталий Жуков', room: 'Зал 1' },
+    { weekday: 4, time: '17:00', direction: 'Гитара', teacher: 'Виталий Жуков', room: 'Зал 1' },
     { weekday: 6, time: '12:00', direction: 'Вокал',  teacher: 'Мария Лебедева',   room: 'Зал 2' }
   ];
   var WEEKDAY_RU = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 
   function academicFor(id) {
     var map = read(LS_ACADEMICS, {}) || {};
-    return map[id] || { direction: 'Гитара', teacher: 'Антон Шпигоцкий', level: 'Базовый уровень' };
+    return map[id] || { direction: 'Гитара', teacher: 'Виталий Жуков', level: 'Базовый уровень' };
   }
 
   function nextOccurrence(from, direction) {
