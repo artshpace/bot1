@@ -28,6 +28,15 @@ export default {
       return handleBotWebhook(request, env);
     }
 
+    // --- Ручной прогон напоминаний (для теста): GET/POST /run-reminders?key=… -
+    if (url.pathname === '/run-reminders') {
+      if (env.WEBHOOK_SECRET && url.searchParams.get('key') !== env.WEBHOOK_SECRET) {
+        return new Response('Forbidden', { status: 403 });
+      }
+      const n = await runReminders(env);
+      return jsonRes({ ok: true, sent: n }, 200, {});
+    }
+
     // --- Test notification: cabinet → Worker → user's Telegram ---------------
     if (url.pathname === '/notify-test') {
       return handleNotifyTest(request, env);
@@ -45,6 +54,11 @@ export default {
 
     // --- Lead forwarding (default, unchanged behaviour) -----------------------
     return handleLead(request, env);
+  },
+
+  // Cloudflare Cron Trigger — проверяет расписание и шлёт напоминания за 24ч и 1ч.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runReminders(env));
   }
 };
 
@@ -185,43 +199,60 @@ async function handleBotWebhook(request, env) {
 
   let update;
   try { update = await request.json(); }
-  catch { return new Response('OK', { status: 200 }); }
+  catch { return ok(); }
 
-  const msg = update.message || update.edited_message;
-  const text = msg && msg.text ? msg.text.trim() : '';
-  const chatId = msg && msg.chat ? msg.chat.id : null;
+  try {
+    // Нажатие inline-кнопки (Да/Нет, выбор направления/группы, меню)
+    if (update.callback_query) { await onCallback(env, update.callback_query); return ok(); }
 
-  if (chatId && /^\/start(@\w+)?(\s|$)/i.test(text)) {
-    const code = (text.split(/\s+/)[1] || '').trim();
+    const msg = update.message || update.edited_message;
+    if (!msg || !msg.chat) return ok();
+    const chatId = msg.chat.id;
+    const text = (msg.text || '').trim();
 
-    if (!code) {
-      await reply(env, chatId,
-        '👋 Это бот студии *Shpigotskiy Art Space*.\n\n' +
-        'Чтобы получать уведомления, откройте раздел *Настройки* в личном кабинете и нажмите *«Подключить Telegram»* — бот сам получит код привязки.');
+    // /start <код> — привязка аккаунта кабинета (как раньше)
+    const m = /^\/start(?:@\w+)?(?:\s+(\S+))?/i.exec(text);
+    if (m) {
+      const code = (m[1] || '').trim();
+      if (code) { await handleBind(env, chatId, code); return ok(); }
+      await ensureParent(env, chatId, msg.from);
+      await sendMenu(env, chatId, true);
+      return ok();
+    }
+    if (/^\/(add|children|deti|menu)/i.test(text)) {
+      await ensureParent(env, chatId, msg.from);
+      await sendMenu(env, chatId, false);
       return ok();
     }
 
-    try {
-      const r = await bindCode(env, code, chatId);
-      if (r === 'ok') {
-        await reply(env, chatId, '✅ *Аккаунт привязан.*\nТеперь вы будете получать уведомления о занятиях и заявках здесь.');
-      } else if (r === 'expired') {
-        await reply(env, chatId, '⌛️ Код истёк. Вернитесь в кабинет и нажмите *«Подключить Telegram»* ещё раз — код действует 10 минут.');
-      } else {
-        await reply(env, chatId, '⚠️ Код недействителен. Сгенерируйте новый в кабинете: Настройки → «Подключить Telegram».');
-      }
-    } catch (e) {
-      // Surface the reason (status / message) so misconfig is easy to spot.
-      console.error('bindCode error:', e && e.message);
-      await reply(env, chatId, '⚠️ Не удалось привязать аккаунт.\n\n_Причина:_ `' + ((e && e.message) || 'неизвестно') + '`\n\nПроверьте переменные SUPABASE_URL и SUPABASE_SERVICE_ROLE_KEY в Worker.');
-    }
+    // Иначе — по состоянию диалога
+    const st = await getState(env, chatId);
+    if (st && st.step === 'reg_name')     { await onRegName(env, chatId, text); return ok(); }
+    if (st && st.step === 'await_reason') { await onReason(env, chatId, text, st.data || {}); return ok(); }
+
+    await sendText(env, chatId, 'Не понял 🙂 Нажмите /start, чтобы открыть меню.');
+    return ok();
+  } catch (e) {
+    console.error('bot webhook error:', e && e.message);
     return ok();
   }
+}
 
-  if (chatId) {
-    await reply(env, chatId, 'Я присылаю уведомления студии *Shpigotskiy Art Space*. Привязать аккаунт можно в кабинете: Настройки → «Подключить Telegram».');
+// Привязка аккаунта кабинета по коду (вынесено из /start).
+async function handleBind(env, chatId, code) {
+  try {
+    const r = await bindCode(env, code, chatId);
+    if (r === 'ok') {
+      await reply(env, chatId, '✅ *Аккаунт привязан.*\nТеперь вы будете получать уведомления о занятиях и заявках здесь.');
+    } else if (r === 'expired') {
+      await reply(env, chatId, '⌛️ Код истёк. Вернитесь в кабинет и нажмите *«Подключить Telegram»* ещё раз — код действует 10 минут.');
+    } else {
+      await reply(env, chatId, '⚠️ Код недействителен. Сгенерируйте новый в кабинете: Настройки → «Подключить Telegram».');
+    }
+  } catch (e) {
+    console.error('bindCode error:', e && e.message);
+    await reply(env, chatId, '⚠️ Не удалось привязать аккаунт.\n\n_Причина:_ `' + ((e && e.message) || 'неизвестно') + '`');
   }
-  return ok();
 }
 
 function ok() { return new Response('OK', { status: 200 }); }
@@ -578,4 +609,227 @@ function b64urlBytes(bytes) {
   let bin = '';
   for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/* =============================================================================
+   ТЕЛЕГРАМ-БОТ ПОСЕЩАЕМОСТИ
+   ---------------------------------------------------------------------------
+   • Родитель добавляет ребёнка: ФИО → направление → группа (из расписания).
+   • Cron за 24ч и 1ч до занятия шлёт напоминание с кнопками «Да/Нет».
+   • «Нет» → бот просит причину; ответ пересылается владельцу.
+   • Все ответы дублируются владельцу (OWNER_CHAT_ID или TELEGRAM_CHAT_ID).
+   Хранилище — Supabase (migration 0019). Время — Asia/Almaty (+5).
+   ============================================================================= */
+const BOT_TZ_OFFSET = 5 * 3600 * 1000;
+const WD_FULL  = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+const WD_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерство','Современный танец','Живопись'];
+
+// Группы — зеркало schedule.html. days: 0=Вс…6=Сб. time: начало занятия (Almaty).
+const BOT_GROUPS = [
+  { id:'g1', dir:'Гитара', age:'разный возраст', teacher:'Георгий Захаров', days:[1,3,5], time:'09:00' },
+  { id:'g2', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'10:00' },
+  { id:'g3', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'11:00' },
+  { id:'g4', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'16:00' },
+  { id:'g5', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'17:00' },
+  { id:'g6', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'18:00' },
+  { id:'g7', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'19:00' },
+  { id:'g8', dir:'Гитара', age:'18+',            teacher:'Виталий Жуков',   days:[1,3,5], time:'20:00' },
+  { id:'g9', dir:'Гитара', age:'разный возраст', teacher:'Георгий Захаров', days:[2,4,6], time:'17:00' },
+  { id:'v1', dir:'Вокал', age:'7–10 лет', teacher:'Наталья Ерзакова', days:[6,0], time:'12:00' },
+  { id:'v2', dir:'Вокал', age:'11+',      teacher:'Наталья Ерзакова', days:[6,0], time:'13:00' },
+  { id:'a1', dir:'Актёрское мастерство', age:'4–6 лет',   teacher:'Марина Черняк',   days:[6,0], time:'15:45' },
+  { id:'a2', dir:'Актёрское мастерство', age:'7–10 лет',  teacher:'Оксана Розанова', days:[1,3], time:'15:00' },
+  { id:'a3', dir:'Актёрское мастерство', age:'7–10 лет',  teacher:'Марина Черняк',   days:[2,4], time:'09:30' },
+  { id:'a4', dir:'Актёрское мастерство', age:'7–10 лет',  teacher:'Марина Черняк',   days:[6,0], time:'14:45' },
+  { id:'a5', dir:'Актёрское мастерство', age:'11–14 лет', teacher:'Оксана Розанова', days:[1,3], time:'09:00' },
+  { id:'a6', dir:'Актёрское мастерство', age:'11–14 лет', teacher:'Оксана Розанова', days:[1,3], time:'16:00' },
+  { id:'a7', dir:'Актёрское мастерство', age:'11–14 лет', teacher:'Марина Черняк',   days:[6,0], time:'09:00' },
+  { id:'a8', dir:'Актёрское мастерство', age:'14+',       teacher:'Антон Шпигоцкий', days:[6,0], time:'14:30' },
+  { id:'d1', dir:'Современный танец', age:'4–6 лет',   teacher:'Дарья Клюк', days:[1,3,5], time:'18:30' },
+  { id:'d2', dir:'Современный танец', age:'от 11 лет', teacher:'Дарья Клюк', days:[6,0], time:'11:30' },
+  { id:'d3', dir:'Современный танец', age:'7–10 лет',  teacher:'Дарья Клюк', days:[6,0], time:'13:00' },
+  { id:'p1', dir:'Живопись', age:'4–6 лет',  teacher:'Мария Андрюшенко', days:[6], time:'10:00' },
+  { id:'p2', dir:'Живопись', age:'7–10 лет', teacher:'Мария Андрюшенко', days:[0], time:'10:00' }
+];
+function botGroup(id){ return BOT_GROUPS.find(g => g.id === id) || null; }
+function botGroupLabel(g){ return g.age + ' · ' + g.days.map(d => WD_SHORT[d]).join('/') + ' ' + g.time + ' · ' + g.teacher; }
+
+/* ---------- Telegram ---------- */
+async function tgApi(env, method, payload){
+  return fetch('https://api.telegram.org/bot' + env.TELEGRAM_BOT_TOKEN + '/' + method, {
+    method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload)
+  });
+}
+function kb(rows){ return { inline_keyboard: rows }; }
+async function sendText(env, chatId, text, keyboard){
+  const p = { chat_id: chatId, text }; if (keyboard) p.reply_markup = keyboard;
+  await tgApi(env, 'sendMessage', p);
+}
+async function editText(env, chatId, msgId, text){ await tgApi(env,'editMessageText',{ chat_id:chatId, message_id:msgId, text }); }
+async function answerCb(env, id){ await tgApi(env,'answerCallbackQuery',{ callback_query_id:id }); }
+async function notifyOwner(env, text){ const chat = env.OWNER_CHAT_ID || env.TELEGRAM_CHAT_ID; if (chat) await sendText(env, chat, text); }
+
+/* ---------- Supabase (service-role) ---------- */
+function sbCfg(env){
+  return {
+    base: env.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1',
+    h: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY, 'Content-Type':'application/json' }
+  };
+}
+async function sbSelect(env, q){ const {base,h}=sbCfg(env); const r=await fetch(base+q,{headers:h}); return r.ok ? r.json() : []; }
+async function sbInsert(env, table, obj){ const {base,h}=sbCfg(env); return fetch(base+'/'+table,{method:'POST',headers:Object.assign({Prefer:'return=minimal'},h),body:JSON.stringify(obj)}); }
+async function sbUpsert(env, table, obj, conflict){ const {base,h}=sbCfg(env); return fetch(base+'/'+table+'?on_conflict='+conflict,{method:'POST',headers:Object.assign({Prefer:'resolution=merge-duplicates,return=minimal'},h),body:JSON.stringify(obj)}); }
+async function sbPatch(env, q, obj){ const {base,h}=sbCfg(env); return fetch(base+q,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},h),body:JSON.stringify(obj)}); }
+async function sbDelete(env, q){ const {base,h}=sbCfg(env); return fetch(base+q,{method:'DELETE',headers:h}); }
+const enc = encodeURIComponent;
+
+/* ---------- состояние диалога / родитель ---------- */
+async function getState(env, chatId){ const rows=await sbSelect(env,'/bot_state?select=step,data&chat_id=eq.'+enc(String(chatId))+'&limit=1'); return rows[0]||null; }
+async function setState(env, chatId, step, data){ await sbUpsert(env,'bot_state',{chat_id:String(chatId),step:step,data:data||{},updated_at:new Date().toISOString()},'chat_id'); }
+async function clearState(env, chatId){ await sbDelete(env,'/bot_state?chat_id=eq.'+enc(String(chatId))); }
+async function ensureParent(env, chatId, from){
+  const name=[from&&from.first_name,from&&from.last_name].filter(Boolean).join(' ')+(from&&from.username?(' (@'+from.username+')'):'');
+  await sbUpsert(env,'bot_parents',{chat_id:String(chatId),tg_name:(name.trim()||null)},'chat_id');
+}
+async function parentName(env, chatId){ const rows=await sbSelect(env,'/bot_parents?select=tg_name&chat_id=eq.'+enc(String(chatId))+'&limit=1'); return (rows[0]&&rows[0].tg_name)||('чат '+chatId); }
+
+/* ---------- меню и регистрация ---------- */
+async function sendMenu(env, chatId, greet){
+  const head = greet ? '👋 Это бот студии Shpigotskiy Art Space.\nЗдесь можно добавить ребёнка и получать напоминания о занятиях.\n\n' : '';
+  await sendText(env, chatId, head + 'Что хотите сделать?', kb([
+    [{ text:'➕ Добавить ребёнка', callback_data:'reg:new' }],
+    [{ text:'📋 Мои дети',        callback_data:'my:list' }]
+  ]));
+}
+async function onCallback(env, cq){
+  const chatId = cq.message && cq.message.chat ? cq.message.chat.id : (cq.from && cq.from.id);
+  const msgId  = cq.message && cq.message.message_id;
+  const data   = cq.data || '';
+  await answerCb(env, cq.id);
+  const parts = data.split(':');
+
+  if (data === 'reg:new'){
+    await ensureParent(env, chatId, cq.from);
+    await setState(env, chatId, 'reg_name', {});
+    await sendText(env, chatId, 'Введите, пожалуйста, ФИО ребёнка одним сообщением.');
+    return;
+  }
+  if (parts[0]==='reg' && parts[1]==='dir'){
+    const dir = BOT_DIRS[Number(parts[2])]; if(!dir) return;
+    const st = await getState(env, chatId); const d = (st&&st.data)||{};
+    d.dir = dir; await setState(env, chatId, 'reg_pick', d);
+    const groups = BOT_GROUPS.filter(g=>g.dir===dir);
+    await sendText(env, chatId, 'Выберите группу по направлению «'+dir+'»:',
+      kb(groups.map(g=>[{ text: botGroupLabel(g), callback_data:'reg:grp:'+g.id }])));
+    return;
+  }
+  if (parts[0]==='reg' && parts[1]==='grp'){
+    const g = botGroup(parts[2]); if(!g) return;
+    const st = await getState(env, chatId); const d=(st&&st.data)||{};
+    const child = d.child_name || 'Ребёнок';
+    const ins = await sbInsert(env,'bot_students',{chat_id:String(chatId),child_name:child,direction:g.dir,group_id:g.id});
+    await clearState(env, chatId);
+    if(!ins.ok){ await sendText(env, chatId,'⚠️ Не удалось сохранить. Попробуйте ещё раз: /start'); return; }
+    await sendText(env, chatId, '✅ Добавлено:\n👤 '+child+'\n🎯 '+g.dir+' — '+g.age+'\n📅 '+g.days.map(x=>WD_SHORT[x]).join('/')+' '+g.time+'\n\nЯ пришлю напоминание за сутки и за час до занятия.');
+    await notifyOwner(env, '🆕 Новый ребёнок в боте\n👤 '+child+'\n🎯 '+g.dir+' · '+botGroupLabel(g)+'\n👪 Родитель: '+(await parentName(env,chatId)));
+    await sendMenu(env, chatId, false);
+    return;
+  }
+  if (data === 'my:list'){
+    const kids = await sbSelect(env,'/bot_students?select=id,child_name,direction,group_id&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
+    if(!kids.length){ await sendText(env, chatId,'Пока нет добавленных детей.', kb([[{text:'➕ Добавить ребёнка',callback_data:'reg:new'}]])); return; }
+    for(const k of kids){
+      const g=botGroup(k.group_id);
+      await sendText(env, chatId, '👤 '+k.child_name+'\n🎯 '+k.direction+(g?(' — '+botGroupLabel(g)):''),
+        kb([[{text:'🗑 Удалить',callback_data:'my:del:'+k.id}]]));
+    }
+    return;
+  }
+  if (parts[0]==='my' && parts[1]==='del'){
+    await sbDelete(env,'/bot_students?id=eq.'+enc(parts[2])+'&chat_id=eq.'+enc(String(chatId)));
+    await sendText(env, chatId,'Удалено.');
+    return;
+  }
+  if (parts[0]==='att'){ await onAttendance(env, chatId, msgId, parts); return; }
+}
+async function onRegName(env, chatId, text){
+  const name=(text||'').trim();
+  if(name.length<3 || !/[А-Яа-яЁёA-Za-z]/.test(name)){ await sendText(env, chatId,'Пожалуйста, введите ФИО ребёнка текстом (например: Иванов Иван).'); return; }
+  await setState(env, chatId,'reg_pick',{child_name:name});
+  await sendText(env, chatId,'Выберите направление, на котором занимается '+name+':',
+    kb(BOT_DIRS.map((d,i)=>[{text:d,callback_data:'reg:dir:'+i}])));
+}
+
+/* ---------- ответ на напоминание ---------- */
+async function onAttendance(env, chatId, msgId, parts){
+  const sid=parts[1], dateC=parts[2], gid=parts[3], resp=parts[4];
+  const lessonDate = dateC.slice(0,4)+'-'+dateC.slice(4,6)+'-'+dateC.slice(6,8);
+  const g = botGroup(gid);
+  const kids = await sbSelect(env,'/bot_students?select=child_name,direction&id=eq.'+enc(sid)+'&limit=1');
+  const child = (kids[0]&&kids[0].child_name)||'Ребёнок';
+  const who = await parentName(env, chatId);
+  const when = lessonDate.split('-').reverse().join('.')+(g?(' '+g.time):'');
+
+  await sbPatch(env,'/bot_attendance?student_id=eq.'+enc(sid)+'&lesson_date=eq.'+enc(lessonDate)+'&group_id=eq.'+enc(gid),
+    { response: (resp==='y'?'yes':'no'), responded_at:new Date().toISOString() });
+
+  if(resp==='y'){
+    if(msgId) await editText(env, chatId, msgId, '✅ Спасибо! Отметил, что '+child+' придёт '+when+'. Ждём!');
+    await notifyOwner(env, '✅ ПРИДЁТ\n👤 '+child+(g?(' — '+g.dir+' '+g.age):'')+'\n📅 '+when+'\n👪 '+who);
+  } else {
+    if(msgId) await editText(env, chatId, msgId, '❌ Записал, что '+child+' не придёт '+when+'.\n\nНапишите, пожалуйста, причину пропуска одним сообщением.');
+    await setState(env, chatId,'await_reason',{student_id:sid,lesson_date:lessonDate,group_id:gid,child_name:child,when:when});
+    await notifyOwner(env, '❌ НЕ ПРИДЁТ\n👤 '+child+(g?(' — '+g.dir+' '+g.age):'')+'\n📅 '+when+'\n👪 '+who+'\n⏳ причину уточняю…');
+  }
+}
+async function onReason(env, chatId, text, data){
+  const reason=(text||'').trim();
+  await sbPatch(env,'/bot_attendance?student_id=eq.'+enc(data.student_id)+'&lesson_date=eq.'+enc(data.lesson_date)+'&group_id=eq.'+enc(data.group_id),
+    { reason: reason });
+  await clearState(env, chatId);
+  await sendText(env, chatId,'Спасибо, передал причину администратору. Хорошего дня! 🙌');
+  await notifyOwner(env, '📝 ПРИЧИНА ПРОПУСКА\n👤 '+(data.child_name||'')+'\n📅 '+(data.when||data.lesson_date)+'\n💬 '+reason+'\n👪 '+(await parentName(env,chatId)));
+}
+
+/* ---------- планировщик (24ч и 1ч) ---------- */
+function almatyParts(ms){ const d=new Date(ms+BOT_TZ_OFFSET); return { y:d.getUTCFullYear(), mo:d.getUTCMonth(), da:d.getUTCDate(), dow:d.getUTCDay() }; }
+function occYmd(ms){ const p=almatyParts(ms); return p.y+'-'+String(p.mo+1).padStart(2,'0')+'-'+String(p.da).padStart(2,'0'); }
+function occCompact(ms){ return occYmd(ms).replace(/-/g,''); }
+function occDdMm(ms){ const p=almatyParts(ms); return String(p.da).padStart(2,'0')+'.'+String(p.mo+1).padStart(2,'0'); }
+function occurrencesWithin(g, now, horizon){
+  const out=[]; const hh=Number(g.time.slice(0,2)), mm=Number(g.time.slice(3,5));
+  for(let add=0; add<=8; add++){
+    const p=almatyParts(now+add*86400000);
+    if(g.days.indexOf(p.dow)===-1) continue;
+    const occ=Date.UTC(p.y,p.mo,p.da,hh,mm)-BOT_TZ_OFFSET;
+    if(occ>=now && occ<=now+horizon) out.push(occ);
+  }
+  return out;
+}
+async function runReminders(env){
+  const now=Date.now(); const H=25*3600000; let sent=0;
+  const kids = await sbSelect(env,'/bot_students?select=id,chat_id,child_name,direction,group_id&active=eq.true');
+  for(const k of kids){
+    const g=botGroup(k.group_id); if(!g) continue;
+    for(const occ of occurrencesWithin(g, now, H)){
+      const delta=occ-now;
+      let kind=null;
+      if(delta>3600000 && delta<=24*3600000) kind='24h';
+      else if(delta>0 && delta<=3600000)     kind='1h';
+      if(!kind) continue;
+      const lessonDate=occYmd(occ);
+      const dup=await sbSelect(env,'/bot_attendance?select=id&student_id=eq.'+enc(k.id)+'&lesson_date=eq.'+enc(lessonDate)+'&group_id=eq.'+enc(g.id)+'&kind=eq.'+kind+'&limit=1');
+      if(dup.length) continue;
+      const ins=await sbInsert(env,'bot_attendance',{student_id:k.id,lesson_date:lessonDate,lesson_time:g.time,group_id:g.id,kind:kind});
+      if(!ins.ok) continue; // 409 = уже отправлено (гонка)
+      const head = kind==='24h' ? '🔔 Напоминание о занятии (за сутки)' : '🔔 Скоро занятие (примерно через час)';
+      await sendText(env, k.chat_id,
+        head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n\nРебёнок придёт на занятие?',
+        kb([[{text:'✅ Да', callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':y'},
+             {text:'❌ Нет',callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':n'}]]));
+      sent++;
+    }
+  }
+  return sent;
 }
