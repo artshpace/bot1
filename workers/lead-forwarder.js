@@ -221,13 +221,15 @@ async function handleBotWebhook(request, env) {
     const m = /^\/start(?:@\w+)?(?:\s+(\S+))?/i.exec(text);
     if (m) {
       const code = (m[1] || '').trim();
-      if (code) { await handleBind(env, chatId, code); return ok(); }
+      if (code) { await handleBind(env, chatId, code); await setMenuButton(env, chatId); return ok(); }
       await ensureParent(env, chatId, msg.from);
+      await setMenuButton(env, chatId);
       await sendMenu(env, chatId, true);
       return ok();
     }
-    if (/^\/(add|children|deti|menu)/i.test(text)) {
+    if (/^\/(add|children|deti|menu|app|site)/i.test(text)) {
       await ensureParent(env, chatId, msg.from);
+      await setMenuButton(env, chatId);
       await sendMenu(env, chatId, false);
       return ok();
     }
@@ -632,6 +634,9 @@ const WD_FULL  = ['Воскресенье','Понедельник','Вторн�
 const WD_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерство','Современный танец','Живопись'];
 
+// Живой сайт студии — он же Telegram Mini App (открывается кнопкой web_app).
+const SITE_URL = 'https://artshpace.github.io/bot1/website/index.html';
+
 // Группы — зеркало schedule.html. days: 0=Вс…6=Сб. time: начало занятия (Almaty).
 const BOT_GROUPS = [
   { id:'g1', dir:'Гитара', age:'разный возраст', teacher:'Георгий Захаров', days:[1,3,5], time:'09:00' },
@@ -703,11 +708,20 @@ async function parentName(env, chatId){ const rows=await sbSelect(env,'/bot_pare
 
 /* ---------- меню и регистрация ---------- */
 async function sendMenu(env, chatId, greet){
-  const head = greet ? '👋 Это бот студии Shpigotskiy Art Space.\nЗдесь можно добавить ребёнка и получать напоминания о занятиях.\n\n' : '';
+  const head = greet ? '👋 Это бот студии Shpigotskiy Art Space.\nЗдесь можно открыть приложение-сайт, добавить ученика и получать напоминания о занятиях.\n\n' : '';
   await sendText(env, chatId, head + 'Что хотите сделать?', kb([
-    [{ text:'➕ Добавить ребёнка', callback_data:'reg:new' }],
-    [{ text:'📋 Мои дети',        callback_data:'my:list' }]
+    [{ text:'🌐 Открыть приложение (сайт)', web_app:{ url: SITE_URL } }],
+    [{ text:'➕ Добавить ученика', callback_data:'reg:new' }],
+    [{ text:'📋 Мои записи',        callback_data:'my:list' }]
   ]));
+}
+
+// Постоянная кнопка-меню чата открывает сайт как Mini App (идемпотентно на /start).
+async function setMenuButton(env, chatId){
+  await tgApi(env, 'setChatMenuButton', {
+    chat_id: chatId,
+    menu_button: { type: 'web_app', text: 'Приложение', web_app: { url: SITE_URL } }
+  });
 }
 async function onCallback(env, cq){
   const chatId = cq.message && cq.message.chat ? cq.message.chat.id : (cq.from && cq.from.id);
@@ -719,7 +733,7 @@ async function onCallback(env, cq){
   if (data === 'reg:new'){
     await ensureParent(env, chatId, cq.from);
     await setState(env, chatId, 'reg_name', {});
-    await sendText(env, chatId, 'Введите, пожалуйста, ФИО ребёнка одним сообщением.');
+    await sendText(env, chatId, 'Введите, пожалуйста, ФИО ученика — ребёнка или взрослого — одним сообщением.');
     return;
   }
   if (parts[0]==='reg' && parts[1]==='dir'){
@@ -745,7 +759,7 @@ async function onCallback(env, cq){
   }
   if (data === 'my:list'){
     const kids = await sbSelect(env,'/bot_students?select=id,child_name,direction,group_id&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
-    if(!kids.length){ await sendText(env, chatId,'Пока нет добавленных детей.', kb([[{text:'➕ Добавить ребёнка',callback_data:'reg:new'}]])); return; }
+    if(!kids.length){ await sendText(env, chatId,'Пока нет добавленных учеников.', kb([[{text:'➕ Добавить ученика',callback_data:'reg:new'}]])); return; }
     for(const k of kids){
       const g=botGroup(k.group_id);
       await sendText(env, chatId, '👤 '+k.child_name+'\n🎯 '+k.direction+(g?(' — '+botGroupLabel(g)):''),
@@ -762,7 +776,7 @@ async function onCallback(env, cq){
 }
 async function onRegName(env, chatId, text){
   const name=(text||'').trim();
-  if(name.length<3 || !/[А-Яа-яЁёA-Za-z]/.test(name)){ await sendText(env, chatId,'Пожалуйста, введите ФИО ребёнка текстом (например: Иванов Иван).'); return; }
+  if(name.length<3 || !/[А-Яа-яЁёA-Za-z]/.test(name)){ await sendText(env, chatId,'Пожалуйста, введите ФИО ученика текстом (например: Иванов Иван).'); return; }
   await setState(env, chatId,'reg_pick',{child_name:name});
   await sendText(env, chatId,'Выберите направление, на котором занимается '+name+':',
     kb(BOT_DIRS.map((d,i)=>[{text:d,callback_data:'reg:dir:'+i}])));
@@ -832,7 +846,7 @@ async function runReminders(env){
       if(!ins.ok) continue; // 409 = уже отправлено (гонка)
       const head = kind==='24h' ? '🔔 Напоминание о занятии (за сутки)' : '🔔 Скоро занятие (примерно через час)';
       await sendText(env, k.chat_id,
-        head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n\nРебёнок придёт на занятие?',
+        head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n\nПридёт ли ученик на занятие?',
         kb([[{text:'✅ Да', callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':y'},
              {text:'❌ Нет',callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':n'}]]));
       sent++;

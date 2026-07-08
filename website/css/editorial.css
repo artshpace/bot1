@@ -267,3 +267,7 @@
 
   /* Мягкая «пружина» появления и на внутренних страницах */
   .editorial .fade-up{ transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1); }
+
+  /* ---------- Внутри Telegram Mini App ---------- */
+  .tg-miniapp .site-header{ padding-top: max(16px, env(safe-area-inset-top)); }
+  .tg-miniapp{ padding-bottom: env(safe-area-inset-bottom); }
