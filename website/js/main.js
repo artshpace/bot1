@@ -5,6 +5,10 @@
 const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 const LS_UTM = 'sas_utm';
 
+/* Meta Pixel ID студии (Events Manager → «Интернет»). Грузится на всех
+   страницах; PageView шлётся автоматически, Lead — при отправке формы. */
+const META_PIXEL_ID = '320219384379297';
+
 function captureUTM() {
   try {
     const params = new URLSearchParams(location.search);
@@ -26,7 +30,7 @@ function bootPixel() {
   };
   if (!window._fbq) window._fbq = n;
   n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
-  let pixelId = '';
+  let pixelId = /^\d{6,}$/.test(META_PIXEL_ID) ? META_PIXEL_ID : '';
   try {
     const cfg = JSON.parse(localStorage.getItem('sas_meta_config') || '{}');
     if (cfg.enabled && cfg.pixelId) pixelId = cfg.pixelId;
