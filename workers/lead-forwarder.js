@@ -110,6 +110,13 @@ async function handleLead(request, env) {
     } catch (e) { /* swallow — Telegram still fires below */ }
   }
 
+  // Meta Conversions API — серверное событие Lead (дедуп с браузерным пикселем
+  // по одному event_id). Best-effort: никогда не блокирует уведомление.
+  if (env.META_CAPI_TOKEN) {
+    try { await sendCapiLead(env, body, request); }
+    catch (e) { console.error('CAPI error: ' + (e && e.message ? e.message : e)); }
+  }
+
   // Create an event in the director's Google Calendar (Задача 5). Best-effort:
   // we log the outcome (missing env / error / success) so failures are visible
   // in the Worker logs, but never block the lead on it.
@@ -832,4 +839,48 @@ async function runReminders(env){
     }
   }
   return sent;
+}
+
+/* =============================================================================
+   META CONVERSIONS API — серверное событие Lead
+   ---------------------------------------------------------------------------
+   Дедуп с браузерным пикселем по event_id (сайт присылает его же). Телефон/имя
+   хешируются SHA-256 (требование Meta). Токен — только в env.META_CAPI_TOKEN.
+   ============================================================================= */
+const META_PIXEL = '320219384379297';
+async function sha256hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function capiNormPhone(p){
+  let d = String(p || '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.length === 11 && d[0] === '8') d = '7' + d.slice(1);   // 8XXXXXXXXXX → 7…
+  if (d.length === 10) d = '7' + d;                             // без кода страны → +7
+  return d;
+}
+async function sendCapiLead(env, body, request){
+  const ud = {};
+  const ph = capiNormPhone(body.phone);
+  if (ph) ud.ph = [await sha256hex(ph)];
+  const nm = String(body.name || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (nm[0]) ud.fn = [await sha256hex(nm[0])];
+  if (nm[1]) ud.ln = [await sha256hex(nm[1])];
+  const ip = request.headers.get('CF-Connecting-IP'); if (ip) ud.client_ip_address = ip;
+  const ua = request.headers.get('User-Agent');       if (ua) ud.client_user_agent = ua;
+
+  const payload = { data: [{
+    event_name: 'Lead',
+    event_time: Math.floor(Date.now() / 1000),
+    action_source: 'website',
+    event_source_url: body.pageUrl || request.headers.get('Referer') || 'https://artshpace.github.io/bot1/website/',
+    event_id: body.eventId || ('lead-' + Date.now()),
+    user_data: ud,
+    custom_data: { content_name: body.direction || 'Заявка' }
+  }]};
+
+  const url = 'https://graph.facebook.com/v21.0/' + META_PIXEL + '/events?access_token=' + encodeURIComponent(env.META_CAPI_TOKEN);
+  const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  if (!r.ok) console.error('CAPI resp ' + r.status + ': ' + (await r.text()).slice(0, 300));
+  else console.log('CAPI Lead sent, event_id=' + payload.data[0].event_id);
 }

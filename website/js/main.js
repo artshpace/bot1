@@ -333,12 +333,17 @@ function submitLead(formId, form) {
     }
   };
 
+  /* Один event_id на заявку — чтобы браузерный Pixel и серверный Conversions
+     API не задваивали конверсию (Meta склеит события по event_id). */
+  var leadEventId = 'lead-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  try { window.__sasLeadEventId = leadEventId; } catch (e) { /* ignore */ }
+
   if (window.API && API.leads && payload.name && payload.phone) {
     API.leads.create(payload).catch(() => { /* keep the success UI; lead retried server-side */ });
   } else {
     console.log('Lead (no API on page):', formId, payload);
   }
-  /* Forward to Cloudflare Worker → Telegram. Fires silently; never breaks UX. */
+  /* Forward to Cloudflare Worker → Telegram + Conversions API. Fires silently. */
   if (WORKER_URL && !WORKER_URL.includes('ТВОЙ_АККАУНТ') && payload.phone) {
     fetch(WORKER_URL, {
       method: 'POST',
@@ -348,7 +353,8 @@ function submitLead(formId, form) {
         direction: payload.direction, slot: payload.preferredTime,
         slotDate: payload.preferredDate,
         source: payload.source, comment: payload.comment,
-        utm: payload.utm
+        utm: payload.utm,
+        eventId: leadEventId, pageUrl: (typeof location !== 'undefined' ? location.href : '')
       })
     }).catch(() => { /* silent — lead already saved locally */ });
   }

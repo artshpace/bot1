@@ -3011,10 +3011,11 @@
   /* Hoisted tracking helper — fans a conversion event out to Meta Pixel
      (browser) and the Conversions API (server) scaffolds. Safe no-op until
      a real Pixel ID / access token is configured. See `tracking` namespace. */
-  function trackEvent(name, params) {
+  function trackEvent(name, params, eventID) {
     try {
       if (typeof window !== 'undefined' && typeof window.fbq === 'function') {
-        window.fbq('track', name, params || {});
+        if (eventID) window.fbq('track', name, params || {}, { eventID: eventID });
+        else window.fbq('track', name, params || {});
       }
     } catch (e) { /* never break business logic on a tracking error */ }
     /* Server-side mirror (Conversions API) — queued for a real backend. */
@@ -3353,7 +3354,8 @@
       /* Schedule the client reminder ladder (scaffold). */
       reminders.scheduleForLead(lead);
       /* Conversion events for Meta. */
-      trackEvent('Lead', { content_name: lead.direction || 'Заявка', source: lead.source });
+      trackEvent('Lead', { content_name: lead.direction || 'Заявка', source: lead.source },
+        (typeof window !== 'undefined' && window.__sasLeadEventId) || undefined);
       if (lead.preferredDate) trackEvent('Schedule', { content_name: lead.direction || 'Пробное' });
       return delay(clone(lead));
     },
