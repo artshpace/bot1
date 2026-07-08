@@ -224,10 +224,15 @@ async function handleBotWebhook(request, env) {
       if (code) { await handleBind(env, chatId, code); await setMenuButton(env, chatId); return ok(); }
       await ensureParent(env, chatId, msg.from);
       await setMenuButton(env, chatId);
+      await setCommands(env);
       await sendMenu(env, chatId, true);
       return ok();
     }
-    if (/^\/(add|children|deti|menu|app|site)/i.test(text)) {
+    if (/^\/(schedule|raspisanie)/i.test(text)) { await sendSchedule(env, chatId); return ok(); }
+    if (/^\/(directions|napravleniya|dirs)/i.test(text)) { await sendDirs(env, chatId); return ok(); }
+    if (/^\/(price|prices|ceny|tseny)/i.test(text)) { await sendPrice(env, chatId); return ok(); }
+    if (/^\/(contacts|kontakty)/i.test(text)) { await sendContacts(env, chatId); return ok(); }
+    if (/^\/(add|children|deti|menu|app|site|help)/i.test(text)) {
       await ensureParent(env, chatId, msg.from);
       await setMenuButton(env, chatId);
       await sendMenu(env, chatId, false);
@@ -674,8 +679,9 @@ async function tgApi(env, method, payload){
   });
 }
 function kb(rows){ return { inline_keyboard: rows }; }
-async function sendText(env, chatId, text, keyboard){
+async function sendText(env, chatId, text, keyboard, parseMode){
   const p = { chat_id: chatId, text }; if (keyboard) p.reply_markup = keyboard;
+  if (parseMode) p.parse_mode = parseMode;
   await tgApi(env, 'sendMessage', p);
 }
 async function editText(env, chatId, msgId, text){ await tgApi(env,'editMessageText',{ chat_id:chatId, message_id:msgId, text }); }
@@ -708,12 +714,82 @@ async function parentName(env, chatId){ const rows=await sbSelect(env,'/bot_pare
 
 /* ---------- меню и регистрация ---------- */
 async function sendMenu(env, chatId, greet){
-  const head = greet ? '👋 Это бот студии Shpigotskiy Art Space.\nЗдесь можно открыть приложение-сайт, добавить ученика и получать напоминания о занятиях.\n\n' : '';
+  const head = greet ? '👋 Это бот студии *Shpigotskiy Art Space*.\nВсё как на сайте: расписание, направления, запись на пробное и напоминания о занятиях.\n\n' : '';
   await sendText(env, chatId, head + 'Что хотите сделать?', kb([
     [{ text:'🌐 Открыть приложение (сайт)', web_app:{ url: SITE_URL } }],
-    [{ text:'➕ Добавить ученика', callback_data:'reg:new' }],
-    [{ text:'📋 Мои записи',        callback_data:'my:list' }]
-  ]));
+    [{ text:'✍️ Записаться на пробное',      web_app:{ url: SITE_URL + '#trial' } }],
+    [{ text:'📅 Расписание',   callback_data:'nav:schedule' },
+     { text:'🎨 Направления',  callback_data:'nav:dirs' }],
+    [{ text:'💰 Цены',         callback_data:'nav:price' },
+     { text:'📞 Контакты',     callback_data:'nav:contacts' }],
+    [{ text:'➕ Добавить ученика', callback_data:'reg:new' },
+     { text:'📋 Мои записи',       callback_data:'my:list' }],
+    [{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77086366351?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }],
+    [{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]
+  ]), 'Markdown');
+}
+
+/* ---------- нативные разделы «как на сайте» ---------- */
+async function sendSchedule(env, chatId){
+  let t = '📅 *Расписание занятий*\n_Актуально, Петропавловск (время местное)._\n';
+  for (const dir of BOT_DIRS){
+    const gs = BOT_GROUPS.filter(g => g.dir === dir);
+    if (!gs.length) continue;
+    t += '\n*' + dir + '*\n';
+    for (const g of gs){
+      t += '• ' + g.age + ' — ' + g.days.map(d => WD_SHORT[d]).join('/') + ' ' + g.time + ' · ' + g.teacher + '\n';
+    }
+  }
+  t += '\nУкулеле/домбра — группы формируются.\nЗаписаться на пробное — кнопка ниже.';
+  await sendText(env, chatId, t, kb([
+    [{ text:'✍️ Записаться на пробное', web_app:{ url: SITE_URL + '#trial' } }],
+    [{ text:'‹ В меню', callback_data:'nav:menu' }]
+  ]), 'Markdown');
+}
+
+async function sendDirs(env, chatId){
+  const blurbs = {
+    'Гитара': 'Гитара, укулеле, домбра. Преподаватели Георгий Захаров и Виталий Жуков. Есть группа для взрослых 18+.',
+    'Вокал': 'Постановка голоса и дыхания. Наталья Ерзакова — высшая категория, 50+ лет опыта.',
+    'Актёрское мастерство': 'Раскрепощение, речь, уверенность на сцене. Педагоги Марина Черняк, Оксана Розанова; группа 14+ — владелец студии Антон Шпигоцкий (Малый театр, драмтеатр им. Н. Погодина).',
+    'Современный танец': 'Пластика и координация. Дарья Клюк — 14+ лет опыта, ансамбль Arabesque.',
+    'Живопись': 'Рисунок, живопись, творческое мышление. Педагог Мария Андрюшенко.'
+  };
+  let t = '🎨 *Направления студии*\n';
+  for (const dir of BOT_DIRS){ t += '\n*' + dir + '*\n' + (blurbs[dir] || '') + '\n'; }
+  t += '\nПодробнее и фото — в приложении (кнопка «Открыть приложение»).';
+  await sendText(env, chatId, t, kb([
+    [{ text:'📅 Расписание', callback_data:'nav:schedule' },
+     { text:'✍️ На пробное', web_app:{ url: SITE_URL + '#trial' } }],
+    [{ text:'‹ В меню', callback_data:'nav:menu' }]
+  ]), 'Markdown');
+}
+
+async function sendPrice(env, chatId){
+  const t = '💰 *Стоимость занятий*\n\n' +
+    'Актуальную стоимость абонемента и разового занятия уточняйте у менеджера — подберём удобный формат под направление и возраст.\n\n' +
+    '🎁 *Первое пробное занятие — бесплатно.*';
+  await sendText(env, chatId, t, kb([
+    [{ text:'💬 Уточнить в WhatsApp', url:'https://wa.me/77086366351?text=' + encodeURIComponent('Здравствуйте! Подскажите, пожалуйста, стоимость занятий.') }],
+    [{ text:'✍️ Записаться на пробное', web_app:{ url: SITE_URL + '#trial' } }],
+    [{ text:'‹ В меню', callback_data:'nav:menu' }]
+  ]), 'Markdown');
+}
+
+async function sendContacts(env, chatId){
+  const t = '📞 *Контакты — Shpigotskiy Art Space*\n\n' +
+    '📍 Петропавловск, ул. Интернациональная, 63, 5 этаж\n' +
+    '📱 WhatsApp/тел: +7 708 636‑63‑51\n' +
+    '👤 Администратор: +7 701 398‑00‑19\n' +
+    '✉️ Email: artshpace@gmail.com\n' +
+    '📸 Instagram: @artshpace';
+  await sendText(env, chatId, t, kb([
+    [{ text:'💬 WhatsApp', url:'https://wa.me/77086366351' },
+     { text:'📸 Instagram', url:'https://instagram.com/artshpace' }],
+    [{ text:'🗺 2ГИС', url:'https://2gis.kz/petropavlovsk/firm/70000001085367039' },
+     { text:'🗺 Яндекс', url:'https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/' }],
+    [{ text:'‹ В меню', callback_data:'nav:menu' }]
+  ]), 'Markdown');
 }
 
 // Постоянная кнопка-меню чата открывает сайт как Mini App (идемпотентно на /start).
@@ -723,12 +799,32 @@ async function setMenuButton(env, chatId){
     menu_button: { type: 'web_app', text: 'Приложение', web_app: { url: SITE_URL } }
   });
 }
+// Синий список команд бота (как разделы сайта). Идемпотентно.
+async function setCommands(env){
+  await tgApi(env, 'setMyCommands', { commands: [
+    { command:'start',      description:'Меню бота' },
+    { command:'schedule',   description:'📅 Расписание занятий' },
+    { command:'directions', description:'🎨 Направления студии' },
+    { command:'price',      description:'💰 Стоимость занятий' },
+    { command:'contacts',   description:'📞 Контакты и адрес' },
+    { command:'add',        description:'➕ Добавить ученика' },
+    { command:'children',   description:'📋 Мои записи' }
+  ]});
+}
 async function onCallback(env, cq){
   const chatId = cq.message && cq.message.chat ? cq.message.chat.id : (cq.from && cq.from.id);
   const msgId  = cq.message && cq.message.message_id;
   const data   = cq.data || '';
   await answerCb(env, cq.id);
   const parts = data.split(':');
+
+  if (parts[0] === 'nav'){
+    if (data === 'nav:schedule'){ await sendSchedule(env, chatId); return; }
+    if (data === 'nav:dirs'){     await sendDirs(env, chatId);     return; }
+    if (data === 'nav:price'){    await sendPrice(env, chatId);    return; }
+    if (data === 'nav:contacts'){ await sendContacts(env, chatId); return; }
+    if (data === 'nav:menu'){     await sendMenu(env, chatId, false); return; }
+  }
 
   if (data === 'reg:new'){
     await ensureParent(env, chatId, cq.from);
