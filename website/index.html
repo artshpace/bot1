@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Shpigotskiy Art Space — Школа гитары, вокала, актёрского в Петропавловске</title>
   <meta name="description" content="Детская студия творческого развития в Петропавловске. Гитара, вокал, живопись, актёрское, танцы. Первое занятие бесплатно. 160+ учеников, NPS 9.7.">
   <meta name="keywords" content="студия для детей Петропавловск, гитара Петропавловск, актёрское мастерство, вокал детям, современный танец, живопись для детей">
@@ -14,10 +14,249 @@
   <link rel="canonical" href="https://artshpace.github.io/bot/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- ===== EDITORIAL-PREMIUM HOMEPAGE LAYER =====
+       Слой поверх style.css: тёплая «бумажная» палитра, парящая nav-таблетка,
+       двойной кант карточек, мягкие тени, зерно. Вся разметка сохраняет
+       классы/ID, на которые опирается js/main.js (fade-up, data-target,
+       modal-trial, reviews-grid, faq, data-sas-contact и т.д.). -->
+  <style>
+  .home-editorial{
+    --paper:#FBF8F2; --cream:#F4EEE2; --cream-2:#EDE4D3; --line:#E2D8C6;
+    --ink:#1A1512; --ink-soft:#4A433D;
+    /* переопределяем общие токены style.css под тёплую палитру — модалка,
+       формы, FAQ и футер получают премиум-вид «бесплатно» */
+    --bg:#FBF8F2; --bg-alt:#F4EEE2; --bg-cream:#FFFFFF; --bg-3:#EDE4D3;
+    --dark:#1A1512; --body:#4A433D; --muted:#7A716A;
+    --border:rgba(120,90,50,.16); --gold-border:rgba(201,168,76,.32);
+    --shadow-soft:0 20px 40px -24px rgba(60,40,20,.28);
+    --shadow-deep:0 34px 64px -32px rgba(60,40,20,.4);
+  }
+  .home-editorial{ background:var(--paper); }
+
+  /* тонкая «бумажная» зернистость поверх всей страницы */
+  .home-editorial::before{
+    content:"";position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ---------- floating glass nav pill ---------- */
+  .home-editorial .site-header{
+    background:transparent;border-bottom:none;height:auto;box-shadow:none;padding:16px 0;
+  }
+  .home-editorial .site-header.scrolled{ box-shadow:none; }
+  .home-editorial .nav-inner{
+    background:rgba(251,248,242,.74);
+    backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);
+    border:1px solid rgba(226,216,198,.75);border-radius:999px;
+    padding:10px 12px 10px 24px;box-shadow:0 14px 34px -22px rgba(60,40,20,.5);
+    transition:box-shadow .3s ease;
+  }
+  .home-editorial .site-header.scrolled .nav-inner{ box-shadow:0 18px 40px -20px rgba(60,40,20,.55); }
+  .home-editorial .nav-logo .name{ letter-spacing:-.01em; }
+  .home-editorial .nav-links a,
+  .home-editorial .nav-dropdown-toggle{ font-weight:500;color:var(--ink-soft); }
+  .home-editorial .nav-cta{
+    border-radius:999px !important;box-shadow:0 12px 26px -12px rgba(227,6,19,.55) !important;
+  }
+  .home-editorial .nav-dropdown-menu{
+    border-radius:20px;border-color:var(--line);background:#fff;
+    box-shadow:0 20px 44px -20px rgba(60,40,20,.4);
+  }
+
+  /* ---------- premium pill buttons ---------- */
+  .home-editorial .btn{ border-radius:999px;font-weight:600;letter-spacing:.01em; }
+  .home-editorial .btn-lg{ border-radius:999px; }
+  .home-editorial .btn-primary{ box-shadow:0 16px 32px -14px rgba(227,6,19,.6); }
+  .home-editorial .btn-primary:hover{ box-shadow:0 22px 40px -16px rgba(227,6,19,.65); }
+  .home-editorial .btn-white{ background:#fff;border:1px solid var(--line); }
+  .home-editorial .btn-outline{ border-radius:999px; }
+
+  /* arrow-in-circle affordance для главных кнопок */
+  .home-editorial .btn .ic{
+    width:32px;height:32px;border-radius:999px;display:inline-grid;place-items:center;
+    background:rgba(255,255,255,.2);margin-left:2px;
+    transition:transform .5s cubic-bezier(.32,.72,0,1);
+  }
+  .home-editorial .btn:hover .ic{ transform:translateX(3px); }
+  .home-editorial .btn-white .ic,
+  .home-editorial .cta-banner .btn-primary .ic{ background:rgba(227,6,19,.12); }
+
+  /* мягче общий ритм разделов + заголовки */
+  .home-editorial .section{ padding:104px 0; }
+  .home-editorial .section-alt{ background:linear-gradient(180deg,var(--cream),var(--paper)); }
+  .home-editorial .eyebrow{ letter-spacing:.18em; }
+
+  /* ---------- HERO (light editorial split) ---------- */
+  .home-editorial .hero-ed{ position:relative;z-index:2;padding:150px 0 96px; }
+  .home-editorial .hero-ed-grid{
+    display:grid;grid-template-columns:1.12fr .88fr;gap:56px;align-items:center;
+  }
+  .home-editorial .eyebrow-pill{
+    display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;
+    background:rgba(227,6,19,.07);color:var(--primary);
+    font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .home-editorial .eyebrow-pill .pin{ width:7px;height:7px;border-radius:999px;background:var(--gold); }
+  .home-editorial .hero-ed h1{
+    font-size:clamp(2.6rem,6vw,4.6rem);line-height:1.04;letter-spacing:-.015em;
+    color:var(--ink);margin:24px 0 0;
+  }
+  .home-editorial .hero-ed h1 em{ font-style:italic;color:var(--primary); }
+  .home-editorial .hero-ed .lead{
+    font-size:1.18rem;color:var(--ink-soft);max-width:520px;margin:26px 0 34px;
+  }
+  .home-editorial .hero-ed-cta{ display:flex;gap:14px;flex-wrap:wrap; }
+  .home-editorial .hero-ed-trust{ display:flex;gap:10px;flex-wrap:wrap;margin-top:34px; }
+  .home-editorial .hero-ed-trust span{
+    font-size:.82rem;color:var(--ink-soft);background:var(--cream);border:1px solid var(--line);
+    padding:8px 15px;border-radius:999px;font-weight:500;
+  }
+  /* правая панель-«карточка» с двойным кантом и метриками */
+  .home-editorial .hero-ed-panel{
+    background:var(--cream-2);border:1px solid var(--line);border-radius:34px;padding:9px;
+    box-shadow:var(--shadow-deep);
+  }
+  .home-editorial .hero-ed-panel-in{
+    border-radius:26px;padding:36px;color:#fff;position:relative;overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 80% 8%, rgba(201,168,76,.5), transparent 55%),
+      radial-gradient(120% 120% at 12% 100%, rgba(227,6,19,.6), transparent 55%),
+      linear-gradient(155deg,#241a15,#3a231b);
+  }
+  .home-editorial .hero-ed-panel-in .k{
+    font-family:'Playfair Display',serif;font-size:.95rem;opacity:.85;margin-bottom:24px;
+  }
+  .home-editorial .hero-ed-metrics{ display:grid;grid-template-columns:1fr 1fr;gap:24px 18px; }
+  .home-editorial .hero-ed-metrics .n{
+    font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:800;line-height:1;color:#fff;
+  }
+  .home-editorial .hero-ed-metrics .n span{ color:var(--gold); }
+  .home-editorial .hero-ed-metrics .l{ font-size:.8rem;opacity:.82;margin-top:8px; }
+  .home-editorial .hero-ed-panel-in .free{
+    margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.16);
+    display:flex;align-items:center;gap:11px;font-size:.9rem;
+  }
+  .home-editorial .hero-ed-panel-in .free .dot{
+    width:9px;height:9px;border-radius:999px;background:var(--gold);
+    box-shadow:0 0 0 4px rgba(201,168,76,.25);flex-shrink:0;
+  }
+
+  /* ---------- DIRECTIONS bento ---------- */
+  .home-editorial .bento{ display:grid;grid-template-columns:repeat(6,1fr);gap:18px; }
+  .home-editorial .bcard{
+    background:var(--cream);border:1px solid var(--line);border-radius:26px;padding:8px;
+    transition:transform .5s cubic-bezier(.32,.72,0,1),box-shadow .5s;
+  }
+  .home-editorial .bcard:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
+  .home-editorial .bcard-in{
+    border-radius:20px;background:#fff;height:100%;padding:28px;display:flex;flex-direction:column;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .home-editorial .bcard .tag{
+    font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9C7D2E;
+  }
+  .home-editorial .bcard h3{ font-size:1.5rem;margin:14px 0 8px;color:var(--ink); }
+  .home-editorial .bcard p{ color:var(--muted);font-size:.92rem;flex:1;line-height:1.65; }
+  .home-editorial .bcard .more{
+    margin-top:20px;color:var(--primary);font-weight:600;font-size:.9rem;
+    display:inline-flex;align-items:center;gap:6px;transition:gap .3s ease;
+  }
+  .home-editorial .bcard:hover .more{ gap:11px; }
+  .home-editorial .bcard .glyph{
+    width:54px;height:54px;border-radius:16px;display:grid;place-items:center;
+    background:var(--cream-2);color:var(--ink);
+  }
+  .home-editorial .bcard .glyph svg{ width:27px;height:27px;stroke:currentColor;stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round; }
+  .home-editorial .col-3{ grid-column:span 3; }
+  .home-editorial .col-2{ grid-column:span 2; }
+  .home-editorial .bcard.feat .bcard-in{ background:linear-gradient(155deg,#2a1c16,#43261c);color:#fff; }
+  .home-editorial .bcard.feat .tag{ color:var(--gold); }
+  .home-editorial .bcard.feat h3{ color:#fff; }
+  .home-editorial .bcard.feat p{ color:rgba(255,255,255,.75); }
+  .home-editorial .bcard.feat .glyph{ background:rgba(255,255,255,.1);color:var(--gold); }
+  .home-editorial .bcard.feat .more{ color:#fff; }
+  @media(max-width:860px){ .home-editorial .bento{grid-template-columns:1fr 1fr}.home-editorial .col-3,.home-editorial .col-2{grid-column:span 1} }
+  @media(max-width:560px){ .home-editorial .bento{grid-template-columns:1fr} }
+
+  /* ---------- TEACHERS ---------- */
+  .home-editorial .teachers-grid .teacher-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:26px;
+    box-shadow:none;text-align:center;
+  }
+  .home-editorial .teachers-grid .teacher-card:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
+  .home-editorial .teacher-photo{ height:230px; }
+  .home-editorial .teacher-mono{
+    width:100%;height:100%;display:grid;place-items:center;
+    font-family:'Playfair Display',serif;font-size:3.4rem;font-weight:700;color:#fff;
+    background:linear-gradient(140deg,var(--primary),var(--gold));
+  }
+  .home-editorial .teacher-card h3{ color:var(--ink); }
+
+  /* ---------- BENEFITS ---------- */
+  .home-editorial .benefit-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+  }
+  .home-editorial .benefit-card:hover{ box-shadow:var(--shadow-soft);transform:translateY(-4px); }
+  .home-editorial .benefit-icon{ border-radius:16px; }
+
+  /* ---------- REVIEWS ---------- */
+  .home-editorial .review-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+  }
+  .home-editorial .review-card:hover{ box-shadow:var(--shadow-soft); }
+
+  /* ---------- GALLERY ---------- */
+  .home-editorial .gallery-item{ border-radius:20px; }
+
+  /* ---------- EVENTS ---------- */
+  .home-editorial .event-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+  }
+  .home-editorial .event-card:hover{ box-shadow:var(--shadow-soft); }
+
+  /* ---------- PRICING ---------- */
+  .home-editorial .pricing-card{
+    background:#fff;border:1px solid var(--line);border-radius:24px;
+  }
+  .home-editorial .pricing-card--featured{
+    background:linear-gradient(155deg,var(--primary),#b90410);border-color:transparent;
+    box-shadow:0 24px 48px -24px rgba(227,6,19,.5);
+  }
+
+  /* ---------- CTA banner → warm rounded box ---------- */
+  .home-editorial .cta-banner{ background:transparent;padding:0 24px 104px; }
+  .home-editorial .cta-banner::before,.home-editorial .cta-banner::after{ display:none; }
+  .home-editorial .cta-banner-inner{
+    max-width:1180px;margin:0 auto;border-radius:38px;padding:78px 40px;
+    background:
+      radial-gradient(120% 120% at 18% 0%, rgba(201,168,76,.5), transparent 55%),
+      linear-gradient(150deg,#B90410,#7a0410);
+    box-shadow:var(--shadow-deep);
+  }
+
+  /* ---------- FAQ / CONTACTS refinement ---------- */
+  .home-editorial .faq-question{ font-size:1.15rem; }
+  .home-editorial .contact-icon{ border-radius:14px; }
+  .home-editorial .map-container{ border-radius:24px;border-color:var(--line); }
+  .home-editorial .schedule-row{ background:var(--cream);border:1px solid var(--line); }
+
+  /* softer, springier reveal for this page */
+  .home-editorial .fade-up{ transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1); }
+
+  @media(max-width:900px){
+    .home-editorial .hero-ed-grid{ grid-template-columns:1fr;gap:40px; }
+    .home-editorial .hero-ed{ padding:128px 0 72px; }
+  }
+  @media(max-width:768px){
+    .home-editorial .section{ padding:72px 0; }
+    .home-editorial .hero-ed-cta .btn{ width:100%; }
+  }
+  </style>
 </head>
-<body>
+<body class="home-editorial">
 
 <!-- ===== HEADER ===== -->
 <header class="site-header">
@@ -36,227 +275,120 @@
 </header>
 <nav class="mobile-nav"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="graduates.html">Выпускники</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="contacts.html">Контакты</a><a href="account/login.html">Личный кабинет</a><a href="#trial" class="mob-cta">Записаться на пробное занятие</a></nav>
 
-<!-- ===== HERO ===== -->
-<section class="hero" aria-label="Главный экран">
-  <div class="hero-bg"></div>
-  <img src="../media/teachers/1.jpg" alt="Занятия в студии" class="hero-img" loading="eager">
-  <div class="hero-overlay"></div>
-  <div class="container" style="width:100%;position:relative;z-index:2;">
-    <div class="hero-content">
-      <div class="eyebrow" style="color:var(--gold)">
-        <span style="width:28px;height:2px;background:var(--gold);display:block;"></span>
-        Петропавловск, Казахстан
-      </div>
-      <h1>Помогаем детям<br><em style="font-style:italic;color:var(--gold)">раскрепоститься</em><br>и выйти на сцену</h1>
-      <p class="lead">Студия для детей от 4 лет. Гитара, вокал, живопись, актёрское и танцы — первое занятие бесплатно. Уже 160 учеников в Петропавловске.</p>
-      <div class="hero-btns">
+<!-- ===== HERO (editorial split) ===== -->
+<section class="hero-ed" aria-label="Главный экран">
+  <div class="container hero-ed-grid">
+    <div class="hero-ed-copy fade-up">
+      <span class="eyebrow-pill"><span class="pin"></span> Петропавловск, Казахстан</span>
+      <h1>Помогаем детям <em>раскрепоститься</em> и выйти на сцену</h1>
+      <p class="lead">Студия для детей от 4 лет и взрослых. Гитара, вокал, живопись, актёрское и танцы — первое занятие бесплатно. Уже 160 учеников в Петропавловске.</p>
+      <div class="hero-ed-cta">
         <a href="#trial" class="btn btn-primary btn-lg">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
           Записаться на пробное
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
         </a>
-        <a href="directions/index.html" class="btn btn-white btn-lg">
-          Все направления
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-        </a>
+        <a href="directions/index.html" class="btn btn-white btn-lg">Все направления</a>
       </div>
-      <div class="hero-trust">
+      <div class="hero-ed-trust">
         <span>⭐ NPS 9.7</span>
         <span>160+ учеников</span>
         <span>5 направлений</span>
         <span>Пробное — бесплатно</span>
       </div>
     </div>
-  </div>
-  <div class="hero-scroll">Прокрутите</div>
-</section>
-
-<!-- ===== STATS ===== -->
-<div class="stats-bar">
-  <div class="container">
-    <div class="stats-grid">
-      <div class="stat-item">
-        <span class="num" data-target="160" data-suffix="+">0+</span>
-        <div class="label">Учеников</div>
-      </div>
-      <div class="stat-item">
-        <span class="num" data-target="5">0</span>
-        <div class="label">Направлений</div>
-      </div>
-      <div class="stat-item">
-        <span class="num" data-target="7">0</span>
-        <div class="label">Преподавателей</div>
-      </div>
-      <div class="stat-item">
-        <span class="num" data-target="42" data-suffix="+">0+</span>
-        <div class="label">Мероприятий проведено</div>
-      </div>
-      <div class="stat-item">
-        <span class="num" data-target="14" data-suffix="+">0+</span>
-        <div class="label">Дипломов и наград</div>
-      </div>
-      <div class="stat-item">
-        <span class="num" data-target="3" data-suffix=" года">0</span>
-        <div class="label">На рынке</div>
+    <div class="hero-ed-panel fade-up">
+      <div class="hero-ed-panel-in">
+        <div class="k">Студия в цифрах</div>
+        <div class="hero-ed-metrics">
+          <div><div class="n"><span data-target="160" data-suffix="+">0+</span></div><div class="l">учеников сегодня</div></div>
+          <div><div class="n"><span data-target="5">0</span></div><div class="l">направлений</div></div>
+          <div><div class="n"><span data-target="7">0</span></div><div class="l">преподавателей</div></div>
+          <div><div class="n"><span data-target="42" data-suffix="+">0+</span></div><div class="l">мероприятий</div></div>
+        </div>
+        <div class="free"><span class="dot"></span> Первое занятие — бесплатно и ни к чему не обязывает</div>
       </div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- ===== DIRECTIONS ===== -->
-<section class="section" id="directions">
+<!-- ===== DIRECTIONS (bento) ===== -->
+<section class="section section-alt" id="directions">
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Обучение</div>
-      <h2>Направления студии</h2>
-      <p>Пять дисциплин, которые помогут раскрыться каждому — от самых маленьких до взрослых учеников.</p>
+      <h2>Пять направлений, где раскрывается ребёнок</h2>
+      <p>От первых аккордов до сцены — программы для любого возраста и темперамента.</p>
     </div>
-    <div class="directions-grid">
+    <div class="bento">
 
-      <div class="dir-card fade-up">
-        <div class="dir-card-img">
-          <div class="dir-card-img-placeholder" style="background:linear-gradient(135deg,#1a0a0a,#3d1010);">
-            <svg class="dir-icon" viewBox="0 0 64 64" fill="none">
-              <circle cx="22" cy="40" r="14" fill="#C9A84C" opacity=".9"/>
-              <circle cx="22" cy="40" r="5" fill="#E30613"/>
-              <rect x="34" y="6" width="6" height="32" rx="3" transform="rotate(45 37 22)" fill="#fff" opacity=".85"/>
-            </svg>
-          </div>
+      <a href="directions/guitar.html" class="bcard feat col-3 fade-up">
+        <div class="bcard-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><circle cx="8" cy="16" r="5"/><path d="M13 12l7-8"/></svg></div>
+          <div class="tag" style="margin-top:16px;">Фокус набора · 6+ лет</div>
+          <h3>Гитара · Укулеле</h3>
+          <p>Классическая и электрогитара, аккорды, чтение нот, музыкальная теория и живые выступления. Ведут педагоги-мультиинструменталисты.</p>
+          <span class="more">Подробнее →</span>
         </div>
-        <div class="dir-card-body">
-          <div class="dir-card-meta">
-            <span class="age-badge">6+ лет</span>
-            <span>Индивидуально</span>
-          </div>
-          <h3>Гитара</h3>
-          <p>Классическая и электрогитара, аккорды, чтение нот, музыкальная теория и живые выступления.</p>
-          <a href="directions/guitar.html" class="dir-link">
-            Подробнее
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </a>
-        </div>
-      </div>
+      </a>
 
-      <div class="dir-card fade-up">
-        <div class="dir-card-img">
-          <div class="dir-card-img-placeholder" style="background:linear-gradient(135deg,#0d1a0d,#0d3020);">
-            <svg class="dir-icon" viewBox="0 0 64 64" fill="none">
-              <rect x="24" y="8" width="16" height="28" rx="8" fill="#1A1A1A"/>
-              <circle cx="32" cy="20" r="4" fill="#E30613"/>
-              <path d="M16 30a16 16 0 0 0 32 0" stroke="#C9A84C" stroke-width="4" stroke-linecap="round"/>
-              <rect x="29" y="46" width="6" height="10" fill="#1A1A1A"/>
-              <rect x="22" y="54" width="20" height="5" rx="2.5" fill="#1A1A1A"/>
-            </svg>
-          </div>
+      <a href="directions/acting.html" class="bcard col-3 fade-up">
+        <div class="bcard-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><path d="M8 3v4M16 3v4"/><rect x="4" y="7" width="16" height="14" rx="2"/><path d="M9 14h6"/></svg></div>
+          <div class="tag" style="margin-top:16px;">Против стеснительности · 6+ лет</div>
+          <h3>Актёрское мастерство</h3>
+          <p>Сценическая речь, импровизация, постановка спектаклей и развитие уверенности в себе. Ведёт актёр областного драмтеатра.</p>
+          <span class="more">Подробнее →</span>
         </div>
-        <div class="dir-card-body">
-          <div class="dir-card-meta">
-            <span class="age-badge">5+ лет</span>
-            <span>Группа / Индивидуально</span>
-          </div>
+      </a>
+
+      <a href="directions/vocals.html" class="bcard col-2 fade-up">
+        <div class="bcard-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><path d="M12 3v10"/><circle cx="12" cy="16" r="4"/><path d="M9 6l6-2"/></svg></div>
+          <div class="tag">Высшая категория · 5+ лет</div>
           <h3>Вокал</h3>
           <p>Постановка голоса, дыхание, сценическое мастерство и выступления на концертах.</p>
-          <a href="directions/vocals.html" class="dir-link">
-            Подробнее
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </a>
+          <span class="more">Подробнее →</span>
         </div>
-      </div>
+      </a>
 
-      <div class="dir-card fade-up">
-        <div class="dir-card-img">
-          <div class="dir-card-img-placeholder" style="background:linear-gradient(135deg,#0d0d1a,#151530);">
-            <svg class="dir-icon" viewBox="0 0 64 64" fill="none">
-              <path d="M10 35a22 18 0 1 1 5 11" fill="#C9A84C" opacity=".85"/>
-              <circle cx="20" cy="24" r="3" fill="#E30613"/>
-              <circle cx="18" cy="34" r="3" fill="#1A1A1A"/>
-              <circle cx="26" cy="18" r="3" fill="#2BA84A"/>
-              <circle cx="35" cy="18" r="3" fill="#3A6EA5"/>
-            </svg>
-          </div>
-        </div>
-        <div class="dir-card-body">
-          <div class="dir-card-meta">
-            <span class="age-badge">4+ лет</span>
-            <span>Группа</span>
-          </div>
+      <a href="directions/painting.html" class="bcard col-2 fade-up">
+        <div class="bcard-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><path d="M4 20l7-7"/><path d="M14 6l4 4"/><circle cx="17" cy="7" r="3"/></svg></div>
+          <div class="tag">С 4 лет</div>
           <h3>Живопись</h3>
           <p>Рисование, акварель, акрил, масло, развитие цветового восприятия и художественного вкуса.</p>
-          <a href="directions/painting.html" class="dir-link">
-            Подробнее
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </a>
+          <span class="more">Подробнее →</span>
         </div>
-      </div>
+      </a>
 
-      <div class="dir-card fade-up">
-        <div class="dir-card-img">
-          <img src="../media/acting/1.jpg" alt="Актёрское мастерство" loading="lazy">
-        </div>
-        <div class="dir-card-body">
-          <div class="dir-card-meta">
-            <span class="age-badge">6+ лет</span>
-            <span>Группа</span>
-          </div>
-          <h3>Актёрское мастерство</h3>
-          <p>Сценическая речь, импровизация, постановка спектаклей и развитие уверенности в себе.</p>
-          <a href="directions/acting.html" class="dir-link">
-            Подробнее
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </a>
-        </div>
-      </div>
-
-      <div class="dir-card fade-up">
-        <div class="dir-card-img">
-          <div class="dir-card-img-placeholder" style="background:linear-gradient(135deg,#1a0a15,#2d0d28);">
-            <svg class="dir-icon" viewBox="0 0 64 64" fill="none">
-              <circle cx="34" cy="12" r="6" fill="#E30613"/>
-              <path d="M34 18l-5 14 10 5-3 13" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M29 32l-10 3M39 25l10 5" stroke="#C9A84C" stroke-width="5" stroke-linecap="round"/>
-            </svg>
-          </div>
-        </div>
-        <div class="dir-card-body">
-          <div class="dir-card-meta">
-            <span class="age-badge">5+ лет</span>
-            <span>Группа</span>
-          </div>
+      <a href="directions/dance.html" class="bcard col-2 fade-up">
+        <div class="bcard-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v7l-4 6M12 14l4 6"/></svg></div>
+          <div class="tag">Contemporary · 5+ лет</div>
           <h3>Современный танец</h3>
           <p>Contemporary, hip-hop, джаз-модерн, хореография и выступления на фестивалях.</p>
-          <a href="directions/dance.html" class="dir-link">
-            Подробнее
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-          </a>
+          <span class="more">Подробнее →</span>
         </div>
-      </div>
+      </a>
 
-      <!-- CTA Card -->
-      <div class="dir-card fade-up" style="background:var(--dark);border-color:rgba(201,168,76,.3);display:flex;flex-direction:column;justify-content:space-between;">
-        <div class="dir-card-body" style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 28px;gap:20px;">
-          <div class="eyebrow" style="color:var(--gold);">
-            <span style="width:20px;height:2px;background:var(--gold);display:block;"></span>
-            Бесплатно
-          </div>
-          <h3 style="color:#fff;font-size:1.5rem;">Не знаете, с чего начать?</h3>
-          <p style="color:rgba(255,255,255,.6);">Приходите на бесплатное пробное занятие — выберем направление вместе.</p>
-          <a href="#trial" class="btn btn-primary" style="align-self:flex-start;">Записаться</a>
-        </div>
-      </div>
-
+    </div>
+    <div style="text-align:center;margin-top:44px;">
+      <a href="#trial" class="btn btn-primary">
+        Не знаете, с чего начать? Приходите на бесплатное пробное
+        <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
     </div>
   </div>
 </section>
-<!-- ===== TEACHERS (moved below directions) ===== -->
+
+<!-- ===== TEACHERS ===== -->
 <section class="section" id="teachers">
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Команда</div>
-      <h2>Наши преподаватели</h2>
-      <p>Профессионалы с высшим образованием и богатым сценическим опытом.</p>
+      <h2>74% родителей выбирают студию из-за педагога</h2>
+      <p>Профессионалы с образованием и призванием — люди, к которым хочется идти.</p>
     </div>
-    <p class="section-lead" style="text-align:center;max-width:520px;margin:0 auto 40px;">
-      74% родителей говорят: решающий фактор — педагог. Познакомьтесь с командой.
-    </p>
     <div class="teachers-grid">
       <div class="teacher-card fade-up">
         <div class="teacher-photo">
@@ -264,15 +396,13 @@
         </div>
         <div class="teacher-card-body">
           <h3>Антон Шпигоцкий</h3>
-          <div class="teacher-spec">Актёрское мастерство · Основатель</div>
+          <div class="teacher-spec">Актёрское · Основатель</div>
           <div class="teacher-exp">Училище им. Щепкина · актёр драмтеатра</div>
         </div>
       </div>
       <div class="teacher-card fade-up">
         <div class="teacher-photo">
-          <div class="teacher-photo-placeholder">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
-          </div>
+          <div class="teacher-mono">Н</div>
         </div>
         <div class="teacher-card-body">
           <h3>Наталья Ерзакова</h3>
@@ -286,24 +416,22 @@
         </div>
         <div class="teacher-card-body">
           <h3>Виталий Жуков</h3>
-          <div class="teacher-spec">Живопись · Гитара · Мультиинструменталист</div>
+          <div class="teacher-spec">Гитара · Живопись</div>
           <div class="teacher-exp">Художник · 100+ выставок</div>
         </div>
       </div>
       <div class="teacher-card fade-up">
         <div class="teacher-photo">
-          <div class="teacher-photo-placeholder">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
-          </div>
+          <div class="teacher-mono">Г</div>
         </div>
         <div class="teacher-card-body">
-          <h3>Педагог театра</h3>
-          <div class="teacher-spec">Актёрское мастерство</div>
-          <div class="teacher-exp">Опыт 7+ лет</div>
+          <h3>Георгий Захаров</h3>
+          <div class="teacher-spec">Гитара · Укулеле · Домбра</div>
+          <div class="teacher-exp">Мультиинструменталист</div>
         </div>
       </div>
     </div>
-    <div style="text-align:center;margin-top:40px;">
+    <div style="text-align:center;margin-top:44px;">
       <a href="teachers.html" class="btn btn-outline">Все преподаватели</a>
     </div>
   </div>
@@ -363,9 +491,8 @@
   </div>
 </section>
 
-
 <!-- ===== REVIEWS ===== -->
-<section class="section section-alt" id="reviews">
+<section class="section" id="reviews">
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Отзывы</div>
@@ -410,7 +537,7 @@
 </section>
 
 <!-- ===== GALLERY ===== -->
-<section class="section" id="gallery">
+<section class="section section-alt" id="gallery">
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Жизнь студии</div>
@@ -418,33 +545,33 @@
     </div>
     <div class="gallery-grid">
       <div class="gallery-item">
-        <img src="../media/acting/photo_2026-06-17_09-38-10.jpg" alt="Занятия в студии" loading="lazy">
+        <img src="../media/acting/1.jpg" alt="Актёрское мастерство в студии" loading="lazy">
         <div class="gallery-overlay">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
         </div>
       </div>
       <div class="gallery-item" style="aspect-ratio:1">
-        <img src="../media/acting/1.jpg" alt="Актёрское мастерство" loading="lazy">
+        <img src="../media/guitar/photo_2026-06-17_09-38-10.jpg" alt="Урок гитары" loading="lazy">
         <div class="gallery-overlay">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
         </div>
       </div>
       <div class="gallery-item" style="aspect-ratio:1">
-        <img src="../media/guitar/1.jpg" alt="Урок гитары" loading="lazy">
+        <img src="../media/teachers/zhukov-painting.jpg" alt="Занятие живописью" loading="lazy">
         <div class="gallery-overlay">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
         </div>
       </div>
-      <div class="gallery-item" style="aspect-ratio:1;background:linear-gradient(135deg,#1a1410,#2d1a0e);display:flex;align-items:center;justify-content:center;">
-        <div style="text-align:center;color:rgba(255,255,255,.5);">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5L5 20"/></svg>
-          <p style="font-size:.75rem;margin-top:8px;">Скоро будут фото</p>
+      <div class="gallery-item" style="aspect-ratio:1">
+        <img src="../media/teachers/zhukov-strings.jpg" alt="Струнные инструменты" loading="lazy">
+        <div class="gallery-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
         </div>
       </div>
-      <div class="gallery-item" style="aspect-ratio:1;background:linear-gradient(135deg,#0d1a15,#0a2418);display:flex;align-items:center;justify-content:center;">
-        <div style="text-align:center;color:rgba(255,255,255,.5);">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="M21 16l-5-5L5 20"/></svg>
-          <p style="font-size:.75rem;margin-top:8px;">Скоро будут фото</p>
+      <div class="gallery-item" style="aspect-ratio:1">
+        <img src="../media/teachers/zhukov-handpan.jpg" alt="Музыкальные занятия" loading="lazy">
+        <div class="gallery-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
         </div>
       </div>
     </div>
@@ -452,7 +579,7 @@
 </section>
 
 <!-- ===== EVENTS ===== -->
-<section class="section section-alt" id="events">
+<section class="section" id="events">
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Мероприятия</div>
@@ -462,7 +589,7 @@
     <div class="events-grid">
       <div class="event-card fade-up">
         <div class="event-img">
-          <div class="event-img-placeholder" style="height:200px;background:linear-gradient(135deg,#1a0808,#3d1010);"></div>
+          <div class="event-img-placeholder" style="height:200px;background:linear-gradient(135deg,#2a1c16,#43261c);"></div>
           <div class="event-date-badge"><div class="day">15</div><div class="month">Июл</div></div>
           <div class="event-type-badge">Концерт</div>
         </div>
@@ -483,7 +610,7 @@
       </div>
       <div class="event-card fade-up">
         <div class="event-img">
-          <div class="event-img-placeholder" style="height:200px;background:linear-gradient(135deg,#08101a,#102040);"></div>
+          <div class="event-img-placeholder" style="height:200px;background:linear-gradient(135deg,#241a15,#3a231b);"></div>
           <div class="event-date-badge"><div class="day">22</div><div class="month">Июл</div></div>
           <div class="event-type-badge">Выставка</div>
         </div>
@@ -504,7 +631,7 @@
       </div>
       <div class="event-card fade-up">
         <div class="event-img">
-          <div class="event-img-placeholder" style="height:200px;background:linear-gradient(135deg,#0d1a0d,#102810);"></div>
+          <div class="event-img-placeholder" style="height:200px;background:linear-gradient(135deg,#2d1a0e,#3a231b);"></div>
           <div class="event-date-badge"><div class="day">5</div><div class="month">Авг</div></div>
           <div class="event-type-badge">Мастер-класс</div>
         </div>
@@ -524,14 +651,14 @@
         </div>
       </div>
     </div>
-    <div style="text-align:center;margin-top:40px;">
+    <div style="text-align:center;margin-top:44px;">
       <a href="events.html" class="btn btn-outline">Все мероприятия</a>
     </div>
   </div>
 </section>
 
 <!-- ===== PRICING ===== -->
-<section class="section" id="pricing">
+<section class="section section-alt" id="pricing">
   <div class="container">
     <div class="eyebrow" style="text-align:center;justify-content:center;">Стоимость</div>
     <h2 style="text-align:center;">Прозрачные цены</h2>
@@ -570,17 +697,12 @@
 <section class="cta-banner" id="trial">
   <div class="cta-banner-inner">
     <div class="free-badge">Первое занятие бесплатно</div>
-    <div class="eyebrow" style="justify-content:center;color:var(--gold);margin-bottom:16px;">
-      <span style="width:20px;height:2px;background:var(--gold);display:block;"></span>
-      Запись
-      <span style="width:20px;height:2px;background:var(--gold);display:block;"></span>
-    </div>
-    <h2>Запишитесь на<br>пробное занятие</h2>
+    <h2>Подарите ребёнку любимое дело</h2>
     <p>Оставьте заявку — мы перезвоним и подберём удобное время. Без обязательств, первое занятие бесплатно.</p>
     <div class="cta-banner-btns">
       <button class="btn btn-primary btn-lg" data-modal="modal-trial">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         Оставить заявку
+        <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </button>
       <a href="https://wa.me/77086366351?text=Здравствуйте!+Хочу+записаться+на+бесплатное+пробное+занятие" class="btn btn-white btn-lg" target="_blank" rel="noopener">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-5A8 8 0 1 1 21 12z"/><path d="M8.6 8.4c.2-.4.4-.4.6-.4h.5c.2 0 .4 0 .6.4l.7 1.6c.1.2.1.3 0 .5l-.5.7c-.1.2-.2.3 0 .5.6 1 1.4 1.6 2.4 2 .2.1.3.1.5-.1l.6-.7c.2-.2.3-.2.5-.1l1.6.8c.2.1.3.2.3.4 0 .5-.2 1.2-.5 1.4-.3.2-1 .5-1.6.4-1.8-.3-3.4-1.2-4.6-2.6-.8-.9-1.4-2-1.5-2.8-.1-.6.1-1.2.4-1.7z"/></svg>
