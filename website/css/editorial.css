@@ -1,0 +1,269 @@
+/* =====================================================================
+   EDITORIAL-PREMIUM LAYER  (shared, applies to <body class="editorial">)
+   ---------------------------------------------------------------------
+   Слой поверх style.css: тёплая «бумажная» палитра, парящая nav-таблетка,
+   двойной кант карточек, мягкие тени, зерно, пилюльные кнопки.
+   Ничего не ломает: только переопределяет визуал существующих классов,
+   сохраняя все JS-хуки (fade-up, data-target, modal-trial, faq и т.д.).
+   ===================================================================== */
+
+  .editorial{
+    --paper:#FBF8F2; --cream:#F4EEE2; --cream-2:#EDE4D3; --line:#E2D8C6;
+    --ink:#1A1512; --ink-soft:#4A433D;
+    /* переопределяем общие токены style.css под тёплую палитру — модалка,
+       формы, FAQ и футер получают премиум-вид «бесплатно» */
+    --bg:#FBF8F2; --bg-alt:#F4EEE2; --bg-cream:#FFFFFF; --bg-3:#EDE4D3;
+    --dark:#1A1512; --body:#4A433D; --muted:#7A716A;
+    --border:rgba(120,90,50,.16); --gold-border:rgba(201,168,76,.32);
+    --shadow-soft:0 20px 40px -24px rgba(60,40,20,.28);
+    --shadow-deep:0 34px 64px -32px rgba(60,40,20,.4);
+  }
+  .editorial{ background:var(--paper); }
+
+  /* тонкая «бумажная» зернистость поверх всей страницы */
+  .editorial::before{
+    content:"";position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ---------- floating glass nav pill ---------- */
+  .editorial .site-header{
+    background:transparent;border-bottom:none;height:auto;box-shadow:none;padding:16px 0;
+  }
+  .editorial .site-header.scrolled{ box-shadow:none; }
+  .editorial .nav-inner{
+    background:rgba(251,248,242,.74);
+    backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);
+    border:1px solid rgba(226,216,198,.75);border-radius:999px;
+    padding:10px 12px 10px 24px;box-shadow:0 14px 34px -22px rgba(60,40,20,.5);
+    transition:box-shadow .3s ease;
+  }
+  .editorial .site-header.scrolled .nav-inner{ box-shadow:0 18px 40px -20px rgba(60,40,20,.55); }
+  .editorial .nav-logo .name{ letter-spacing:-.01em; }
+  .editorial .nav-links a,
+  .editorial .nav-dropdown-toggle{ font-weight:500;color:var(--ink-soft); }
+  .editorial .nav-cta{
+    border-radius:999px !important;box-shadow:0 12px 26px -12px rgba(227,6,19,.55) !important;
+  }
+  .editorial .nav-dropdown-menu{
+    border-radius:20px;border-color:var(--line);background:#fff;
+    box-shadow:0 20px 44px -20px rgba(60,40,20,.4);
+  }
+
+  /* ---------- premium pill buttons ---------- */
+  .editorial .btn{ border-radius:999px;font-weight:600;letter-spacing:.01em; }
+  .editorial .btn-lg{ border-radius:999px; }
+  .editorial .btn-primary{ box-shadow:0 16px 32px -14px rgba(227,6,19,.6); }
+  .editorial .btn-primary:hover{ box-shadow:0 22px 40px -16px rgba(227,6,19,.65); }
+  .editorial .btn-white{ background:#fff;border:1px solid var(--line); }
+  .editorial .btn-outline{ border-radius:999px; }
+
+  /* arrow-in-circle affordance для главных кнопок */
+  .editorial .btn .ic{
+    width:32px;height:32px;border-radius:999px;display:inline-grid;place-items:center;
+    background:rgba(255,255,255,.2);margin-left:2px;
+    transition:transform .5s cubic-bezier(.32,.72,0,1);
+  }
+  .editorial .btn:hover .ic{ transform:translateX(3px); }
+  .editorial .btn-white .ic,
+  .editorial .cta-banner .btn-primary .ic{ background:rgba(227,6,19,.12); }
+
+  /* мягче общий ритм разделов + заголовки */
+  .editorial .section{ padding:104px 0; }
+  .editorial .section-alt{ background:linear-gradient(180deg,var(--cream),var(--paper)); }
+  .editorial .eyebrow{ letter-spacing:.18em; }
+
+  /* ---------- HERO (light editorial split) ---------- */
+  .editorial .hero-ed{ position:relative;z-index:2;padding:150px 0 96px; }
+  .editorial .hero-ed-grid{
+    display:grid;grid-template-columns:1.12fr .88fr;gap:56px;align-items:center;
+  }
+  .editorial .eyebrow-pill{
+    display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;
+    background:rgba(227,6,19,.07);color:var(--primary);
+    font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .editorial .eyebrow-pill .pin{ width:7px;height:7px;border-radius:999px;background:var(--gold); }
+  .editorial .hero-ed h1{
+    font-size:clamp(2.6rem,6vw,4.6rem);line-height:1.04;letter-spacing:-.015em;
+    color:var(--ink);margin:24px 0 0;
+  }
+  .editorial .hero-ed h1 em{ font-style:italic;color:var(--primary); }
+  .editorial .hero-ed .lead{
+    font-size:1.18rem;color:var(--ink-soft);max-width:520px;margin:26px 0 34px;
+  }
+  .editorial .hero-ed-cta{ display:flex;gap:14px;flex-wrap:wrap; }
+  .editorial .hero-ed-trust{ display:flex;gap:10px;flex-wrap:wrap;margin-top:34px; }
+  .editorial .hero-ed-trust span{
+    font-size:.82rem;color:var(--ink-soft);background:var(--cream);border:1px solid var(--line);
+    padding:8px 15px;border-radius:999px;font-weight:500;
+  }
+  /* правая панель-«карточка» с двойным кантом и метриками */
+  .editorial .hero-ed-panel{
+    background:var(--cream-2);border:1px solid var(--line);border-radius:34px;padding:9px;
+    box-shadow:var(--shadow-deep);
+  }
+  .editorial .hero-ed-panel-in{
+    border-radius:26px;padding:36px;color:#fff;position:relative;overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 80% 8%, rgba(201,168,76,.5), transparent 55%),
+      radial-gradient(120% 120% at 12% 100%, rgba(227,6,19,.6), transparent 55%),
+      linear-gradient(155deg,#241a15,#3a231b);
+  }
+  .editorial .hero-ed-panel-in .k{
+    font-family:'Playfair Display',serif;font-size:.95rem;opacity:.85;margin-bottom:24px;
+  }
+  .editorial .hero-ed-metrics{ display:grid;grid-template-columns:1fr 1fr;gap:24px 18px; }
+  .editorial .hero-ed-metrics .n{
+    font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:800;line-height:1;color:#fff;
+  }
+  .editorial .hero-ed-metrics .n span{ color:var(--gold); }
+  .editorial .hero-ed-metrics .l{ font-size:.8rem;opacity:.82;margin-top:8px; }
+  .editorial .hero-ed-panel-in .free{
+    margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.16);
+    display:flex;align-items:center;gap:11px;font-size:.9rem;
+  }
+  .editorial .hero-ed-panel-in .free .dot{
+    width:9px;height:9px;border-radius:999px;background:var(--gold);
+    box-shadow:0 0 0 4px rgba(201,168,76,.25);flex-shrink:0;
+  }
+
+  /* ---------- DIRECTIONS bento ---------- */
+  .editorial .bento{ display:grid;grid-template-columns:repeat(6,1fr);gap:18px; }
+  .editorial .bcard{
+    background:var(--cream);border:1px solid var(--line);border-radius:26px;padding:8px;
+    transition:transform .5s cubic-bezier(.32,.72,0,1),box-shadow .5s;
+  }
+  .editorial .bcard:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
+  .editorial .bcard-in{
+    border-radius:20px;background:#fff;height:100%;padding:28px;display:flex;flex-direction:column;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .editorial .bcard .tag{
+    font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9C7D2E;
+  }
+  .editorial .bcard h3{ font-size:1.5rem;margin:14px 0 8px;color:var(--ink); }
+  .editorial .bcard p{ color:var(--muted);font-size:.92rem;flex:1;line-height:1.65; }
+  .editorial .bcard .more{
+    margin-top:20px;color:var(--primary);font-weight:600;font-size:.9rem;
+    display:inline-flex;align-items:center;gap:6px;transition:gap .3s ease;
+  }
+  .editorial .bcard:hover .more{ gap:11px; }
+  .editorial .bcard .glyph{
+    width:54px;height:54px;border-radius:16px;display:grid;place-items:center;
+    background:var(--cream-2);color:var(--ink);
+  }
+  .editorial .bcard .glyph svg{ width:27px;height:27px;stroke:currentColor;stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round; }
+  .editorial .col-3{ grid-column:span 3; }
+  .editorial .col-2{ grid-column:span 2; }
+  .editorial .bcard.feat .bcard-in{ background:linear-gradient(155deg,#2a1c16,#43261c);color:#fff; }
+  .editorial .bcard.feat .tag{ color:var(--gold); }
+  .editorial .bcard.feat h3{ color:#fff; }
+  .editorial .bcard.feat p{ color:rgba(255,255,255,.75); }
+  .editorial .bcard.feat .glyph{ background:rgba(255,255,255,.1);color:var(--gold); }
+  .editorial .bcard.feat .more{ color:#fff; }
+  @media(max-width:860px){ .editorial .bento{grid-template-columns:1fr 1fr}.editorial .col-3,.editorial .col-2{grid-column:span 1} }
+  @media(max-width:560px){ .editorial .bento{grid-template-columns:1fr} }
+
+  /* ---------- TEACHERS ---------- */
+  .editorial .teachers-grid .teacher-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:26px;
+    box-shadow:none;text-align:center;
+  }
+  .editorial .teachers-grid .teacher-card:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
+  .editorial .teacher-photo{ height:230px; }
+  .editorial .teacher-mono{
+    width:100%;height:100%;display:grid;place-items:center;
+    font-family:'Playfair Display',serif;font-size:3.4rem;font-weight:700;color:#fff;
+    background:linear-gradient(140deg,var(--primary),var(--gold));
+  }
+  .editorial .teacher-card h3{ color:var(--ink); }
+
+  /* ---------- BENEFITS ---------- */
+  .editorial .benefit-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+  }
+  .editorial .benefit-card:hover{ box-shadow:var(--shadow-soft);transform:translateY(-4px); }
+  .editorial .benefit-icon{ border-radius:16px; }
+
+  /* ---------- REVIEWS ---------- */
+  .editorial .review-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+  }
+  .editorial .review-card:hover{ box-shadow:var(--shadow-soft); }
+
+  /* ---------- GALLERY ---------- */
+  .editorial .gallery-item{ border-radius:20px; }
+
+  /* ---------- EVENTS ---------- */
+  .editorial .event-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+  }
+  .editorial .event-card:hover{ box-shadow:var(--shadow-soft); }
+
+  /* ---------- PRICING ---------- */
+  .editorial .pricing-card{
+    background:#fff;border:1px solid var(--line);border-radius:24px;
+  }
+  .editorial .pricing-card--featured{
+    background:linear-gradient(155deg,var(--primary),#b90410);border-color:transparent;
+    box-shadow:0 24px 48px -24px rgba(227,6,19,.5);
+  }
+
+  /* ---------- CTA banner → warm rounded box ---------- */
+  .editorial .cta-banner{ background:transparent;padding:0 24px 104px; }
+  .editorial .cta-banner::before,.editorial .cta-banner::after{ display:none; }
+  .editorial .cta-banner-inner{
+    max-width:1180px;margin:0 auto;border-radius:38px;padding:78px 40px;
+    background:
+      radial-gradient(120% 120% at 18% 0%, rgba(201,168,76,.5), transparent 55%),
+      linear-gradient(150deg,#B90410,#7a0410);
+    box-shadow:var(--shadow-deep);
+  }
+
+  /* ---------- FAQ / CONTACTS refinement ---------- */
+  .editorial .faq-question{ font-size:1.15rem; }
+  .editorial .contact-icon{ border-radius:14px; }
+  .editorial .map-container{ border-radius:24px;border-color:var(--line); }
+  .editorial .schedule-row{ background:var(--cream);border:1px solid var(--line); }
+
+  /* softer, springier reveal for this page */
+  .editorial .fade-up{ transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1); }
+
+  @media(max-width:900px){
+    .editorial .hero-ed-grid{ grid-template-columns:1fr;gap:40px; }
+    .editorial .hero-ed{ padding:128px 0 72px; }
+  }
+  @media(max-width:768px){
+    .editorial .section{ padding:72px 0; }
+    .editorial .hero-ed-cta .btn{ width:100%; }
+  }
+
+  /* ============================================================
+     Доп. компоненты внутренних страниц (не встречаются на главной)
+     ============================================================ */
+
+  /* Тёмные «шапки» страниц и направлений — тёплый уголь + мягкие блики */
+  .editorial .page-hero,
+  .editorial .dir-hero{ background:#1A1512; }
+  .editorial .page-hero::before{ background:radial-gradient(circle, rgba(227,6,19,.22), transparent 70%); }
+  .editorial .page-hero::after{ background:radial-gradient(circle, rgba(201,168,76,.16), transparent 70%); }
+
+  /* Карточки курсов */
+  .editorial .course-card{ background:var(--cream);border:1px solid var(--line);border-radius:24px; }
+  .editorial .course-card:hover{ box-shadow:var(--shadow-soft); }
+
+  /* Навыки / пункты списков на страницах направлений */
+  .editorial .skill-item{ background:#fff;border:1px solid var(--line);border-radius:16px; }
+  .editorial .age-group{ border-radius:16px;border-color:var(--gold-border); }
+
+  /* Таблица расписания / карточки статей / галерея — общий тёплый тон */
+  .editorial .schedule-table,
+  .editorial .article-card,
+  .editorial .material-card{ border-radius:20px; }
+
+  /* Плитки/секции, использующие var(--bg-cream) как фон, становятся чуть теплее */
+  .editorial .section-dark{ background:#1A1512; }
+
+  /* Мягкая «пружина» появления и на внутренних страницах */
+  .editorial .fade-up{ transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1); }
