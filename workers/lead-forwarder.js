@@ -742,14 +742,14 @@ function groupTimeRange(g){
 }
 // Занятость слотов, переключаемая из админ-панели (✅ Есть места / ❌ Мест нет).
 async function allGroupStatus(env){
-  const rows = await sbSelect(env, '/bot_group_status?select=group_id,full');
+  const rows = await sbSelect(env, '/bot_group_status?select=group_id,is_full');
   const map = {};
-  for (const r of rows) map[r.group_id] = !!r.full;
+  for (const r of rows) map[r.group_id] = !!r.is_full;
   return map;
 }
 async function groupFullStatus(env, groupId){
-  const rows = await sbSelect(env, '/bot_group_status?select=full&group_id=eq.' + enc(groupId) + '&limit=1');
-  return rows.length ? !!rows[0].full : false;
+  const rows = await sbSelect(env, '/bot_group_status?select=is_full&group_id=eq.' + enc(groupId) + '&limit=1');
+  return rows.length ? !!rows[0].is_full : false;
 }
 
 // Шаг 1: выбор направления (5 кнопок) — как на сайте.
@@ -916,7 +916,7 @@ async function toggleGroupStatus(env, chatId, groupId){
   const g = botGroup(groupId);
   if (!g) return;
   const cur = await groupFullStatus(env, groupId);
-  await sbUpsert(env, 'bot_group_status', { group_id: groupId, full: !cur, updated_at: new Date().toISOString() }, 'group_id');
+  await sbUpsert(env, 'bot_group_status', { group_id: groupId, is_full: !cur, updated_at: new Date().toISOString() }, 'group_id');
   await sendAdminSchedDir(env, chatId, BOT_DIRS.indexOf(g.dir));
 }
 

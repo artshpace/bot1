@@ -13,7 +13,7 @@ create table if not exists public.bot_admins (
 -- Занят ли слот расписания — переключается из админ-панели (✅/❌), без правки текста.
 create table if not exists public.bot_group_status (
   group_id    text primary key,       -- id группы из BOT_GROUPS в воркере
-  full        boolean not null default false,
+  is_full     boolean not null default false,
   updated_at  timestamptz not null default now()
 );
 
