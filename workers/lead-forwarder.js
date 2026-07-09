@@ -783,12 +783,6 @@ function groupTimeRange(g){
   const h2 = (h + 1) % 24;
   return g.time + '–' + String(h2).padStart(2, '0') + ':' + String(m).padStart(2, '0');
 }
-// Компактная запись времени для узких кнопок-ячеек сетки: "09:00"→"9", "09:30"→"9:30".
-function shortTime(t){
-  const [h, m] = t.split(':');
-  const hh = String(Number(h));
-  return m === '00' ? hh : hh + ':' + m;
-}
 // Занятость слотов, переключаемая из админ-панели (✅ Есть места / ❌ Мест нет).
 async function allGroupStatus(env){
   const rows = await sbSelect(env, '/bot_group_status?select=group_id,is_full');
@@ -833,22 +827,22 @@ async function sendScheduleDir(env, chatId, dirIdx){
   const statusMap = await allGroupStatus(env);
   const cellGroup = (time, day) => gs.find(g => g.time === time && g.days.indexOf(day) !== -1) || null;
 
-  // Узкие подписи и тонкие текстовые символы (не цветные эмодзи) вместо ✅/❌ —
-  // кнопки в клиенте Telegram получаются компактнее и визуально более плоские.
+  // Время — полностью (первая колонка шире остальных), дни — узкие 2-буквенные
+  // подписи, галочки — зелёные (✅), полная группа — красная (❌).
   const rows = [];
-  rows.push([{ text: '–', callback_data: 'noop' }].concat(days.map(d => ({ text: WD_SHORT[d], callback_data: 'noop' }))));
+  rows.push([{ text: '⏱ Время', callback_data: 'noop' }].concat(days.map(d => ({ text: WD_SHORT[d], callback_data: 'noop' }))));
   for (const time of times) {
-    const row = [{ text: shortTime(time), callback_data: 'noop' }];
+    const row = [{ text: time, callback_data: 'noop' }];
     for (const d of days) {
       const g = cellGroup(time, d);
       if (!g) { row.push({ text: '·', callback_data: 'noop' }); continue; }
-      row.push({ text: statusMap[g.id] ? '✕' : '✓', callback_data: 'sch:cell:' + dirIdx + ':' + g.id });
+      row.push({ text: statusMap[g.id] ? '❌' : '✅', callback_data: 'sch:cell:' + dirIdx + ':' + g.id });
     }
     rows.push(row);
   }
   rows.push([{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }]);
   rows.push([{ text: '‹ Направления', callback_data: 'nav:schedule' }, { text: '‹ В меню', callback_data: 'nav:menu' }]);
-  await sendText(env, chatId, '🎯 *' + dir + '*\nНажмите ✓ — покажу педагога и запись.', kb(rows), 'Markdown');
+  await sendText(env, chatId, '🎯 *' + dir + '*\nНажмите ✅ — покажу педагога и запись.', kb(rows), 'Markdown');
 }
 
 // Клик по ячейке календаря — карточка конкретного слота.
