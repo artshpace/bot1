@@ -231,7 +231,7 @@ async function handleBotWebhook(request, env) {
       return ok();
     }
     if (/^\/(schedule|raspisanie)/i.test(text)) { await sendScheduleDirs(env, chatId); return ok(); }
-    if (/^\/(directions|napravleniya|dirs)/i.test(text)) { await sendDirs(env, chatId); return ok(); }
+    if (/^\/(directions|napravleniya|dirs)/i.test(text)) { await sendDirsMenu(env, chatId); return ok(); }
     if (/^\/(price|prices|ceny|tseny)/i.test(text)) { await sendPrice(env, chatId); return ok(); }
     if (/^\/(contacts|kontakty)/i.test(text)) { await sendContacts(env, chatId); return ok(); }
     if (/^\/admin/i.test(text)) { await handleAdminCmd(env, chatId); return ok(); }
@@ -642,6 +642,19 @@ const BOT_TZ_OFFSET = 5 * 3600 * 1000;
 const WD_FULL  = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const WD_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерство','Современный танец','Живопись'];
+const DIR_EMOJI = ['🎸','🎤','🎭','💃','🎨'];
+const DIR_BLURBS = {
+  'Гитара': 'Гитара, укулеле, домбра. Преподаватели Георгий Захаров и Виталий Жуков. Есть группа для взрослых 18+.',
+  'Вокал': 'Постановка голоса и дыхания. Наталья Ерзакова — высшая категория, 50+ лет опыта.',
+  'Актёрское мастерство': 'Раскрепощение, речь, уверенность на сцене. Педагоги Марина Черняк, Оксана Розанова; группа 14+ — владелец студии Антон Шпигоцкий (Малый театр, драмтеатр им. Н. Погодина).',
+  'Современный танец': 'Пластика и координация. Дарья Клюк — 14+ лет опыта, ансамбль Arabesque.',
+  'Живопись': 'Рисунок, живопись, творческое мышление. Педагог Мария Андрюшенко.'
+};
+function dirAgeGroups(dir){ return Array.from(new Set(BOT_GROUPS.filter(g => g.dir === dir).map(g => g.age))).join(', ') || '—'; }
+function dirSampleSchedule(dir){
+  return BOT_GROUPS.filter(g => g.dir === dir).slice(0, 2)
+    .map(g => g.days.map(d => WD_SHORT[d]).join('/') + ' ' + groupTimeRange(g) + ' — ' + g.teacher).join('\n') || '—';
+}
 
 // Живой сайт студии — он же Telegram Mini App (открывается кнопкой web_app).
 const SITE_URL = 'https://artshpace.github.io/bot1/website/index.html';
@@ -777,48 +790,58 @@ async function sendScheduleDir(env, chatId, dirIdx){
   ]), 'Markdown');
 }
 
-async function sendDirs(env, chatId){
-  const blurbs = {
-    'Гитара': 'Гитара, укулеле, домбра. Преподаватели Георгий Захаров и Виталий Жуков. Есть группа для взрослых 18+.',
-    'Вокал': 'Постановка голоса и дыхания. Наталья Ерзакова — высшая категория, 50+ лет опыта.',
-    'Актёрское мастерство': 'Раскрепощение, речь, уверенность на сцене. Педагоги Марина Черняк, Оксана Розанова; группа 14+ — владелец студии Антон Шпигоцкий (Малый театр, драмтеатр им. Н. Погодина).',
-    'Современный танец': 'Пластика и координация. Дарья Клюк — 14+ лет опыта, ансамбль Arabesque.',
-    'Живопись': 'Рисунок, живопись, творческое мышление. Педагог Мария Андрюшенко.'
-  };
-  let t = '🎨 *Направления студии*\n';
-  for (const dir of BOT_DIRS){ t += '\n*' + dir + '*\n' + (blurbs[dir] || '') + '\n'; }
-  t += '\nПодробнее и фото — в приложении (кнопка «Открыть приложение»).';
+// Шаг 1: карточки-кнопки направлений (грид). Шаг 2: развёрнутая карточка.
+async function sendDirsMenu(env, chatId){
+  const rows = BOT_DIRS.map((d, i) => [{ text: (DIR_EMOJI[i] || '🎨') + ' ' + d + ' — Подробнее →', callback_data: 'dir:show:' + i }]);
+  rows.push([{ text: '‹ В меню', callback_data: 'nav:menu' }]);
+  await sendText(env, chatId, '🎭 *Направления студии*\nВыберите направление:', kb(rows), 'Markdown');
+}
+async function sendDirDetail(env, chatId, idx){
+  const dir = BOT_DIRS[idx];
+  if (!dir) { await sendDirsMenu(env, chatId); return; }
+  const t = (DIR_EMOJI[idx] || '🎨') + ' *' + dir + '*\n\n' + (DIR_BLURBS[dir] || '') +
+    '\n\n👶 *Возраст:* ' + dirAgeGroups(dir) +
+    '\n\n🗓 *Пример расписания:*\n' + dirSampleSchedule(dir);
   await sendText(env, chatId, t, kb([
-    [{ text:'📅 Расписание', callback_data:'nav:schedule' },
-     { text:'✍️ На пробное', web_app:{ url: SITE_URL + '#trial' } }],
-    [{ text:'‹ В меню', callback_data:'nav:menu' }]
+    [{ text: '📅 Полное расписание', callback_data: 'sch:dir:' + idx }],
+    [{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }],
+    [{ text: '‹ Направления', callback_data: 'nav:dirs' }, { text: '‹ В меню', callback_data: 'nav:menu' }]
   ]), 'Markdown');
 }
 
+// Карточки по направлениям — без выдуманных цифр (сайт: «уточните у менеджера»);
+// у каждой карточки своя кнопка WhatsApp с предзаполненным текстом направления.
 async function sendPrice(env, chatId){
-  const t = '💰 *Стоимость занятий*\n\n' +
-    'Актуальную стоимость абонемента и разового занятия уточняйте у менеджера — подберём удобный формат под направление и возраст.\n\n' +
-    '🎁 *Первое пробное занятие — бесплатно.*';
-  await sendText(env, chatId, t, kb([
-    [{ text:'💬 Уточнить в WhatsApp', url:'https://wa.me/77086366351?text=' + encodeURIComponent('Здравствуйте! Подскажите, пожалуйста, стоимость занятий.') }],
-    [{ text:'✍️ Записаться на пробное', web_app:{ url: SITE_URL + '#trial' } }],
-    [{ text:'‹ В меню', callback_data:'nav:menu' }]
-  ]), 'Markdown');
+  let t = '💰 *Стоимость занятий*\n\n' +
+    'Точную стоимость абонемента и разового занятия уточняйте у менеджера — подберём формат под направление и возраст.\n\n' +
+    '🎁 *Первое пробное занятие — бесплатно.*\n';
+  const rows = [];
+  BOT_DIRS.forEach((dir, i) => {
+    t += '\n' + (DIR_EMOJI[i] || '🎨') + ' *' + dir + '* — уточните у менеджера';
+    rows.push([{ text: '💬 ' + dir + ' — узнать цену', url: 'https://wa.me/77086366351?text=' +
+      encodeURIComponent('Здравствуйте! Подскажите, пожалуйста, стоимость занятий по направлению «' + dir + '».') }]);
+  });
+  rows.push([{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }]);
+  rows.push([{ text: '‹ В меню', callback_data: 'nav:menu' }]);
+  await sendText(env, chatId, t, kb(rows), 'Markdown');
 }
 
+// Контакты — мультивыбор: кому именно написать в WhatsApp (студия / руководитель / администратор).
 async function sendContacts(env, chatId){
   const t = '📞 *Контакты — Shpigotskiy Art Space*\n\n' +
     '📍 Петропавловск, ул. Интернациональная, 63, 5 этаж\n' +
-    '📱 WhatsApp/тел: +7 708 636‑63‑51\n' +
-    '👤 Администратор: +7 701 398‑00‑19\n' +
     '✉️ Email: artshpace@gmail.com\n' +
-    '📸 Instagram: @artshpace';
+    '📸 Instagram: @artshpace\n\n' +
+    'Кому написать в WhatsApp?';
+  const waText = (who) => encodeURIComponent('Здравствуйте, я из бота Shpigotskiy Art Space. Пишу ' + who + '.');
   await sendText(env, chatId, t, kb([
-    [{ text:'💬 WhatsApp', url:'https://wa.me/77086366351' },
-     { text:'📸 Instagram', url:'https://instagram.com/artshpace' }],
-    [{ text:'🗺 2ГИС', url:'https://2gis.kz/petropavlovsk/firm/70000001085367039' },
-     { text:'🗺 Яндекс', url:'https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/' }],
-    [{ text:'‹ В меню', callback_data:'nav:menu' }]
+    [{ text: '💬 Студия (основной)', url: 'https://wa.me/77086366351?text=' + waText('в студию') }],
+    [{ text: '👤 Антон Шпигоцкий (руководитель)', url: 'https://wa.me/77084322371?text=' + waText('руководителю') }],
+    [{ text: '🗂 Администратор', url: 'https://wa.me/77013980019?text=' + waText('администратору') }],
+    [{ text: '📸 Instagram', url: 'https://instagram.com/artshpace' }],
+    [{ text: '🗺 2ГИС', url: 'https://2gis.kz/petropavlovsk/firm/70000001085367039' },
+     { text: '🗺 Яндекс', url: 'https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/' }],
+    [{ text: '‹ В меню', callback_data: 'nav:menu' }]
   ]), 'Markdown');
 }
 
@@ -929,12 +952,13 @@ async function onCallback(env, cq){
 
   if (parts[0] === 'nav'){
     if (data === 'nav:schedule'){ await sendScheduleDirs(env, chatId); return; }
-    if (data === 'nav:dirs'){     await sendDirs(env, chatId);     return; }
+    if (data === 'nav:dirs'){     await sendDirsMenu(env, chatId);  return; }
     if (data === 'nav:price'){    await sendPrice(env, chatId);    return; }
     if (data === 'nav:contacts'){ await sendContacts(env, chatId); return; }
     if (data === 'nav:menu'){     await sendMenu(env, chatId, false); return; }
   }
   if (parts[0] === 'sch' && parts[1] === 'dir'){ await sendScheduleDir(env, chatId, Number(parts[2])); return; }
+  if (parts[0] === 'dir' && parts[1] === 'show'){ await sendDirDetail(env, chatId, Number(parts[2])); return; }
 
   if (parts[0] === 'adm'){
     const admin = await isAdmin(env, chatId);
