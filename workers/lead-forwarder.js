@@ -14,6 +14,8 @@
 //   SUPABASE_URL               — https://<ref>.supabase.co            (Plain)   [добавить]
 //   SUPABASE_SERVICE_ROLE_KEY  — Supabase service_role key            (Secret)  [добавить]
 //   WEBHOOK_SECRET             — случайная строка (защита вебхука)     (Secret)  [добавить]
+//   ADMIN_PIN                  — PIN для входа в /admin                (Secret)  [добавить]
+//   ADMIN_TG_IDS               — доп. allowlist chat_id через запятую  (Plain)   [опционально]
 //
 // Регистрация вебхука ОДИН раз после деплоя (подставь токен/URL/секрет):
 //   https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<worker>.workers.dev/bot&secret_token=<WEBHOOK_SECRET>
@@ -228,10 +230,11 @@ async function handleBotWebhook(request, env) {
       await sendMenu(env, chatId, true);
       return ok();
     }
-    if (/^\/(schedule|raspisanie)/i.test(text)) { await sendSchedule(env, chatId); return ok(); }
+    if (/^\/(schedule|raspisanie)/i.test(text)) { await sendScheduleDirs(env, chatId); return ok(); }
     if (/^\/(directions|napravleniya|dirs)/i.test(text)) { await sendDirs(env, chatId); return ok(); }
     if (/^\/(price|prices|ceny|tseny)/i.test(text)) { await sendPrice(env, chatId); return ok(); }
     if (/^\/(contacts|kontakty)/i.test(text)) { await sendContacts(env, chatId); return ok(); }
+    if (/^\/admin/i.test(text)) { await handleAdminCmd(env, chatId); return ok(); }
     if (/^\/(add|children|deti|menu|app|site|help)/i.test(text)) {
       await ensureParent(env, chatId, msg.from);
       await setMenuButton(env, chatId);
@@ -243,6 +246,7 @@ async function handleBotWebhook(request, env) {
     const st = await getState(env, chatId);
     if (st && st.step === 'reg_name')     { await onRegName(env, chatId, text); return ok(); }
     if (st && st.step === 'await_reason') { await onReason(env, chatId, text, st.data || {}); return ok(); }
+    if (st && st.step === 'admin_pin')    { await onAdminPin(env, chatId, text, st.data || {}); return ok(); }
 
     await sendText(env, chatId, 'Не понял 🙂 Нажмите /start, чтобы открыть меню.');
     return ok();
@@ -730,20 +734,46 @@ async function sendMenu(env, chatId, greet){
 }
 
 /* ---------- нативные разделы «как на сайте» ---------- */
-async function sendSchedule(env, chatId){
-  let t = '📅 *Расписание занятий*\n_Актуально, Петропавловск (время местное)._\n';
-  for (const dir of BOT_DIRS){
-    const gs = BOT_GROUPS.filter(g => g.dir === dir);
-    if (!gs.length) continue;
-    t += '\n*' + dir + '*\n';
-    for (const g of gs){
-      t += '• ' + g.age + ' — ' + g.days.map(d => WD_SHORT[d]).join('/') + ' ' + g.time + ' · ' + g.teacher + '\n';
-    }
-  }
-  t += '\nУкулеле/домбра — группы формируются.\nЗаписаться на пробное — кнопка ниже.';
+// Формат окончания занятия: старт из BOT_GROUPS + 1 час (везде в расписании студии).
+function groupTimeRange(g){
+  const [h, m] = g.time.split(':').map(Number);
+  const h2 = (h + 1) % 24;
+  return g.time + '–' + String(h2).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+// Занятость слотов, переключаемая из админ-панели (✅ Есть места / ❌ Мест нет).
+async function allGroupStatus(env){
+  const rows = await sbSelect(env, '/bot_group_status?select=group_id,full');
+  const map = {};
+  for (const r of rows) map[r.group_id] = !!r.full;
+  return map;
+}
+async function groupFullStatus(env, groupId){
+  const rows = await sbSelect(env, '/bot_group_status?select=full&group_id=eq.' + enc(groupId) + '&limit=1');
+  return rows.length ? !!rows[0].full : false;
+}
+
+// Шаг 1: выбор направления (5 кнопок) — как на сайте.
+async function sendScheduleDirs(env, chatId){
+  const rows = BOT_DIRS.map((d, i) => [{ text: d, callback_data: 'sch:dir:' + i }]);
+  rows.push([{ text: '‹ В меню', callback_data: 'nav:menu' }]);
+  await sendText(env, chatId, '📅 *Расписание*\nВыберите направление:', kb(rows), 'Markdown');
+}
+
+// Шаг 2: календарь-виджет по направлению — день/время + педагог + свободно/занято.
+async function sendScheduleDir(env, chatId, dirIdx){
+  const dir = BOT_DIRS[dirIdx];
+  if (!dir) { await sendScheduleDirs(env, chatId); return; }
+  const gs = BOT_GROUPS.filter(g => g.dir === dir);
+  const statusMap = await allGroupStatus(env);
+  const lines = gs.map(g => {
+    const icon = statusMap[g.id] ? '❌ Мест нет' : '✅ Есть места';
+    return '*' + g.days.map(d => WD_SHORT[d]).join('/') + ' ' + groupTimeRange(g) + '*'
+      + ' · ' + g.age + ' · _' + g.teacher + '_ · ' + icon;
+  });
+  const t = '🎯 *' + dir + '*\n\n' + (lines.length ? lines.join('\n') : 'Группы формируются — уточните у менеджера.');
   await sendText(env, chatId, t, kb([
-    [{ text:'✍️ Записаться на пробное', web_app:{ url: SITE_URL + '#trial' } }],
-    [{ text:'‹ В меню', callback_data:'nav:menu' }]
+    [{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }],
+    [{ text: '‹ Направления', callback_data: 'nav:schedule' }, { text: '‹ В меню', callback_data: 'nav:menu' }]
   ]), 'Markdown');
 }
 
@@ -808,9 +838,88 @@ async function setCommands(env){
     { command:'price',      description:'💰 Стоимость занятий' },
     { command:'contacts',   description:'📞 Контакты и адрес' },
     { command:'add',        description:'➕ Добавить ученика' },
-    { command:'children',   description:'📋 Мои записи' }
+    { command:'children',   description:'📋 Мои записи' },
+    { command:'admin',      description:'🔑 Админ-панель' }
   ]});
 }
+
+/* ---------- админ-панель (PIN-авторизация) ---------- */
+async function isAdmin(env, chatId){
+  const rows = await sbSelect(env, '/bot_admins?select=chat_id&chat_id=eq.' + enc(String(chatId)) + '&limit=1');
+  return rows.length > 0;
+}
+// Доп. allowlist (ADMIN_TG_IDS, через запятую) — если задан, /admin молча игнорируется
+// для остальных, не раскрывая, что админ-режим вообще существует.
+function isAllowedAdminId(env, chatId){
+  if (!env.ADMIN_TG_IDS) return true;
+  const list = String(env.ADMIN_TG_IDS).split(',').map(s => s.trim()).filter(Boolean);
+  return list.indexOf(String(chatId)) !== -1;
+}
+async function handleAdminCmd(env, chatId){
+  if (await isAdmin(env, chatId)) { await sendAdminPanel(env, chatId); return; }
+  if (!isAllowedAdminId(env, chatId)) return;
+  if (!env.ADMIN_PIN) { await sendText(env, chatId, '🔒 Админ-панель не настроена.'); return; }
+  await setState(env, chatId, 'admin_pin', { attempts: 0 });
+  await sendText(env, chatId, '🔒 Введите PIN администратора:');
+}
+async function onAdminPin(env, chatId, text, data){
+  const attempts = (data.attempts || 0) + 1;
+  if ((text || '').trim() === String(env.ADMIN_PIN)) {
+    await sbUpsert(env, 'bot_admins', { chat_id: String(chatId), granted_at: new Date().toISOString() }, 'chat_id');
+    await clearState(env, chatId);
+    await sendAdminPanel(env, chatId);
+    return;
+  }
+  if (attempts >= 3) {
+    await clearState(env, chatId);
+    await sendText(env, chatId, '⛔️ Слишком много попыток. Наберите /admin позже.');
+    return;
+  }
+  await setState(env, chatId, 'admin_pin', { attempts });
+  await sendText(env, chatId, '❌ Неверный PIN. Осталось попыток: ' + (3 - attempts));
+}
+async function sendAdminPanel(env, chatId){
+  await sendText(env, chatId, '🔑 *Админ-панель*', kb([
+    [{ text: '👥 Ученики', callback_data: 'adm:students' }],
+    [{ text: '📅 Расписание (слоты)', callback_data: 'adm:sched' }],
+    [{ text: '🚪 Выйти из админки', callback_data: 'adm:logout' }],
+    [{ text: '‹ В меню', callback_data: 'nav:menu' }]
+  ]), 'Markdown');
+}
+async function sendAdminStudents(env, chatId){
+  const kids = await sbSelect(env, '/bot_students?select=id,child_name,direction,group_id&active=eq.true&order=created_at.desc&limit=30');
+  if (!kids.length) { await sendText(env, chatId, 'Учеников пока нет.', kb([[{ text: '‹ Панель', callback_data: 'adm:panel' }]])); return; }
+  const lines = kids.map((k, i) => (i + 1) + '. ' + k.child_name + ' — ' + k.direction + (botGroup(k.group_id) ? (' · ' + botGroupLabel(botGroup(k.group_id))) : ''));
+  const rows = kids.map(k => [{ text: '🗑 ' + k.child_name, callback_data: 'adm:stu:del:' + k.id }]);
+  rows.push([{ text: '‹ Панель', callback_data: 'adm:panel' }]);
+  await sendText(env, chatId, '👥 *Ученики* (последние ' + kids.length + ')\n\n' + lines.join('\n'), kb(rows), 'Markdown');
+}
+async function sendAdminSchedDirs(env, chatId){
+  const rows = BOT_DIRS.map((d, i) => [{ text: d, callback_data: 'adm:sch:dir:' + i }]);
+  rows.push([{ text: '‹ Панель', callback_data: 'adm:panel' }]);
+  await sendText(env, chatId, '📅 *Расписание — управление слотами*\nВыберите направление:', kb(rows), 'Markdown');
+}
+async function sendAdminSchedDir(env, chatId, dirIdx){
+  const dir = BOT_DIRS[dirIdx];
+  if (!dir) { await sendAdminSchedDirs(env, chatId); return; }
+  const gs = BOT_GROUPS.filter(g => g.dir === dir);
+  const statusMap = await allGroupStatus(env);
+  const rows = gs.map(g => {
+    const full = !!statusMap[g.id];
+    const label = g.days.map(d => WD_SHORT[d]).join('/') + ' ' + groupTimeRange(g) + ' · ' + g.teacher + ' · ' + (full ? '❌ Полная' : '✅ Свободна');
+    return [{ text: label, callback_data: 'adm:tog:' + g.id }];
+  });
+  rows.push([{ text: '‹ Направления', callback_data: 'adm:sched' }, { text: '‹ Панель', callback_data: 'adm:panel' }]);
+  await sendText(env, chatId, '🎯 *' + dir + '*\nНажмите на слот, чтобы переключить статус.', kb(rows), 'Markdown');
+}
+async function toggleGroupStatus(env, chatId, groupId){
+  const g = botGroup(groupId);
+  if (!g) return;
+  const cur = await groupFullStatus(env, groupId);
+  await sbUpsert(env, 'bot_group_status', { group_id: groupId, full: !cur, updated_at: new Date().toISOString() }, 'group_id');
+  await sendAdminSchedDir(env, chatId, BOT_DIRS.indexOf(g.dir));
+}
+
 async function onCallback(env, cq){
   const chatId = cq.message && cq.message.chat ? cq.message.chat.id : (cq.from && cq.from.id);
   const msgId  = cq.message && cq.message.message_id;
@@ -819,11 +928,25 @@ async function onCallback(env, cq){
   const parts = data.split(':');
 
   if (parts[0] === 'nav'){
-    if (data === 'nav:schedule'){ await sendSchedule(env, chatId); return; }
+    if (data === 'nav:schedule'){ await sendScheduleDirs(env, chatId); return; }
     if (data === 'nav:dirs'){     await sendDirs(env, chatId);     return; }
     if (data === 'nav:price'){    await sendPrice(env, chatId);    return; }
     if (data === 'nav:contacts'){ await sendContacts(env, chatId); return; }
     if (data === 'nav:menu'){     await sendMenu(env, chatId, false); return; }
+  }
+  if (parts[0] === 'sch' && parts[1] === 'dir'){ await sendScheduleDir(env, chatId, Number(parts[2])); return; }
+
+  if (parts[0] === 'adm'){
+    const admin = await isAdmin(env, chatId);
+    if (!admin){ await sendText(env, chatId, '⛔️ Доступ только для администраторов. Наберите /admin.'); return; }
+    if (data === 'adm:panel'){    await sendAdminPanel(env, chatId);    return; }
+    if (data === 'adm:students'){ await sendAdminStudents(env, chatId); return; }
+    if (parts[1] === 'stu' && parts[2] === 'del'){ await sbDelete(env, '/bot_students?id=eq.' + enc(parts[3])); await sendAdminStudents(env, chatId); return; }
+    if (data === 'adm:sched'){ await sendAdminSchedDirs(env, chatId); return; }
+    if (parts[1] === 'sch' && parts[2] === 'dir'){ await sendAdminSchedDir(env, chatId, Number(parts[3])); return; }
+    if (parts[1] === 'tog'){ await toggleGroupStatus(env, chatId, parts[2]); return; }
+    if (data === 'adm:logout'){ await sbDelete(env, '/bot_admins?chat_id=eq.' + enc(String(chatId))); await sendText(env, chatId, 'Вы вышли из админ-панели.'); return; }
+    return;
   }
 
   if (data === 'reg:new'){

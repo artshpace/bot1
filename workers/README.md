@@ -23,6 +23,15 @@
    - `TELEGRAM_BOT_TOKEN` — токен бота от @BotFather
    - `TELEGRAM_CHAT_ID` — ваш chat_id (можно получить от @userinfobot) или ID группы
 
+   Для админ-панели бота (`/admin`, миграция `supabase/migrations/0020_bot_admin.sql`):
+   ```
+   wrangler secret put ADMIN_PIN
+   ```
+   - `ADMIN_PIN` — PIN для входа в `/admin` (Secret, обязателен для админ-панели)
+   - `ADMIN_TG_IDS` — опциональный allowlist chat_id через запятую (Plain-переменная
+     в Dashboard → Settings → Variables); если задан, `/admin` не отвечает никому,
+     кроме перечисленных id
+
 4. Задеплоить:
    ```
    cd workers
