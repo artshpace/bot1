@@ -827,12 +827,15 @@ async function sendScheduleDir(env, chatId, dirIdx){
   const statusMap = await allGroupStatus(env);
   const cellGroup = (time, day) => gs.find(g => g.time === time && g.days.indexOf(day) !== -1) || null;
 
-  // Время — полностью (первая колонка шире остальных), дни — узкие 2-буквенные
-  // подписи, галочки — зелёные (✅), полная группа — красная (❌).
+  // Telegram делит кнопки ВНУТРИ одной строки поровну — широкое время и узкие
+  // дни в одном ряду конфликтуют по ширине. Поэтому время — своя строка
+  // (единственная кнопка в ряду = вся ширина, помещается целиком), а под ней —
+  // отдельная строка только с узкими днями/галочками (без соседства с временем).
   const rows = [];
-  rows.push([{ text: '⏱ Время', callback_data: 'noop' }].concat(days.map(d => ({ text: WD_SHORT[d], callback_data: 'noop' }))));
+  rows.push(days.map(d => ({ text: WD_SHORT[d], callback_data: 'noop' })));
   for (const time of times) {
-    const row = [{ text: time, callback_data: 'noop' }];
+    rows.push([{ text: '⏱ ' + time, callback_data: 'noop' }]);
+    const row = [];
     for (const d of days) {
       const g = cellGroup(time, d);
       if (!g) { row.push({ text: '·', callback_data: 'noop' }); continue; }
