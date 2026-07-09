@@ -247,6 +247,12 @@ async function handleBotWebhook(request, env) {
     if (st && st.step === 'reg_name')     { await onRegName(env, chatId, text); return ok(); }
     if (st && st.step === 'await_reason') { await onReason(env, chatId, text, st.data || {}); return ok(); }
     if (st && st.step === 'admin_pin')    { await onAdminPin(env, chatId, text, st.data || {}); return ok(); }
+    if (st && st.step === 'dir_search')   { await onDirSearch(env, chatId, text); return ok(); }
+
+    // Ничего не совпало по состоянию — пробуем угадать направление по слову
+    // (набирает «гитара»/«танцы»/… прямо в чат, без входа через кнопку поиска).
+    const guess = matchDirByKeyword(text);
+    if (guess !== -1) { await sendDirDetail(env, chatId, guess); return ok(); }
 
     await sendText(env, chatId, 'Не понял 🙂 Нажмите /start, чтобы открыть меню.');
     return ok();
@@ -656,6 +662,26 @@ function dirSampleSchedule(dir){
     .map(g => g.days.map(d => WD_SHORT[d]).join('/') + ' ' + groupTimeRange(g) + ' — ' + g.teacher).join('\n') || '—';
 }
 
+// Поиск направления по слову — и явной кнопкой, и опортунистически по любому тексту.
+const DIR_KEYWORDS = {
+  'Гитара': ['гитар', 'укулеле', 'домбр'],
+  'Вокал': ['вокал', 'петь', 'пение', 'голос'],
+  'Актёрское мастерство': ['актер', 'актёр', 'сцен', 'театр', 'ораторск'],
+  'Современный танец': ['танец', 'танцы', 'танц'],
+  'Живопись': ['живопис', 'рисова', 'рисунок', 'художеств']
+};
+function matchDirByKeyword(text){
+  const q = (text || '').trim().toLowerCase();
+  if (!q) return -1;
+  for (let i = 0; i < BOT_DIRS.length; i++){
+    const dir = BOT_DIRS[i].toLowerCase();
+    if (dir.indexOf(q) !== -1 || q.indexOf(dir) !== -1) return i;
+    const kws = DIR_KEYWORDS[BOT_DIRS[i]] || [];
+    for (const kw of kws) if (q.indexOf(kw) !== -1) return i;
+  }
+  return -1;
+}
+
 // Живой сайт студии — он же Telegram Mini App (открывается кнопкой web_app).
 const SITE_URL = 'https://artshpace.github.io/bot1/website/index.html';
 
@@ -729,6 +755,10 @@ async function ensureParent(env, chatId, from){
 }
 async function parentName(env, chatId){ const rows=await sbSelect(env,'/bot_parents?select=tg_name&chat_id=eq.'+enc(String(chatId))+'&limit=1'); return (rows[0]&&rows[0].tg_name)||('чат '+chatId); }
 
+// Предпочтения: последнее направление, на которое смотрел пользователь (ярлык "⭐").
+async function setLastDirection(env, chatId, dir){ await sbUpsert(env,'bot_parents',{chat_id:String(chatId),last_direction:dir},'chat_id'); }
+async function getLastDirection(env, chatId){ const rows=await sbSelect(env,'/bot_parents?select=last_direction&chat_id=eq.'+enc(String(chatId))+'&limit=1'); return (rows[0]&&rows[0].last_direction)||null; }
+
 /* ---------- меню и регистрация ---------- */
 async function sendMenu(env, chatId, greet){
   const head = greet ? '👋 Это бот студии *Shpigotskiy Art Space*.\nВсё как на сайте: расписание, направления, запись на пробное и напоминания о занятиях.\n\n' : '';
@@ -765,9 +795,14 @@ async function groupFullStatus(env, groupId){
   return rows.length ? !!rows[0].is_full : false;
 }
 
-// Шаг 1: выбор направления (5 кнопок) — как на сайте.
+// Шаг 1: выбор направления (5 кнопок) — как на сайте. Сверху — ярлык последнего
+// просмотренного направления (запоминаем в bot_parents.last_direction).
 async function sendScheduleDirs(env, chatId){
-  const rows = BOT_DIRS.map((d, i) => [{ text: d, callback_data: 'sch:dir:' + i }]);
+  const last = await getLastDirection(env, chatId);
+  const rows = [];
+  const lastIdx = last ? BOT_DIRS.indexOf(last) : -1;
+  if (lastIdx !== -1) rows.push([{ text: '⭐ ' + last + ' (последнее)', callback_data: 'sch:dir:' + lastIdx }]);
+  rows.push(...BOT_DIRS.map((d, i) => [{ text: d, callback_data: 'sch:dir:' + i }]));
   rows.push([{ text: '‹ В меню', callback_data: 'nav:menu' }]);
   await sendText(env, chatId, '📅 *Расписание*\nВыберите направление:', kb(rows), 'Markdown');
 }
@@ -776,6 +811,7 @@ async function sendScheduleDirs(env, chatId){
 async function sendScheduleDir(env, chatId, dirIdx){
   const dir = BOT_DIRS[dirIdx];
   if (!dir) { await sendScheduleDirs(env, chatId); return; }
+  await setLastDirection(env, chatId, dir);
   const gs = BOT_GROUPS.filter(g => g.dir === dir);
   const statusMap = await allGroupStatus(env);
   const lines = gs.map(g => {
@@ -790,15 +826,22 @@ async function sendScheduleDir(env, chatId, dirIdx){
   ]), 'Markdown');
 }
 
-// Шаг 1: карточки-кнопки направлений (грид). Шаг 2: развёрнутая карточка.
+// Шаг 1: карточки-кнопки направлений (грид) + ярлык последнего просмотренного
+// направления + вход в поиск по слову. Шаг 2: развёрнутая карточка.
 async function sendDirsMenu(env, chatId){
-  const rows = BOT_DIRS.map((d, i) => [{ text: (DIR_EMOJI[i] || '🎨') + ' ' + d + ' — Подробнее →', callback_data: 'dir:show:' + i }]);
+  const last = await getLastDirection(env, chatId);
+  const rows = [];
+  const lastIdx = last ? BOT_DIRS.indexOf(last) : -1;
+  if (lastIdx !== -1) rows.push([{ text: '⭐ ' + last + ' (последнее)', callback_data: 'dir:show:' + lastIdx }]);
+  rows.push(...BOT_DIRS.map((d, i) => [{ text: (DIR_EMOJI[i] || '🎨') + ' ' + d + ' — Подробнее →', callback_data: 'dir:show:' + i }]));
+  rows.push([{ text: '🔍 Найти по слову', callback_data: 'dir:search' }]);
   rows.push([{ text: '‹ В меню', callback_data: 'nav:menu' }]);
   await sendText(env, chatId, '🎭 *Направления студии*\nВыберите направление:', kb(rows), 'Markdown');
 }
 async function sendDirDetail(env, chatId, idx){
   const dir = BOT_DIRS[idx];
   if (!dir) { await sendDirsMenu(env, chatId); return; }
+  await setLastDirection(env, chatId, dir);
   const t = (DIR_EMOJI[idx] || '🎨') + ' *' + dir + '*\n\n' + (DIR_BLURBS[dir] || '') +
     '\n\n👶 *Возраст:* ' + dirAgeGroups(dir) +
     '\n\n🗓 *Пример расписания:*\n' + dirSampleSchedule(dir);
@@ -843,6 +886,18 @@ async function sendContacts(env, chatId){
      { text: '🗺 Яндекс', url: 'https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/' }],
     [{ text: '‹ В меню', callback_data: 'nav:menu' }]
   ]), 'Markdown');
+}
+
+// Поиск направления по слову (кнопка "🔍 Найти по слову" в sendDirsMenu).
+async function onDirSearch(env, chatId, text){
+  await clearState(env, chatId);
+  const idx = matchDirByKeyword(text);
+  if (idx === -1){
+    await sendText(env, chatId, 'Не нашёл такое направление. Доступные: ' + BOT_DIRS.join(', ') + '.',
+      kb([[{ text: '🎭 Все направления', callback_data: 'nav:dirs' }]]));
+    return;
+  }
+  await sendDirDetail(env, chatId, idx);
 }
 
 // Постоянная кнопка-меню чата открывает сайт как Mini App (идемпотентно на /start).
@@ -959,6 +1014,12 @@ async function onCallback(env, cq){
   }
   if (parts[0] === 'sch' && parts[1] === 'dir'){ await sendScheduleDir(env, chatId, Number(parts[2])); return; }
   if (parts[0] === 'dir' && parts[1] === 'show'){ await sendDirDetail(env, chatId, Number(parts[2])); return; }
+  if (data === 'dir:search'){
+    await setState(env, chatId, 'dir_search', {});
+    await sendText(env, chatId, '🔍 Введите слово — например «гитара», «танцы», «вокал», «актёрское», «живопись».',
+      kb([[{ text: '‹ Отмена', callback_data: 'reg:cancel' }]]));
+    return;
+  }
 
   if (parts[0] === 'adm'){
     const admin = await isAdmin(env, chatId);
@@ -976,7 +1037,13 @@ async function onCallback(env, cq){
   if (data === 'reg:new'){
     await ensureParent(env, chatId, cq.from);
     await setState(env, chatId, 'reg_name', {});
-    await sendText(env, chatId, 'Введите, пожалуйста, ФИО ученика — ребёнка или взрослого — одним сообщением.');
+    await sendText(env, chatId, 'Введите, пожалуйста, ФИО ученика — ребёнка или взрослого — одним сообщением.',
+      kb([[{ text: '‹ Отмена', callback_data: 'reg:cancel' }]]));
+    return;
+  }
+  if (data === 'reg:cancel'){
+    await clearState(env, chatId);
+    await sendMenu(env, chatId, false);
     return;
   }
   if (parts[0]==='reg' && parts[1]==='dir'){
@@ -985,7 +1052,7 @@ async function onCallback(env, cq){
     d.dir = dir; await setState(env, chatId, 'reg_pick', d);
     const groups = BOT_GROUPS.filter(g=>g.dir===dir);
     await sendText(env, chatId, 'Выберите группу по направлению «'+dir+'»:',
-      kb(groups.map(g=>[{ text: botGroupLabel(g), callback_data:'reg:grp:'+g.id }])));
+      kb(groups.map(g=>[{ text: botGroupLabel(g), callback_data:'reg:grp:'+g.id }]).concat([[{ text: '‹ Отмена', callback_data: 'reg:cancel' }]])));
     return;
   }
   if (parts[0]==='reg' && parts[1]==='grp'){
@@ -1003,10 +1070,11 @@ async function onCallback(env, cq){
   if (data === 'my:list'){
     const kids = await sbSelect(env,'/bot_students?select=id,child_name,direction,group_id&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
     if(!kids.length){ await sendText(env, chatId,'Пока нет добавленных учеников.', kb([[{text:'➕ Добавить ученика',callback_data:'reg:new'}]])); return; }
-    for(const k of kids){
-      const g=botGroup(k.group_id);
-      await sendText(env, chatId, '👤 '+k.child_name+'\n🎯 '+k.direction+(g?(' — '+botGroupLabel(g)):''),
-        kb([[{text:'🗑 Удалить',callback_data:'my:del:'+k.id}]]));
+    for(let i=0;i<kids.length;i++){
+      const k=kids[i]; const g=botGroup(k.group_id);
+      const rows=[[{text:'🗑 Удалить',callback_data:'my:del:'+k.id}]];
+      if (i === kids.length - 1) rows.push([{ text:'‹ В меню', callback_data:'nav:menu' }]);
+      await sendText(env, chatId, '👤 '+k.child_name+'\n🎯 '+k.direction+(g?(' — '+botGroupLabel(g)):''), kb(rows));
     }
     return;
   }
@@ -1022,7 +1090,7 @@ async function onRegName(env, chatId, text){
   if(name.length<3 || !/[А-Яа-яЁёA-Za-z]/.test(name)){ await sendText(env, chatId,'Пожалуйста, введите ФИО ученика текстом (например: Иванов Иван).'); return; }
   await setState(env, chatId,'reg_pick',{child_name:name});
   await sendText(env, chatId,'Выберите направление, на котором занимается '+name+':',
-    kb(BOT_DIRS.map((d,i)=>[{text:d,callback_data:'reg:dir:'+i}])));
+    kb(BOT_DIRS.map((d,i)=>[{text:d,callback_data:'reg:dir:'+i}]).concat([[{ text:'‹ Отмена', callback_data:'reg:cancel' }]])));
 }
 
 /* ---------- ответ на напоминание ---------- */
