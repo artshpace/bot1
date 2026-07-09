@@ -649,34 +649,16 @@ const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерс
 // Живой сайт студии — он же Telegram Mini App (открывается кнопкой web_app).
 const SITE_URL = 'https://artshpace.github.io/bot1/website/index.html';
 
-// Группы — зеркало schedule.html. days: 0=Вс…6=Сб. time: начало занятия (Almaty).
-const BOT_GROUPS = [
-  { id:'g1', dir:'Гитара', age:'разный возраст', teacher:'Георгий Захаров', days:[1,3,5], time:'09:00' },
-  { id:'g2', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'10:00' },
-  { id:'g3', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'11:00' },
-  { id:'g4', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'16:00' },
-  { id:'g5', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'17:00' },
-  { id:'g6', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'18:00' },
-  { id:'g7', dir:'Гитара', age:'разный возраст', teacher:'Виталий Жуков',   days:[1,3,5], time:'19:00' },
-  { id:'g8', dir:'Гитара', age:'18+',            teacher:'Виталий Жуков',   days:[1,3,5], time:'20:00' },
-  { id:'g9', dir:'Гитара', age:'разный возраст', teacher:'Георгий Захаров', days:[2,4,6], time:'17:00' },
-  { id:'v1', dir:'Вокал', age:'7–10 лет', teacher:'Наталья Ерзакова', days:[6,0], time:'12:00' },
-  { id:'v2', dir:'Вокал', age:'11+',      teacher:'Наталья Ерзакова', days:[6,0], time:'13:00' },
-  { id:'a1', dir:'Актёрское мастерство', age:'4–6 лет',   teacher:'Марина Черняк',   days:[6,0], time:'15:45' },
-  { id:'a2', dir:'Актёрское мастерство', age:'7–10 лет',  teacher:'Оксана Розанова', days:[1,3], time:'15:00' },
-  { id:'a3', dir:'Актёрское мастерство', age:'7–10 лет',  teacher:'Марина Черняк',   days:[2,4], time:'09:30' },
-  { id:'a4', dir:'Актёрское мастерство', age:'7–10 лет',  teacher:'Марина Черняк',   days:[6,0], time:'14:45' },
-  { id:'a5', dir:'Актёрское мастерство', age:'11–14 лет', teacher:'Оксана Розанова', days:[1,3], time:'09:00' },
-  { id:'a6', dir:'Актёрское мастерство', age:'11–14 лет', teacher:'Оксана Розанова', days:[1,3], time:'16:00' },
-  { id:'a7', dir:'Актёрское мастерство', age:'11–14 лет', teacher:'Марина Черняк',   days:[6,0], time:'09:00' },
-  { id:'a8', dir:'Актёрское мастерство', age:'14+',       teacher:'Антон Шпигоцкий', days:[6,0], time:'14:30' },
-  { id:'d1', dir:'Современный танец', age:'4–6 лет',   teacher:'Дарья Клюк', days:[1,3,5], time:'18:30' },
-  { id:'d2', dir:'Современный танец', age:'от 11 лет', teacher:'Дарья Клюк', days:[6,0], time:'11:30' },
-  { id:'d3', dir:'Современный танец', age:'7–10 лет',  teacher:'Дарья Клюк', days:[6,0], time:'13:00' },
-  { id:'p1', dir:'Живопись', age:'4–6 лет',  teacher:'Мария Андрюшенко', days:[6], time:'10:00' },
-  { id:'p2', dir:'Живопись', age:'7–10 лет', teacher:'Мария Андрюшенко', days:[0], time:'10:00' }
-];
-function botGroup(id){ return BOT_GROUPS.find(g => g.id === id) || null; }
+// Группы — раньше были захардкожены здесь; теперь живут в таблице bot_groups
+// (миграция 0022_bot_groups_table.sql), правки не требуют деплоя воркера.
+// days: 0=Вс…6=Сб. time: начало занятия (Almaty).
+async function loadBotGroups(env){
+  return sbSelect(env, '/bot_groups?select=id,dir,age,teacher,days,time&active=eq.true&order=id');
+}
+async function botGroup(env, id){
+  const rows = await sbSelect(env, '/bot_groups?select=id,dir,age,teacher,days,time&id=eq.' + enc(id) + '&limit=1');
+  return rows[0] || null;
+}
 function botGroupLabel(g){ return g.age + ' · ' + g.days.map(d => WD_SHORT[d]).join('/') + ' ' + g.time + ' · ' + g.teacher; }
 
 /* ---------- Telegram ---------- */
@@ -810,7 +792,11 @@ async function sendAdminPanel(env, chatId){
 async function sendAdminStudents(env, chatId){
   const kids = await sbSelect(env, '/bot_students?select=id,child_name,direction,group_id&active=eq.true&order=created_at.desc&limit=30');
   if (!kids.length) { await sendText(env, chatId, 'Учеников пока нет.', kb([[{ text: '‹ Панель', callback_data: 'adm:panel' }]])); return; }
-  const lines = kids.map((k, i) => (i + 1) + '. ' + k.child_name + ' — ' + k.direction + (botGroup(k.group_id) ? (' · ' + botGroupLabel(botGroup(k.group_id))) : ''));
+  const lines = [];
+  for (let i = 0; i < kids.length; i++) {
+    const k = kids[i]; const g = await botGroup(env, k.group_id);
+    lines.push((i + 1) + '. ' + k.child_name + ' — ' + k.direction + (g ? (' · ' + botGroupLabel(g)) : ''));
+  }
   const rows = kids.map(k => [{ text: '🗑 ' + k.child_name, callback_data: 'adm:stu:del:' + k.id }]);
   rows.push([{ text: '‹ Панель', callback_data: 'adm:panel' }]);
   await sendText(env, chatId, '👥 *Ученики* (последние ' + kids.length + ')\n\n' + lines.join('\n'), kb(rows), 'Markdown');
@@ -851,13 +837,13 @@ async function onCallback(env, cq){
     const dir = BOT_DIRS[Number(parts[2])]; if(!dir) return;
     const st = await getState(env, chatId); const d = (st&&st.data)||{};
     d.dir = dir; await setState(env, chatId, 'reg_pick', d);
-    const groups = BOT_GROUPS.filter(g=>g.dir===dir);
+    const groups = (await loadBotGroups(env)).filter(g=>g.dir===dir);
     await sendText(env, chatId, 'Выберите группу по направлению «'+dir+'»:',
       kb(groups.map(g=>[{ text: botGroupLabel(g), callback_data:'reg:grp:'+g.id }]).concat([[{ text: '‹ Отмена', callback_data: 'reg:cancel' }]])));
     return;
   }
   if (parts[0]==='reg' && parts[1]==='grp'){
-    const g = botGroup(parts[2]); if(!g) return;
+    const g = await botGroup(env, parts[2]); if(!g) return;
     const st = await getState(env, chatId); const d=(st&&st.data)||{};
     const child = d.child_name || 'Ребёнок';
     const ins = await sbInsert(env,'bot_students',{chat_id:String(chatId),child_name:child,direction:g.dir,group_id:g.id});
@@ -872,7 +858,7 @@ async function onCallback(env, cq){
     const kids = await sbSelect(env,'/bot_students?select=id,child_name,direction,group_id&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
     if(!kids.length){ await sendText(env, chatId,'Пока нет добавленных учеников.', kb([[{text:'➕ Добавить ученика',callback_data:'reg:new'}]])); return; }
     for(let i=0;i<kids.length;i++){
-      const k=kids[i]; const g=botGroup(k.group_id);
+      const k=kids[i]; const g=await botGroup(env, k.group_id);
       const rows=[[{text:'🗑 Удалить',callback_data:'my:del:'+k.id}]];
       if (i === kids.length - 1) rows.push([{ text:'‹ В меню', callback_data:'nav:menu' }]);
       await sendText(env, chatId, '👤 '+k.child_name+'\n🎯 '+k.direction+(g?(' — '+botGroupLabel(g)):''), kb(rows));
@@ -898,7 +884,7 @@ async function onRegName(env, chatId, text){
 async function onAttendance(env, chatId, msgId, parts){
   const sid=parts[1], dateC=parts[2], gid=parts[3], resp=parts[4];
   const lessonDate = dateC.slice(0,4)+'-'+dateC.slice(4,6)+'-'+dateC.slice(6,8);
-  const g = botGroup(gid);
+  const g = await botGroup(env, gid);
   const kids = await sbSelect(env,'/bot_students?select=child_name,direction&id=eq.'+enc(sid)+'&limit=1');
   const child = (kids[0]&&kids[0].child_name)||'Ребёнок';
   const who = await parentName(env, chatId);
@@ -944,7 +930,7 @@ async function runReminders(env){
   const now=Date.now(); const H=25*3600000; let sent=0;
   const kids = await sbSelect(env,'/bot_students?select=id,chat_id,child_name,direction,group_id&active=eq.true');
   for(const k of kids){
-    const g=botGroup(k.group_id); if(!g) continue;
+    const g=await botGroup(env, k.group_id); if(!g) continue;
     for(const occ of occurrencesWithin(g, now, H)){
       const delta=occ-now;
       let kind=null;
