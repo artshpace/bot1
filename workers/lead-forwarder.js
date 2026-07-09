@@ -230,10 +230,10 @@ async function handleBotWebhook(request, env) {
       await sendMenu(env, chatId, true);
       return ok();
     }
-    if (/^\/(schedule|raspisanie)/i.test(text)) { await sendScheduleDirs(env, chatId); return ok(); }
-    if (/^\/(directions|napravleniya|dirs)/i.test(text)) { await sendDirsMenu(env, chatId); return ok(); }
-    if (/^\/(price|prices|ceny|tseny)/i.test(text)) { await sendPrice(env, chatId); return ok(); }
-    if (/^\/(contacts|kontakty)/i.test(text)) { await sendContacts(env, chatId); return ok(); }
+    if (/^\/(schedule|raspisanie)/i.test(text)) { await sendOpenAppHint(env, chatId, 'Расписание'); return ok(); }
+    if (/^\/(directions|napravleniya|dirs)/i.test(text)) { await sendOpenAppHint(env, chatId, 'Направления'); return ok(); }
+    if (/^\/(price|prices|ceny|tseny)/i.test(text)) { await sendOpenAppHint(env, chatId, 'Цены'); return ok(); }
+    if (/^\/(contacts|kontakty)/i.test(text)) { await sendOpenAppHint(env, chatId, 'Контакты'); return ok(); }
     if (/^\/admin/i.test(text)) { await handleAdminCmd(env, chatId); return ok(); }
     if (/^\/(add|children|deti|menu|app|site|help)/i.test(text)) {
       await ensureParent(env, chatId, msg.from);
@@ -247,12 +247,6 @@ async function handleBotWebhook(request, env) {
     if (st && st.step === 'reg_name')     { await onRegName(env, chatId, text); return ok(); }
     if (st && st.step === 'await_reason') { await onReason(env, chatId, text, st.data || {}); return ok(); }
     if (st && st.step === 'admin_pin')    { await onAdminPin(env, chatId, text, st.data || {}); return ok(); }
-    if (st && st.step === 'dir_search')   { await onDirSearch(env, chatId, text); return ok(); }
-
-    // Ничего не совпало по состоянию — пробуем угадать направление по слову
-    // (набирает «гитара»/«танцы»/… прямо в чат, без входа через кнопку поиска).
-    const guess = matchDirByKeyword(text);
-    if (guess !== -1) { await sendDirDetail(env, chatId, guess); return ok(); }
 
     await sendText(env, chatId, 'Не понял 🙂 Нажмите /start, чтобы открыть меню.');
     return ok();
@@ -647,40 +641,10 @@ function b64urlBytes(bytes) {
 const BOT_TZ_OFFSET = 5 * 3600 * 1000;
 const WD_FULL  = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const WD_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+// Направления — используются только для шага "выбрать направление" при
+// регистрации ученика на напоминания (reg:dir). Расписание/цены/контакты
+// теперь только в приложении (сайте), бот их больше не дублирует.
 const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерство','Современный танец','Живопись'];
-const DIR_EMOJI = ['🎸','🎤','🎭','💃','🎨'];
-const DIR_BLURBS = {
-  'Гитара': 'Гитара, укулеле, домбра. Преподаватели Георгий Захаров и Виталий Жуков. Есть группа для взрослых 18+.',
-  'Вокал': 'Постановка голоса и дыхания. Наталья Ерзакова — высшая категория, 50+ лет опыта.',
-  'Актёрское мастерство': 'Раскрепощение, речь, уверенность на сцене. Педагоги Марина Черняк, Оксана Розанова; группа 14+ — владелец студии Антон Шпигоцкий (Малый театр, драмтеатр им. Н. Погодина).',
-  'Современный танец': 'Пластика и координация. Дарья Клюк — 14+ лет опыта, ансамбль Arabesque.',
-  'Живопись': 'Рисунок, живопись, творческое мышление. Педагог Мария Андрюшенко.'
-};
-function dirAgeGroups(dir){ return Array.from(new Set(BOT_GROUPS.filter(g => g.dir === dir).map(g => g.age))).join(', ') || '—'; }
-function dirSampleSchedule(dir){
-  return BOT_GROUPS.filter(g => g.dir === dir).slice(0, 2)
-    .map(g => g.days.map(d => WD_SHORT[d]).join('/') + ' ' + groupTimeRange(g) + ' — ' + g.teacher).join('\n') || '—';
-}
-
-// Поиск направления по слову — и явной кнопкой, и опортунистически по любому тексту.
-const DIR_KEYWORDS = {
-  'Гитара': ['гитар', 'укулеле', 'домбр'],
-  'Вокал': ['вокал', 'петь', 'пение', 'голос'],
-  'Актёрское мастерство': ['актер', 'актёр', 'сцен', 'театр', 'ораторск'],
-  'Современный танец': ['танец', 'танцы', 'танц'],
-  'Живопись': ['живопис', 'рисова', 'рисунок', 'художеств']
-};
-function matchDirByKeyword(text){
-  const q = (text || '').trim().toLowerCase();
-  if (!q) return -1;
-  for (let i = 0; i < BOT_DIRS.length; i++){
-    const dir = BOT_DIRS[i].toLowerCase();
-    if (dir.indexOf(q) !== -1 || q.indexOf(dir) !== -1) return i;
-    const kws = DIR_KEYWORDS[BOT_DIRS[i]] || [];
-    for (const kw of kws) if (q.indexOf(kw) !== -1) return i;
-  }
-  return -1;
-}
 
 // Живой сайт студии — он же Telegram Mini App (открывается кнопкой web_app).
 const SITE_URL = 'https://artshpace.github.io/bot1/website/index.html';
@@ -755,187 +719,30 @@ async function ensureParent(env, chatId, from){
 }
 async function parentName(env, chatId){ const rows=await sbSelect(env,'/bot_parents?select=tg_name&chat_id=eq.'+enc(String(chatId))+'&limit=1'); return (rows[0]&&rows[0].tg_name)||('чат '+chatId); }
 
-// Предпочтения: последнее направление, на которое смотрел пользователь (ярлык "⭐").
-async function setLastDirection(env, chatId, dir){ await sbUpsert(env,'bot_parents',{chat_id:String(chatId),last_direction:dir},'chat_id'); }
-async function getLastDirection(env, chatId){ const rows=await sbSelect(env,'/bot_parents?select=last_direction&chat_id=eq.'+enc(String(chatId))+'&limit=1'); return (rows[0]&&rows[0].last_direction)||null; }
-
 /* ---------- меню и регистрация ---------- */
+// Расписание/направления/цены/контакты теперь только в приложении (сайте) —
+// у него функционал шире, чем можно нативно сделать в чате. Бот отвечает
+// за то, чего сайт не может: пуш-напоминания о занятиях и быстрый ввод
+// ученика в базу для этих напоминаний.
 async function sendMenu(env, chatId, greet){
-  const head = greet ? '👋 Это бот студии *Shpigotskiy Art Space*.\nВсё как на сайте: расписание, направления, запись на пробное и напоминания о занятиях.\n\n' : '';
+  const head = greet ? '👋 Это бот студии *Shpigotskiy Art Space*.\nОткрывает сайт как приложение и присылает напоминания о занятиях.\n\n' : '';
   await sendText(env, chatId, head + 'Что хотите сделать?', kb([
     [{ text:'🌐 Открыть приложение (сайт)', web_app:{ url: SITE_URL } }],
     [{ text:'✍️ Записаться на пробное',      web_app:{ url: SITE_URL + '#trial' } }],
-    [{ text:'📅 Расписание',   callback_data:'nav:schedule' },
-     { text:'🎨 Направления',  callback_data:'nav:dirs' }],
-    [{ text:'💰 Цены',         callback_data:'nav:price' },
-     { text:'📞 Контакты',     callback_data:'nav:contacts' }],
-    [{ text:'➕ Добавить ученика', callback_data:'reg:new' },
+    [{ text:'➕ Добавить ученика (для напоминаний)', callback_data:'reg:new' },
      { text:'📋 Мои записи',       callback_data:'my:list' }],
     [{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77086366351?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }],
     [{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]
   ]), 'Markdown');
 }
 
-/* ---------- нативные разделы «как на сайте» ---------- */
-// Формат окончания занятия: старт из BOT_GROUPS + 1 час (везде в расписании студии).
-function groupTimeRange(g){
-  const [h, m] = g.time.split(':').map(Number);
-  const h2 = (h + 1) % 24;
-  return g.time + '–' + String(h2).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-}
-// Занятость слотов, переключаемая из админ-панели (✅ Есть места / ❌ Мест нет).
-async function allGroupStatus(env){
-  const rows = await sbSelect(env, '/bot_group_status?select=group_id,is_full');
-  const map = {};
-  for (const r of rows) map[r.group_id] = !!r.is_full;
-  return map;
-}
-async function groupFullStatus(env, groupId){
-  const rows = await sbSelect(env, '/bot_group_status?select=is_full&group_id=eq.' + enc(groupId) + '&limit=1');
-  return rows.length ? !!rows[0].is_full : false;
-}
-
-// Шаг 1: выбор направления (5 кнопок) — как на сайте. Сверху — ярлык последнего
-// просмотренного направления (запоминаем в bot_parents.last_direction).
-async function sendScheduleDirs(env, chatId){
-  const last = await getLastDirection(env, chatId);
-  const rows = [];
-  const lastIdx = last ? BOT_DIRS.indexOf(last) : -1;
-  if (lastIdx !== -1) rows.push([{ text: '⭐ ' + last + ' (последнее)', callback_data: 'sch:dir:' + lastIdx }]);
-  rows.push(...BOT_DIRS.map((d, i) => [{ text: d, callback_data: 'sch:dir:' + i }]));
-  rows.push([{ text: '‹ В меню', callback_data: 'nav:menu' }]);
-  await sendText(env, chatId, '📅 *Расписание*\nВыберите направление:', kb(rows), 'Markdown');
-}
-
-// Шаг 2: календарь-сетка (время × день недели) кликабельными кнопками-ячейками.
-// Верхняя строка и колонка времени — инертные подписи (callback_data:'noop').
-async function sendScheduleDir(env, chatId, dirIdx){
-  const dir = BOT_DIRS[dirIdx];
-  if (!dir) { await sendScheduleDirs(env, chatId); return; }
-  await setLastDirection(env, chatId, dir);
-  const gs = BOT_GROUPS.filter(g => g.dir === dir);
-  if (!gs.length) {
-    await sendText(env, chatId, '🎯 *' + dir + '*\n\nГруппы формируются — уточните у менеджера.', kb([
-      [{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }],
-      [{ text: '‹ Направления', callback_data: 'nav:schedule' }, { text: '‹ В меню', callback_data: 'nav:menu' }]
-    ]), 'Markdown');
-    return;
-  }
-  const days = Array.from(new Set(gs.reduce((a, g) => a.concat(g.days), [])))
-    .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
-  const times = Array.from(new Set(gs.map(g => g.time))).sort();
-  const statusMap = await allGroupStatus(env);
-  const cellGroup = (time, day) => gs.find(g => g.time === time && g.days.indexOf(day) !== -1) || null;
-
-  // Telegram делит кнопки ВНУТРИ одной строки поровну — широкое время и узкие
-  // дни в одном ряду конфликтуют по ширине. Поэтому время — своя строка
-  // (единственная кнопка в ряду = вся ширина, помещается целиком), а под ней —
-  // отдельная строка только с узкими днями/галочками (без соседства с временем).
-  const rows = [];
-  rows.push(days.map(d => ({ text: WD_SHORT[d], callback_data: 'noop' })));
-  for (const time of times) {
-    rows.push([{ text: '⏱ ' + time, callback_data: 'noop' }]);
-    const row = [];
-    for (const d of days) {
-      const g = cellGroup(time, d);
-      if (!g) { row.push({ text: '·', callback_data: 'noop' }); continue; }
-      row.push({ text: statusMap[g.id] ? '❌' : '✅', callback_data: 'sch:cell:' + dirIdx + ':' + g.id });
-    }
-    rows.push(row);
-  }
-  rows.push([{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }]);
-  rows.push([{ text: '‹ Направления', callback_data: 'nav:schedule' }, { text: '‹ В меню', callback_data: 'nav:menu' }]);
-  await sendText(env, chatId, '🎯 *' + dir + '*\nНажмите ✅ — покажу педагога и запись.', kb(rows), 'Markdown');
-}
-
-// Клик по ячейке календаря — карточка конкретного слота.
-async function sendScheduleCell(env, chatId, dirIdx, groupId){
-  const g = botGroup(groupId);
-  if (!g) { await sendScheduleDir(env, chatId, dirIdx); return; }
-  const full = await groupFullStatus(env, groupId);
-  const t = '🎯 *' + g.dir + '*\n\n' +
-    '🗓 ' + g.days.map(d => WD_SHORT[d]).join('/') + ' ' + groupTimeRange(g) + '\n' +
-    '👶 ' + g.age + '\n' +
-    '👨‍🏫 ' + g.teacher + '\n' +
-    (full ? '❌ Мест нет' : '✅ Есть места');
-  await sendText(env, chatId, t, kb([
-    [{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }],
-    [{ text: '‹ Календарь', callback_data: 'sch:dir:' + dirIdx }, { text: '‹ Направления', callback_data: 'nav:schedule' }]
-  ]), 'Markdown');
-}
-
-// Шаг 1: карточки-кнопки направлений (грид) + ярлык последнего просмотренного
-// направления + вход в поиск по слову. Шаг 2: развёрнутая карточка.
-async function sendDirsMenu(env, chatId){
-  const last = await getLastDirection(env, chatId);
-  const rows = [];
-  const lastIdx = last ? BOT_DIRS.indexOf(last) : -1;
-  if (lastIdx !== -1) rows.push([{ text: '⭐ ' + last + ' (последнее)', callback_data: 'dir:show:' + lastIdx }]);
-  rows.push(...BOT_DIRS.map((d, i) => [{ text: (DIR_EMOJI[i] || '🎨') + ' ' + d + ' — Подробнее →', callback_data: 'dir:show:' + i }]));
-  rows.push([{ text: '🔍 Найти по слову', callback_data: 'dir:search' }]);
-  rows.push([{ text: '‹ В меню', callback_data: 'nav:menu' }]);
-  await sendText(env, chatId, '🎭 *Направления студии*\nВыберите направление:', kb(rows), 'Markdown');
-}
-async function sendDirDetail(env, chatId, idx){
-  const dir = BOT_DIRS[idx];
-  if (!dir) { await sendDirsMenu(env, chatId); return; }
-  await setLastDirection(env, chatId, dir);
-  const t = (DIR_EMOJI[idx] || '🎨') + ' *' + dir + '*\n\n' + (DIR_BLURBS[dir] || '') +
-    '\n\n👶 *Возраст:* ' + dirAgeGroups(dir) +
-    '\n\n🗓 *Пример расписания:*\n' + dirSampleSchedule(dir);
-  await sendText(env, chatId, t, kb([
-    [{ text: '📅 Полное расписание', callback_data: 'sch:dir:' + idx }],
-    [{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }],
-    [{ text: '‹ Направления', callback_data: 'nav:dirs' }, { text: '‹ В меню', callback_data: 'nav:menu' }]
-  ]), 'Markdown');
-}
-
-// Карточки по направлениям — без выдуманных цифр (сайт: «уточните у менеджера»);
-// у каждой карточки своя кнопка WhatsApp с предзаполненным текстом направления.
-async function sendPrice(env, chatId){
-  let t = '💰 *Стоимость занятий*\n\n' +
-    'Точную стоимость абонемента и разового занятия уточняйте у менеджера — подберём формат под направление и возраст.\n\n' +
-    '🎁 *Первое пробное занятие — бесплатно.*\n';
-  const rows = [];
-  BOT_DIRS.forEach((dir, i) => {
-    t += '\n' + (DIR_EMOJI[i] || '🎨') + ' *' + dir + '* — уточните у менеджера';
-    rows.push([{ text: '💬 ' + dir + ' — узнать цену', url: 'https://wa.me/77086366351?text=' +
-      encodeURIComponent('Здравствуйте! Подскажите, пожалуйста, стоимость занятий по направлению «' + dir + '».') }]);
-  });
-  rows.push([{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }]);
-  rows.push([{ text: '‹ В меню', callback_data: 'nav:menu' }]);
-  await sendText(env, chatId, t, kb(rows), 'Markdown');
-}
-
-// Контакты — мультивыбор: кому именно написать в WhatsApp (студия / руководитель / администратор).
-async function sendContacts(env, chatId){
-  const t = '📞 *Контакты — Shpigotskiy Art Space*\n\n' +
-    '📍 Петропавловск, ул. Интернациональная, 63, 5 этаж\n' +
-    '✉️ Email: artshpace@gmail.com\n' +
-    '📸 Instagram: @artshpace\n\n' +
-    'Кому написать в WhatsApp?';
-  const waText = (who) => encodeURIComponent('Здравствуйте, я из бота Shpigotskiy Art Space. Пишу ' + who + '.');
-  await sendText(env, chatId, t, kb([
-    [{ text: '💬 Студия (основной)', url: 'https://wa.me/77086366351?text=' + waText('в студию') }],
-    [{ text: '👤 Антон Шпигоцкий (руководитель)', url: 'https://wa.me/77084322371?text=' + waText('руководителю') }],
-    [{ text: '🗂 Администратор', url: 'https://wa.me/77013980019?text=' + waText('администратору') }],
-    [{ text: '📸 Instagram', url: 'https://instagram.com/artshpace' }],
-    [{ text: '🗺 2ГИС', url: 'https://2gis.kz/petropavlovsk/firm/70000001085367039' },
-     { text: '🗺 Яндекс', url: 'https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/' }],
-    [{ text: '‹ В меню', callback_data: 'nav:menu' }]
-  ]), 'Markdown');
-}
-
-// Поиск направления по слову (кнопка "🔍 Найти по слову" в sendDirsMenu).
-async function onDirSearch(env, chatId, text){
-  await clearState(env, chatId);
-  const idx = matchDirByKeyword(text);
-  if (idx === -1){
-    await sendText(env, chatId, 'Не нашёл такое направление. Доступные: ' + BOT_DIRS.join(', ') + '.',
-      kb([[{ text: '🎭 Все направления', callback_data: 'nav:dirs' }]]));
-    return;
-  }
-  await sendDirDetail(env, chatId, idx);
+// Раньше эти команды показывали расписание/направления/цены/контакты прямо
+// в чате — теперь всё это только в приложении, команды просто открывают его.
+async function sendOpenAppHint(env, chatId, what){
+  await sendText(env, chatId, what + ' — в приложении, там удобнее и полнее.', kb([
+    [{ text:'🌐 Открыть приложение', web_app:{ url: SITE_URL } }],
+    [{ text:'‹ В меню', callback_data:'nav:menu' }]
+  ]));
 }
 
 // Постоянная кнопка-меню чата открывает сайт как Mini App (идемпотентно на /start).
@@ -945,14 +752,10 @@ async function setMenuButton(env, chatId){
     menu_button: { type: 'web_app', text: 'Приложение', web_app: { url: SITE_URL } }
   });
 }
-// Синий список команд бота (как разделы сайта). Идемпотентно.
+// Синий список команд бота. Идемпотентно.
 async function setCommands(env){
   await tgApi(env, 'setMyCommands', { commands: [
     { command:'start',      description:'Меню бота' },
-    { command:'schedule',   description:'📅 Расписание занятий' },
-    { command:'directions', description:'🎨 Направления студии' },
-    { command:'price',      description:'💰 Стоимость занятий' },
-    { command:'contacts',   description:'📞 Контакты и адрес' },
     { command:'add',        description:'➕ Добавить ученика' },
     { command:'children',   description:'📋 Мои записи' },
     { command:'admin',      description:'🔑 Админ-панель' }
@@ -994,10 +797,12 @@ async function onAdminPin(env, chatId, text, data){
   await setState(env, chatId, 'admin_pin', { attempts });
   await sendText(env, chatId, '❌ Неверный PIN. Осталось попыток: ' + (3 - attempts));
 }
+// Раздел управления слотами убран вместе с нативным календарём — расписание
+// теперь показывает только приложение (сайт). В админке остаётся ростер
+// учеников, набранных ботом для напоминаний.
 async function sendAdminPanel(env, chatId){
   await sendText(env, chatId, '🔑 *Админ-панель*', kb([
     [{ text: '👥 Ученики', callback_data: 'adm:students' }],
-    [{ text: '📅 Расписание (слоты)', callback_data: 'adm:sched' }],
     [{ text: '🚪 Выйти из админки', callback_data: 'adm:logout' }],
     [{ text: '‹ В меню', callback_data: 'nav:menu' }]
   ]), 'Markdown');
@@ -1010,56 +815,15 @@ async function sendAdminStudents(env, chatId){
   rows.push([{ text: '‹ Панель', callback_data: 'adm:panel' }]);
   await sendText(env, chatId, '👥 *Ученики* (последние ' + kids.length + ')\n\n' + lines.join('\n'), kb(rows), 'Markdown');
 }
-async function sendAdminSchedDirs(env, chatId){
-  const rows = BOT_DIRS.map((d, i) => [{ text: d, callback_data: 'adm:sch:dir:' + i }]);
-  rows.push([{ text: '‹ Панель', callback_data: 'adm:panel' }]);
-  await sendText(env, chatId, '📅 *Расписание — управление слотами*\nВыберите направление:', kb(rows), 'Markdown');
-}
-async function sendAdminSchedDir(env, chatId, dirIdx){
-  const dir = BOT_DIRS[dirIdx];
-  if (!dir) { await sendAdminSchedDirs(env, chatId); return; }
-  const gs = BOT_GROUPS.filter(g => g.dir === dir);
-  const statusMap = await allGroupStatus(env);
-  const rows = gs.map(g => {
-    const full = !!statusMap[g.id];
-    const label = g.days.map(d => WD_SHORT[d]).join('/') + ' ' + groupTimeRange(g) + ' · ' + g.teacher + ' · ' + (full ? '❌ Полная' : '✅ Свободна');
-    return [{ text: label, callback_data: 'adm:tog:' + g.id }];
-  });
-  rows.push([{ text: '‹ Направления', callback_data: 'adm:sched' }, { text: '‹ Панель', callback_data: 'adm:panel' }]);
-  await sendText(env, chatId, '🎯 *' + dir + '*\nНажмите на слот, чтобы переключить статус.', kb(rows), 'Markdown');
-}
-async function toggleGroupStatus(env, chatId, groupId){
-  const g = botGroup(groupId);
-  if (!g) return;
-  const cur = await groupFullStatus(env, groupId);
-  await sbUpsert(env, 'bot_group_status', { group_id: groupId, is_full: !cur, updated_at: new Date().toISOString() }, 'group_id');
-  await sendAdminSchedDir(env, chatId, BOT_DIRS.indexOf(g.dir));
-}
 
 async function onCallback(env, cq){
   const chatId = cq.message && cq.message.chat ? cq.message.chat.id : (cq.from && cq.from.id);
   const msgId  = cq.message && cq.message.message_id;
   const data   = cq.data || '';
   await answerCb(env, cq.id);
-  if (data === 'noop') return;
   const parts = data.split(':');
 
-  if (parts[0] === 'nav'){
-    if (data === 'nav:schedule'){ await sendScheduleDirs(env, chatId); return; }
-    if (data === 'nav:dirs'){     await sendDirsMenu(env, chatId);  return; }
-    if (data === 'nav:price'){    await sendPrice(env, chatId);    return; }
-    if (data === 'nav:contacts'){ await sendContacts(env, chatId); return; }
-    if (data === 'nav:menu'){     await sendMenu(env, chatId, false); return; }
-  }
-  if (parts[0] === 'sch' && parts[1] === 'dir'){ await sendScheduleDir(env, chatId, Number(parts[2])); return; }
-  if (parts[0] === 'sch' && parts[1] === 'cell'){ await sendScheduleCell(env, chatId, Number(parts[2]), parts[3]); return; }
-  if (parts[0] === 'dir' && parts[1] === 'show'){ await sendDirDetail(env, chatId, Number(parts[2])); return; }
-  if (data === 'dir:search'){
-    await setState(env, chatId, 'dir_search', {});
-    await sendText(env, chatId, '🔍 Введите слово — например «гитара», «танцы», «вокал», «актёрское», «живопись».',
-      kb([[{ text: '‹ Отмена', callback_data: 'reg:cancel' }]]));
-    return;
-  }
+  if (data === 'nav:menu'){ await sendMenu(env, chatId, false); return; }
 
   if (parts[0] === 'adm'){
     const admin = await isAdmin(env, chatId);
@@ -1067,9 +831,6 @@ async function onCallback(env, cq){
     if (data === 'adm:panel'){    await sendAdminPanel(env, chatId);    return; }
     if (data === 'adm:students'){ await sendAdminStudents(env, chatId); return; }
     if (parts[1] === 'stu' && parts[2] === 'del'){ await sbDelete(env, '/bot_students?id=eq.' + enc(parts[3])); await sendAdminStudents(env, chatId); return; }
-    if (data === 'adm:sched'){ await sendAdminSchedDirs(env, chatId); return; }
-    if (parts[1] === 'sch' && parts[2] === 'dir'){ await sendAdminSchedDir(env, chatId, Number(parts[3])); return; }
-    if (parts[1] === 'tog'){ await toggleGroupStatus(env, chatId, parts[2]); return; }
     if (data === 'adm:logout'){ await sbDelete(env, '/bot_admins?chat_id=eq.' + enc(String(chatId))); await sendText(env, chatId, 'Вы вышли из админ-панели.'); return; }
     return;
   }
