@@ -807,44 +807,55 @@ async function sendScheduleDirs(env, chatId){
   await sendText(env, chatId, '📅 *Расписание*\nВыберите направление:', kb(rows), 'Markdown');
 }
 
-// Шаг 2: дни недели, в которые есть занятия по направлению (inline-кнопки).
+// Шаг 2: календарь-сетка (время × день недели) кликабельными кнопками-ячейками.
+// Верхняя строка и колонка времени — инертные подписи (callback_data:'noop').
 async function sendScheduleDir(env, chatId, dirIdx){
   const dir = BOT_DIRS[dirIdx];
   if (!dir) { await sendScheduleDirs(env, chatId); return; }
   await setLastDirection(env, chatId, dir);
   const gs = BOT_GROUPS.filter(g => g.dir === dir);
-  const daysPresent = Array.from(new Set(gs.reduce((a, g) => a.concat(g.days), [])))
-    .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
-  if (!daysPresent.length) {
+  if (!gs.length) {
     await sendText(env, chatId, '🎯 *' + dir + '*\n\nГруппы формируются — уточните у менеджера.', kb([
       [{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }],
       [{ text: '‹ Направления', callback_data: 'nav:schedule' }, { text: '‹ В меню', callback_data: 'nav:menu' }]
     ]), 'Markdown');
     return;
   }
+  const days = Array.from(new Set(gs.reduce((a, g) => a.concat(g.days), [])))
+    .sort((a, b) => (a === 0 ? 7 : a) - (b === 0 ? 7 : b));
+  const times = Array.from(new Set(gs.map(g => g.time))).sort();
+  const statusMap = await allGroupStatus(env);
+  const cellGroup = (time, day) => gs.find(g => g.time === time && g.days.indexOf(day) !== -1) || null;
+
   const rows = [];
-  for (let i = 0; i < daysPresent.length; i += 3) {
-    rows.push(daysPresent.slice(i, i + 3).map(d => ({ text: WD_SHORT[d], callback_data: 'sch:day:' + dirIdx + ':' + d })));
+  rows.push([{ text: '⏱', callback_data: 'noop' }].concat(days.map(d => ({ text: WD_SHORT[d], callback_data: 'noop' }))));
+  for (const time of times) {
+    const row = [{ text: time, callback_data: 'noop' }];
+    for (const d of days) {
+      const g = cellGroup(time, d);
+      if (!g) { row.push({ text: '·', callback_data: 'noop' }); continue; }
+      row.push({ text: statusMap[g.id] ? '❌' : '✅', callback_data: 'sch:cell:' + dirIdx + ':' + g.id });
+    }
+    rows.push(row);
   }
+  rows.push([{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }]);
   rows.push([{ text: '‹ Направления', callback_data: 'nav:schedule' }, { text: '‹ В меню', callback_data: 'nav:menu' }]);
-  await sendText(env, chatId, '🎯 *' + dir + '*\nВыберите день:', kb(rows), 'Markdown');
+  await sendText(env, chatId, '🎯 *' + dir + '*\nНажмите на ✅/❌ — покажу педагога и запись.', kb(rows), 'Markdown');
 }
 
-// Шаг 3: развёрнутый список слотов в выбранный день — время · педагог · свободно/занято.
-async function sendScheduleDay(env, chatId, dirIdx, dayIdx){
-  const dir = BOT_DIRS[dirIdx];
-  if (!dir) { await sendScheduleDirs(env, chatId); return; }
-  const gs = BOT_GROUPS.filter(g => g.dir === dir && g.days.indexOf(dayIdx) !== -1)
-    .sort((a, b) => a.time.localeCompare(b.time));
-  const statusMap = await allGroupStatus(env);
-  const lines = gs.map(g => {
-    const icon = statusMap[g.id] ? '❌ Мест нет' : '✅ Есть места';
-    return '*' + groupTimeRange(g) + '*' + ' · ' + g.age + ' · _' + g.teacher + '_ · ' + icon;
-  });
-  const t = '🎯 *' + dir + '* — ' + WD_SHORT[dayIdx] + '\n\n' + (lines.length ? lines.join('\n') : 'В этот день занятий нет.');
+// Клик по ячейке календаря — карточка конкретного слота.
+async function sendScheduleCell(env, chatId, dirIdx, groupId){
+  const g = botGroup(groupId);
+  if (!g) { await sendScheduleDir(env, chatId, dirIdx); return; }
+  const full = await groupFullStatus(env, groupId);
+  const t = '🎯 *' + g.dir + '*\n\n' +
+    '🗓 ' + g.days.map(d => WD_SHORT[d]).join('/') + ' ' + groupTimeRange(g) + '\n' +
+    '👶 ' + g.age + '\n' +
+    '👨‍🏫 ' + g.teacher + '\n' +
+    (full ? '❌ Мест нет' : '✅ Есть места');
   await sendText(env, chatId, t, kb([
     [{ text: '✍️ Записаться на пробное', web_app: { url: SITE_URL + '#trial' } }],
-    [{ text: '‹ Дни', callback_data: 'sch:dir:' + dirIdx }, { text: '‹ Направления', callback_data: 'nav:schedule' }]
+    [{ text: '‹ Календарь', callback_data: 'sch:dir:' + dirIdx }, { text: '‹ Направления', callback_data: 'nav:schedule' }]
   ]), 'Markdown');
 }
 
@@ -1025,6 +1036,7 @@ async function onCallback(env, cq){
   const msgId  = cq.message && cq.message.message_id;
   const data   = cq.data || '';
   await answerCb(env, cq.id);
+  if (data === 'noop') return;
   const parts = data.split(':');
 
   if (parts[0] === 'nav'){
@@ -1035,7 +1047,7 @@ async function onCallback(env, cq){
     if (data === 'nav:menu'){     await sendMenu(env, chatId, false); return; }
   }
   if (parts[0] === 'sch' && parts[1] === 'dir'){ await sendScheduleDir(env, chatId, Number(parts[2])); return; }
-  if (parts[0] === 'sch' && parts[1] === 'day'){ await sendScheduleDay(env, chatId, Number(parts[2]), Number(parts[3])); return; }
+  if (parts[0] === 'sch' && parts[1] === 'cell'){ await sendScheduleCell(env, chatId, Number(parts[2]), parts[3]); return; }
   if (parts[0] === 'dir' && parts[1] === 'show'){ await sendDirDetail(env, chatId, Number(parts[2])); return; }
   if (data === 'dir:search'){
     await setState(env, chatId, 'dir_search', {});
