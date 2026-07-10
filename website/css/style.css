@@ -737,7 +737,8 @@ p { font-size: 1rem; line-height: 1.7; }
   .hero-btns .btn { width: 100%; text-align: center; }
   .hero-btns .btn-lg { padding: 16px 20px; font-size: 1rem; white-space: normal; }
   .mobile-nav { overflow-y: auto; -webkit-overflow-scrolling: touch; }
-  .cta-banner-btns { flex-direction: column; align-items: center; }
+  .cta-banner-btns { flex-direction: column; align-items: stretch; }
+  .cta-banner-btns .btn { width: 100%; text-align: center; white-space: normal; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .skills-grid { grid-template-columns: 1fr; }
   .modal { padding: 28px 20px; }
@@ -750,6 +751,7 @@ p { font-size: 1rem; line-height: 1.7; }
   .gallery-grid { grid-template-columns: 1fr 1fr; }
   .stat-item .num { font-size: 2rem; }
   h1 { font-size: 2rem; }
+  .btn-lg { white-space: normal; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
