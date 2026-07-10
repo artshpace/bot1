@@ -20,10 +20,12 @@ create table if not exists public.studio_values (
 
 alter table public.studio_values enable row level security;
 
+drop policy if exists "studio_values_select_active" on public.studio_values;
 create policy "studio_values_select_active"
   on public.studio_values for select
   using (active = true or public.is_admin());
 
+drop policy if exists "studio_values_admin_write" on public.studio_values;
 create policy "studio_values_admin_write"
   on public.studio_values for all
   using (public.is_admin())

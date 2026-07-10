@@ -31,10 +31,12 @@ create table if not exists public.studio_achievements (
 
 alter table public.studio_achievements enable row level security;
 
+drop policy if exists "studio_ach_select_active" on public.studio_achievements;
 create policy "studio_ach_select_active"
   on public.studio_achievements for select
   using (active = true or public.is_admin());
 
+drop policy if exists "studio_ach_admin_write" on public.studio_achievements;
 create policy "studio_ach_admin_write"
   on public.studio_achievements for all
   using (public.is_admin())

@@ -30,10 +30,12 @@ create table if not exists public.reviews (
 
 alter table public.reviews enable row level security;
 
+drop policy if exists "reviews_select_approved" on public.reviews;
 create policy "reviews_select_approved"
   on public.reviews for select
   using ((status = 'approved' and active = true) or public.is_admin());
 
+drop policy if exists "reviews_admin_write" on public.reviews;
 create policy "reviews_admin_write"
   on public.reviews for all
   using (public.is_admin())
