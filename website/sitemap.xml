@@ -61,11 +61,6 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://artshpace.github.io/bot/website/graduates.html</loc>
-    <priority>0.8</priority>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
     <loc>https://artshpace.github.io/bot/website/schedule.html</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>
