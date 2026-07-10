@@ -554,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyDirectorPricing();
   applyDirectorContacts();
   renderReviews();
+  renderValues();
   initScheduleForm('modal-form');
 });
 
@@ -801,6 +802,37 @@ function applyDirectorContacts() {
     }
     if (el.dataset.sasContactText !== 'keep') el.textContent = val;
   });
+}
+
+/* ===== VALUES (studio_values via Supabase) [Phase 1] =====
+   #values-grid ships with static fallback cards in the HTML. If SUPA is
+   loaded and returns rows, we replace them; otherwise the static markup
+   stays — same graceful-degradation contract as renderReviews(). */
+const VALUE_ICONS = {
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>',
+  star: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4-6.3-4.6L5.7 21 8 14 2 9.4h7.6z"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  smile: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>'
+};
+
+function renderValues() {
+  const grid = document.getElementById('values-grid');
+  if (!grid || !window.SUPA || !SUPA.values) return;
+  SUPA.values.listActive().then((list) => {
+    if (!Array.isArray(list) || !list.length) return; /* keep static fallback markup */
+    grid.innerHTML = list.map((v) => {
+      const icon = VALUE_ICONS[v.icon] || VALUE_ICONS.star;
+      return '<div class="par-card fade-up">' +
+        '<div class="par-ico">' + icon + '</div>' +
+        '<h3>' + escapeHtml(v.title || '') + '</h3>' +
+        '<p>' + escapeHtml(v.description || '') + '</p>' +
+        '</div>';
+    }).join('');
+  }).catch(() => {}); /* keep static fallback markup */
 }
 
 function renderReviews() {

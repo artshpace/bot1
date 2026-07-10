@@ -32,7 +32,9 @@
     'admin-orders.html', 'admin-ads.html',
     /* Educational v1.1 */
     'admin-journal.html', 'admin-recalculations.html', 'admin-rehearsals.html',
-    'admin-tickets.html', 'admin-branding.html'];
+    'admin-tickets.html', 'admin-branding.html',
+    /* Phase 1 platform extension */
+    'admin-values.html'];
   // Pages reserved for the Director (owner superuser) only. [Phase 2 P0]
   var DIRECTOR_PAGES = ['director.html', 'admin-payroll.html'];
   // Pages that belong to the Parent cabinet.

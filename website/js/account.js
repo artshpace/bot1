@@ -231,6 +231,7 @@
     { href: 'admin-achievements.html',  label: 'Достижения',       icon: ICON.star      },
     { href: 'admin-portfolio.html',     label: 'Портфолио',        icon: ICON.folder    },
     { href: 'admin-events.html',        label: 'Мероприятия',      icon: ICON.ticket    },
+    { href: 'admin-values.html',        label: 'Ценности студии',  icon: ICON.star      },
     /* --- Финансы / Аналитика --- */
     { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
     { href: 'admin-orders.html',        label: 'Заказы',           icon: ICON.cart      },
@@ -389,6 +390,7 @@
     'admin-achievements.html':{ title: 'Достижения' },
     'admin-events.html':      { title: 'Мероприятия' },
     'admin-portfolio.html':   { title: 'Портфолио' },
+    'admin-values.html':      { title: 'Ценности студии' },
     'admin-payments.html':    { title: 'Платежи' },
     /* CRM v0.9 */
     'admin-leads.html':       { title: 'CRM Лиды' },
@@ -3428,6 +3430,68 @@
       var m = openModal(id ? 'Редактировать материал' : 'Новый материал портфолио', html);
       bindCrudForm(m, function (data) { return id ? API.portfolio.update(id, data) : API.portfolio.create(data); },
         function () { toast(id ? 'Сохранено' : 'Материал добавлен'); loadAdminPortfolio(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — studio_values CRUD (public values.html)  [Phase 1]
+     Real Supabase table, not the API.* mock — SUPA is loaded alongside
+     api.js/account.js on this one admin page only.
+     ================================================================= */
+  var VALUE_ICON_OPTS = [
+    { value: 'heart', label: 'Сердце' }, { value: 'star', label: 'Звезда' },
+    { value: 'users', label: 'Люди' }, { value: 'spark', label: 'Искра' },
+    { value: 'shield', label: 'Щит' }, { value: 'book', label: 'Книга' },
+    { value: 'target', label: 'Мишень' }, { value: 'smile', label: 'Улыбка' }
+  ];
+  var adminValues = $('#admin-values-root');
+  if (adminValues) {
+    var addValueBtn = $('[data-add-value]');
+    if (addValueBtn) addValueBtn.addEventListener('click', function () { editValue(null); });
+    loadAdminValues();
+  }
+  function loadAdminValues() {
+    if (!window.SUPA || !SUPA.values) { adminValues.innerHTML = '<p class="cab-empty">Supabase не настроен.</p>'; return; }
+    SUPA.values.listAll().then(function (list) {
+      if (!list.length) { adminValues.innerHTML = '<p class="cab-empty">Ценностей пока нет.</p>'; return; }
+      var rows = list.map(function (v) {
+        return '<tr>' +
+          '<td data-th="Название"><strong>' + escapeHtml(v.title) + '</strong></td>' +
+          '<td data-th="Описание">' + escapeHtml((v.description || '').slice(0, 80)) + '</td>' +
+          '<td data-th="Порядок">' + (v.sort || 0) + '</td>' +
+          '<td data-th="Статус">' + (v.active === false ? 'Скрыта' : 'Активна') + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + v.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + v.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminValues.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Название</th><th>Описание</th><th>Порядок</th><th>Статус</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminValues).forEach(function (b) { b.addEventListener('click', function () { editValue(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminValues).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить ценность?')) SUPA.values.remove(b.getAttribute('data-del')).then(function () { toast('Удалено'); loadAdminValues(); });
+        });
+      });
+    }).catch(function (e) { adminValues.innerHTML = '<p class="cab-empty">' + escapeHtml(e.message || 'Ошибка загрузки') + '</p>'; });
+  }
+  function editValue(id) {
+    (id ? SUPA.values.listAll() : Promise.resolve([])).then(function (list) {
+      var v = id ? (list.filter(function (x) { return x.id === id; })[0] || {}) : {};
+      var html = '<form data-form>' +
+        field('Название', input('title', v.title)) +
+        field('Описание', textarea('description', v.description)) +
+        row(field('Иконка', selectCtrl('icon', VALUE_ICON_OPTS, v.icon || 'star')),
+            field('Порядок', input('sort', v.sort || 0, 'number'))) +
+        field('Активна', selectCtrl('active', [{ value: 'true', label: 'Да' }, { value: 'false', label: 'Нет' }], v.active === false ? 'false' : 'true')) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать ценность' : 'Новая ценность', html);
+      bindCrudForm(m, function (data) {
+        data.sort = parseInt(data.sort, 10) || 0;
+        data.active = data.active === 'true';
+        return id ? SUPA.values.update(id, data) : SUPA.values.create(data);
+      }, function () { toast(id ? 'Сохранено' : 'Ценность добавлена'); loadAdminValues(); });
     });
   }
 
