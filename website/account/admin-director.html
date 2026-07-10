@@ -104,13 +104,16 @@
 
 <div class="ad-toast" id="ad-toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../js/supa-config.js"></script>
+<script src="../js/supa.js"></script>
 <script>
 (function () {
   'use strict';
 
   var K = {
     pin: 'sas_director_pin', leads: 'sas_leads', slots: 'sas_director_slots',
-    pricing: 'sas_director_pricing', reviews: 'sas_director_reviews',
+    pricing: 'sas_director_pricing',
     teachers: 'sas_director_teachers', contacts: 'sas_director_contacts',
     lastEdit: 'sas_director_lastEdit'
   };
@@ -143,14 +146,6 @@
       { id: 'weekday', label: 'Будни (уточним)', value: 'weekday', active: true }
     ],
     pricing: { subscription: '', single: '' },
-    reviews: [
-      { id: 'r1', author: 'Айгуль К.', direction: 'Мама ученицы · Вокал', stars: 5, active: true,
-        text: 'Дочь занимается вокалом уже полгода. Педагог очень внимательный, ребёнок прогрессирует на глазах. Уже выступила на концерте!' },
-      { id: 'r2', author: 'Наталья В.', direction: 'Мама ученика · Гитара', stars: 5, active: true,
-        text: 'Сын ходит на гитару. Никогда не думала, что он будет так увлечён! Уже через 3 месяца играл первые песни.' },
-      { id: 'r3', author: 'Марина Т.', direction: 'Мама ученика · Актёрское', stars: 5, active: true,
-        text: 'Записала ребёнка на актёрское мастерство. Раньше он был очень стеснительным. За один сезон выступил на сцене!' }
-    ],
     teachers: [
       { id: 't1', name: 'Антон Шпигоцкий', subject: 'Актёрское мастерство · Ораторское искусство · Основатель', credentials: 'Училище им. Щепкина (с отличием) · актёр драмтеатра им. Погодина', bio: '', active: true },
       { id: 't2', name: 'Захаров Георгий', subject: 'Гитара', credentials: 'Гитара · Укулеле · Домбра', bio: '', active: true },
@@ -212,6 +207,11 @@
     { id: 'broadcast', label: '📢 Рассылка WhatsApp', render: renderBroadcast }
   ];
   var current = 'dashboard';
+  // Отзывы live in the real Supabase `reviews` table, not localStorage —
+  // reviewsCache holds the fetched rows; null means "not loaded yet".
+  var reviewsCache = null;
+  var DIRECTION_LABELS = { guitar: 'Гитара', acting: 'Актёрское', vocals: 'Вокал', dance: 'Танцы', painting: 'Живопись' };
+  var STATUS_LABELS = { approved: 'Одобрен', pending: 'На модерации', rejected: 'Отклонён' };
 
   function newLeadsCount() {
     return get(K.leads, []).filter(function (l) { return l.status === 'new'; }).length;
@@ -430,53 +430,104 @@
     document.getElementById('p-single').onchange = s;
   }
 
-  /* ---------- REVIEWS ---------- */
+  /* ---------- REVIEWS (real Supabase table, see reviewsCache above) ---------- */
+  function reviewsAvailable() { return !!(window.SUPA && SUPA.reviews); }
   function renderReviews() {
-    var list = load('reviews');
-    var h = '<div class="ad-h">Отзывы</div><div class="ad-sub">Показываются в блоке «Что говорят родители» на главной.</div>';
+    if (!reviewsAvailable()) {
+      return '<div class="ad-h">Отзывы</div><div class="ad-sub">Supabase не настроен — отзывы недоступны.</div>';
+    }
+    if (reviewsCache === null) {
+      SUPA.reviews.listAll().then(function (list) {
+        reviewsCache = list;
+        if (current === 'reviews') rerender();
+      }).catch(function () {
+        reviewsCache = [];
+        if (current === 'reviews') rerender();
+      });
+      return '<div class="ad-h">Отзывы</div><div class="ad-sub">Загрузка…</div>';
+    }
+    var list = reviewsCache;
+    var h = '<div class="ad-h">Отзывы</div><div class="ad-sub">Показываются на главной, /reviews.html и страницах направлений после модерации (статус «Одобрен»).</div>';
     h += '<div class="ad-card" id="rev-list">';
     list.forEach(function (r, i) {
-      h += '<div class="ed-row" data-i="' + i + '">' +
+      h += '<div class="ed-row" data-i="' + i + '" data-id="' + esc(r.id || '') + '">' +
         '<div class="ad-row">' +
-          '<div><label class="fl">Автор</label><input class="fc r-author" value="' + esc(r.author) + '"></div>' +
-          '<div><label class="fl">Подпись (направление)</label><input class="fc r-dir" value="' + esc(r.direction) + '"></div>' +
+          '<div><label class="fl">Автор</label><input class="fc r-author" value="' + esc(r.author_name) + '"></div>' +
+          '<div><label class="fl">Направление</label><select class="fc r-dir"><option value="">—</option>' +
+            Object.keys(DIRECTION_LABELS).map(function (k) { return '<option value="' + k + '"' + (r.direction === k ? ' selected' : '') + '>' + DIRECTION_LABELS[k] + '</option>'; }).join('') +
+          '</select></div>' +
           '<div style="max-width:120px"><label class="fl">Звёзд</label><select class="fc r-stars">' +
-            [5, 4, 3, 2, 1].map(function (n) { return '<option' + ((parseInt(r.stars, 10) || 5) === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+            [5, 4, 3, 2, 1].map(function (n) { return '<option' + ((parseInt(r.rating, 10) || 5) === n ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
           '</select></div>' +
         '</div>' +
-        '<label class="fl" style="margin-top:10px">Текст отзыва</label><textarea class="fc r-text">' + esc(r.text) + '</textarea>' +
+        '<div class="ad-row">' +
+          '<div><label class="fl">Дата</label><input type="date" class="fc r-date" value="' + esc(r.review_date || '') + '"></div>' +
+          '<div><label class="fl">Фото (URL, необязательно)</label><input class="fc r-photo" value="' + esc(r.photo_url || '') + '"></div>' +
+          '<div><label class="fl">Видео (URL, необязательно)</label><input class="fc r-video" value="' + esc(r.video_url || '') + '"></div>' +
+        '</div>' +
+        '<label class="fl" style="margin-top:10px">Текст отзыва</label><textarea class="fc r-text">' + esc(r.body) + '</textarea>' +
         '<div class="ctrls">' +
+          '<label class="fl" style="margin:0 8px 0 0">Статус</label><select class="fc r-status" style="max-width:170px;display:inline-block">' +
+            Object.keys(STATUS_LABELS).map(function (k) { return '<option value="' + k + '"' + ((r.status || 'approved') === k ? ' selected' : '') + '>' + STATUS_LABELS[k] + '</option>'; }).join('') +
+          '</select>' +
           '<label class="chk"><input type="checkbox" class="r-active"' + (r.active !== false ? ' checked' : '') + '> Показывать</label>' +
           '<span class="spacer"></span>' +
-          '<button class="ad-btn sm" data-up="' + i + '">↑</button>' +
-          '<button class="ad-btn sm" data-down="' + i + '">↓</button>' +
           '<button class="ad-btn sm" data-del="' + i + '">Удалить</button>' +
         '</div></div>';
     });
     h += '</div><button class="ad-btn primary" id="rev-add">+ Добавить отзыв</button>';
     return h;
   }
-  function readReviews() {
-    var prev = load('reviews');
-    return Array.prototype.map.call(document.querySelectorAll('#rev-list .ed-row'), function (row, i) {
+  function bindReviews() {
+    if (!reviewsAvailable() || reviewsCache === null) return;
+    function rowFields(row) {
       return {
-        id: (prev[i] && prev[i].id) || uid(),
-        author: row.querySelector('.r-author').value.trim(),
-        direction: row.querySelector('.r-dir').value.trim(),
-        stars: parseInt(row.querySelector('.r-stars').value, 10) || 5,
-        text: row.querySelector('.r-text').value.trim(),
+        author_name: row.querySelector('.r-author').value.trim(),
+        direction: row.querySelector('.r-dir').value || null,
+        rating: parseInt(row.querySelector('.r-stars').value, 10) || 5,
+        review_date: row.querySelector('.r-date').value || null,
+        photo_url: row.querySelector('.r-photo').value.trim() || null,
+        video_url: row.querySelector('.r-video').value.trim() || null,
+        body: row.querySelector('.r-text').value.trim(),
+        status: row.querySelector('.r-status').value,
         active: row.querySelector('.r-active').checked
       };
-    });
-  }
-  function bindReviews() {
-    document.querySelectorAll('#rev-list input, #rev-list textarea, #rev-list select').forEach(function (el) {
-      el.onchange = function () { save(K.reviews, readReviews()); };
+    }
+    function persist(row) {
+      var id = row.getAttribute('data-id');
+      var fields = rowFields(row);
+      if (id) {
+        SUPA.reviews.update(id, fields).then(function () { toast('Сохранено ✓'); }).catch(function (e) { toast(e.message || 'Ошибка сохранения'); });
+      } else {
+        SUPA.reviews.create(fields).then(function (created) {
+          row.setAttribute('data-id', created.id);
+          reviewsCache[parseInt(row.getAttribute('data-i'), 10)] = created;
+          toast('Отзыв добавлен ✓');
+        }).catch(function (e) { toast(e.message || 'Ошибка сохранения'); });
+      }
+    }
+    document.querySelectorAll('#rev-list .ed-row').forEach(function (row) {
+      row.querySelectorAll('input, textarea, select').forEach(function (el) {
+        el.onchange = function () { persist(row); };
+      });
     });
     document.getElementById('rev-add').onclick = function () {
-      var l = readReviews(); l.push({ id: uid(), author: 'Имя', direction: '', stars: 5, text: '', active: true }); save(K.reviews, l); rerender();
+      reviewsCache.push({ id: null, author_name: 'Имя', direction: null, rating: 5, review_date: new Date().toISOString().slice(0, 10), photo_url: '', video_url: '', body: '', status: 'approved', active: true });
+      rerender();
     };
-    arrayRowCtrls('#rev-list', readReviews, K.reviews);
+    document.querySelectorAll('#rev-list [data-del]').forEach(function (btn) {
+      btn.onclick = function () {
+        var i = parseInt(btn.getAttribute('data-del'), 10);
+        var r = reviewsCache[i];
+        if (!window.confirm('Удалить отзыв?')) return;
+        if (r.id) {
+          SUPA.reviews.remove(r.id).then(function () { reviewsCache.splice(i, 1); rerender(); toast('Удалено'); })
+            .catch(function (e) { toast(e.message || 'Ошибка удаления'); });
+        } else {
+          reviewsCache.splice(i, 1); rerender();
+        }
+      };
+    });
   }
 
   /* ---------- TEACHERS ---------- */

@@ -835,27 +835,40 @@ function renderValues() {
   }).catch(() => {}); /* keep static fallback markup */
 }
 
+/* Reviews now live in the real Supabase `reviews` table (see
+   supabase/migrations/0024_reviews.sql), not localStorage. #reviews-grid
+   ships with static fallback cards in the HTML; if a grid carries
+   data-direction, only that direction's approved reviews are shown
+   (used on directions/*.html). Same graceful-degradation contract as
+   renderValues(): empty/unreachable → static markup stays. */
 function renderReviews() {
   const grid = document.getElementById('reviews-grid');
-  if (!grid) return;
-  const list = readDirector('sas_director_reviews');
-  if (!Array.isArray(list)) return;            /* keep static fallback markup */
-  const active = list.filter(r => r && r.active !== false);
-  if (!active.length) return;                  /* keep static fallback markup */
-  grid.innerHTML = active.map(r => {
-    const n = Math.max(1, Math.min(5, parseInt(r.stars, 10) || 5));
-    const stars = '★★★★★'.slice(0, n);
-    const name = (r.author || 'Родитель').trim();
-    const avatar = name.charAt(0).toUpperCase();
-    return '<div class="review-card fade-up">' +
-      '<div class="review-stars">' + stars + '</div>' +
-      '<p class="review-text">' + escapeHtml(r.text || '') + '</p>' +
-      '<div class="review-author">' +
-      '<div class="review-author-avatar">' + escapeHtml(avatar) + '</div>' +
-      '<div><div class="review-author-name">' + escapeHtml(name) + '</div>' +
-      '<div class="review-author-role">' + escapeHtml(r.direction || '') + '</div></div>' +
-      '</div></div>';
-  }).join('');
+  if (!grid || !window.SUPA || !SUPA.reviews) return;
+  const direction = grid.dataset.direction || null;
+  SUPA.reviews.listApproved(direction).then((list) => {
+    if (!Array.isArray(list) || !list.length) return; /* keep static fallback markup */
+    grid.innerHTML = list.map(r => {
+      const n = Math.max(1, Math.min(5, parseInt(r.rating, 10) || 5));
+      const stars = '★★★★★'.slice(0, n);
+      const name = (r.author_name || 'Родитель').trim();
+      const avatar = name.charAt(0).toUpperCase();
+      const roleLabel = CHIP_DIRECTION[r.direction] || '';
+      const video = r.video_url
+        ? '<a href="' + escapeHtml(r.video_url) + '" target="_blank" rel="noopener" class="review-video-link">▶ Смотреть видео</a>'
+        : '';
+      return '<div class="review-card fade-up" data-dir="' + escapeHtml(r.direction || '') + '">' +
+        '<div class="review-stars">' + stars + '</div>' +
+        '<p class="review-text">' + escapeHtml(r.body || '') + '</p>' +
+        video +
+        '<div class="review-author">' +
+        (r.photo_url
+          ? '<img class="review-author-avatar" src="' + escapeHtml(r.photo_url) + '" alt="">'
+          : '<div class="review-author-avatar">' + escapeHtml(avatar) + '</div>') +
+        '<div><div class="review-author-name">' + escapeHtml(name) + '</div>' +
+        '<div class="review-author-role">' + escapeHtml(roleLabel) + '</div></div>' +
+        '</div></div>';
+    }).join('');
+  }).catch(() => {}); /* keep static fallback markup */
 }
 
 /* ===== ACTIVE NAV LINK ===== */
