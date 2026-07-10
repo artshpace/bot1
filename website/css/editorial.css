@@ -290,3 +290,26 @@
   .step-num { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--gold)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; }
   .step-row h4 { margin-bottom:6px; font-size:1.1rem; }
   .step-row p { color:var(--muted); line-height:1.7; }
+
+  /* ---------- Достижения студии (achievements.html) ---------- */
+  .ach-pub-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px; }
+  .ach-pub-card {
+    background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-lg);
+    overflow:hidden; transition:box-shadow .3s ease, transform .3s ease;
+  }
+  .ach-pub-card:hover { box-shadow:var(--shadow-md); transform:translateY(-4px); }
+  .ach-pub-thumb {
+    height:170px; background-size:cover; background-position:center;
+    background-image:linear-gradient(135deg,var(--primary),var(--gold));
+    position:relative;
+  }
+  .ach-pub-ribbon {
+    position:absolute; top:12px; left:12px; font-size:.7rem; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; background:rgba(0,0,0,.55); color:#fff;
+    padding:4px 12px; border-radius:40px;
+  }
+  .ach-pub-body { padding:20px; }
+  .ach-pub-body h3 { font-size:1.05rem; margin-bottom:6px; }
+  .ach-pub-body p { color:var(--muted); font-size:.88rem; line-height:1.6; margin-bottom:10px; }
+  .ach-pub-meta { display:flex; gap:10px; flex-wrap:wrap; font-size:.78rem; color:var(--muted); }
+  .ach-pub-meta a { color:var(--primary); font-weight:700; }

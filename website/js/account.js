@@ -232,6 +232,7 @@
     { href: 'admin-portfolio.html',     label: 'Портфолио',        icon: ICON.folder    },
     { href: 'admin-events.html',        label: 'Мероприятия',      icon: ICON.ticket    },
     { href: 'admin-values.html',        label: 'Ценности студии',  icon: ICON.star      },
+    { href: 'admin-achievements-public.html', label: 'Достижения студии', icon: ICON.star },
     /* --- Финансы / Аналитика --- */
     { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
     { href: 'admin-orders.html',        label: 'Заказы',           icon: ICON.cart      },
@@ -391,6 +392,7 @@
     'admin-events.html':      { title: 'Мероприятия' },
     'admin-portfolio.html':   { title: 'Портфолио' },
     'admin-values.html':      { title: 'Ценности студии' },
+    'admin-achievements-public.html': { title: 'Достижения студии' },
     'admin-payments.html':    { title: 'Платежи' },
     /* CRM v0.9 */
     'admin-leads.html':       { title: 'CRM Лиды' },
@@ -3492,6 +3494,81 @@
         data.active = data.active === 'true';
         return id ? SUPA.values.update(id, data) : SUPA.values.create(data);
       }, function () { toast(id ? 'Сохранено' : 'Ценность добавлена'); loadAdminValues(); });
+    });
+  }
+
+  /* =================================================================
+     ADMIN — studio_achievements CRUD (public achievements.html)  [Phase 1]
+     Real Supabase table — NOT the per-student mock achievements used by
+     account/admin-achievements.html. See naming note in js/supa.js.
+     ================================================================= */
+  var ACH_PUBLIC_CATEGORY_OPTS = [
+    { value: 'student', label: 'Ученики' }, { value: 'teacher', label: 'Преподаватели' },
+    { value: 'play', label: 'Спектакли' }, { value: 'concert', label: 'Концерты' },
+    { value: 'exhibition', label: 'Выставки' }, { value: 'competition', label: 'Конкурсы' }
+  ];
+  var ACH_PUBLIC_DIRECTION_OPTS = [
+    { value: '', label: '—' }, { value: 'guitar', label: 'Гитара' }, { value: 'vocals', label: 'Вокал' },
+    { value: 'acting', label: 'Актёрское' }, { value: 'dance', label: 'Танцы' }, { value: 'painting', label: 'Живопись' }
+  ];
+  var adminAchPublic = $('#admin-achievements-public-root');
+  if (adminAchPublic) {
+    var addAchPublicBtn = $('[data-add-ach-public]');
+    if (addAchPublicBtn) addAchPublicBtn.addEventListener('click', function () { editAchievementPublic(null); });
+    loadAdminAchievementsPublic();
+  }
+  function loadAdminAchievementsPublic() {
+    if (!window.SUPA || !SUPA.achievements) { adminAchPublic.innerHTML = '<p class="cab-empty">Supabase не настроен.</p>'; return; }
+    SUPA.achievements.listAll().then(function (list) {
+      if (!list.length) { adminAchPublic.innerHTML = '<p class="cab-empty">Достижений пока нет.</p>'; return; }
+      var catLabel = {}; ACH_PUBLIC_CATEGORY_OPTS.forEach(function (o) { catLabel[o.value] = o.label; });
+      var rows = list.map(function (a) {
+        return '<tr>' +
+          '<td data-th="Категория">' + escapeHtml(catLabel[a.category] || a.category) + '</td>' +
+          '<td data-th="Название"><strong>' + escapeHtml(a.title) + '</strong></td>' +
+          '<td data-th="Участник">' + escapeHtml(a.participant_name || '') + '</td>' +
+          '<td data-th="Дата">' + fmtDate(a.event_date) + '</td>' +
+          '<td data-th="Статус">' + (a.active === false ? 'Скрыто' : 'Активно') + '</td>' +
+          '<td data-th=""><div class="cab-row-actions">' +
+            '<button class="btn-icon" data-edit="' + a.id + '" title="Редактировать">✎</button>' +
+            '<button class="btn-icon danger" data-del="' + a.id + '" title="Удалить">✕</button>' +
+          '</div></td></tr>';
+      }).join('');
+      adminAchPublic.innerHTML = '<div class="cab-table-wrap"><table class="cab-table">' +
+        '<thead><tr><th>Категория</th><th>Название</th><th>Участник</th><th>Дата</th><th>Статус</th><th></th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>';
+      $all('[data-edit]', adminAchPublic).forEach(function (b) { b.addEventListener('click', function () { editAchievementPublic(b.getAttribute('data-edit')); }); });
+      $all('[data-del]', adminAchPublic).forEach(function (b) {
+        b.addEventListener('click', function () {
+          if (confirm('Удалить достижение?')) SUPA.achievements.remove(b.getAttribute('data-del')).then(function () { toast('Удалено'); loadAdminAchievementsPublic(); });
+        });
+      });
+    }).catch(function (e) { adminAchPublic.innerHTML = '<p class="cab-empty">' + escapeHtml(e.message || 'Ошибка загрузки') + '</p>'; });
+  }
+  function editAchievementPublic(id) {
+    (id ? SUPA.achievements.listAll() : Promise.resolve([])).then(function (list) {
+      var a = id ? (list.filter(function (x) { return x.id === id; })[0] || {}) : {};
+      var html = '<form data-form>' +
+        row(field('Категория', selectCtrl('category', ACH_PUBLIC_CATEGORY_OPTS, a.category || 'student')),
+            field('Направление', selectCtrl('direction', ACH_PUBLIC_DIRECTION_OPTS, a.direction || ''))) +
+        field('Название', input('title', a.title)) +
+        field('Описание', textarea('description', a.description)) +
+        row(field('Участник / коллектив', input('participant_name', a.participant_name)),
+            field('Дата события', input('event_date', a.event_date, 'date'))) +
+        field('Фото (URL)', input('photo_url', a.photo_url)) +
+        row(field('Диплом (URL)', input('diploma_url', a.diploma_url)),
+            field('Сертификат (URL)', input('certificate_url', a.certificate_url))) +
+        row(field('Активно', selectCtrl('active', [{ value: 'true', label: 'Да' }, { value: 'false', label: 'Нет' }], a.active === false ? 'false' : 'true')),
+            field('Рекомендуемое', selectCtrl('featured', [{ value: 'false', label: 'Нет' }, { value: 'true', label: 'Да' }], a.featured ? 'true' : 'false'))) +
+        formActions() + '</form>';
+      var m = openModal(id ? 'Редактировать достижение' : 'Новое достижение', html, true);
+      bindCrudForm(m, function (data) {
+        data.active = data.active === 'true';
+        data.featured = data.featured === 'true';
+        if (!data.direction) data.direction = null;
+        if (!data.event_date) data.event_date = null;
+        return id ? SUPA.achievements.update(id, data) : SUPA.achievements.create(data);
+      }, function () { toast(id ? 'Сохранено' : 'Достижение добавлено'); loadAdminAchievementsPublic(); });
     });
   }
 

@@ -71,6 +71,16 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
+    <loc>https://artshpace.github.io/bot/website/reviews.html</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/achievements.html</loc>
+    <priority>0.7</priority>
+    <changefreq>weekly</changefreq>
+  </url>
+  <url>
     <loc>https://artshpace.github.io/bot/website/schedule.html</loc>
     <priority>0.8</priority>
     <changefreq>weekly</changefreq>

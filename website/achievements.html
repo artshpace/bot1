@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Достижения — Shpigotskiy Art Space</title>
+  <meta name="description" content="Достижения студии Shpigotskiy Art Space: победы учеников и преподавателей, спектакли, концерты, выставки и конкурсы. Петропавловск.">
+  <meta property="og:title" content="Достижения — Shpigotskiy Art Space">
+  <meta property="og:description" content="Достижения студии Shpigotskiy Art Space: ученики, преподаватели, спектакли, концерты, выставки, конкурсы.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://artshpace.github.io/bot/achievements.html">
+  <link rel="canonical" href="https://artshpace.github.io/bot/achievements.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/editorial.css">
+</head>
+<body class="editorial">
+<header class="site-header">
+  <div class="container">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo"><span class="name">Shpigotskiy Art Space</span><span class="tagline-small">Студия творческого развития</span></a>
+      <div class="nav-links"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle active" aria-haspopup="true" aria-expanded="false">О школе <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="nav-dropdown-menu"><a href="mission.html">Миссия</a><a href="values.html">Ценности</a><a href="reviews.html">Отзывы</a><a href="achievements.html">Достижения</a><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="portfolio.html">Портфолио</a><a href="legal/index.html">Правовая информация</a></div></div><a href="contacts.html">Контакты</a><a href="account/login.html">Кабинет</a><a href="index.html#trial" class="nav-cta">Записаться</a></div>
+      <button class="nav-hamburger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+<nav class="mobile-nav"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><a href="mission.html">Миссия</a><a href="values.html">Ценности</a><a href="reviews.html">Отзывы</a><a href="achievements.html">Достижения</a><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="legal/index.html">Правовая информация</a><a href="contacts.html">Контакты</a><a href="account/login.html">Личный кабинет</a><a href="index.html#trial" class="mob-cta">Записаться на пробное занятие</a></nav>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Достижения</span></div>
+      <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Достижения</div>
+      <h1>Победы наших учеников и педагогов</h1>
+      <p class="lead">Спектакли, концерты, выставки и конкурсы — то, ради чего мы каждый день выходим на занятия.</p>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;margin-bottom:28px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="ach-cat-filters">
+        <button class="form-chip selected" data-ach-cat="all">Все</button>
+        <button class="form-chip" data-ach-cat="student">Ученики</button>
+        <button class="form-chip" data-ach-cat="teacher">Преподаватели</button>
+        <button class="form-chip" data-ach-cat="play">Спектакли</button>
+        <button class="form-chip" data-ach-cat="concert">Концерты</button>
+        <button class="form-chip" data-ach-cat="exhibition">Выставки</button>
+        <button class="form-chip" data-ach-cat="competition">Конкурсы</button>
+      </div>
+      <input type="search" id="ach-search" placeholder="Поиск по названию…" class="fc" style="max-width:260px;padding:10px 16px;border:1px solid var(--border);border-radius:999px;font-size:.9rem;">
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px;" id="ach-dir-filters">
+      <button class="form-chip selected" data-ach-dir="all">Все направления</button>
+      <button class="form-chip" data-ach-dir="guitar">Гитара</button>
+      <button class="form-chip" data-ach-dir="vocals">Вокал</button>
+      <button class="form-chip" data-ach-dir="acting">Актёрское</button>
+      <button class="form-chip" data-ach-dir="dance">Танцы</button>
+      <button class="form-chip" data-ach-dir="painting">Живопись</button>
+    </div>
+
+    <div class="ach-pub-grid" id="ach-grid">
+      <p class="cab-empty" id="ach-empty">Загрузка…</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <div class="free-badge">Первое занятие бесплатно</div>
+    <h2>Станьте частью следующей истории</h2>
+    <p>Запишитесь на бесплатное пробное занятие — и, может быть, следующая победа будет вашей.</p>
+    <div class="cta-banner-btns">
+      <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться на пробное</a>
+      <a href="https://wa.me/77086366351?text=Здравствуйте!%20Хочу%20записаться%20на%20пробное%20занятие" target="_blank" class="btn btn-white btn-lg">Спросить в WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
+      <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
+      <div class="footer-col"><h4>Студия</h4><ul><li><a href="mission.html">Миссия</a></li><li><a href="values.html">Ценности</a></li><li><a href="reviews.html">Отзывы</a></li><li><a href="achievements.html">Достижения</a></li><li><a href="teachers.html">Преподаватели</a></li><li><a href="schedule.html">Расписание</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77086366351">+7 708 636-63-51</a></li><li><a href="https://wa.me/77086366351" target="_blank">WhatsApp</a></li><li><a href="https://t.me/artshpacebot" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2026 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a> · <a href="legal/index.html">Правовая информация</a></div>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Достижения — Shpigotskiy Art Space",
+  "url": "https://artshpace.github.io/bot/achievements.html"
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supa-config.js"></script>
+<script src="js/supa.js"></script>
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script>
+(function () {
+  var CATEGORY_LABELS = { student: 'Ученики', teacher: 'Преподаватели', play: 'Спектакли', concert: 'Концерты', exhibition: 'Выставки', competition: 'Конкурсы' };
+  var DIRECTION_LABELS = { guitar: 'Гитара', vocals: 'Вокал', acting: 'Актёрское', dance: 'Танцы', painting: 'Живопись' };
+  var grid = document.getElementById('ach-grid');
+  var empty = document.getElementById('ach-empty');
+  var state = { cat: 'all', dir: 'all', q: '' };
+  var all = [];
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  function card(a) {
+    var thumb = a.photo_url ? 'background-image:url(\'' + esc(a.photo_url) + '\')' : '';
+    var links = [];
+    if (a.diploma_url) links.push('<a href="' + esc(a.diploma_url) + '" target="_blank" rel="noopener">Диплом</a>');
+    if (a.certificate_url) links.push('<a href="' + esc(a.certificate_url) + '" target="_blank" rel="noopener">Сертификат</a>');
+    var meta = [];
+    if (a.participant_name) meta.push(esc(a.participant_name));
+    if (a.direction) meta.push(DIRECTION_LABELS[a.direction] || a.direction);
+    if (a.event_date) meta.push(new Date(a.event_date).toLocaleDateString('ru-RU'));
+    return '<div class="ach-pub-card fade-up">' +
+      '<div class="ach-pub-thumb" style="' + thumb + '"><span class="ach-pub-ribbon">' + esc(CATEGORY_LABELS[a.category] || a.category) + '</span></div>' +
+      '<div class="ach-pub-body">' +
+        '<h3>' + esc(a.title) + '</h3>' +
+        (a.description ? '<p>' + esc(a.description) + '</p>' : '') +
+        '<div class="ach-pub-meta">' + meta.map(esc).join(' · ') + (links.length ? (meta.length ? ' · ' : '') + links.join(' · ') : '') + '</div>' +
+      '</div></div>';
+  }
+
+  function render() {
+    var q = state.q.trim().toLowerCase();
+    var list = all.filter(function (a) {
+      if (state.cat !== 'all' && a.category !== state.cat) return false;
+      if (state.dir !== 'all' && a.direction !== state.dir) return false;
+      if (q && (a.title || '').toLowerCase().indexOf(q) === -1 && (a.description || '').toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    if (!list.length) {
+      grid.innerHTML = '';
+      empty.style.display = '';
+      empty.textContent = all.length ? 'Ничего не найдено по заданным фильтрам.' : 'Достижения скоро появятся здесь.';
+      grid.appendChild(empty);
+      return;
+    }
+    grid.innerHTML = list.map(card).join('');
+  }
+
+  document.querySelectorAll('[data-ach-cat]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-ach-cat]').forEach(function (b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      state.cat = btn.getAttribute('data-ach-cat');
+      render();
+    });
+  });
+  document.querySelectorAll('[data-ach-dir]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-ach-dir]').forEach(function (b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      state.dir = btn.getAttribute('data-ach-dir');
+      render();
+    });
+  });
+  var searchInput = document.getElementById('ach-search');
+  searchInput.addEventListener('input', function () { state.q = searchInput.value; render(); });
+
+  if (window.SUPA && SUPA.achievements) {
+    SUPA.achievements.listActive().then(function (list) {
+      all = list || [];
+      render();
+    }).catch(function () {
+      empty.textContent = 'Не удалось загрузить достижения.';
+    });
+  } else {
+    empty.textContent = 'Достижения скоро появятся здесь.';
+  }
+})();
+</script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="js/tg.js"></script>
+</body>
+</html>
