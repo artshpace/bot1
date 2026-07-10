@@ -271,3 +271,22 @@
   /* ---------- Внутри Telegram Mini App ---------- */
   .tg-miniapp .site-header{ padding-top: max(16px, env(safe-area-inset-top)); }
   .tg-miniapp{ padding-bottom: env(safe-area-inset-bottom); }
+
+  /* =====================================================================
+     ОБЩИЕ ПАТТЕРНЫ КОНТЕНТНЫХ СТРАНИЦ (был только в parents.html — вынесено
+     сюда, чтобы mission.html/values.html/achievements.html и т.д. не
+     копировали один и тот же <style> блок повторно).
+     ===================================================================== */
+  .par-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; }
+  .par-card { background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-xl); padding:32px; transition:all var(--transition); }
+  .par-card:hover { box-shadow:var(--shadow-md); border-color:var(--gold-border); }
+  .par-ico { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:rgba(227,6,19,.08); color:var(--primary); margin-bottom:18px; }
+  .par-ico svg { width:26px; height:26px; }
+  .par-card h3 { margin-bottom:10px; font-size:1.2rem; }
+  .par-card p { color:var(--muted); line-height:1.75; font-size:.95rem; }
+
+  .step-row { display:grid; grid-template-columns:56px 1fr; gap:20px; align-items:start; padding:22px 0; border-bottom:1px solid var(--border); }
+  .step-row:last-child { border-bottom:none; }
+  .step-num { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--gold)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; }
+  .step-row h4 { margin-bottom:6px; font-size:1.1rem; }
+  .step-row p { color:var(--muted); line-height:1.7; }

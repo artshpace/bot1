@@ -337,6 +337,104 @@
             return { ok: true };
           });
       });
+    },
+
+    // ---- Ценности студии (studio_values) — публичное чтение + admin CRUD ---
+    values: {
+      listActive: function () {
+        if (!client) return Promise.resolve([]);
+        return client.from('studio_values').select('id,title,description,icon,sort')
+          .eq('active', true).order('sort', { ascending: true })
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      listAll: function () {
+        if (!client) return Promise.resolve([]);
+        return client.from('studio_values').select('*').order('sort', { ascending: true })
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      create: function (fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('studio_values').insert(fields).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      update: function (id, fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('studio_values').update(fields).eq('id', id).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      remove: function (id) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('studio_values').delete().eq('id', id)
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
+      }
+    },
+
+    // ---- Отзывы (reviews) — публичное чтение (approved+active) + admin CRUD ---
+    reviews: {
+      listApproved: function (direction) {
+        if (!client) return Promise.resolve([]);
+        var q = client.from('reviews').select('id,author_name,direction,rating,review_date,photo_url,video_url,body')
+          .eq('status', 'approved').eq('active', true).order('sort', { ascending: true });
+        if (direction) q = q.eq('direction', direction);
+        return q.then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      listAll: function () {
+        if (!client) return Promise.resolve([]);
+        return client.from('reviews').select('*').order('sort', { ascending: true })
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      create: function (fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('reviews').insert(fields).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      update: function (id, fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('reviews').update(fields).eq('id', id).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      setStatus: function (id, status) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('reviews').update({ status: status }).eq('id', id).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      remove: function (id) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('reviews').delete().eq('id', id)
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
+      }
+    },
+
+    // ---- Достижения студии (studio_achievements) — публичное чтение + admin CRUD ---
+    achievements: {
+      listActive: function (filters) {
+        if (!client) return Promise.resolve([]);
+        filters = filters || {};
+        var q = client.from('studio_achievements').select('*').eq('active', true).order('event_date', { ascending: false });
+        if (filters.category) q = q.eq('category', filters.category);
+        if (filters.direction) q = q.eq('direction', filters.direction);
+        return q.then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      listAll: function () {
+        if (!client) return Promise.resolve([]);
+        return client.from('studio_achievements').select('*').order('event_date', { ascending: false })
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      create: function (fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('studio_achievements').insert(fields).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      update: function (id, fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('studio_achievements').update(fields).eq('id', id).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      remove: function (id) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('studio_achievements').delete().eq('id', id)
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
+      }
     }
   };
 

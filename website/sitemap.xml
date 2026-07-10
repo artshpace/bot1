@@ -95,4 +95,29 @@
     <priority>0.3</priority>
     <changefreq>yearly</changefreq>
   </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/legal/index.html</loc>
+    <priority>0.3</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/consent.html</loc>
+    <priority>0.2</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/visiting-rules.html</loc>
+    <priority>0.2</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/photo-consent.html</loc>
+    <priority>0.2</priority>
+    <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://artshpace.github.io/bot/website/requisites.html</loc>
+    <priority>0.2</priority>
+    <changefreq>yearly</changefreq>
+  </url>
 </urlset>
