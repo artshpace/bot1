@@ -595,7 +595,9 @@ function applyTextOverrides() {
    unreachable → the built-in default stays. */
 function renderHeroVideo() {
   const box = document.getElementById('hero-media');
-  if (!box || !window.SUPA || !SUPA.media) return;
+  if (!box) return;
+  initHeroSound(box); /* wire click-to-unmute for any native <video> (incl. default) */
+  if (!window.SUPA || !SUPA.media) return;
   SUPA.media.listBySection('home', 'hero').then((list) => {
     if (!Array.isArray(list) || !list.length) return; /* keep default embed */
     const it = list[0];
@@ -604,11 +606,29 @@ function renderHeroVideo() {
   }).catch(() => {}); /* keep default embed */
 }
 
+/* Speaker icons for the native-video sound toggle. */
+const SND_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg>';
+const SND_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
+
 /* Build an autoplaying, muted, looping player for a media URL.
-   Handles YouTube, Vimeo, direct video files and images. */
+   Priority is a NATIVE <video> (mp4/webm) or a chrome-less Vimeo background —
+   both blend into the page. A YouTube iframe is the last-resort fallback: it
+   always carries third-party chrome and can't be made fully native. */
 function buildMediaPlayer(url, kind) {
   if (!url) return '';
   const u = String(url);
+  if (kind === 'video' || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) {
+    return '<video src="' + escapeHtml(u) + '" autoplay muted loop playsinline></video>' +
+      '<button type="button" class="hero-ed-sound" data-sound-toggle aria-label="Включить звук">' + SND_OFF + '</button>';
+  }
+  if (kind === 'image' || /\.(png|jpe?g|gif|webp|svg)(\?|#|$)/i.test(u)) {
+    return '<img src="' + escapeHtml(u) + '" alt="Студия" style="width:100%;height:100%;object-fit:cover">';
+  }
+  const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vm) {
+    const src = 'https://player.vimeo.com/video/' + vm[1] + '?autoplay=1&muted=1&loop=1&background=1';
+    return '<iframe src="' + src + '" title="Видео студии" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+  }
   const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
   if (yt) {
     const id = yt[1];
@@ -617,18 +637,26 @@ function buildMediaPlayer(url, kind) {
       '&controls=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&fs=0&iv_load_policy=3';
     return '<iframe src="' + src + '" title="Видео студии" allow="autoplay; encrypted-media; picture-in-picture" loading="lazy"></iframe>';
   }
-  const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if (vm) {
-    const src = 'https://player.vimeo.com/video/' + vm[1] + '?autoplay=1&muted=1&loop=1&background=1';
-    return '<iframe src="' + src + '" title="Видео студии" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
-  }
-  if (kind === 'video' || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) {
-    return '<video src="' + escapeHtml(u) + '" autoplay muted loop playsinline></video>';
-  }
-  if (kind === 'image' || /\.(png|jpe?g|gif|webp|svg)(\?|#|$)/i.test(u)) {
-    return '<img src="' + escapeHtml(u) + '" alt="Студия" style="width:100%;height:100%;object-fit:cover">';
-  }
   return '<iframe src="' + escapeHtml(u) + '" title="Видео студии" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe>';
+}
+
+/* Click the hero video (or the small speaker) to toggle sound. Works only for
+   a native <video>; a YouTube/Vimeo iframe manages its own audio internally. */
+function initHeroSound(box) {
+  if (!box || box.dataset.soundBound) return;
+  box.dataset.soundBound = '1';
+  box.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
+    const v = box.querySelector('video');
+    if (!v) return;
+    v.muted = !v.muted;
+    if (!v.muted && v.paused && v.play) { try { v.play(); } catch (_) {} }
+    const btn = box.querySelector('[data-sound-toggle]');
+    if (btn) {
+      btn.innerHTML = v.muted ? SND_OFF : SND_ON;
+      btn.setAttribute('aria-label', v.muted ? 'Включить звук' : 'Выключить звук');
+    }
+  });
 }
 
 /* ===== WHATSAPP ROUTING [v1.1] =====

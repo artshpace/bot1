@@ -3819,7 +3819,7 @@
           '<button class="btn btn-primary" id="media-pub-btn" type="button">Опубликовать</button>' +
         '</div>' +
         '<div id="media-status" class="media-status" style="display:none"></div>' +
-        '<p class="cab-muted media-hint">Загрузите файл ИЛИ вставьте ссылку. После публикации медиа сразу появляется в выбранном разделе на сайте. Раздел «Галерея» уже отображается на gallery.html.</p>' +
+        '<p class="cab-muted media-hint">Загрузите файл ИЛИ вставьте ссылку. После публикации медиа сразу появляется в выбранном разделе на сайте. Раздел «Галерея» уже отображается на gallery.html.<br>Видео для шапки главной: MP4 до 100 МБ (лучше короткий сжатый ролик 720p) — отображается «заподлицо», без плеера. Большой файл не загрузится (лимит хранилища) — сожмите ролик или вставьте ссылку.</p>' +
       '</div>' +
       '<div class="media-list-head"><h3>Опубликованные медиа</h3>' +
         '<label class="media-field media-filter">Фильтр раздела<select id="media-filter" class="form-control"><option value="">Все разделы</option>' + sectionOpts + '</select></label>' +

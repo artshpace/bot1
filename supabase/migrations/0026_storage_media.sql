@@ -18,10 +18,16 @@
 -- Run в Supabase → SQL Editor → Run. ПОСЛЕ 0001 (использует is_admin()).
 -- =====================================================================
 
--- 1) bucket (публичное чтение)
-insert into storage.buckets (id, name, public)
-values ('media', 'media', true)
-on conflict (id) do update set public = true;
+-- 1) bucket (публичное чтение) + лимит размера файла 100 МБ (по умолчанию
+--    Supabase режет на ~50 МБ → видео не грузилось «object exceeded the
+--    maximum allowed size»). Значение в БАЙТАХ: 100*1024*1024 = 104857600.
+--    ВАЖНО: если файл всё равно не грузится — глобальный лимит проекта в
+--    Dashboard → Storage → Settings → «Upload file size limit» тоже должен
+--    быть не ниже. На бесплатном тарифе максимум 50 МБ на файл — для шапки
+--    используйте короткий сжатый ролик (<50 МБ) или ссылку YouTube/Vimeo.
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('media', 'media', true, 104857600)
+on conflict (id) do update set public = true, file_size_limit = 104857600;
 
 -- 2) политики на storage.objects (RLS там включён по умолчанию)
 

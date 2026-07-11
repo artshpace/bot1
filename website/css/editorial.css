@@ -135,19 +135,31 @@
     width:9px;height:9px;border-radius:999px;background:var(--gold);
     box-shadow:0 0 0 4px rgba(201,168,76,.25);flex-shrink:0;
   }
-  /* видео-плеер в правой панели героя (заменил «Студия в цифрах») —
-     безрамочный: без кремовой карточки и тёмной подложки, только само
-     скруглённое видео с мягкой тенью, будто встроено в страницу. */
-  .editorial .hero-ed-panel--bare{ background:none;border:0;box-shadow:none;padding:0;border-radius:0; }
-  .editorial .hero-ed-panel--bare .hero-ed-panel-video{ background:none;padding:0;border-radius:0; }
+  /* видео в шапке героя — НЕ виджет-плеер, а часть страницы:
+     ни рамки, ни тени, ни скруглений, ни фона, ни отступов. Контейнер
+     полностью прозрачен и заподлицо с макетом. */
+  .editorial .hero-ed-panel--bare{ background:none;border:0;box-shadow:none;padding:0;margin:0;border-radius:0; }
+  .editorial .hero-ed-panel--bare .hero-ed-panel-video{ background:none;border:0;box-shadow:none;padding:0;margin:0;border-radius:0; }
   .editorial .hero-ed-video{
-    position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
-    background:transparent;box-shadow:0 6px 22px -12px rgba(26,21,18,.14);
+    position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;
+    border:0;outline:0;box-shadow:none;background:transparent;padding:0;margin:0;border-radius:0;
   }
   .editorial .hero-ed-video iframe,
   .editorial .hero-ed-video video{
-    position:absolute;inset:0;width:100%;height:100%;border:0;display:block;object-fit:cover;
+    position:absolute;inset:0;width:100%;height:100%;border:0;outline:0;display:block;
+    object-fit:cover;background:transparent;
   }
+  /* Ненавязчивый переключатель звука для нативного <video> (только для mp4).
+     Скрыт, проявляется при наведении/касании; сам ролик тоже кликабелен. */
+  .editorial .hero-ed-sound{
+    position:absolute;right:14px;bottom:14px;z-index:3;width:42px;height:42px;
+    border:0;border-radius:999px;cursor:pointer;color:#fff;
+    background:rgba(26,21,18,.40);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s ease;
+  }
+  .editorial .hero-ed-video:hover .hero-ed-sound{ opacity:1; }
+  .editorial .hero-ed-sound svg{ width:20px;height:20px; }
+  @media(hover:none){ .editorial .hero-ed-sound{ opacity:.82; } }
 
   /* ---------- DIRECTIONS bento ---------- */
   .editorial .bento{ display:grid;grid-template-columns:repeat(6,1fr);gap:18px; }
