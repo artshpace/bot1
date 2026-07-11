@@ -481,6 +481,43 @@
         return client.storage.from('media').remove([].concat(paths))
           .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
       }
+    },
+
+    // ---- Медиа-записи сайта (media_items) — публичное чтение + admin CRUD --
+    media: {
+      // Активные записи одного раздела (для публичных страниц)
+      listBySection: function (section, subsection) {
+        if (!client) return Promise.resolve([]);
+        var q = client.from('media_items').select('*')
+          .eq('section', section).eq('active', true)
+          .order('sort', { ascending: true }).order('created_at', { ascending: false });
+        if (subsection) q = q.eq('subsection', subsection);
+        return q.then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      // Все записи (админ) — опц. фильтр по разделу
+      listAll: function (section) {
+        if (!client) return Promise.resolve([]);
+        var q = client.from('media_items').select('*')
+          .order('section', { ascending: true })
+          .order('sort', { ascending: true }).order('created_at', { ascending: false });
+        if (section) q = q.eq('section', section);
+        return q.then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      create: function (fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('media_items').insert(fields).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      update: function (id, fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('media_items').update(fields).eq('id', id).select().maybeSingle()
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
+      },
+      remove: function (id) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('media_items').delete().eq('id', id)
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
+      }
     }
   };
 

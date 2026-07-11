@@ -3744,137 +3744,210 @@
      просматривать/копировать ссылки даже в демо-режиме; загрузка/удаление
      требуют реальной сессии админа (иначе RLS вернёт ошибку — показываем её).
      ================================================================= */
-  var MEDIA_FOLDERS = [
-    { value: 'general',      label: 'Общее' },
-    { value: 'portfolio',    label: 'Портфолио' },
-    { value: 'reviews',      label: 'Отзывы' },
-    { value: 'achievements', label: 'Достижения' },
-    { value: 'values',       label: 'Ценности' },
-    { value: 'gallery',      label: 'Галерея' }
+  // Разделы сайта и их подразделы (категории). gallery уже рендерится на
+  // публичной gallery.html; остальные разделы готовы под подключение.
+  var MEDIA_SECTIONS = [
+    { value: 'gallery',  label: 'Галерея', subs: [
+      { value: 'concert',     label: 'Концерты' },
+      { value: 'exhibition',  label: 'Выставки' },
+      { value: 'spectacle',   label: 'Спектакли' },
+      { value: 'class',       label: 'Занятия' },
+      { value: 'masterclass', label: 'Мастер-классы' }
+    ] },
+    { value: 'concerts', label: 'Концерты и выступления', subs: [] },
+    { value: 'teachers', label: 'Преподаватели', subs: [] },
+    { value: 'courses',  label: 'Онлайн-курсы', subs: [] },
+    { value: 'general',  label: 'Общее', subs: [] }
   ];
+  function mediaSection(v) { return MEDIA_SECTIONS.filter(function (s) { return s.value === v; })[0]; }
+  function mediaSectionLabel(v) { var s = mediaSection(v); return s ? s.label : v; }
+  function mediaSubLabel(section, v) {
+    var s = mediaSection(section); if (!s || !v) return v || '';
+    var sub = s.subs.filter(function (x) { return x.value === v; })[0];
+    return sub ? sub.label : v;
+  }
+  function detectKindFromFile(f) {
+    var t = (f && f.type) || '';
+    if (/^image\//.test(t)) return 'image';
+    if (/^video\//.test(t)) return 'video';
+    return 'file';
+  }
+  function detectKindFromLink(u) {
+    if (/youtube\.com|youtu\.be|vimeo\.com/i.test(u)) return 'embed';
+    if (/\.(png|jpe?g|gif|webp|svg)(\?|#|$)/i.test(u)) return 'image';
+    if (/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) return 'video';
+    return 'embed';
+  }
+  function subControlHtml(section, current, name) {
+    var s = mediaSection(section);
+    var nameAttr = name ? ' name="' + name + '"' : '';
+    var idAttr = name ? '' : ' id="media-sub"';
+    if (s && s.subs.length) {
+      var opts = '<option value="">—</option>' + s.subs.map(function (o) {
+        return '<option value="' + escapeHtml(o.value) + '"' + (o.value === current ? ' selected' : '') + '>' + escapeHtml(o.label) + '</option>';
+      }).join('');
+      return '<select' + idAttr + nameAttr + ' class="form-control">' + opts + '</select>';
+    }
+    return '<input' + idAttr + nameAttr + ' class="form-control" type="text" value="' + escapeHtml(current || '') + '" placeholder="напр. концерт, лето-2026">';
+  }
   var adminMedia = $('#admin-media-root');
   if (adminMedia) loadAdminMedia();
-  function mediaFolderLabel(v) {
-    var f = MEDIA_FOLDERS.filter(function (x) { return x.value === v; })[0];
-    return f ? f.label : v;
-  }
-  function fmtBytes(n) {
-    if (!n && n !== 0) return '';
-    if (n < 1024) return n + ' Б';
-    if (n < 1048576) return (n / 1024).toFixed(0) + ' КБ';
-    return (n / 1048576).toFixed(1) + ' МБ';
-  }
   function loadAdminMedia() {
-    if (!window.SUPA || !SUPA.storage) {
-      adminMedia.innerHTML = '<p class="cab-empty">Supabase не настроен — загрузка недоступна.</p>';
+    if (!window.SUPA || !SUPA.media) {
+      adminMedia.innerHTML = '<p class="cab-empty">Supabase не настроен — медиацентр недоступен.</p>';
       return;
     }
-    var folderOpts = MEDIA_FOLDERS.map(function (f) {
-      return '<option value="' + f.value + '">' + escapeHtml(f.label) + '</option>';
+    var sectionOpts = MEDIA_SECTIONS.map(function (s) {
+      return '<option value="' + s.value + '">' + escapeHtml(s.label) + '</option>';
     }).join('');
     adminMedia.innerHTML =
       '<div id="media-banner"></div>' +
       '<div class="media-upload">' +
-        '<div class="media-upload-row">' +
-          '<label class="media-field">Раздел (папка)<select id="media-folder" class="form-control">' + folderOpts + '</select></label>' +
-          '<label class="media-field media-field-grow">Файлы<input type="file" id="media-file" class="form-control" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.mp3,.mp4,.wav,.ogg"></label>' +
-          '<button class="btn btn-primary" id="media-upload-btn" type="button">Загрузить</button>' +
+        '<div class="media-pub-grid">' +
+          '<label class="media-field">Раздел<select id="media-section" class="form-control">' + sectionOpts + '</select></label>' +
+          '<label class="media-field">Подраздел / категория<span id="media-sub-wrap">' + subControlHtml('gallery', '') + '</span></label>' +
+          '<label class="media-field media-field-grow">Заголовок (необязательно)<input id="media-title" class="form-control" type="text" placeholder="напр. Отчётный концерт, май"></label>' +
         '</div>' +
-        '<p class="cab-muted media-hint">Поддерживаются фото, PDF, видео и аудио. После загрузки нажмите «Копировать ссылку» на карточке файла и вставьте её в нужный раздел. Для YouTube / Vimeo файл загружать не нужно — вставляйте ссылку прямо в разделе.</p>' +
+        '<div class="media-pub-grid">' +
+          '<label class="media-field media-field-grow">Файл (фото / видео)<input type="file" id="media-file" class="form-control" accept="image/*,video/*"></label>' +
+          '<label class="media-field media-field-grow">…или ссылка (YouTube / Vimeo / URL)<input id="media-link" class="form-control" type="text" placeholder="https://youtu.be/… или https://…/photo.jpg"></label>' +
+          '<button class="btn btn-primary" id="media-pub-btn" type="button">Опубликовать</button>' +
+        '</div>' +
+        '<div id="media-status" class="media-status" style="display:none"></div>' +
+        '<p class="cab-muted media-hint">Загрузите файл ИЛИ вставьте ссылку. После публикации медиа сразу появляется в выбранном разделе на сайте. Раздел «Галерея» уже отображается на gallery.html.</p>' +
+      '</div>' +
+      '<div class="media-list-head"><h3>Опубликованные медиа</h3>' +
+        '<label class="media-field media-filter">Фильтр раздела<select id="media-filter" class="form-control"><option value="">Все разделы</option>' + sectionOpts + '</select></label>' +
       '</div>' +
       '<div id="media-list" class="media-list"><p class="cab-muted">Загрузка…</p></div>';
 
-    var folderSel = $('#media-folder');
+    var sectionSel = $('#media-section');
+    var subWrap = $('#media-sub-wrap');
+    var titleInput = $('#media-title');
     var fileInput = $('#media-file');
-    var uploadBtn = $('#media-upload-btn');
+    var linkInput = $('#media-link');
+    var pubBtn = $('#media-pub-btn');
+    var statusEl = $('#media-status');
+    var filterSel = $('#media-filter');
 
-    // Session check → warn if uploads will fail (demo/mock mode)
+    function setStatus(msg, kind) {
+      if (!msg) { statusEl.style.display = 'none'; return; }
+      statusEl.style.display = '';
+      statusEl.className = 'media-status media-status-' + (kind || 'info');
+      statusEl.textContent = msg;
+    }
+
+    sectionSel.addEventListener('change', function () {
+      subWrap.innerHTML = subControlHtml(sectionSel.value, '');
+    });
+
+    // Session check → warn in demo mode (uploads need a real admin session)
     SUPA.storage.hasSession().then(function (has) {
       var banner = $('#media-banner');
       if (!banner) return;
       if (has) {
-        banner.innerHTML = '<div class="media-note media-note-ok">✓ Вы вошли под реальным аккаунтом — загрузка файлов доступна.</div>';
+        banner.innerHTML = '<div class="media-note media-note-ok">✓ Вход под реальным аккаунтом — загрузка и публикация доступны.</div>';
       } else {
-        banner.innerHTML = '<div class="media-note media-note-warn">⚠ Вы в демо-режиме (localStorage). Просматривать и копировать ссылки можно, но <strong>загрузка файлов недоступна</strong>. Войдите на странице входа под реальным аккаунтом администратора (email/пароль Supabase), чтобы загружать файлы. Вставка ссылок YouTube / Vimeo в разделах работает всегда.</div>';
+        banner.innerHTML = '<div class="media-note media-note-warn">⚠ Вы в демо-режиме (localStorage). <strong>Публикация и загрузка недоступны</strong> — войдите на login.html под реальным аккаунтом администратора (email/пароль Supabase). Просмотр уже опубликованного работает.</div>';
       }
     });
 
     function renderList() {
-      var folder = folderSel.value;
       var box = $('#media-list');
       box.innerHTML = '<p class="cab-muted">Загрузка…</p>';
-      SUPA.storage.list(folder).then(function (items) {
-        // storage.list may include a placeholder row for empty folders
-        items = (items || []).filter(function (it) { return it && it.name && it.name !== '.emptyFolderPlaceholder'; });
-        if (!items.length) { box.innerHTML = '<p class="cab-empty">В этом разделе пока нет файлов.</p>'; return; }
+      SUPA.media.listAll(filterSel.value || undefined).then(function (items) {
+        if (!items.length) { box.innerHTML = '<p class="cab-empty">Пока ничего не опубликовано.</p>'; return; }
         box.innerHTML = '<div class="media-grid">' + items.map(function (it) {
-          var path = folder + '/' + it.name;
-          var url = SUPA.storage.publicUrl(path);
-          var mime = (it.metadata && it.metadata.mimetype) || '';
-          var size = it.metadata && it.metadata.size;
-          var isImg = /^image\//.test(mime) || /\.(png|jpe?g|gif|webp|svg)$/i.test(it.name);
+          var isImg = it.kind === 'image';
           var thumb = isImg
-            ? '<div class="media-thumb" style="background-image:url(\'' + url + '\')"></div>'
-            : '<div class="media-thumb media-thumb-file">' + (ICON.folder || '') + '</div>';
+            ? '<div class="media-thumb" style="background-image:url(\'' + escapeHtml(it.thumb_url || it.url) + '\')"></div>'
+            : '<div class="media-thumb media-thumb-file">' + (it.kind === 'video' || it.kind === 'embed' ? (ICON.play || '') : (ICON.folder || '')) + '</div>';
+          var badges = '<span class="media-badge">' + escapeHtml(mediaSectionLabel(it.section)) + '</span>' +
+            (it.subsection ? '<span class="media-badge media-badge-sub">' + escapeHtml(mediaSubLabel(it.section, it.subsection)) + '</span>' : '') +
+            (it.active ? '' : '<span class="media-badge media-badge-off">скрыто</span>');
           return '<div class="media-card">' +
             thumb +
             '<div class="media-card-body">' +
-              '<div class="media-card-name" title="' + escapeHtml(it.name) + '">' + escapeHtml(it.name) + '</div>' +
-              '<div class="media-card-meta">' + escapeHtml(fmtBytes(size)) + '</div>' +
+              '<div class="media-card-meta">' + badges + '</div>' +
+              '<div class="media-card-name" title="' + escapeHtml(it.title || '') + '">' + escapeHtml(it.title || '(без названия)') + '</div>' +
               '<div class="media-card-actions">' +
-                '<button class="btn btn-outline btn-sm" data-media-copy="' + escapeHtml(url) + '">Копировать ссылку</button>' +
-                '<a class="btn btn-outline btn-sm" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Открыть</a>' +
-                '<button class="btn btn-outline btn-sm media-del" data-media-del="' + escapeHtml(path) + '">Удалить</button>' +
+                '<a class="btn btn-outline btn-sm" href="' + escapeHtml(it.url) + '" target="_blank" rel="noopener">Открыть</a>' +
+                '<button class="btn btn-outline btn-sm" data-media-edit="' + it.id + '">Изменить</button>' +
+                '<button class="btn btn-outline btn-sm media-del" data-media-del="' + it.id + '">Удалить</button>' +
               '</div>' +
             '</div>' +
           '</div>';
         }).join('') + '</div>';
       }).catch(function (e) {
-        box.innerHTML = '<p class="cab-empty">Не удалось загрузить список: ' + escapeHtml(e.message) + '</p>';
+        box.innerHTML = '<p class="cab-empty">Не удалось загрузить: ' + escapeHtml(e.message) + '</p>';
       });
     }
 
-    uploadBtn.addEventListener('click', function () {
-      var files = fileInput.files;
-      if (!files || !files.length) { toast('Выберите файл(ы)'); return; }
-      var folder = folderSel.value;
-      uploadBtn.disabled = true; uploadBtn.textContent = 'Загрузка…';
-      var jobs = Array.prototype.slice.call(files).map(function (f) {
-        return SUPA.storage.upload(f, { folder: folder });
-      });
-      Promise.all(jobs).then(function () {
-        toast('Загружено: ' + files.length + ' файл(ов)');
-        fileInput.value = '';
+    pubBtn.addEventListener('click', function () {
+      var section = sectionSel.value;
+      var sub = ($('#media-sub') || {}).value || '';
+      var title = titleInput.value.trim();
+      var file = fileInput.files && fileInput.files[0];
+      var link = linkInput.value.trim();
+      if (!file && !link) { setStatus('Выберите файл или вставьте ссылку.', 'err'); return; }
+      pubBtn.disabled = true;
+      setStatus(file ? 'Загрузка файла…' : 'Публикация…', 'info');
+      var step = file
+        ? SUPA.storage.upload(file, { folder: section }).then(function (r) { return { url: r.url, kind: detectKindFromFile(file) }; })
+        : Promise.resolve({ url: link, kind: detectKindFromLink(link) });
+      step.then(function (res) {
+        return SUPA.media.create({
+          section: section, subsection: sub || null, title: title || null,
+          url: res.url, kind: res.kind
+        });
+      }).then(function () {
+        setStatus('Опубликовано ✓ — теперь видно в разделе на сайте.', 'ok');
+        fileInput.value = ''; linkInput.value = ''; titleInput.value = '';
         renderList();
       }).catch(function (e) {
-        toast('Ошибка загрузки: ' + e.message);
-      }).then(function () {
-        uploadBtn.disabled = false; uploadBtn.textContent = 'Загрузить';
-      });
+        setStatus('Ошибка: ' + e.message, 'err');
+      }).then(function () { pubBtn.disabled = false; });
     });
 
-    folderSel.addEventListener('change', renderList);
+    filterSel.addEventListener('change', renderList);
 
     adminMedia.addEventListener('click', function (e) {
-      var copyBtn = e.target.closest('[data-media-copy]');
-      if (copyBtn) {
-        var url = copyBtn.getAttribute('data-media-copy');
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(url).then(function () { toast('Ссылка скопирована'); },
-            function () { window.prompt('Скопируйте ссылку:', url); });
-        } else { window.prompt('Скопируйте ссылку:', url); }
-        return;
-      }
+      var editBtn = e.target.closest('[data-media-edit]');
+      if (editBtn) { editMediaItem(editBtn.getAttribute('data-media-edit'), renderList); return; }
       var delBtn = e.target.closest('[data-media-del]');
       if (delBtn) {
-        var path = delBtn.getAttribute('data-media-del');
-        if (!window.confirm('Удалить файл безвозвратно?')) return;
-        SUPA.storage.remove(path).then(function () { toast('Файл удалён'); renderList(); },
+        if (!window.confirm('Удалить эту запись? (файл в хранилище останется)')) return;
+        SUPA.media.remove(delBtn.getAttribute('data-media-del')).then(function () { toast('Удалено'); renderList(); },
           function (ex) { toast('Не удалось удалить: ' + ex.message); });
       }
     });
 
     renderList();
+  }
+  function editMediaItem(id, done) {
+    SUPA.media.listAll().then(function (list) {
+      var it = list.filter(function (x) { return x.id === id; })[0] || {};
+      var html = '<form data-form>' +
+        field('Раздел', selectCtrl('section', MEDIA_SECTIONS.map(function (s) { return { value: s.value, label: s.label }; }), it.section)) +
+        field('Подраздел / категория', '<span id="edit-sub-wrap">' + subControlHtml(it.section, it.subsection, 'subsection') + '</span>') +
+        field('Заголовок', input('title', it.title)) +
+        field('Ссылка (URL)', input('url', it.url)) +
+        row(field('Активно', selectCtrl('active', [{ value: 'true', label: 'Да' }, { value: 'false', label: 'Нет' }], it.active === false ? 'false' : 'true')),
+            field('Порядок', input('sort', it.sort == null ? 0 : it.sort, 'number'))) +
+        formActions() + '</form>';
+      var m = openModal('Изменить медиа', html, true);
+      // rebuild subsection control if section changed in the modal
+      var secSel = m.body.querySelector('select[name="section"]');
+      var subWrap = m.body.querySelector('#edit-sub-wrap');
+      if (secSel && subWrap) secSel.addEventListener('change', function () { subWrap.innerHTML = subControlHtml(secSel.value, '', 'subsection'); });
+      bindCrudForm(m, function (data) {
+        data.active = data.active === 'true';
+        data.sort = parseInt(data.sort, 10) || 0;
+        if (!data.subsection) data.subsection = null;
+        if (!data.title) data.title = null;
+        return SUPA.media.update(id, data);
+      }, function () { toast('Сохранено'); if (done) done(); });
+    });
   }
 
   /* =================================================================
