@@ -96,3 +96,145 @@ Supabase `bot_groups` (миграция `0022_bot_groups_table.sql` — напо
 4. При каждом изменении index.html — проверять что modal-form и trial-form консистентны
 5. Admin panel сохраняет данные в localStorage с префиксом sas_director_*
 6. /compact если контекст > 70%
+
+## Phase 1 — Миграции Supabase (обязательны для новых фич)
+
+Три новых таблицы для расширения платформы (добавлены в июле 2026). Каждая использует стандартный RLS-паттерн из 0001: анон читает только активные (`active=true`), пишут только админы (`is_admin()`).
+
+### Как применить миграции
+1. Открыть Supabase → SQL Editor → новая вкладка
+2. Скопировать содержимое каждой миграции ниже (или из raw GitHub ссылок)
+3. Запустить по очереди: **0023 → 0024 → 0025**
+4. Проверить: в таблице должны появиться `studio_values`, `reviews`, `studio_achievements`
+
+---
+
+### 0023_studio_values.sql — Ценности студии
+**Для:** публичная страница `website/values.html` + админ-CRUD `account/admin-values.html`  
+**Функция:** хранит 5-7 основных ценностей студии (творчество, дружба, развитие и т.д.) с текстом и иконкой  
+**Область видимости:** анон видит `active=true`, админ видит все  
+**Используется в коде:**
+- `js/main.js` — `renderValues()` вызывает `SUPA.values.listActive()`
+- `account/admin-values.html` + `js/account.js` — `loadAdminValues()/editValue()` вызывают `SUPA.values.*`
+
+```sql
+create table if not exists public.studio_values (
+  id          uuid primary key default gen_random_uuid(),
+  title       text not null,
+  description text not null,
+  icon        text,                 -- ключ ('heart', 'star', 'book', etc.)
+  sort        int not null default 0,
+  active      boolean not null default true,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+alter table public.studio_values enable row level security;
+drop policy if exists "studio_values_select_active" on public.studio_values;
+create policy "studio_values_select_active"
+  on public.studio_values for select
+  using (active = true or public.is_admin());
+drop policy if exists "studio_values_admin_write" on public.studio_values;
+create policy "studio_values_admin_write"
+  on public.studio_values for all
+  using (public.is_admin())
+  with check (public.is_admin());
+```
+
+---
+
+### 0024_reviews.sql — Отзывы родителей
+**Для:** `website/reviews.html` (каталог отзывов) + направления + главная  
+**Функция:** заменяет старый `localStorage['sas_director_reviews']` на реальную БД  
+**Поля:**
+- `author_name` — имя родителя/ученика
+- `direction` — направление (guitar/acting/vocals/dance/painting или null)
+- `rating` — оценка 1–5
+- `review_date` — дата отзыва
+- `photo_url` / `video_url` — ссылки на аватар/видеотестимониал
+- `body` — текст отзыва
+- `status` — 'approved'/'pending'/'rejected' (по умолчанию 'approved' для админ-ввода, готово под будущую публичную форму)
+
+**Модерация:** в `account/admin-director.html`, вкладка "⭐ Отзывы" — админ видит все, может менять статус и деактивировать  
+**Видимость:** анон видит только `status='approved' AND active=true`
+
+```sql
+create table if not exists public.reviews (
+  id           uuid primary key default gen_random_uuid(),
+  author_name  text not null,
+  direction    text check (direction in ('guitar', 'acting', 'vocals', 'dance', 'painting') or direction is null),
+  rating       int not null default 5 check (rating between 1 and 5),
+  review_date  date not null default current_date,
+  photo_url    text,
+  video_url    text,
+  body         text not null,
+  status       text not null default 'approved' check (status in ('pending', 'approved', 'rejected')),
+  active       boolean not null default true,
+  sort         int not null default 0,
+  created_by   uuid references public.profiles (id) on delete set null,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
+);
+alter table public.reviews enable row level security;
+drop policy if exists "reviews_select_approved" on public.reviews;
+create policy "reviews_select_approved"
+  on public.reviews for select
+  using ((status = 'approved' and active = true) or public.is_admin());
+drop policy if exists "reviews_admin_write" on public.reviews;
+create policy "reviews_admin_write"
+  on public.reviews for all
+  using (public.is_admin())
+  with check (public.is_admin());
+```
+
+---
+
+### 0025_studio_achievements.sql — Достижения студии
+**Для:** публичная страница `website/achievements.html` (спектакли, концерты, конкурсы, ученики и преподаватели)  
+**Функция:** хранит студийные достижения (отличается от личных достижений ученика в кабинете, которые в mock `api.js`)  
+**Категории:** student, teacher, play, concert, exhibition, competition  
+**Используется:** фильтры по категориям и направлениям, поиск, админ-CRUD в `account/admin-achievements-public.html`
+
+```sql
+create table if not exists public.studio_achievements (
+  id               uuid primary key default gen_random_uuid(),
+  category         text not null check (category in ('student', 'teacher', 'play', 'concert', 'exhibition', 'competition')),
+  title            text not null,
+  description      text,
+  direction        text check (direction in ('guitar', 'acting', 'vocals', 'dance', 'painting') or direction is null),
+  participant_name text,             -- имя ученика/преподавателя/коллектива
+  event_date       date not null default current_date,
+  photo_url        text,
+  diploma_url      text,
+  certificate_url  text,
+  featured         boolean not null default false,
+  active           boolean not null default true,
+  sort             int not null default 0,
+  created_by       uuid references public.profiles (id) on delete set null,
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now()
+);
+alter table public.studio_achievements enable row level security;
+drop policy if exists "studio_ach_select_active" on public.studio_achievements;
+create policy "studio_ach_select_active"
+  on public.studio_achievements for select
+  using (active = true or public.is_admin());
+drop policy if exists "studio_ach_admin_write" on public.studio_achievements;
+create policy "studio_ach_admin_write"
+  on public.studio_achievements for all
+  using (public.is_admin())
+  with check (public.is_admin());
+create index if not exists idx_studio_ach_category  on public.studio_achievements (category);
+create index if not exists idx_studio_ach_direction on public.studio_achievements (direction);
+```
+
+---
+
+### Зачем они нужны
+
+**0023 — Ценности** дают возможность показать на сайте ядро философии студии (не просто красивый текст, а редактируемый администратором контент). Это повышает доверие родителей — видят настоящие принципы, а не маркетинг.
+
+**0024 — Отзывы** переводят социальное доказательство (родители видят реальные отзывы) в управляемую админом БД вместо ручного списания в localStorage. Админ может модерировать, добавлять фото/видео отзывов, сортировать.
+
+**0025 — Достижения** — витрина успехов: ученики получили награды на конкурсах, спектакли прошли успешно, преподаватели признаны. Это часть стратегии привлечения: потенциальный родитель видит не только программу, но и результаты (конкурсные работы, фотографии выставок, дипломы).
+
+Все три таблицы интегрированы в админ-панель (кабинет руководителя) и публичный сайт. После применения миграций админ может сразу заполнять контент через UI, это будет видно на главной и специальных страницах.
