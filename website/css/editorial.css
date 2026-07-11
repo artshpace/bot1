@@ -74,10 +74,15 @@
   .editorial .eyebrow{ letter-spacing:.18em; }
 
   /* ---------- HERO (light editorial split) ---------- */
-  .editorial .hero-ed{ position:relative;z-index:2;padding:150px 0 96px; }
+  .editorial .hero-ed{ position:relative;z-index:2;padding:128px 0 90px; }
   .editorial .hero-ed-grid{
-    display:grid;grid-template-columns:.9fr 1.3fr;gap:44px;align-items:center;
+    display:grid;grid-template-columns:.9fr 1.3fr;
+    grid-template-areas:"copy panel" "cta panel";
+    column-gap:44px;row-gap:18px;align-items:center;
   }
+  .editorial .hero-ed-copy{ grid-area:copy;align-self:end; }
+  .editorial .hero-ed-cta{ grid-area:cta;align-self:start; }
+  .editorial .hero-ed-panel{ grid-area:panel; }
   .editorial .eyebrow-pill{
     display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;
     background:rgba(227,6,19,.07);color:var(--primary);
@@ -127,11 +132,14 @@
     width:9px;height:9px;border-radius:999px;background:var(--gold);
     box-shadow:0 0 0 4px rgba(201,168,76,.25);flex-shrink:0;
   }
-  /* видео-плеер в правой панели героя (заменил «Студия в цифрах») */
-  .editorial .hero-ed-panel-video{ padding:14px; }
+  /* видео-плеер в правой панели героя (заменил «Студия в цифрах») —
+     безрамочный: без кремовой карточки и тёмной подложки, только само
+     скруглённое видео с мягкой тенью, будто встроено в страницу. */
+  .editorial .hero-ed-panel--bare{ background:none;border:0;box-shadow:none;padding:0;border-radius:0; }
+  .editorial .hero-ed-panel--bare .hero-ed-panel-video{ background:none;padding:0;border-radius:0; }
   .editorial .hero-ed-video{
-    position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
-    background:#000;box-shadow:0 10px 30px rgba(0,0,0,.35);
+    position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;
+    background:#000;box-shadow:0 22px 55px -14px rgba(26,21,18,.30);
   }
   .editorial .hero-ed-video iframe,
   .editorial .hero-ed-video video{
@@ -243,8 +251,14 @@
   .editorial .fade-up{ transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1); }
 
   @media(max-width:900px){
-    .editorial .hero-ed-grid{ grid-template-columns:1fr;gap:40px; }
-    .editorial .hero-ed{ padding:128px 0 72px; }
+    /* один столбец, порядок: текст → плеер → кнопки (плеер выше кнопок) */
+    .editorial .hero-ed-grid{
+      grid-template-columns:1fr;
+      grid-template-areas:"copy" "panel" "cta";
+      row-gap:26px;
+    }
+    .editorial .hero-ed-cta{ align-self:auto; }
+    .editorial .hero-ed{ padding:104px 0 64px; }
   }
   @media(max-width:768px){
     .editorial .section{ padding:72px 0; }
