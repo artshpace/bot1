@@ -82,8 +82,18 @@ document.querySelectorAll('.nav-dropdown-toggle').forEach(btn => {
     btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 });
-document.addEventListener('click', () => {
-  document.querySelectorAll('.nav-dropdown.open').forEach(dd => dd.classList.remove('open'));
+document.addEventListener('click', e => {
+  // Закрываем только dropdown не в мобильном меню, или если клик не на ссылку
+  if (e.target.closest('.mobile-nav .nav-dropdown-menu a')) {
+    // Закрываем только dropdown при клике на ссылку, но оставляем мобильное меню открытым
+    const dd = e.target.closest('.mobile-nav .nav-dropdown');
+    if (dd) dd.classList.remove('open');
+  } else {
+    // Закрываем все открытые dropdown при клике вне
+    document.querySelectorAll('.nav-dropdown.open').forEach(dd => {
+      if (!dd.contains(e.target)) dd.classList.remove('open');
+    });
+  }
 });
 
 /* ===== SCROLL ANIMATIONS ===== */
