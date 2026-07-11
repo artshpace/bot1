@@ -80,7 +80,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 }
 .site-header.scrolled { box-shadow: var(--shadow-md); }
 .nav-inner {
-  height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 18px;
   padding: 0 24px; box-sizing: border-box; max-width: 100%;
 }
 .nav-logo {
@@ -91,10 +91,10 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   color: var(--dark); white-space: nowrap;
 }
 .nav-logo .tagline-small { font-size: .65rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
-.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-links { display: flex; align-items: center; gap: 2px; }
 .nav-links a {
-  padding: 8px 14px; border-radius: var(--radius-sm); font-size: .9rem; font-weight: 600;
-  color: var(--body); transition: all var(--transition);
+  padding: 8px 10px; border-radius: var(--radius-sm); font-size: .875rem; font-weight: 600;
+  color: var(--body); transition: all var(--transition); white-space: nowrap;
 }
 .nav-links a:hover, .nav-links a.active { color: var(--primary); background: rgba(227,6,19,.06); }
 .nav-cta {
@@ -106,10 +106,10 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 /* "О школе" dropdown — groups secondary links to declutter the header */
 .nav-dropdown { position: relative; }
 .nav-dropdown-toggle {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 8px 14px; border-radius: var(--radius-sm); font-size: .9rem; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 8px 10px; border-radius: var(--radius-sm); font-size: .875rem; font-weight: 600;
   color: var(--body); background: none; border: none; cursor: pointer; font-family: inherit;
-  transition: all var(--transition);
+  transition: all var(--transition); white-space: nowrap;
 }
 .nav-dropdown-toggle:hover, .nav-dropdown-toggle.active { color: var(--primary); background: rgba(227,6,19,.06); }
 .nav-dropdown-menu {
