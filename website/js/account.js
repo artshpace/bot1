@@ -3980,6 +3980,36 @@
       { key: 'home.trial.title',      label: 'Призыв (пробное)', def: 'Подарите ребёнку любимое дело' },
       { key: 'home.faq.title',        label: 'FAQ', def: 'Частые вопросы' },
       { key: 'home.contacts.title',   label: 'Контакты', def: 'Как нас найти' }
+    ] },
+    { group: 'О школе — заголовки страниц', items: [
+      { key: 'mission.hero.title',      label: 'Миссия — заголовок', def: 'Творчество — не хобби, а инструмент взросления' },
+      { key: 'mission.hero.lead',       label: 'Миссия — подзаголовок', def: '' },
+      { key: 'values.hero.title',       label: 'Ценности — заголовок', def: 'На чём строится всё, что мы делаем' },
+      { key: 'values.hero.lead',        label: 'Ценности — подзаголовок', def: '' },
+      { key: 'reviews.hero.title',      label: 'Отзывы — заголовок', def: 'Что говорят родители' },
+      { key: 'reviews.hero.lead',       label: 'Отзывы — подзаголовок', def: '' },
+      { key: 'achievements.hero.title', label: 'Достижения — заголовок', def: 'Победы наших учеников и педагогов' },
+      { key: 'achievements.hero.lead',  label: 'Достижения — подзаголовок', def: '' },
+      { key: 'teachers.hero.title',     label: 'Преподаватели — заголовок', def: 'Наши преподаватели' },
+      { key: 'teachers.hero.lead',      label: 'Преподаватели — подзаголовок', def: '' },
+      { key: 'parents.hero.title',      label: 'Родителям — заголовок', def: 'Всё, что важно знать перед первым занятием' },
+      { key: 'parents.hero.lead',       label: 'Родителям — подзаголовок', def: '' },
+      { key: 'contacts.hero.title',     label: 'Контакты — заголовок', def: 'Контакты' },
+      { key: 'contacts.hero.lead',      label: 'Контакты — подзаголовок', def: '' }
+    ] },
+    { group: 'Направления — заголовки страниц', items: [
+      { key: 'directions.hero.title',   label: 'Обзор — заголовок', def: 'Выберите своё направление', html: true },
+      { key: 'directions.hero.lead',    label: 'Обзор — подзаголовок', def: '' },
+      { key: 'dir.guitar.hero.title',   label: 'Гитара — заголовок', def: 'Гитара, укулеле и домбра' },
+      { key: 'dir.guitar.hero.lead',    label: 'Гитара — подзаголовок', def: '' },
+      { key: 'dir.vocals.hero.title',   label: 'Вокал — заголовок', def: 'Вокал' },
+      { key: 'dir.vocals.hero.lead',    label: 'Вокал — подзаголовок', def: '' },
+      { key: 'dir.acting.hero.title',   label: 'Актёрское — заголовок', def: 'Актёрское мастерство', html: true },
+      { key: 'dir.acting.hero.lead',    label: 'Актёрское — подзаголовок', def: '' },
+      { key: 'dir.dance.hero.title',    label: 'Танцы — заголовок', def: 'Современный танец', html: true },
+      { key: 'dir.dance.hero.lead',     label: 'Танцы — подзаголовок', def: '' },
+      { key: 'dir.painting.hero.title', label: 'Живопись — заголовок', def: 'Живопись' },
+      { key: 'dir.painting.hero.lead',  label: 'Живопись — подзаголовок', def: '' }
     ] }
   ];
 
