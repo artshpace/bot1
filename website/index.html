@@ -43,8 +43,8 @@
   <div class="container hero-ed-grid">
     <div class="hero-ed-copy fade-up">
       <span class="eyebrow-pill"><span class="pin"></span> Петропавловск, Казахстан</span>
-      <h1>Помогаем детям <em>раскрепоститься</em> и выйти на сцену</h1>
-      <p class="lead">Студия для детей от 4 лет и взрослых. Гитара, вокал, живопись, актёрское и танцы — первое занятие бесплатно. Уже 160 учеников в Петропавловске.</p>
+      <h1 data-tx="home.hero.title">Место, где <em>дети раскрываются</em></h1>
+      <p class="lead" data-tx="home.hero.lead">Студия творческого развития для детей от 4 лет — и для взрослых тоже. Гитара, вокал, живопись, актёрское мастерство и танцы. Первое занятие бесплатно. Уже 160 учеников в Петропавловске.</p>
       <div class="hero-ed-cta">
         <a href="#trial" class="btn btn-primary btn-lg">
           Записаться на пробное
@@ -60,13 +60,17 @@
       </div>
     </div>
     <div class="hero-ed-panel fade-up">
-      <div class="hero-ed-panel-in">
-        <div class="k">Студия в цифрах</div>
-        <div class="hero-ed-metrics">
-          <div><div class="n"><span data-target="160" data-suffix="+">0+</span></div><div class="l">учеников сегодня</div></div>
-          <div><div class="n"><span data-target="5">0</span></div><div class="l">направлений</div></div>
-          <div><div class="n"><span data-target="7">0</span></div><div class="l">преподавателей</div></div>
-          <div><div class="n"><span data-target="42" data-suffix="+">0+</span></div><div class="l">мероприятий</div></div>
+      <div class="hero-ed-panel-in hero-ed-panel-video">
+        <!-- Видео на главной. По умолчанию — смонтированный ролик студии; админ
+             может заменить/удалить его в Медиацентре (раздел «Главная страница» →
+             «Видео в шапке»). main.js подставит запись из media_items (home/hero),
+             если она есть; иначе остаётся встроенный ролик ниже. -->
+        <div class="hero-ed-video" id="hero-media"
+             data-hero-default="https://www.youtube.com/watch?v=lBqztlaWOsM">
+          <iframe src="https://www.youtube-nocookie.com/embed/lBqztlaWOsM?autoplay=1&mute=1&loop=1&playlist=lBqztlaWOsM&rel=0&modestbranding=1&playsinline=1"
+                  title="Видео студии Shpigotskiy Art Space"
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  allowfullscreen loading="lazy"></iframe>
         </div>
         <div class="free"><span class="dot"></span> Первое занятие — бесплатно и ни к чему не обязывает</div>
       </div>
@@ -79,7 +83,7 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Обучение</div>
-      <h2>Пять направлений, где раскрывается ребёнок</h2>
+      <h2 data-tx="home.directions.title">Пять направлений, где раскрывается ребёнок</h2>
       <p>От первых аккордов до сцены — программы для любого возраста и темперамента.</p>
     </div>
     <div class="bento">
@@ -149,7 +153,7 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Команда</div>
-      <h2>74% родителей выбирают студию из-за педагога</h2>
+      <h2 data-tx="home.teachers.title">74% родителей выбирают студию из-за педагога</h2>
       <p>Профессионалы с образованием и призванием — люди, к которым хочется идти.</p>
     </div>
     <div class="teachers-grid">
@@ -205,7 +209,7 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Почему мы</div>
-      <h2>Преимущества студии</h2>
+      <h2 data-tx="home.benefits.title">Преимущества студии</h2>
     </div>
     <div class="benefits-grid">
       <div class="benefit-card fade-up">
@@ -259,7 +263,7 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Отзывы</div>
-      <h2>Что говорят родители</h2>
+      <h2 data-tx="home.reviews.title">Что говорят родители</h2>
     </div>
     <div class="reviews-grid" id="reviews-grid">
       <div class="review-card fade-up">
@@ -304,7 +308,7 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Жизнь студии</div>
-      <h2>Фотографии занятий</h2>
+      <h2 data-tx="home.gallery.title">Фотографии занятий</h2>
     </div>
     <div class="gallery-grid">
       <div class="gallery-item">
@@ -346,7 +350,7 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Мероприятия</div>
-      <h2>Ближайшие события</h2>
+      <h2 data-tx="home.events.title">Ближайшие события</h2>
       <p>Концерты, выставки, спектакли и мастер-классы — жизнь студии за пределами учебных занятий.</p>
     </div>
     <div class="events-grid">
@@ -424,7 +428,7 @@
 <section class="section section-alt" id="pricing">
   <div class="container">
     <div class="eyebrow" style="text-align:center;justify-content:center;">Стоимость</div>
-    <h2 style="text-align:center;">Прозрачные цены</h2>
+    <h2 style="text-align:center;" data-tx="home.pricing.title">Прозрачные цены</h2>
     <p style="text-align:center;color:var(--muted);margin-bottom:40px;">
       Первое пробное занятие — бесплатно. Платить нужно только если решите продолжить.
     </p>
@@ -442,13 +446,6 @@
         <a href="https://wa.me/77086366351?text=Здравствуйте!+Хочу+узнать+стоимость+абонемента"
            class="btn btn-white btn-full" target="_blank" rel="noopener">Узнать цену</a>
       </div>
-      <div class="pricing-card">
-        <div class="pricing-tag">Разовое</div>
-        <div class="pricing-price" id="price-single">Уточните у менеджера</div>
-        <div class="pricing-desc">Для тех, кто хочет попробовать без абонемента.</div>
-        <a href="https://wa.me/77086366351?text=Здравствуйте!+Хочу+узнать+стоимость+разового+занятия"
-           class="btn btn-outline btn-full" target="_blank" rel="noopener">Написать</a>
-      </div>
     </div>
     <p style="text-align:center;color:var(--muted);font-size:0.85rem;margin-top:24px;">
       * Точные цены зависят от направления и формата занятий. Напишите нам — ответим за час.
@@ -460,7 +457,7 @@
 <section class="cta-banner" id="trial">
   <div class="cta-banner-inner">
     <div class="free-badge">Первое занятие бесплатно</div>
-    <h2>Подарите ребёнку любимое дело</h2>
+    <h2 data-tx="home.trial.title">Подарите ребёнку любимое дело</h2>
     <p>Оставьте заявку — мы перезвоним и подберём удобное время. Без обязательств, первое занятие бесплатно.</p>
     <div class="cta-banner-btns">
       <button class="btn btn-primary btn-lg" data-modal="modal-trial">
@@ -480,7 +477,7 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">FAQ</div>
-      <h2>Частые вопросы</h2>
+      <h2 data-tx="home.faq.title">Частые вопросы</h2>
     </div>
     <div class="faq-list">
       <div class="faq-item">
@@ -534,7 +531,7 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Контакты</div>
-      <h2>Как нас найти</h2>
+      <h2 data-tx="home.contacts.title">Как нас найти</h2>
     </div>
     <div class="contacts-grid">
       <div>

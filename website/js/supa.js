@@ -518,6 +518,35 @@
         return client.from('media_items').delete().eq('id', id)
           .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
       }
+    },
+
+    // ---- Редактируемые тексты сайта (site_texts) — key/value ---------------
+    // Публичное чтение всех записей; запись только админ (RLS 0028).
+    texts: {
+      // Возвращает карту { key: value } для подстановки в [data-tx].
+      getAll: function () {
+        if (!client) return Promise.resolve({});
+        return client.from('site_texts').select('key,value')
+          .then(function (r) {
+            if (r.error) throw new Error(translate(r.error.message));
+            var map = {};
+            (r.data || []).forEach(function (row) { map[row.key] = row.value; });
+            return map;
+          });
+      },
+      // Upsert одного текста по ключу.
+      set: function (key, value) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('site_texts')
+          .upsert({ key: key, value: value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
+      },
+      // Сброс переопределения — публичная страница вернётся к тексту по умолчанию.
+      remove: function (key) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.from('site_texts').delete().eq('key', key)
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
+      }
     }
   };
 

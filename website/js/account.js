@@ -270,6 +270,7 @@
     { href: 'admin-values.html',        label: 'Ценности студии',  icon: ICON.star      },
     { href: 'admin-achievements-public.html', label: 'Достижения студии', icon: ICON.star },
     { href: 'admin-media.html',         label: 'Медиацентр',       icon: ICON.image     },
+    { href: 'admin-texts.html',         label: 'Тексты сайта',     icon: ICON.note      },
     /* --- Финансы / Аналитика --- */
     { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
     { href: 'admin-orders.html',        label: 'Заказы',           icon: ICON.cart      },
@@ -431,6 +432,7 @@
     'admin-values.html':      { title: 'Ценности студии' },
     'admin-achievements-public.html': { title: 'Достижения студии' },
     'admin-media.html':       { title: 'Медиацентр' },
+    'admin-texts.html':       { title: 'Тексты сайта' },
     'admin-payments.html':    { title: 'Платежи' },
     /* CRM v0.9 */
     'admin-leads.html':       { title: 'CRM Лиды' },
@@ -3747,6 +3749,9 @@
   // Разделы сайта и их подразделы (категории). gallery уже рендерится на
   // публичной gallery.html; остальные разделы готовы под подключение.
   var MEDIA_SECTIONS = [
+    { value: 'home',     label: 'Главная страница', subs: [
+      { value: 'hero',   label: 'Видео в шапке' }
+    ] },
     { value: 'gallery',  label: 'Галерея', subs: [
       { value: 'concert',     label: 'Концерты' },
       { value: 'exhibition',  label: 'Выставки' },
@@ -3949,6 +3954,110 @@
       }, function () { toast('Сохранено'); if (done) done(); });
     });
   }
+
+  /* =================================================================
+     ADMIN — Тексты сайта  (site_texts, редактируемые [data-tx])
+     -----------------------------------------------------------------
+     Реестр редактируемых слотов: ключ должен совпадать с data-tx="…"
+     на публичной странице. Значение по умолчанию (default) показывается
+     как подсказка и подставляется, если админ ещё не переопределил текст
+     или нажал «Сбросить». Чтобы добавить новый редактируемый текст —
+     повесьте data-tx="page.slot" в HTML и добавьте строку сюда.
+     ================================================================= */
+  var TEXT_SLOTS = [
+    { group: 'Главная — первый экран', items: [
+      { key: 'home.hero.title', label: 'Заголовок', def: 'Место, где <em>дети раскрываются</em>', html: true },
+      { key: 'home.hero.lead',  label: 'Подзаголовок', def: 'Студия творческого развития для детей от 4 лет — и для взрослых тоже. Гитара, вокал, живопись, актёрское мастерство и танцы. Первое занятие бесплатно. Уже 160 учеников в Петропавловске.' }
+    ] },
+    { group: 'Главная — заголовки разделов', items: [
+      { key: 'home.directions.title', label: 'Направления', def: 'Пять направлений, где раскрывается ребёнок' },
+      { key: 'home.teachers.title',   label: 'Команда', def: '74% родителей выбирают студию из-за педагога' },
+      { key: 'home.benefits.title',   label: 'Преимущества', def: 'Преимущества студии' },
+      { key: 'home.reviews.title',    label: 'Отзывы', def: 'Что говорят родители' },
+      { key: 'home.gallery.title',    label: 'Галерея', def: 'Фотографии занятий' },
+      { key: 'home.events.title',     label: 'Мероприятия', def: 'Ближайшие события' },
+      { key: 'home.pricing.title',    label: 'Стоимость', def: 'Прозрачные цены' },
+      { key: 'home.trial.title',      label: 'Призыв (пробное)', def: 'Подарите ребёнку любимое дело' },
+      { key: 'home.faq.title',        label: 'FAQ', def: 'Частые вопросы' },
+      { key: 'home.contacts.title',   label: 'Контакты', def: 'Как нас найти' }
+    ] }
+  ];
+
+  var adminTexts = $('#admin-texts-root');
+  if (adminTexts) loadAdminTexts();
+  function loadAdminTexts() {
+    if (!window.SUPA || !SUPA.texts) {
+      adminTexts.innerHTML = '<p class="cab-empty">Supabase не настроен — редактор текстов недоступен.</p>';
+      return;
+    }
+    adminTexts.innerHTML = '<div id="texts-banner"></div><div id="texts-body"><p class="cab-muted">Загрузка…</p></div>';
+
+    // Предупреждаем в демо-режиме — запись требует реальной сессии админа.
+    SUPA.storage.hasSession().then(function (has) {
+      var banner = $('#texts-banner');
+      if (!banner) return;
+      banner.innerHTML = has
+        ? '<div class="media-note media-note-ok">✓ Вход под реальным аккаунтом — изменения сохранятся в базе.</div>'
+        : '<div class="media-note media-note-warn">⚠ Вы в демо-режиме (localStorage). <strong>Сохранение недоступно</strong> — войдите на login.html под реальным аккаунтом администратора (email/пароль Supabase).</div>';
+    });
+
+    SUPA.texts.getAll().then(function (map) {
+      map = map || {};
+      var body = $('#texts-body');
+      body.innerHTML = TEXT_SLOTS.map(function (grp) {
+        return '<div class="tx-group"><h3>' + escapeHtml(grp.group) + '</h3>' +
+          grp.items.map(function (it) {
+            var cur = map[it.key];
+            var val = (cur != null ? cur : '');
+            var overridden = cur != null && String(cur).trim() !== '';
+            return '<div class="tx-row" data-tx-key="' + escapeHtml(it.key) + '">' +
+              '<div class="tx-row-head">' +
+                '<label class="tx-label">' + escapeHtml(it.label) +
+                  (overridden ? ' <span class="tx-tag">изменён</span>' : ' <span class="tx-tag tx-tag-def">по умолчанию</span>') +
+                '</label>' +
+                '<code class="tx-key">' + escapeHtml(it.key) + '</code>' +
+              '</div>' +
+              '<textarea class="form-control tx-input" rows="2" placeholder="' + escapeHtml(stripTags(it.def)) + '">' + escapeHtml(val) + '</textarea>' +
+              '<div class="tx-actions">' +
+                '<button class="btn btn-primary btn-sm" data-tx-save>Сохранить</button>' +
+                '<button class="btn btn-outline btn-sm" data-tx-reset>Сбросить</button>' +
+                '<span class="tx-status"></span>' +
+              '</div>' +
+            '</div>';
+          }).join('') + '</div>';
+      }).join('');
+    }).catch(function (e) {
+      $('#texts-body').innerHTML = '<p class="cab-empty">Не удалось загрузить: ' + escapeHtml(e.message) + '</p>';
+    });
+
+    adminTexts.addEventListener('click', function (e) {
+      var row = e.target.closest('.tx-row');
+      if (!row) return;
+      var key = row.getAttribute('data-tx-key');
+      var input = row.querySelector('.tx-input');
+      var statusEl = row.querySelector('.tx-status');
+      var tag = row.querySelector('.tx-tag');
+      function setStatus(msg, ok) { statusEl.textContent = msg; statusEl.className = 'tx-status ' + (ok ? 'tx-ok' : 'tx-err'); }
+
+      if (e.target.closest('[data-tx-save]')) {
+        var val = input.value.trim();
+        if (!val) { setStatus('Пусто — используйте «Сбросить»', false); return; }
+        setStatus('Сохранение…', true);
+        SUPA.texts.set(key, val).then(function () {
+          setStatus('Сохранено ✓', true);
+          if (tag) { tag.textContent = 'изменён'; tag.className = 'tx-tag'; }
+        }, function (ex) { setStatus('Ошибка: ' + ex.message, false); });
+      } else if (e.target.closest('[data-tx-reset]')) {
+        setStatus('Сброс…', true);
+        SUPA.texts.remove(key).then(function () {
+          input.value = '';
+          setStatus('Сброшено — текст по умолчанию', true);
+          if (tag) { tag.textContent = 'по умолчанию'; tag.className = 'tx-tag tx-tag-def'; }
+        }, function (ex) { setStatus('Ошибка: ' + ex.message, false); });
+      }
+    });
+  }
+  function stripTags(s) { return String(s == null ? '' : s).replace(/<[^>]*>/g, ''); }
 
   /* =================================================================
      ADMIN — CRM Лиды  [v0.9]

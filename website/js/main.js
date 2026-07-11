@@ -565,8 +565,70 @@ document.addEventListener('DOMContentLoaded', () => {
   applyDirectorContacts();
   renderReviews();
   renderValues();
+  applyTextOverrides();
+  renderHeroVideo();
   initScheduleForm('modal-form');
 });
+
+/* ===== EDITABLE SITE TEXTS (data-tx) =====
+   Any element carrying data-tx="<key>" can be overridden from the admin
+   panel (account/admin-texts.html → site_texts table). The HTML keeps a
+   sensible default so the page never looks empty if Supabase is empty or
+   unreachable — same graceful-degradation contract as renderReviews(). */
+function applyTextOverrides() {
+  const nodes = document.querySelectorAll('[data-tx]');
+  if (!nodes.length || !window.SUPA || !SUPA.texts) return;
+  SUPA.texts.getAll().then((map) => {
+    if (!map) return;
+    nodes.forEach((el) => {
+      const key = el.getAttribute('data-tx');
+      const val = map[key];
+      if (val != null && String(val).trim() !== '') el.innerHTML = val;
+    });
+  }).catch(() => {}); /* keep static defaults */
+}
+
+/* ===== HERO VIDEO =====
+   The right-hand hero panel plays a montage reel. #hero-media ships with a
+   default embed in the HTML; if the admin published a video to media_items
+   (section 'home', subsection 'hero') it replaces the default. Empty/
+   unreachable → the built-in default stays. */
+function renderHeroVideo() {
+  const box = document.getElementById('hero-media');
+  if (!box || !window.SUPA || !SUPA.media) return;
+  SUPA.media.listBySection('home', 'hero').then((list) => {
+    if (!Array.isArray(list) || !list.length) return; /* keep default embed */
+    const it = list[0];
+    const html = buildMediaPlayer(it.url, it.kind);
+    if (html) box.innerHTML = html;
+  }).catch(() => {}); /* keep default embed */
+}
+
+/* Build an autoplaying, muted, looping player for a media URL.
+   Handles YouTube, Vimeo, direct video files and images. */
+function buildMediaPlayer(url, kind) {
+  if (!url) return '';
+  const u = String(url);
+  const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  if (yt) {
+    const id = yt[1];
+    const src = 'https://www.youtube-nocookie.com/embed/' + id +
+      '?autoplay=1&mute=1&loop=1&playlist=' + id + '&rel=0&modestbranding=1&playsinline=1';
+    return '<iframe src="' + src + '" title="Видео студии" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+  }
+  const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vm) {
+    const src = 'https://player.vimeo.com/video/' + vm[1] + '?autoplay=1&muted=1&loop=1&background=1';
+    return '<iframe src="' + src + '" title="Видео студии" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+  }
+  if (kind === 'video' || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) {
+    return '<video src="' + escapeHtml(u) + '" autoplay muted loop playsinline></video>';
+  }
+  if (kind === 'image' || /\.(png|jpe?g|gif|webp|svg)(\?|#|$)/i.test(u)) {
+    return '<img src="' + escapeHtml(u) + '" alt="Студия" style="width:100%;height:100%;object-fit:cover">';
+  }
+  return '<iframe src="' + escapeHtml(u) + '" title="Видео студии" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe>';
+}
 
 /* ===== WHATSAPP ROUTING [v1.1] =====
    The studio is lead-gen, not e-commerce: every booking funnels into WhatsApp.
