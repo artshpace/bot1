@@ -278,7 +278,7 @@
   text-transform: uppercase; color: var(--muted); padding: 16px 18px;
   border-bottom: 1px solid var(--border); white-space: nowrap;
 }
-.cab-table tbody td { padding: 16px 18px; border-bottom: 1px solid var(--border); color: var(--body); vertical-align: middle; }
+.cab-table tbody td { padding: 16px 18px; border-bottom: 1px solid var(--border); color: var(--body); vertical-align: middle; overflow-wrap: break-word; word-wrap: break-word; }
 .cab-table tbody tr:last-child td { border-bottom: none; }
 .cab-table tbody tr:hover { background: var(--bg-alt); }
 .cab-table strong { color: var(--dark); }
@@ -984,10 +984,10 @@
 .pf-card.pf-photo .pf-thumb { background: linear-gradient(135deg,#0d1a0d,#0d3020); }
 .pf-card.pf-diploma .pf-thumb, .pf-card.pf-certificate .pf-thumb { background: linear-gradient(135deg,#1a0a15,#2d0d28); }
 .pf-kind { position: absolute; top: 10px; left: 10px; font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; background: rgba(0,0,0,.4); padding: 3px 8px; border-radius: 6px; }
-.pf-body { padding: 16px; }
-.pf-body strong { display: block; font-size: .95rem; color: var(--dark); }
-.pf-body p { font-size: .83rem; color: var(--body); margin: 6px 0; }
-.pf-meta { font-size: .75rem; color: var(--muted); margin-bottom: 12px; }
+.pf-body { padding: 16px; box-sizing: border-box; }
+.pf-body strong { display: block; font-size: .95rem; color: var(--dark); overflow-wrap: break-word; word-wrap: break-word; }
+.pf-body p { font-size: .83rem; color: var(--body); margin: 6px 0; overflow-wrap: break-word; word-wrap: break-word; }
+.pf-meta { font-size: .75rem; color: var(--muted); margin-bottom: 12px; overflow-wrap: break-word; word-wrap: break-word; }
 
 /* =====================================================================
    Phase 1 — PORTFOLIO: skills summary + timeline + PDF export
@@ -1079,6 +1079,10 @@ body.tg-miniapp .cab-subnav { padding-left: 20px; padding-right: 20px; }
 }
 @media (max-width: 420px) {
   .pf-grid { grid-template-columns: 1fr; }
+  h1, h2, h3, h4 { overflow-wrap: break-word; word-wrap: break-word; max-width: 100%; }
+  .btn { white-space: normal; overflow-wrap: break-word; word-wrap: break-word; }
+  .pf-body strong, .pf-body p { max-width: 100%; box-sizing: border-box; }
+  .cab-table tbody td { max-width: 100%; word-break: break-word; }
 }
 
 /* =====================================================================

@@ -181,10 +181,12 @@
 
   /* ---------- BENEFITS ---------- */
   .editorial .benefit-card{
-    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+    background:var(--cream);border:1px solid var(--line);border-radius:24px;box-sizing:border-box;
   }
   .editorial .benefit-card:hover{ box-shadow:var(--shadow-soft);transform:translateY(-4px); }
-  .editorial .benefit-icon{ border-radius:16px; }
+  .editorial .benefit-card h4{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .benefit-card p{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .benefit-icon{ border-radius:16px; flex-shrink:0; }
 
   /* ---------- REVIEWS ---------- */
   .editorial .review-card{
@@ -236,7 +238,9 @@
   }
   @media(max-width:768px){
     .editorial .section{ padding:72px 0; }
-    .editorial .hero-ed-cta .btn{ width:100%; }
+    .editorial .hero-ed-cta .btn{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
+    .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
+    .editorial h1, .editorial h2, .editorial h3, .editorial h4{ max-width:100%; }
   }
 
   /* ============================================================
@@ -250,11 +254,15 @@
   .editorial .page-hero::after{ background:radial-gradient(circle, rgba(201,168,76,.16), transparent 70%); }
 
   /* Карточки курсов */
-  .editorial .course-card{ background:var(--cream);border:1px solid var(--line);border-radius:24px; }
+  .editorial .course-card{ background:var(--cream);border:1px solid var(--line);border-radius:24px;box-sizing:border-box; }
   .editorial .course-card:hover{ box-shadow:var(--shadow-soft); }
+  .editorial .course-card h3, .editorial .course-card h4{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .course-card p{ overflow-wrap:break-word; word-wrap:break-word; }
 
   /* Навыки / пункты списков на страницах направлений */
-  .editorial .skill-item{ background:#fff;border:1px solid var(--line);border-radius:16px; }
+  .editorial .skill-item{ background:#fff;border:1px solid var(--line);border-radius:16px;box-sizing:border-box; }
+  .editorial .skill-item h4{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .skill-item p{ overflow-wrap:break-word; word-wrap:break-word; }
   .editorial .age-group{ border-radius:16px;border-color:var(--gold-border); }
 
   /* Таблица расписания / карточки статей / галерея — общий тёплый тон */
@@ -278,12 +286,12 @@
      копировали один и тот же <style> блок повторно).
      ===================================================================== */
   .par-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; }
-  .par-card { background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-xl); padding:32px; transition:all var(--transition); }
+  .par-card { background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-xl); padding:32px; transition:all var(--transition); box-sizing:border-box; }
   .par-card:hover { box-shadow:var(--shadow-md); border-color:var(--gold-border); }
-  .par-ico { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:rgba(227,6,19,.08); color:var(--primary); margin-bottom:18px; }
+  .par-ico { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:rgba(227,6,19,.08); color:var(--primary); margin-bottom:18px; flex-shrink:0; }
   .par-ico svg { width:26px; height:26px; }
-  .par-card h3 { margin-bottom:10px; font-size:1.2rem; }
-  .par-card p { color:var(--muted); line-height:1.75; font-size:.95rem; }
+  .par-card h3 { margin-bottom:10px; font-size:1.2rem; overflow-wrap:break-word; word-wrap:break-word; }
+  .par-card p { color:var(--muted); line-height:1.75; font-size:.95rem; overflow-wrap:break-word; word-wrap:break-word; }
 
   .step-row { display:grid; grid-template-columns:56px 1fr; gap:20px; align-items:start; padding:22px 0; border-bottom:1px solid var(--border); }
   .step-row:last-child { border-bottom:none; }
@@ -295,7 +303,7 @@
   .ach-pub-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px; }
   .ach-pub-card {
     background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-lg);
-    overflow:hidden; transition:box-shadow .3s ease, transform .3s ease;
+    overflow:hidden; transition:box-shadow .3s ease, transform .3s ease; box-sizing:border-box;
   }
   .ach-pub-card:hover { box-shadow:var(--shadow-md); transform:translateY(-4px); }
   .ach-pub-thumb {
@@ -306,10 +314,10 @@
   .ach-pub-ribbon {
     position:absolute; top:12px; left:12px; font-size:.7rem; font-weight:700;
     letter-spacing:.06em; text-transform:uppercase; background:rgba(0,0,0,.55); color:#fff;
-    padding:4px 12px; border-radius:40px;
+    padding:4px 12px; border-radius:40px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
-  .ach-pub-body { padding:20px; }
-  .ach-pub-body h3 { font-size:1.05rem; margin-bottom:6px; }
-  .ach-pub-body p { color:var(--muted); font-size:.88rem; line-height:1.6; margin-bottom:10px; }
+  .ach-pub-body { padding:20px; box-sizing:border-box; }
+  .ach-pub-body h3 { font-size:1.05rem; margin-bottom:6px; overflow-wrap:break-word; word-wrap:break-word; }
+  .ach-pub-body p { color:var(--muted); font-size:.88rem; line-height:1.6; margin-bottom:10px; overflow-wrap:break-word; word-wrap:break-word; }
   .ach-pub-meta { display:flex; gap:10px; flex-wrap:wrap; font-size:.78rem; color:var(--muted); }
   .ach-pub-meta a { color:var(--primary); font-weight:700; }
