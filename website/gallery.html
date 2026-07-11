@@ -270,6 +270,9 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supa-config.js"></script>
+<script src="js/supa.js"></script>
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
@@ -285,6 +288,34 @@
       });
     });
   });
+
+  /* Live gallery from Supabase (media_items, section='gallery').
+     Graceful degradation: only replace the hand-authored fallback grid
+     when real rows come back; on empty/error the static items stay. */
+  var CAT = { concert: 'Концерт', exhibition: 'Выставка', spectacle: 'Спектакль', class: 'Занятие', masterclass: 'Мастер-класс' };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  if (window.SUPA && SUPA.media && typeof SUPA.media.listBySection === 'function') {
+    SUPA.media.listBySection('gallery').then(function (items) {
+      if (!items || !items.length) return; // keep static fallback
+      grid.innerHTML = items.map(function (it) {
+        var cat = it.subsection || '';
+        var isImg = it.kind === 'image';
+        var bg = isImg
+          ? "background-image:url('" + esc(it.thumb_url || it.url) + "');background-size:cover;background-position:center;"
+          : (it.thumb_url ? "background-image:url('" + esc(it.thumb_url) + "');background-size:cover;background-position:center;" : "background:linear-gradient(135deg,#1a0808,#3d1010);");
+        var playBadge = (it.kind === 'video' || it.kind === 'embed') ? '<span class="gallery-play">▶</span>' : '';
+        return '<div class="gallery-item fade-up in-view" data-cat="' + esc(cat) + '">' +
+          '<a class="gallery-thumb" style="display:block;' + bg + '" href="' + esc(it.url) + '" target="_blank" rel="noopener">' +
+            playBadge +
+            '<div class="gallery-overlay"><div class="gallery-info">' +
+              '<span class="gallery-cat">' + esc(CAT[cat] || cat) + '</span>' +
+              (it.title ? '<h4>' + esc(it.title) + '</h4>' : '') +
+            '</div></div>' +
+          '</a>' +
+        '</div>';
+      }).join('');
+    }).catch(function () { /* keep static fallback */ });
+  }
 })();
 </script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
