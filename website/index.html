@@ -45,28 +45,30 @@
       <span class="eyebrow-pill"><span class="pin"></span> Петропавловск, Казахстан</span>
       <h1 class="hero-ed-h1" data-tx="home.hero.title">Место, где <em>дети раскрываются</em></h1>
       <p class="lead" data-tx="home.hero.lead">Студия творческого развития для детей и взрослых. Первое занятие бесплатно.</p>
-    </div>
-    <div class="hero-ed-cta fade-up">
-      <a href="#trial" class="btn btn-primary btn-lg">
+      <a href="#trial" class="btn btn-primary btn-lg hero-ed-cta-primary">
         Записаться на пробное
         <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
-      <a href="directions/index.html" class="btn btn-white btn-lg">Все направления</a>
     </div>
     <div class="hero-ed-panel hero-ed-panel--bare">
       <div class="hero-ed-panel-in hero-ed-panel-video">
         <!-- Видео на главной. По умолчанию — смонтированный ролик студии; админ
              может заменить/удалить его в Медиацентре (раздел «Главная страница» →
              «Видео в шапке»). main.js подставит запись из media_items (home/hero),
-             если она есть; иначе остаётся встроенный ролик ниже. -->
+             если она есть; иначе остаётся встроенный ролик ниже.
+             controls=0 / fs=0 / iv_load_policy=3 — скрываем управление, чтобы
+             ролик выглядел как встроенное в сайт видео, а не как плеер. -->
         <div class="hero-ed-video" id="hero-media"
              data-hero-default="https://www.youtube.com/watch?v=lBqztlaWOsM">
-          <iframe src="https://www.youtube-nocookie.com/embed/lBqztlaWOsM?autoplay=1&mute=1&loop=1&playlist=lBqztlaWOsM&rel=0&modestbranding=1&playsinline=1"
+          <iframe src="https://www.youtube-nocookie.com/embed/lBqztlaWOsM?autoplay=1&mute=1&loop=1&playlist=lBqztlaWOsM&controls=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&fs=0&iv_load_policy=3"
                   title="Видео студии Shpigotskiy Art Space"
                   allow="autoplay; encrypted-media; picture-in-picture"
-                  allowfullscreen loading="lazy"></iframe>
+                  loading="lazy"></iframe>
         </div>
       </div>
+    </div>
+    <div class="hero-ed-cta fade-up">
+      <a href="directions/index.html" class="btn btn-white btn-lg">Все направления</a>
     </div>
   </div>
 </section>

@@ -98,6 +98,9 @@
     font-size:1.12rem;color:var(--ink-soft);max-width:520px;margin:20px 0 30px;
   }
   .editorial .hero-ed-cta{ display:flex;gap:14px;flex-wrap:wrap; }
+  /* Основная кнопка живёт в текстовом блоке (всегда видна над плеером),
+     «Все направления» — в .hero-ed-cta (на мобильном уходит под плеер). */
+  .editorial .hero-ed-cta-primary{ margin-top:6px; }
   .editorial .hero-ed-trust{ display:flex;gap:10px;flex-wrap:wrap;margin-top:34px; }
   .editorial .hero-ed-trust span{
     font-size:.82rem;color:var(--ink-soft);background:var(--cream);border:1px solid var(--line);
@@ -138,8 +141,8 @@
   .editorial .hero-ed-panel--bare{ background:none;border:0;box-shadow:none;padding:0;border-radius:0; }
   .editorial .hero-ed-panel--bare .hero-ed-panel-video{ background:none;padding:0;border-radius:0; }
   .editorial .hero-ed-video{
-    position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;
-    background:#000;box-shadow:0 22px 55px -14px rgba(26,21,18,.30);
+    position:relative;width:100%;aspect-ratio:16/9;border-radius:16px;overflow:hidden;
+    background:transparent;box-shadow:0 6px 22px -12px rgba(26,21,18,.14);
   }
   .editorial .hero-ed-video iframe,
   .editorial .hero-ed-video video{
@@ -262,7 +265,8 @@
   }
   @media(max-width:768px){
     .editorial .section{ padding:72px 0; }
-    .editorial .hero-ed-cta .btn{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
+    .editorial .hero-ed-cta .btn,
+    .editorial .hero-ed-cta-primary{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial h1, .editorial h2, .editorial h3, .editorial h4{ max-width:100%; }
   }
