@@ -990,6 +990,34 @@
 .pf-meta { font-size: .75rem; color: var(--muted); margin-bottom: 12px; }
 
 /* =====================================================================
+   Phase 1 — PORTFOLIO: skills summary + timeline + PDF export
+   ===================================================================== */
+.pf-skills { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-bottom: 24px; }
+.pf-skill-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 16px; }
+.pf-skill-dir { font-size: .78rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+.pf-skill-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .82rem; color: var(--body); padding: 3px 0; }
+.pf-skill-dots { display: flex; gap: 3px; }
+.pf-skill-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); }
+.pf-skill-dot.on { background: var(--gold); }
+
+.cab-timeline { position: relative; padding-left: 28px; }
+.cab-timeline::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+.cab-timeline-month { font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin: 22px 0 12px; }
+.cab-timeline-month:first-child { margin-top: 0; }
+.cab-timeline-item { position: relative; padding: 4px 0 16px 18px; }
+.cab-timeline-item::before {
+  content: ''; position: absolute; left: -28px; top: 9px; width: 10px; height: 10px; border-radius: 50%;
+  background: var(--primary); border: 2px solid var(--bg-alt);
+}
+.cab-timeline-item strong { display: block; font-size: .92rem; color: var(--dark); }
+.cab-timeline-item p { font-size: .82rem; color: var(--muted); margin-top: 3px; }
+.cab-timeline-tag {
+  display: inline-block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--primary); background: rgba(227,6,19,.08); padding: 2px 8px; border-radius: 999px; margin-bottom: 4px;
+}
+.cab-timeline-date { font-size: .74rem; color: var(--muted); }
+
+/* =====================================================================
    v0.6 — ACCOUNT SETTINGS
    ===================================================================== */
 .settings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; align-items: start; }

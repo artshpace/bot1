@@ -1651,7 +1651,8 @@
       .map(function (c) {
         var s = courseLmsStats(c.id, id);
         return { id: c.id, title: c.title, teacher: c.teacher, progress: s.progress,
-          lessonsDone: s.lessonsDone, lessonsTotal: s.lessonsTotal, done: s.progress >= 100 };
+          lessonsDone: s.lessonsDone, lessonsTotal: s.lessonsTotal, done: s.progress >= 100,
+          date: s.lastViewedAt };
       });
   }
   function certsFor(id) {
@@ -2452,6 +2453,7 @@
       var rec = { id: uid('pf'), studentId: data.studentId, kind: data.kind || 'photo',
         direction: (data.direction || '').trim() || 'Общее',
         title: data.title.trim(), note: (data.note || '').trim(),
+        url: (data.url || '').trim(),
         addedBy: (data.addedBy || '').trim() || (me ? me.name : 'Преподаватель'),
         date: data.date || ymd(new Date()) };
       list.push(rec); write(LS_PORTFOLIO, list);
@@ -2463,7 +2465,7 @@
       var list = read(LS_PORTFOLIO, []);
       var rec = list.filter(function (p) { return p.id === id; })[0];
       if (!rec) return fail('Материал не найден');
-      ['studentId','kind','direction','title','note','addedBy','date'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
+      ['studentId','kind','direction','title','note','url','addedBy','date'].forEach(function (k) { if (data[k] != null) rec[k] = data[k]; });
       write(LS_PORTFOLIO, list);
       return delay(rec);
     },

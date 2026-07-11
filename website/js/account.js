@@ -3079,43 +3079,170 @@
     diploma:     { label: 'Диплом',     icon: ICON.cert  },
     certificate: { label: 'Сертификат', icon: ICON.cert  }
   };
+  var TIMELINE_MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь',
+    'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   var pfRoot = $('#portfolio-root');
   if (pfRoot) {
     resolveViewer().then(function (ctx) {
       if (!ctx.id) { pfRoot.innerHTML = '<p class="cab-empty">Нет данных для отображения.</p>'; return; }
-      API.portfolio.list(ctx.id).then(function (list) {
-        if (!list.length) {
-          pfRoot.innerHTML = viewerPicker(ctx, 'portfolio.html', 'Ученик') +
-            '<p class="cab-empty">Портфолио пока пустое. Материалы добавляет преподаватель.</p>';
-          bindViewerPicker(pfRoot);
-          return;
-        }
-        /* collect unique kinds for filter tabs */
+      Promise.all([
+        API.portfolio.list(ctx.id),
+        API.student.development(ctx.id),
+        API.skillMap.getForStudent(ctx.id)
+      ]).then(function (res) {
+        var list = res[0], dev = res[1], skillMapData = res[2];
+        var studentName = (ctx.options && ctx.options.length)
+          ? ((ctx.options.filter(function (o) { return o.id === ctx.id; })[0] || {}).name || '')
+          : (((API.auth.current() || {}).name) || '');
         var kinds = ['all'];
         list.forEach(function (p) { if (kinds.indexOf(p.kind) === -1) kinds.push(p.kind); });
+        var timeline = buildPortfolioTimeline(list, dev);
+        var pfView = 'items';
         var pfFilter = 'all';
-        function renderPfGrid() {
-          var visible = pfFilter === 'all' ? list : list.filter(function (p) { return p.kind === pfFilter; });
-          var grid = visible.length
-            ? '<div class="pf-grid">' + visible.map(renderPortfolioItem).join('') + '</div>'
-            : '<p class="cab-empty">Нет материалов этого типа.</p>';
-          var tabs = '<div class="cab-tabs pf-filter-tabs">' +
-            kinds.map(function (k) {
-              var lbl = k === 'all' ? 'Все' : ((PF_KIND[k] || {}).label || k);
-              return '<button class="cab-tab' + (pfFilter === k ? ' active' : '') + '" data-pf-filter="' + k + '">' + lbl + '</button>';
-            }).join('') + '</div>';
-          pfRoot.innerHTML = viewerPicker(ctx, 'portfolio.html', 'Ученик') + tabs + grid;
+
+        function render() {
+          var head = viewerPicker(ctx, 'portfolio.html', 'Ученик') + renderSkillsSummary(skillMapData);
+          var viewTabs = '<div class="cab-tabs">' +
+            '<button class="cab-tab' + (pfView === 'items' ? ' active' : '') + '" data-pf-view="items">Работы</button>' +
+            '<button class="cab-tab' + (pfView === 'timeline' ? ' active' : '') + '" data-pf-view="timeline">Временная шкала</button>' +
+            '</div>';
+          var toolbar = '<div class="cab-toolbar"><div></div>' +
+            '<button class="btn btn-outline btn-sm" data-pf-pdf>' + ICON.download + ' Скачать PDF</button></div>';
+          var body;
+          if (pfView === 'timeline') {
+            body = timeline.length ? renderPortfolioTimelineHtml(timeline) : '<p class="cab-empty">Пока нечего показать на временной шкале.</p>';
+          } else if (!list.length) {
+            body = '<p class="cab-empty">Портфолио пока пустое. Материалы добавляет преподаватель.</p>';
+          } else {
+            var visible = pfFilter === 'all' ? list : list.filter(function (p) { return p.kind === pfFilter; });
+            var grid = visible.length
+              ? '<div class="pf-grid">' + visible.map(renderPortfolioItem).join('') + '</div>'
+              : '<p class="cab-empty">Нет материалов этого типа.</p>';
+            var kindTabs = '<div class="cab-tabs pf-filter-tabs">' +
+              kinds.map(function (k) {
+                var lbl = k === 'all' ? 'Все' : ((PF_KIND[k] || {}).label || k);
+                return '<button class="cab-tab' + (pfFilter === k ? ' active' : '') + '" data-pf-filter="' + k + '">' + lbl + '</button>';
+              }).join('') + '</div>';
+            body = kindTabs + grid;
+          }
+          pfRoot.innerHTML = head + viewTabs + toolbar + body;
           bindViewerPicker(pfRoot);
+          $all('[data-pf-view]', pfRoot).forEach(function (b) {
+            b.addEventListener('click', function () { pfView = b.getAttribute('data-pf-view'); render(); });
+          });
           $all('[data-pf-filter]', pfRoot).forEach(function (b) {
-            b.addEventListener('click', function () { pfFilter = b.getAttribute('data-pf-filter'); renderPfGrid(); });
+            b.addEventListener('click', function () { pfFilter = b.getAttribute('data-pf-filter'); render(); });
           });
           $all('[data-pf-open]', pfRoot).forEach(function (b) {
-            b.addEventListener('click', function () { toast('Просмотр материала доступен в полной версии'); });
+            b.addEventListener('click', function () {
+              var item = list.filter(function (x) { return x.id === b.getAttribute('data-pf-open'); })[0];
+              if (item && item.url) window.open(item.url, '_blank', 'noopener');
+              else toast('Ссылка на материал пока не добавлена');
+            });
           });
+          var pdfBtn = $('[data-pf-pdf]', pfRoot);
+          if (pdfBtn) pdfBtn.addEventListener('click', function () { exportPortfolioPdf(studentName, timeline); });
         }
-        renderPfGrid();
+        render();
       });
     });
+  }
+  /* Compact read-only skills summary — reuses the same skillMap data the
+     admin "Карта развития" screen writes; no new UI to edit skills here. */
+  function renderSkillsSummary(skillMapData) {
+    var dirs = Object.keys(skillMapData || {});
+    if (!dirs.length) return '';
+    var cards = dirs.map(function (dir) {
+      var skills = skillMapData[dir];
+      var rows = Object.keys(skills).map(function (skill) {
+        var level = skills[skill] || 0;
+        var dots = '';
+        for (var i = 1; i <= 5; i++) dots += '<span class="pf-skill-dot' + (i <= level ? ' on' : '') + '"></span>';
+        return '<div class="pf-skill-row"><span>' + escapeHtml(skill) + '</span><span class="pf-skill-dots">' + dots + '</span></div>';
+      }).join('');
+      return '<div class="pf-skill-card"><div class="pf-skill-dir">' + escapeHtml(dir) + '</div>' + rows + '</div>';
+    }).join('');
+    return '<h2 class="cab-section-title">Навыки</h2><div class="pf-skills">' + cards + '</div>';
+  }
+  /* Merges portfolio items + achievements + certificates + completed
+     courses + teacher notes into one date-sorted feed for the
+     "Временная шкала" view and the PDF export. */
+  function buildPortfolioTimeline(portfolioList, dev) {
+    var entries = [];
+    portfolioList.forEach(function (p) {
+      entries.push({ date: p.date, tag: (PF_KIND[p.kind] || {}).label || p.kind, title: p.title, desc: p.note || '' });
+    });
+    (dev.achievements || []).forEach(function (a) {
+      entries.push({ date: a.date, tag: 'Достижение', title: a.title, desc: a.description || '' });
+    });
+    (dev.certificates || []).forEach(function (c) {
+      entries.push({ date: c.date, tag: 'Сертификат', title: c.title, desc: c.description || '' });
+    });
+    (dev.courses || []).filter(function (c) { return c.done && c.date; }).forEach(function (c) {
+      entries.push({ date: c.date, tag: 'Курс завершён', title: c.title, desc: '' });
+    });
+    (dev.notes || []).forEach(function (n) {
+      entries.push({ date: n.date, tag: 'Комментарий преподавателя', title: n.author, desc: n.text });
+    });
+    entries = entries.filter(function (e) { return e.date; });
+    entries.sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
+    return entries;
+  }
+  function renderPortfolioTimelineHtml(entries) {
+    var html = '<div class="cab-timeline">';
+    var lastMonth = null;
+    entries.forEach(function (e) {
+      var d = new Date(e.date);
+      var monthKey = TIMELINE_MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+      if (monthKey !== lastMonth) {
+        html += '<div class="cab-timeline-month">' + monthKey + '</div>';
+        lastMonth = monthKey;
+      }
+      html += '<div class="cab-timeline-item">' +
+        '<span class="cab-timeline-tag">' + escapeHtml(e.tag) + '</span>' +
+        '<strong>' + escapeHtml(e.title || '') + '</strong>' +
+        (e.desc ? '<p>' + escapeHtml(e.desc) + '</p>' : '') +
+        '<span class="cab-timeline-date">' + fmtDate(e.date) + '</span>' +
+      '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+  /* Text-based summary report (dates/types/titles/notes) — labelled as a
+     report, not a photo album, since Phase 1 has no real embedded images. */
+  function exportPortfolioPdf(studentName, entries) {
+    if (!window.jspdf || !window.jspdf.jsPDF) { toast('PDF-модуль не загружен'); return; }
+    if (!entries.length) { toast('Нет данных для отчёта'); return; }
+    var doc = new window.jspdf.jsPDF();
+    var pageH = doc.internal.pageSize.getHeight();
+    var marginL = 14, y = 20;
+    doc.setFontSize(16);
+    doc.text('Портфолио — ' + (studentName || 'ученик'), marginL, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.text('Сформировано: ' + fmtDate(new Date().toISOString().slice(0, 10)), marginL, y);
+    y += 10;
+    entries.forEach(function (e) {
+      if (y > pageH - 24) { doc.addPage(); y = 20; }
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text(fmtDate(e.date) + ' — ' + (e.tag || ''), marginL, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      doc.text(doc.splitTextToSize(e.title || '', 180), marginL, y);
+      y += 6;
+      if (e.desc) {
+        var lines = doc.splitTextToSize(e.desc, 180);
+        doc.setFontSize(9);
+        lines.forEach(function (line) {
+          if (y > pageH - 16) { doc.addPage(); y = 20; }
+          doc.text(line, marginL, y);
+          y += 5;
+        });
+      }
+      y += 4;
+    });
+    doc.save('portfolio-' + (studentName || 'student').replace(/\s+/g, '_') + '.pdf');
   }
   function renderPortfolioItem(p) {
     var k = PF_KIND[p.kind] || PF_KIND.document;
@@ -3125,7 +3252,7 @@
         (p.direction ? '<div class="pf-direction">' + escapeHtml(p.direction) + '</div>' : '') +
         (p.note ? '<p>' + escapeHtml(p.note) + '</p>' : '') +
         '<div class="pf-meta">' + escapeHtml(p.addedBy || '') + ' · ' + fmtDate(p.date) + '</div>' +
-        '<button class="btn btn-outline btn-sm" data-pf-open>Открыть</button>' +
+        '<button class="btn btn-outline btn-sm" data-pf-open="' + p.id + '">Открыть</button>' +
       '</div></div>';
   }
 
@@ -3426,7 +3553,8 @@
             field('Тип материала', selectCtrl('kind', PF_KIND_OPTS, p.kind || 'photo'))) +
         row(field('Направление', input('direction', p.direction || '')), field('Дата', input('date', p.date, 'date'))) +
         field('Название', input('title', p.title)) +
-        field('Комментарий', textarea('note', p.note)) +
+        field('Ссылка (видео/аудио/документ)', input('url', p.url || '')) +
+        field('Комментарий преподавателя', textarea('note', p.note)) +
         field('Кто добавил', input('addedBy', p.addedBy)) +
         formActions() + '</form>';
       var m = openModal(id ? 'Редактировать материал' : 'Новый материал портфолио', html);
