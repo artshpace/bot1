@@ -76,7 +76,7 @@
   /* ---------- HERO (light editorial split) ---------- */
   .editorial .hero-ed{ position:relative;z-index:2;padding:150px 0 96px; }
   .editorial .hero-ed-grid{
-    display:grid;grid-template-columns:1.12fr .88fr;gap:56px;align-items:center;
+    display:grid;grid-template-columns:1fr 1.05fr;gap:48px;align-items:center;
   }
   .editorial .eyebrow-pill{
     display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;
@@ -85,12 +85,12 @@
   }
   .editorial .eyebrow-pill .pin{ width:7px;height:7px;border-radius:999px;background:var(--gold); }
   .editorial .hero-ed h1{
-    font-size:clamp(2.6rem,6vw,4.6rem);line-height:1.04;letter-spacing:-.015em;
-    color:var(--ink);margin:24px 0 0;
+    font-size:clamp(2.2rem,4.6vw,3.7rem);line-height:1.06;letter-spacing:-.015em;
+    color:var(--ink);margin:20px 0 0;
   }
   .editorial .hero-ed h1 em{ font-style:italic;color:var(--primary); }
   .editorial .hero-ed .lead{
-    font-size:1.18rem;color:var(--ink-soft);max-width:520px;margin:26px 0 34px;
+    font-size:1.12rem;color:var(--ink-soft);max-width:520px;margin:20px 0 30px;
   }
   .editorial .hero-ed-cta{ display:flex;gap:14px;flex-wrap:wrap; }
   .editorial .hero-ed-trust{ display:flex;gap:10px;flex-wrap:wrap;margin-top:34px; }
@@ -137,7 +137,6 @@
   .editorial .hero-ed-video video{
     position:absolute;inset:0;width:100%;height:100%;border:0;display:block;object-fit:cover;
   }
-  .editorial .hero-ed-panel-video .free{ margin-top:16px;padding-top:16px; }
 
   /* ---------- DIRECTIONS bento ---------- */
   .editorial .bento{ display:grid;grid-template-columns:repeat(6,1fr);gap:18px; }
