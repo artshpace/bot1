@@ -752,10 +752,11 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   .section { padding: 64px 0; }
   .section-header { margin-bottom: 40px; }
   .nav-inner { gap: 12px; padding: 0 16px; }
+  .nav-logo { display: flex; flex-shrink: 0; }
   .nav-logo .name { font-size: .95rem; }
   .nav-logo .tagline-small { display: none; }
   .nav-links { display: none; }
-  .nav-cta { padding: 8px 16px !important; font-size: .85rem; }
+  .nav-cta { padding: 8px 16px !important; font-size: .85rem; box-shadow: 0 2px 8px rgba(227,6,19,.4) !important; }
   .nav-hamburger { display: flex; }
   .mobile-nav { display: flex; }
   .directions-grid { grid-template-columns: 1fr; }
@@ -786,8 +787,10 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 }
 @media (max-width: 480px) {
   .nav-inner { gap: 8px; padding: 0 12px; }
-  .nav-logo { display: none; }
-  .nav-cta { padding: 6px 12px !important; font-size: .8rem; flex-shrink: 0; }
+  .nav-logo { display: flex; flex-shrink: 0; }
+  .nav-logo .name { font-size: .85rem; white-space: normal; }
+  .nav-logo .tagline-small { display: none; }
+  .nav-cta { padding: 8px 14px !important; font-size: .85rem; flex-shrink: 0; white-space: normal; }
   .nav-hamburger { width: 40px; height: 40px; }
   .teachers-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: 1fr 1fr; }
