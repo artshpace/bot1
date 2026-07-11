@@ -233,6 +233,7 @@
     { href: 'admin-events.html',        label: 'Мероприятия',      icon: ICON.ticket    },
     { href: 'admin-values.html',        label: 'Ценности студии',  icon: ICON.star      },
     { href: 'admin-achievements-public.html', label: 'Достижения студии', icon: ICON.star },
+    { href: 'admin-media.html',         label: 'Медиацентр',       icon: ICON.image     },
     /* --- Финансы / Аналитика --- */
     { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
     { href: 'admin-orders.html',        label: 'Заказы',           icon: ICON.cart      },
@@ -393,6 +394,7 @@
     'admin-portfolio.html':   { title: 'Портфолио' },
     'admin-values.html':      { title: 'Ценности студии' },
     'admin-achievements-public.html': { title: 'Достижения студии' },
+    'admin-media.html':       { title: 'Медиацентр' },
     'admin-payments.html':    { title: 'Платежи' },
     /* CRM v0.9 */
     'admin-leads.html':       { title: 'CRM Лиды' },
@@ -3698,6 +3700,145 @@
         return id ? SUPA.achievements.update(id, data) : SUPA.achievements.create(data);
       }, function () { toast(id ? 'Сохранено' : 'Достижение добавлено'); loadAdminAchievementsPublic(); });
     });
+  }
+
+  /* =================================================================
+     ADMIN — Медиацентр  (Phase 2 — Supabase Storage)
+     Единая загрузка файлов в хранилище 'media'. Публичное чтение → можно
+     просматривать/копировать ссылки даже в демо-режиме; загрузка/удаление
+     требуют реальной сессии админа (иначе RLS вернёт ошибку — показываем её).
+     ================================================================= */
+  var MEDIA_FOLDERS = [
+    { value: 'general',      label: 'Общее' },
+    { value: 'portfolio',    label: 'Портфолио' },
+    { value: 'reviews',      label: 'Отзывы' },
+    { value: 'achievements', label: 'Достижения' },
+    { value: 'values',       label: 'Ценности' },
+    { value: 'gallery',      label: 'Галерея' }
+  ];
+  var adminMedia = $('#admin-media-root');
+  if (adminMedia) loadAdminMedia();
+  function mediaFolderLabel(v) {
+    var f = MEDIA_FOLDERS.filter(function (x) { return x.value === v; })[0];
+    return f ? f.label : v;
+  }
+  function fmtBytes(n) {
+    if (!n && n !== 0) return '';
+    if (n < 1024) return n + ' Б';
+    if (n < 1048576) return (n / 1024).toFixed(0) + ' КБ';
+    return (n / 1048576).toFixed(1) + ' МБ';
+  }
+  function loadAdminMedia() {
+    if (!window.SUPA || !SUPA.storage) {
+      adminMedia.innerHTML = '<p class="cab-empty">Supabase не настроен — загрузка недоступна.</p>';
+      return;
+    }
+    var folderOpts = MEDIA_FOLDERS.map(function (f) {
+      return '<option value="' + f.value + '">' + escapeHtml(f.label) + '</option>';
+    }).join('');
+    adminMedia.innerHTML =
+      '<div id="media-banner"></div>' +
+      '<div class="media-upload">' +
+        '<div class="media-upload-row">' +
+          '<label class="media-field">Раздел (папка)<select id="media-folder" class="form-control">' + folderOpts + '</select></label>' +
+          '<label class="media-field media-field-grow">Файлы<input type="file" id="media-file" class="form-control" multiple accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.mp3,.mp4,.wav,.ogg"></label>' +
+          '<button class="btn btn-primary" id="media-upload-btn" type="button">Загрузить</button>' +
+        '</div>' +
+        '<p class="cab-muted media-hint">Поддерживаются фото, PDF, видео и аудио. После загрузки нажмите «Копировать ссылку» на карточке файла и вставьте её в нужный раздел. Для YouTube / Vimeo файл загружать не нужно — вставляйте ссылку прямо в разделе.</p>' +
+      '</div>' +
+      '<div id="media-list" class="media-list"><p class="cab-muted">Загрузка…</p></div>';
+
+    var folderSel = $('#media-folder');
+    var fileInput = $('#media-file');
+    var uploadBtn = $('#media-upload-btn');
+
+    // Session check → warn if uploads will fail (demo/mock mode)
+    SUPA.storage.hasSession().then(function (has) {
+      var banner = $('#media-banner');
+      if (!banner) return;
+      if (has) {
+        banner.innerHTML = '<div class="media-note media-note-ok">✓ Вы вошли под реальным аккаунтом — загрузка файлов доступна.</div>';
+      } else {
+        banner.innerHTML = '<div class="media-note media-note-warn">⚠ Вы в демо-режиме (localStorage). Просматривать и копировать ссылки можно, но <strong>загрузка файлов недоступна</strong>. Войдите на странице входа под реальным аккаунтом администратора (email/пароль Supabase), чтобы загружать файлы. Вставка ссылок YouTube / Vimeo в разделах работает всегда.</div>';
+      }
+    });
+
+    function renderList() {
+      var folder = folderSel.value;
+      var box = $('#media-list');
+      box.innerHTML = '<p class="cab-muted">Загрузка…</p>';
+      SUPA.storage.list(folder).then(function (items) {
+        // storage.list may include a placeholder row for empty folders
+        items = (items || []).filter(function (it) { return it && it.name && it.name !== '.emptyFolderPlaceholder'; });
+        if (!items.length) { box.innerHTML = '<p class="cab-empty">В этом разделе пока нет файлов.</p>'; return; }
+        box.innerHTML = '<div class="media-grid">' + items.map(function (it) {
+          var path = folder + '/' + it.name;
+          var url = SUPA.storage.publicUrl(path);
+          var mime = (it.metadata && it.metadata.mimetype) || '';
+          var size = it.metadata && it.metadata.size;
+          var isImg = /^image\//.test(mime) || /\.(png|jpe?g|gif|webp|svg)$/i.test(it.name);
+          var thumb = isImg
+            ? '<div class="media-thumb" style="background-image:url(\'' + url + '\')"></div>'
+            : '<div class="media-thumb media-thumb-file">' + (ICON.folder || '') + '</div>';
+          return '<div class="media-card">' +
+            thumb +
+            '<div class="media-card-body">' +
+              '<div class="media-card-name" title="' + escapeHtml(it.name) + '">' + escapeHtml(it.name) + '</div>' +
+              '<div class="media-card-meta">' + escapeHtml(fmtBytes(size)) + '</div>' +
+              '<div class="media-card-actions">' +
+                '<button class="btn btn-outline btn-sm" data-media-copy="' + escapeHtml(url) + '">Копировать ссылку</button>' +
+                '<a class="btn btn-outline btn-sm" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Открыть</a>' +
+                '<button class="btn btn-outline btn-sm media-del" data-media-del="' + escapeHtml(path) + '">Удалить</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('') + '</div>';
+      }).catch(function (e) {
+        box.innerHTML = '<p class="cab-empty">Не удалось загрузить список: ' + escapeHtml(e.message) + '</p>';
+      });
+    }
+
+    uploadBtn.addEventListener('click', function () {
+      var files = fileInput.files;
+      if (!files || !files.length) { toast('Выберите файл(ы)'); return; }
+      var folder = folderSel.value;
+      uploadBtn.disabled = true; uploadBtn.textContent = 'Загрузка…';
+      var jobs = Array.prototype.slice.call(files).map(function (f) {
+        return SUPA.storage.upload(f, { folder: folder });
+      });
+      Promise.all(jobs).then(function () {
+        toast('Загружено: ' + files.length + ' файл(ов)');
+        fileInput.value = '';
+        renderList();
+      }).catch(function (e) {
+        toast('Ошибка загрузки: ' + e.message);
+      }).then(function () {
+        uploadBtn.disabled = false; uploadBtn.textContent = 'Загрузить';
+      });
+    });
+
+    folderSel.addEventListener('change', renderList);
+
+    adminMedia.addEventListener('click', function (e) {
+      var copyBtn = e.target.closest('[data-media-copy]');
+      if (copyBtn) {
+        var url = copyBtn.getAttribute('data-media-copy');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () { toast('Ссылка скопирована'); },
+            function () { window.prompt('Скопируйте ссылку:', url); });
+        } else { window.prompt('Скопируйте ссылку:', url); }
+        return;
+      }
+      var delBtn = e.target.closest('[data-media-del]');
+      if (delBtn) {
+        var path = delBtn.getAttribute('data-media-del');
+        if (!window.confirm('Удалить файл безвозвратно?')) return;
+        SUPA.storage.remove(path).then(function () { toast('Файл удалён'); renderList(); },
+          function (ex) { toast('Не удалось удалить: ' + ex.message); });
+      }
+    });
+
+    renderList();
   }
 
   /* =================================================================
