@@ -435,6 +435,52 @@
         return client.from('studio_achievements').delete().eq('id', id)
           .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
       }
+    },
+
+    // ---- Медиа-хранилище (Supabase Storage bucket 'media') ----------------
+    // Публичное чтение; загрузка/удаление — только для реальной сессии админа
+    // (см. миграцию 0026). Вставка ссылок (YouTube/Vimeo) хранилища не требует.
+    storage: {
+      BUCKET: 'media',
+      // Есть ли живая Supabase-сессия? Нужна для загрузки файлов.
+      hasSession: function () {
+        if (!client) return Promise.resolve(false);
+        return client.auth.getSession()
+          .then(function (r) { return !!(r && r.data && r.data.session); })
+          .catch(function () { return false; });
+      },
+      upload: function (file, opts) {
+        opts = opts || {};
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        if (!file) return Promise.reject(new Error('Файл не выбран'));
+        var folder = (opts.folder || 'general').replace(/[^a-z0-9_-]/gi, '') || 'general';
+        var dot = file.name.lastIndexOf('.');
+        var ext = dot >= 0 ? file.name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        var base = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+        var path = folder + '/' + base + (ext ? '.' + ext : '');
+        return client.storage.from('media').upload(path, file, {
+          cacheControl: '3600', upsert: false, contentType: file.type || undefined
+        }).then(function (r) {
+          if (r.error) throw new Error(translate(r.error.message));
+          var pub = client.storage.from('media').getPublicUrl(path);
+          return { path: path, url: (pub && pub.data && pub.data.publicUrl) || '', name: file.name, type: file.type, size: file.size };
+        });
+      },
+      list: function (folder) {
+        if (!client) return Promise.resolve([]);
+        return client.storage.from('media').list(folder || '', { limit: 200, sortBy: { column: 'created_at', order: 'desc' } })
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data || []; });
+      },
+      publicUrl: function (path) {
+        if (!client) return '';
+        var pub = client.storage.from('media').getPublicUrl(path);
+        return (pub && pub.data && pub.data.publicUrl) || '';
+      },
+      remove: function (paths) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        return client.storage.from('media').remove([].concat(paths))
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
+      }
     }
   };
 
