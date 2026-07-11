@@ -81,16 +81,17 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 .site-header.scrolled { box-shadow: var(--shadow-md); }
 .nav-inner {
   height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  padding: 0 24px; box-sizing: border-box; max-width: 100%;
 }
 .nav-logo {
-  display: flex; flex-direction: column; line-height: 1.1;
+  display: flex; flex-direction: column; line-height: 1.1; flex-shrink: 0;
 }
 .nav-logo .name {
   font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 800;
   color: var(--dark); white-space: nowrap;
 }
 .nav-logo .tagline-small { font-size: .65rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
-.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-links { display: flex; align-items: center; gap: 4px; flex: 1; max-width: calc(100% - 200px); overflow: hidden; }
 .nav-links a {
   padding: 8px 14px; border-radius: var(--radius-sm); font-size: .9rem; font-weight: 600;
   color: var(--body); transition: all var(--transition);
@@ -99,7 +100,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 .nav-cta {
   padding: 10px 22px !important; background: var(--primary) !important;
   color: #fff !important; border-radius: var(--radius-md) !important;
-  font-weight: 700 !important;
+  font-weight: 700 !important; flex-shrink: 0; white-space: nowrap;
 }
 .nav-cta:hover { background: var(--primary-dark) !important; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(227,6,19,.3); }
 /* "О школе" dropdown — groups secondary links to declutter the header */
@@ -112,10 +113,10 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 }
 .nav-dropdown-toggle:hover, .nav-dropdown-toggle.active { color: var(--primary); background: rgba(227,6,19,.06); }
 .nav-dropdown-menu {
-  position: absolute; top: calc(100% + 6px); right: 0; min-width: 210px;
+  position: absolute; top: calc(100% + 6px); right: 0; min-width: 210px; max-height: 70vh;
   background: #fff; border: 1px solid var(--border); border-radius: var(--radius-md);
   box-shadow: 0 14px 34px rgba(0,0,0,.14); padding: 8px; z-index: 120;
-  display: none; flex-direction: column; gap: 2px;
+  display: none; flex-direction: column; gap: 2px; overflow-y: auto;
 }
 .nav-dropdown:hover .nav-dropdown-menu, .nav-dropdown.open .nav-dropdown-menu { display: flex; }
 .nav-dropdown-menu a {
@@ -702,6 +703,12 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
+  .nav-inner { gap: 16px; }
+  .nav-logo .tagline-small { display: none; }
+  .nav-links a { padding: 6px 10px; font-size: .8rem; }
+  .nav-links > a:nth-child(4), .nav-links > a:nth-child(5), .nav-links > a:nth-child(7) { display: none; }
+  .nav-cta { padding: 8px 18px !important; font-size: .9rem; }
+  .nav-dropdown-menu { max-width: 90vw; right: auto; left: 0; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .directions-grid { grid-template-columns: repeat(2, 1fr); }
   .benefits-grid { grid-template-columns: repeat(2, 1fr); }
@@ -719,7 +726,11 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   :root { --header-h: 64px; }
   .section { padding: 64px 0; }
   .section-header { margin-bottom: 40px; }
+  .nav-inner { gap: 12px; padding: 0 16px; }
+  .nav-logo .name { font-size: .95rem; }
+  .nav-logo .tagline-small { display: none; }
   .nav-links { display: none; }
+  .nav-cta { padding: 8px 16px !important; font-size: .85rem; }
   .nav-hamburger { display: flex; }
   .mobile-nav { display: flex; }
   .directions-grid { grid-template-columns: 1fr; }
@@ -749,6 +760,10 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   .btn { white-space: normal; overflow-wrap: break-word; word-wrap: break-word; }
 }
 @media (max-width: 480px) {
+  .nav-inner { gap: 8px; padding: 0 12px; }
+  .nav-logo { display: none; }
+  .nav-cta { padding: 6px 12px !important; font-size: .8rem; flex-shrink: 0; }
+  .nav-hamburger { width: 40px; height: 40px; }
   .teachers-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: 1fr 1fr; }
   .stat-item .num { font-size: 2rem; }
