@@ -772,10 +772,10 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   .directions-grid { grid-template-columns: 1fr; }
   .benefits-grid { grid-template-columns: 1fr; }
   .teachers-grid { grid-template-columns: repeat(2, 1fr); }
-  /* Mobile: показываем фото преподавателя целиком (не обрезаем лицо).
-     contain вписывает оригинал в портретную рамку, фон закрывает поля. */
-  .teacher-photo { height: auto; aspect-ratio: 3 / 4; background: linear-gradient(135deg, var(--bg-3), var(--bg-alt)); }
-  .teacher-photo img { object-fit: contain; object-position: center; }
+  /* Mobile: фото кадрируется под портретную рамку (заполняет её целиком),
+     смещение к верхней части — лицо остаётся в кадре. */
+  .teacher-photo { height: auto; aspect-ratio: 3 / 4; }
+  .teacher-photo img { object-fit: cover; object-position: center 22%; }
   .reviews-grid { grid-template-columns: 1fr; }
   .events-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: repeat(2, 1fr); }

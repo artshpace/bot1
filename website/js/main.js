@@ -593,70 +593,144 @@ function applyTextOverrides() {
    default embed in the HTML; if the admin published a video to media_items
    (section 'home', subsection 'hero') it replaces the default. Empty/
    unreachable → the built-in default stays. */
-function renderHeroVideo() {
-  const box = document.getElementById('hero-media');
-  if (!box) return;
-  initHeroSound(box); /* wire click-to-unmute for any native <video> (incl. default) */
-  if (!window.SUPA || !SUPA.media) return;
-  SUPA.media.listBySection('home', 'hero').then((list) => {
-    if (!Array.isArray(list) || !list.length) return; /* keep default embed */
-    const it = list[0];
-    const html = buildMediaPlayer(it.url, it.kind);
-    if (html) box.innerHTML = html;
-  }).catch(() => {}); /* keep default embed */
-}
-
-/* Speaker icons for the native-video sound toggle. */
+/* Speaker icons for the sound toggle. */
 const SND_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg>';
 const SND_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>';
 
-/* Build an autoplaying, muted, looping player for a media URL.
-   Priority is a NATIVE <video> (mp4/webm) or a chrome-less Vimeo background —
-   both blend into the page. A YouTube iframe is the last-resort fallback: it
-   always carries third-party chrome and can't be made fully native. */
-function buildMediaPlayer(url, kind) {
-  if (!url) return '';
-  const u = String(url);
-  if (kind === 'video' || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) {
-    return '<video src="' + escapeHtml(u) + '" autoplay muted loop playsinline></video>' +
-      '<button type="button" class="hero-ed-sound" data-sound-toggle aria-label="Включить звук">' + SND_OFF + '</button>';
+/* Hero video. Reads the admin override (media_items home/hero); otherwise
+   uses the default in data-hero-default. A poster layer sits on top and only
+   fades once the video is actually playing, so the visitor never sees the
+   black loading square — the picture appears seamlessly. */
+function renderHeroVideo() {
+  const box = document.getElementById('hero-media');
+  if (!box) return;
+  const def = box.getAttribute('data-hero-default') || '';
+  const go = (url, kind, thumb) => mountHeroVideo(box, url, kind, thumb);
+  if (window.SUPA && SUPA.media) {
+    SUPA.media.listBySection('home', 'hero').then((list) => {
+      if (Array.isArray(list) && list.length) go(list[0].url, list[0].kind, list[0].thumb_url);
+      else go(def, '', '');
+    }).catch(() => go(def, '', ''));
+  } else {
+    go(def, '', '');
   }
-  if (kind === 'image' || /\.(png|jpe?g|gif|webp|svg)(\?|#|$)/i.test(u)) {
-    return '<img src="' + escapeHtml(u) + '" alt="Студия" style="width:100%;height:100%;object-fit:cover">';
-  }
-  const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if (vm) {
-    const src = 'https://player.vimeo.com/video/' + vm[1] + '?autoplay=1&muted=1&loop=1&background=1';
-    return '<iframe src="' + src + '" title="Видео студии" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
-  }
-  const yt = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
-  if (yt) {
-    const id = yt[1];
-    const src = 'https://www.youtube-nocookie.com/embed/' + id +
-      '?autoplay=1&mute=1&loop=1&playlist=' + id +
-      '&controls=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&fs=0&iv_load_policy=3';
-    return '<iframe src="' + src + '" title="Видео студии" allow="autoplay; encrypted-media; picture-in-picture" loading="lazy"></iframe>';
-  }
-  return '<iframe src="' + escapeHtml(u) + '" title="Видео студии" allow="autoplay; fullscreen" allowfullscreen loading="lazy"></iframe>';
 }
 
-/* Click the hero video (or the small speaker) to toggle sound. Works only for
-   a native <video>; a YouTube/Vimeo iframe manages its own audio internally. */
-function initHeroSound(box) {
-  if (!box || box.dataset.soundBound) return;
-  box.dataset.soundBound = '1';
-  box.addEventListener('click', (e) => {
-    if (e.target.closest('a')) return;
-    const v = box.querySelector('video');
-    if (!v) return;
-    v.muted = !v.muted;
-    if (!v.muted && v.paused && v.play) { try { v.play(); } catch (_) {} }
-    const btn = box.querySelector('[data-sound-toggle]');
-    if (btn) {
-      btn.innerHTML = v.muted ? SND_OFF : SND_ON;
-      btn.setAttribute('aria-label', v.muted ? 'Включить звук' : 'Выключить звук');
-    }
-  });
+function ytId(u) {
+  const m = String(u).match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : '';
+}
+
+/* Build the hero player inside `box`. Prefers a native <video> (mp4/webm) or
+   a chrome-less Vimeo/YouTube background. Adds a poster overlay (fades on
+   play) and a subtle sound toggle that works for <video> and YouTube. */
+function mountHeroVideo(box, url, kind, thumb) {
+  const u = String(url || '');
+  if (!u) return;
+  const isFile = kind === 'video' || /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u);
+  const isImg = kind === 'image' || /\.(png|jpe?g|gif|webp|svg)(\?|#|$)/i.test(u);
+  const vm = u.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  const yid = ytId(u);
+
+  box.innerHTML = '';
+  box.classList.remove('is-playing');
+
+  // poster (instant, no black flash) — YouTube gives us a free thumbnail
+  const posterUrl = thumb || (yid ? 'https://img.youtube.com/vi/' + yid + '/maxresdefault.jpg' : '');
+  const poster = document.createElement('div');
+  poster.className = 'hero-ed-poster';
+  if (posterUrl) poster.style.backgroundImage = "url('" + posterUrl + "')";
+
+  const reveal = () => box.classList.add('is-playing');
+
+  if (isImg) {
+    const img = document.createElement('img');
+    img.src = u; img.alt = 'Студия';
+    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+    box.appendChild(img); reveal(); return;
+  }
+
+  const soundBtn = document.createElement('button');
+  soundBtn.type = 'button'; soundBtn.className = 'hero-ed-sound';
+  soundBtn.setAttribute('aria-label', 'Включить звук'); soundBtn.innerHTML = SND_OFF;
+
+  if (isFile) {
+    const v = document.createElement('video');
+    v.src = u; v.autoplay = true; v.muted = true; v.loop = true;
+    v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'auto';
+    if (posterUrl) v.setAttribute('poster', posterUrl);
+    box.appendChild(v); box.appendChild(poster); box.appendChild(soundBtn);
+    v.addEventListener('playing', reveal); v.addEventListener('loadeddata', reveal);
+    const toggle = (e) => {
+      if (e) e.stopPropagation();
+      v.muted = !v.muted;
+      if (!v.muted && v.paused) { try { v.play(); } catch (_) {} }
+      soundBtn.innerHTML = v.muted ? SND_OFF : SND_ON;
+      soundBtn.setAttribute('aria-label', v.muted ? 'Включить звук' : 'Выключить звук');
+    };
+    soundBtn.addEventListener('click', toggle);
+    box.addEventListener('click', (e) => { if (!soundBtn.contains(e.target)) toggle(); });
+    return;
+  }
+
+  if (vm) {
+    const ifr = document.createElement('iframe');
+    ifr.src = 'https://player.vimeo.com/video/' + vm[1] + '?autoplay=1&muted=1&loop=1&background=1';
+    ifr.title = 'Видео студии'; ifr.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+    ifr.allowFullscreen = true; ifr.loading = 'lazy';
+    box.appendChild(ifr); box.appendChild(poster);
+    ifr.addEventListener('load', () => setTimeout(reveal, 300)); // background player: no sound control
+    return;
+  }
+
+  if (yid) {
+    // Use the IFrame API so we can unmute on click and reveal exactly on play.
+    const holder = document.createElement('div');
+    box.appendChild(holder); box.appendChild(poster); box.appendChild(soundBtn);
+    loadYouTubeAPI(() => {
+      const player = new YT.Player(holder, {
+        width: '100%', height: '100%', videoId: yid,
+        playerVars: { autoplay: 1, mute: 1, loop: 1, playlist: yid, controls: 0, rel: 0,
+          modestbranding: 1, playsinline: 1, disablekb: 1, fs: 0, iv_load_policy: 3 },
+        events: {
+          onReady: (e) => { try { e.target.mute(); e.target.playVideo(); } catch (_) {} },
+          onStateChange: (e) => { if (e.data === YT.PlayerState.PLAYING) reveal(); }
+        }
+      });
+      const toggle = (e) => {
+        if (e) e.stopPropagation();
+        const muted = player.isMuted();
+        if (muted) { player.unMute(); player.setVolume(100); } else { player.mute(); }
+        soundBtn.innerHTML = muted ? SND_ON : SND_OFF;
+        soundBtn.setAttribute('aria-label', muted ? 'Выключить звук' : 'Включить звук');
+      };
+      soundBtn.addEventListener('click', toggle);
+      box.addEventListener('click', (e) => { if (!soundBtn.contains(e.target)) toggle(); });
+    });
+    return;
+  }
+
+  // generic URL fallback
+  const ifr = document.createElement('iframe');
+  ifr.src = u; ifr.title = 'Видео студии'; ifr.loading = 'lazy';
+  box.appendChild(ifr); reveal();
+}
+
+/* Load the YouTube IFrame Player API once; queue callbacks until ready. */
+function loadYouTubeAPI(cb) {
+  if (window.YT && window.YT.Player) { cb(); return; }
+  (window.__ytCbs = window.__ytCbs || []).push(cb);
+  if (window.__ytLoading) return;
+  window.__ytLoading = true;
+  const prev = window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady = function () {
+    if (typeof prev === 'function') prev();
+    (window.__ytCbs || []).forEach((f) => { try { f(); } catch (_) {} });
+    window.__ytCbs = [];
+  };
+  const s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
 }
 
 /* ===== WHATSAPP ROUTING [v1.1] =====

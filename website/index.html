@@ -53,17 +53,15 @@
     <div class="hero-ed-panel hero-ed-panel--bare">
       <div class="hero-ed-panel-in hero-ed-panel-video">
         <!-- Видео на главной. По умолчанию — смонтированный ролик студии; админ
-             может заменить/удалить его в Медиацентре (раздел «Главная страница» →
-             «Видео в шапке»). main.js подставит запись из media_items (home/hero),
-             если она есть; иначе остаётся встроенный ролик ниже.
-             controls=0 / fs=0 / iv_load_policy=3 — скрываем управление, чтобы
-             ролик выглядел как встроенное в сайт видео, а не как плеер. -->
+             меняет/удаляет его в Медиацентре (раздел «Главная страница» → «Видео
+             в шапке»). Для «нативного» вида без чёрного мигания лучше залить MP4
+             (тогда рендерится чистый <video>). main.js (mountHeroVideo) строит
+             плеер поверх постера и убирает постер только когда видео реально
+             пошло — чёрного квадрата загрузки посетитель не видит. Постер ниже
+             показывается мгновенно ещё до JS. -->
         <div class="hero-ed-video" id="hero-media"
              data-hero-default="https://www.youtube.com/watch?v=lBqztlaWOsM">
-          <iframe src="https://www.youtube-nocookie.com/embed/lBqztlaWOsM?autoplay=1&mute=1&loop=1&playlist=lBqztlaWOsM&controls=0&rel=0&modestbranding=1&playsinline=1&disablekb=1&fs=0&iv_load_policy=3"
-                  title="Видео студии Shpigotskiy Art Space"
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  loading="lazy"></iframe>
+          <div class="hero-ed-poster" style="background-image:url('https://img.youtube.com/vi/lBqztlaWOsM/maxresdefault.jpg')"></div>
         </div>
       </div>
     </div>
@@ -192,9 +190,46 @@
           <div class="teacher-exp">Мультиинструменталист</div>
         </div>
       </div>
-    </div>
-    <div style="text-align:center;margin-top:44px;">
-      <a href="teachers.html" class="btn btn-outline">Все преподаватели</a>
+      <div class="teacher-card fade-up">
+        <div class="teacher-photo">
+          <div class="teacher-mono">К</div>
+        </div>
+        <div class="teacher-card-body">
+          <h3>Дарья Клюк</h3>
+          <div class="teacher-spec">Современный танец</div>
+          <div class="teacher-exp">14+ лет опыта · ансамбль Arabesque</div>
+        </div>
+      </div>
+      <div class="teacher-card fade-up">
+        <div class="teacher-photo">
+          <div class="teacher-mono">Ч</div>
+        </div>
+        <div class="teacher-card-body">
+          <h3>Марина Черняк</h3>
+          <div class="teacher-spec">Актёрское мастерство</div>
+          <div class="teacher-exp">Педагог театра</div>
+        </div>
+      </div>
+      <div class="teacher-card fade-up">
+        <div class="teacher-photo">
+          <div class="teacher-mono">Р</div>
+        </div>
+        <div class="teacher-card-body">
+          <h3>Оксана Розанова</h3>
+          <div class="teacher-spec">Актёрское мастерство</div>
+          <div class="teacher-exp">Педагог театра</div>
+        </div>
+      </div>
+      <div class="teacher-card fade-up">
+        <div class="teacher-photo">
+          <div class="teacher-mono">М</div>
+        </div>
+        <div class="teacher-card-body">
+          <h3>Мария Андрюшенко</h3>
+          <div class="teacher-spec">Живопись</div>
+          <div class="teacher-exp">Педагог живописи</div>
+        </div>
+      </div>
     </div>
   </div>
 </section>

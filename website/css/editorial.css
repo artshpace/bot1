@@ -149,6 +149,13 @@
     position:absolute;inset:0;width:100%;height:100%;border:0;outline:0;display:block;
     object-fit:cover;background:transparent;
   }
+  /* Постер поверх плеера: виден мгновенно (кадр видео), плавно исчезает,
+     когда видео реально пошло → никакого чёрного квадрата загрузки. */
+  .editorial .hero-ed-poster{
+    position:absolute;inset:0;z-index:2;background-size:cover;background-position:center;
+    background-color:var(--cream-2);transition:opacity .55s ease;
+  }
+  .editorial .hero-ed-video.is-playing .hero-ed-poster{ opacity:0;pointer-events:none; }
   /* Ненавязчивый переключатель звука для нативного <video> (только для mp4).
      Скрыт, проявляется при наведении/касании; сам ролик тоже кликабелен. */
   .editorial .hero-ed-sound{
@@ -204,10 +211,13 @@
     box-shadow:none;text-align:center;
   }
   .editorial .teachers-grid .teacher-card:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
-  .editorial .teacher-photo{ height:230px; }
+  /* Чуть меньше фото + кадрирование по лицу, чтобы все педагоги ровно
+     помещались в сетку одной страницей. */
+  .editorial .teacher-photo{ height:200px; }
+  .editorial .teacher-photo img{ object-fit:cover;object-position:center 22%; }
   .editorial .teacher-mono{
     width:100%;height:100%;display:grid;place-items:center;
-    font-family:'Playfair Display',serif;font-size:3.4rem;font-weight:700;color:#fff;
+    font-family:'Playfair Display',serif;font-size:3rem;font-weight:700;color:#fff;
     background:linear-gradient(140deg,var(--primary),var(--gold));
   }
   .editorial .teacher-card h3{ color:var(--ink); }
