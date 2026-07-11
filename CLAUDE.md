@@ -252,3 +252,20 @@ create index if not exists idx_studio_ach_direction on public.studio_achievement
 **ВАЖНО — два условия, чтобы загрузка работала:**
 1. Применить миграцию 0026 в Supabase.
 2. Войти в кабинет под **реальным** аккаунтом Supabase с ролью `admin`/`director` (email+пароль на login.html). Демо-вход (localStorage-мок) реальной сессии не создаёт → медиацентр покажет предупреждение и оставит только вставку ссылок. Вставка ссылок YouTube/Vimeo/Drive работает всегда, без загрузки и без сессии.
+
+---
+
+## Phase 3 — Медиа-записи сайта (media_items) + управляемая Галерея
+
+**Миграция `0027_media_items.sql`** — таблица `media_items` (универсальные единицы медиа, привязанные к разделу/подразделу) + RLS (анон читает `active`, пишет админ). Применить: Supabase → SQL Editor → Run. ПОСЛЕ 0001.
+
+**Зачем:** решает «загрузил в медиацентр, но на сайте не появилось». Раньше медиацентр клал только файл в Storage. Теперь он создаёт **запись** `media_items` (section + subsection + title + url + kind), а публичные страницы читают эти записи и показывают их.
+
+**Как работает:**
+- Медиацентр (`admin-media.html`) → форма: выбрать раздел + подраздел → загрузить файл ИЛИ вставить ссылку (YouTube/Vimeo/URL) → «Опубликовать» → создаётся `media_items`. Ниже — список опубликованного (фильтр, редактирование, удаление).
+- `js/supa.js` — `SUPA.media.listBySection/listAll/create/update/remove`.
+- Публичный рендер: `website/gallery.html` читает `SUPA.media.listBySection('gallery')` и строит сетку (подразделы = категории chip: concert/exhibition/spectacle/class/masterclass). Пустая БД → остаётся статичная галерея (graceful fallback).
+
+**Разделы `media_items`:** `gallery` (подключён к сайту), плюс заготовки `concerts`, `teachers`, `courses`, `general` — таблица общая, новые публичные страницы подключаются рендером `listBySection('<section>')` без изменения схемы.
+
+**Условия работы те же, что в Phase 2:** применить 0027 + войти под реальным админом Supabase (загрузка/публикация). Вставка ссылок — всегда.
