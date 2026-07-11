@@ -92,6 +92,42 @@
     return '<input class="form-control" name="' + name + '" type="' + (type || 'text') +
       '" value="' + escapeHtml(value == null ? '' : value) + '">';
   }
+  /* URL input + inline «Загрузить файл» button → uploads to Supabase Storage
+     and drops the public URL into the same field. Falls back to plain URL
+     paste (incl. YouTube/Vimeo) which never needs an upload. */
+  function uploadInput(name, value, folder) {
+    return '<div class="upload-field">' +
+      '<input class="form-control" name="' + name + '" type="text" value="' + escapeHtml(value == null ? '' : value) + '" placeholder="URL или загрузите файл →">' +
+      '<button type="button" class="btn btn-outline btn-sm" data-upload="' + name + '" data-folder="' + (folder || 'general') + '">Файл…</button>' +
+      '</div>';
+  }
+  // one-time delegated handler for every uploadInput button (modals are dynamic)
+  if (!window.__mediaUploadWired) {
+    window.__mediaUploadWired = true;
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-upload]');
+      if (!btn) return;
+      if (!(window.SUPA && SUPA.storage)) { toast('Загрузка недоступна — Supabase не настроен'); return; }
+      var name = btn.getAttribute('data-upload');
+      var folder = btn.getAttribute('data-folder') || 'general';
+      var wrap = btn.closest('.upload-field');
+      var field = wrap && wrap.querySelector('input[name="' + name + '"]');
+      var picker = document.createElement('input');
+      picker.type = 'file';
+      picker.accept = 'image/*,video/*,audio/*,.pdf,.doc,.docx';
+      picker.addEventListener('change', function () {
+        if (!picker.files || !picker.files.length) return;
+        var old = btn.textContent; btn.disabled = true; btn.textContent = '…';
+        SUPA.storage.upload(picker.files[0], { folder: folder }).then(function (res) {
+          if (field) field.value = res.url;
+          toast('Файл загружен');
+        }).catch(function (ex) {
+          toast('Ошибка загрузки: ' + ex.message);
+        }).then(function () { btn.disabled = false; btn.textContent = old; });
+      });
+      picker.click();
+    });
+  }
   function textarea(name, value) {
     return '<textarea class="form-control" name="' + name + '" rows="4">' + escapeHtml(value == null ? '' : value) + '</textarea>';
   }
@@ -3555,7 +3591,7 @@
             field('Тип материала', selectCtrl('kind', PF_KIND_OPTS, p.kind || 'photo'))) +
         row(field('Направление', input('direction', p.direction || '')), field('Дата', input('date', p.date, 'date'))) +
         field('Название', input('title', p.title)) +
-        field('Ссылка (видео/аудио/документ)', input('url', p.url || '')) +
+        field('Ссылка (видео/аудио/документ) или загрузка', uploadInput('url', p.url || '', 'portfolio')) +
         field('Комментарий преподавателя', textarea('note', p.note)) +
         field('Кто добавил', input('addedBy', p.addedBy)) +
         formActions() + '</form>';
@@ -3685,9 +3721,9 @@
         field('Описание', textarea('description', a.description)) +
         row(field('Участник / коллектив', input('participant_name', a.participant_name)),
             field('Дата события', input('event_date', a.event_date, 'date'))) +
-        field('Фото (URL)', input('photo_url', a.photo_url)) +
-        row(field('Диплом (URL)', input('diploma_url', a.diploma_url)),
-            field('Сертификат (URL)', input('certificate_url', a.certificate_url))) +
+        field('Фото (URL или загрузка)', uploadInput('photo_url', a.photo_url, 'achievements')) +
+        row(field('Диплом (URL или загрузка)', uploadInput('diploma_url', a.diploma_url, 'achievements')),
+            field('Сертификат (URL или загрузка)', uploadInput('certificate_url', a.certificate_url, 'achievements'))) +
         row(field('Активно', selectCtrl('active', [{ value: 'true', label: 'Да' }, { value: 'false', label: 'Нет' }], a.active === false ? 'false' : 'true')),
             field('Рекомендуемое', selectCtrl('featured', [{ value: 'false', label: 'Нет' }, { value: 'true', label: 'Да' }], a.featured ? 'true' : 'false'))) +
         formActions() + '</form>';
