@@ -284,22 +284,26 @@
       row-gap:18px;
     }
     .editorial .hero-ed-cta{ align-self:auto; }
-    /* padding-top очищает «плавающую» шапку-пилюлю (~94px), чтобы плашка
-       «Петропавловск» не залезала под неё. */
-    .editorial .hero-ed{ padding:110px 0 44px; }
+    /* padding-top очищает «плавающую» шапку-пилюлю (~94px) + вырез экрана
+       (safe-area, актуально в Telegram Mini App), чтобы плашка
+       «Петропавловск» не залезала под шапку. */
+    .editorial .hero-ed{ padding:calc(112px + env(safe-area-inset-top, 0px)) 0 44px; }
     /* Плеер всегда целиком в экране: высота ограничена вьюпортом (svh),
        16:9 сохраняется — на невысоких экранах он сужается и центрируется. */
     .editorial .hero-ed-video{ max-width:calc(52svh * 16 / 9);margin-inline:auto; }
   }
   @media(max-width:768px){
     .editorial .section{ padding:72px 0; }
-    .editorial .hero-ed{ padding:116px 0 40px; }
-    .editorial .hero-ed h1{ font-size:1.9rem;line-height:1.08;margin-top:12px; }
-    .editorial .hero-ed .lead{ font-size:1rem;margin:12px 0 18px; }
+    .editorial .hero-ed{ padding:calc(106px + env(safe-area-inset-top, 0px)) 0 40px; }
+    .editorial .hero-ed-grid{ row-gap:14px; }
+    .editorial .hero-ed h1{ font-size:1.9rem;line-height:1.08;margin-top:10px; }
+    .editorial .hero-ed .lead{ font-size:1rem;margin:10px 0 14px; }
     .editorial .hero-ed-cta-primary.btn-lg{ padding:13px 22px;font-size:.95rem; }
-    /* Плеер во всю ширину экрана (можно вплотную к краям) — больше места. */
+    /* Плеер во всю ширину экрана (вплотную к краям) и чуть выше по вертикали
+       (16:10 вместо 16:9) — на телефоне смотрится крупнее и живее.
+       max-width по svh не даёт ему вылезти за экран на невысоких телефонах. */
     .editorial .hero-ed-panel{ width:100vw;margin-inline:calc(50% - 50vw); }
-    .editorial .hero-ed-video{ max-width:calc(50svh * 16 / 9); }
+    .editorial .hero-ed-video{ aspect-ratio:16 / 10;max-width:calc(44svh * 16 / 10); }
     .editorial .hero-ed-cta .btn,
     .editorial .hero-ed-cta-primary{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
