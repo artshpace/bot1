@@ -276,27 +276,30 @@
   .editorial .fade-up{ transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1); }
 
   @media(max-width:900px){
-    /* один столбец, порядок: текст → плеер → кнопки (плеер выше кнопок) */
+    /* один столбец, порядок: текст → плеер → кнопки (кнопка «Все направления»
+       уходит под плеер, ниже сгиба — плеер получает больше места). */
     .editorial .hero-ed-grid{
       grid-template-columns:1fr;
       grid-template-areas:"copy" "panel" "cta";
       row-gap:18px;
     }
     .editorial .hero-ed-cta{ align-self:auto; }
-    .editorial .hero-ed{ padding:88px 0 48px; }
+    /* padding-top очищает «плавающую» шапку-пилюлю (~94px), чтобы плашка
+       «Петропавловск» не залезала под неё. */
+    .editorial .hero-ed{ padding:110px 0 44px; }
     /* Плеер всегда целиком в экране: высота ограничена вьюпортом (svh),
        16:9 сохраняется — на невысоких экранах он сужается и центрируется. */
-    .editorial .hero-ed-video{ max-width:calc(50svh * 16 / 9);margin-inline:auto; }
+    .editorial .hero-ed-video{ max-width:calc(52svh * 16 / 9);margin-inline:auto; }
   }
   @media(max-width:768px){
     .editorial .section{ padding:72px 0; }
-    /* Ужимаем текстовый блок, чтобы плеер помещался целиком на невысоких
-       телефонах без прокрутки. */
-    .editorial .hero-ed{ padding:80px 0 44px; }
+    .editorial .hero-ed{ padding:116px 0 40px; }
     .editorial .hero-ed h1{ font-size:1.9rem;line-height:1.08;margin-top:12px; }
     .editorial .hero-ed .lead{ font-size:1rem;margin:12px 0 18px; }
     .editorial .hero-ed-cta-primary.btn-lg{ padding:13px 22px;font-size:.95rem; }
-    .editorial .hero-ed-video{ max-width:calc(46svh * 16 / 9); }
+    /* Плеер во всю ширину экрана (можно вплотную к краям) — больше места. */
+    .editorial .hero-ed-panel{ width:100vw;margin-inline:calc(50% - 50vw); }
+    .editorial .hero-ed-video{ max-width:calc(50svh * 16 / 9); }
     .editorial .hero-ed-cta .btn,
     .editorial .hero-ed-cta-primary{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
