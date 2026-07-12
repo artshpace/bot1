@@ -568,7 +568,33 @@ document.addEventListener('DOMContentLoaded', () => {
   applyTextOverrides();
   renderHeroVideo();
   initScheduleForm('modal-form');
+  measureHeroVideoHeight();
 });
+
+/* Dynamically calculate hero video max-height based on actual viewport.
+   Avoids full-bleed (100vw) issues and svh unit inconsistencies across browsers.
+   On mobile (<768px), limit video height so "Все направления" button doesn't
+   get pushed too far below the fold. */
+function measureHeroVideoHeight() {
+  const box = document.getElementById('hero-media');
+  if (!box) return;
+  const update = () => {
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) { document.documentElement.style.setProperty('--hero-max-height', '60vh'); return; }
+    /* On mobile: reserve ~130px for eyebrow+title+lead (accounting for mobile font sizes),
+       ~60px for hero-ed padding, ~44px for "Все направления" button to fit below.
+       16:10 aspect ratio. Typical small phone (360px viewport): ~600px height.
+       If (600 - 130 - 60) = 410px available, video max ≈ 360x22.5 (16:10) ≈ 256px.
+       On tall phones (850px): (850 - 130 - 60) = 660px, video ≈ 60svh ≈ 510px.
+       Clamp to 50svh max to prevent button from disappearing. */
+    const vh = window.innerHeight;
+    const reserved = 200; // eyebrow + title + lead + padding + button
+    const maxH = Math.max(200, Math.min(vh - reserved, vh * 0.5));
+    document.documentElement.style.setProperty('--hero-max-height', maxH + 'px');
+  };
+  update();
+  window.addEventListener('resize', update, { passive: true });
+}
 
 /* ===== EDITABLE SITE TEXTS (data-tx) =====
    Any element carrying data-tx="<key>" can be overridden from the admin

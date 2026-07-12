@@ -299,11 +299,17 @@
     .editorial .hero-ed h1{ font-size:1.9rem;line-height:1.08;margin-top:10px; }
     .editorial .hero-ed .lead{ font-size:1rem;margin:10px 0 14px; }
     .editorial .hero-ed-cta-primary.btn-lg{ padding:13px 22px;font-size:.95rem; }
-    /* Плеер во всю ширину экрана (вплотную к краям) и чуть выше по вертикали
-       (16:10 вместо 16:9) — на телефоне смотрится крупнее и живее.
-       max-width по svh не даёт ему вылезти за экран на невысоких телефонах. */
-    .editorial .hero-ed-panel{ width:100vw;margin-inline:calc(50% - 50vw); }
-    .editorial .hero-ed-video{ aspect-ratio:16 / 10;max-width:calc(44svh * 16 / 10); }
+    /* Плеер респонсивный, не выезжает за край экрана. Аспект-рацио 16:10
+       вместо 16:9 — на телефоне смотрится живее. Высота ограничена JS-переменной
+       --hero-max-height, которая вычисляется в runtime на основе реального вьюпорта.
+       На невысоких экранах плеер сужается и центрируется. */
+    .editorial .hero-ed-panel{ width:100%; max-width:100%; }
+    .editorial .hero-ed-video{
+      aspect-ratio:16 / 10;
+      width:100%;
+      max-height:var(--hero-max-height, 60vh);
+      margin-inline:auto;
+    }
     .editorial .hero-ed-cta .btn,
     .editorial .hero-ed-cta-primary{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
