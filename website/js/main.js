@@ -582,6 +582,7 @@ function measureHeroVideoHeight() {
   const box = document.getElementById('hero-media');
   if (!box) return;
   const ctaBtn = document.querySelector('.hero-ed-cta');
+  const scrollCue = document.querySelector('.hero-scroll-cue');
   const isMobile = () => window.innerWidth <= 768;
 
   const update = () => {
@@ -601,23 +602,34 @@ function measureHeroVideoHeight() {
   /* "Все направления" on mobile: hidden at the very top and while scrolling
      up (so it stops being an eyesore once seen), shown only while actively
      scrolling down past a small threshold. A 2px dead zone avoids flicker
-     from momentum/bounce scrolling. */
+     from momentum/bounce scrolling. The "scroll down" cue does the opposite —
+     visible only at the very top (nudges a first-time visitor that there's
+     more below), gone as soon as they've scrolled at all. */
   let lastY = window.scrollY;
   const SHOW_AT = 20;
   const handleScroll = () => {
-    if (!isMobile() || !ctaBtn) return;
+    if (!isMobile()) return;
     const y = window.scrollY;
     const goingDown = y > lastY + 2;
     const goingUp = y < lastY - 2;
-    if (y <= SHOW_AT || goingUp) ctaBtn.classList.remove('hero-cta-visible');
-    else if (goingDown) ctaBtn.classList.add('hero-cta-visible');
+    if (ctaBtn) {
+      if (y <= SHOW_AT || goingUp) ctaBtn.classList.remove('hero-cta-visible');
+      else if (goingDown) ctaBtn.classList.add('hero-cta-visible');
+    }
+    if (scrollCue) scrollCue.classList.toggle('hero-cue-hidden', y > SHOW_AT);
     lastY = y;
   };
 
   update();
   if (isMobile() && ctaBtn) {
     ctaBtn.classList.remove('hero-cta-visible'); /* ensure hidden on load */
-    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
+  if (isMobile()) window.addEventListener('scroll', handleScroll, { passive: true });
+  if (scrollCue) {
+    scrollCue.addEventListener('click', () => {
+      const target = document.getElementById('directions') || box.closest('section')?.nextElementSibling;
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   }
 
   window.addEventListener('resize', update, { passive: true });

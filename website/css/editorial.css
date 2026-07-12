@@ -167,6 +167,10 @@
   .editorial .hero-ed-video:hover .hero-ed-sound{ opacity:1; }
   .editorial .hero-ed-sound svg{ width:20px;height:20px; }
   @media(hover:none){ .editorial .hero-ed-sound{ opacity:.82; } }
+  /* Подсказка «листайте вниз» — рисуется только на мобильном (мало контента
+     в первом экране, неочевидно, что делать дальше). Полупрозрачная,
+     мягко подпрыгивает; main.js гасит её, как только начался скролл. */
+  .editorial .hero-scroll-cue{ display:none; }
 
   /* ---------- DIRECTIONS bento ----------
      Плоские, полупрозрачные плашки (в духе современных мобильных ОС —
@@ -349,6 +353,26 @@
     .editorial .hero-ed-cta-primary{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial h1, .editorial h2, .editorial h3, .editorial h4{ max-width:100%; }
+    /* Стрелка «вниз» поверх нижнего края плеера: подсказывает, что страница
+       не заканчивается на первом экране. Гаснет по scroll (main.js добавляет
+       .hero-cue-hidden), кнопка «Все направления» тем временем проявляется —
+       одно сменяет другое. */
+    .editorial .hero-ed-panel-in.hero-ed-panel-video{ position:relative; }
+    .editorial .hero-scroll-cue{
+      display:flex;align-items:center;justify-content:center;
+      position:absolute;left:50%;bottom:12px;z-index:4;
+      width:38px;height:38px;border-radius:999px;
+      background:rgba(26,21,18,.36);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+      color:#fff;border:0;cursor:pointer;opacity:.8;
+      animation:heroScrollCueBounce 1.8s ease-in-out infinite;
+      transition:opacity .3s ease;
+    }
+    .editorial .hero-scroll-cue.hero-cue-hidden{ opacity:0;pointer-events:none; }
+    .editorial .hero-scroll-cue svg{ width:20px;height:20px; }
+    @keyframes heroScrollCueBounce{
+      0%,100%{ transform:translateX(-50%) translateY(0); }
+      50%{ transform:translateX(-50%) translateY(6px); }
+    }
     /* Портретная рамка на мобильном; object-fit:contain (не cover) — лицо
        никогда не обрезается, даже если пропорции фото не 3:4. */
     .editorial .teacher-photo{ height:auto;aspect-ratio:3 / 4; }

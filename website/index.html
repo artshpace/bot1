@@ -63,6 +63,12 @@
              data-hero-default="https://www.youtube.com/watch?v=lBqztlaWOsM">
           <div class="hero-ed-poster" style="background-image:url('https://img.youtube.com/vi/lBqztlaWOsM/maxresdefault.jpg')"></div>
         </div>
+        <!-- Подсказка «листайте вниз» — только на телефоне, пока мало контента
+             в зоне видимости и непонятно, что делать дальше. Полупрозрачная,
+             гаснет, как только человек сам начинает скроллить (main.js). -->
+        <button type="button" class="hero-scroll-cue" aria-label="Пролистать вниз" tabindex="-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
       </div>
     </div>
     <div class="hero-ed-cta fade-up">
@@ -481,8 +487,8 @@
       </div>
       <div class="pricing-card pricing-card--featured">
         <div class="pricing-tag">Абонемент</div>
-        <div class="pricing-price" id="price-subscription">от 9 000 ₸</div>
-        <div class="pricing-desc">Групповые занятия, 8 занятий в месяц. Точная цена зависит от направления — от 9 000 до 20 000 ₸/мес, <a href="directions/index.html" style="color:inherit;text-decoration:underline;">смотрите по направлениям</a>.</div>
+        <div class="pricing-price" id="price-subscription">от 14 000 ₸</div>
+        <div class="pricing-desc">Групповые занятия, 8 занятий в месяц. Точная цена зависит от направления — от 14 000 ₸/мес, <a href="directions/index.html" style="color:inherit;text-decoration:underline;">смотрите по направлениям</a>.</div>
         <a href="https://wa.me/77086366351?text=Здравствуйте!+Хочу+узнать+стоимость+абонемента"
            class="btn btn-white btn-full" target="_blank" rel="noopener">Узнать цену</a>
       </div>
