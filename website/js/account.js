@@ -4028,6 +4028,15 @@
     { v: '110', label: 'Крупнее (110%)' },
     { v: '120', label: 'Крупный (120%)' }
   ];
+  /* Затемнение фото на плашках направлений (главная → «Обучение»). Готовые
+     пресеты, не свободный %, — гарантированно читаемый текст поверх фото.
+     Значения/уровни должны совпадать с main.js CARD_DARKEN_PRESETS. */
+  var CARD_DARKEN_OPTIONS = [
+    { v: '40', label: 'Слабое' },
+    { v: '60', label: 'Среднее' },
+    { v: '80', label: 'Сильное (по умолчанию)' },
+    { v: '95', label: 'Максимальное' }
+  ];
 
   var adminTexts = $('#admin-texts-root');
   if (adminTexts) loadAdminTexts();
@@ -4049,6 +4058,10 @@
         '<div class="tx-type-row"><label>Размер текста</label><select class="form-control" id="tx-font-scale">' +
           FONT_SCALE_OPTIONS.map(function (o) { return '<option value="' + o.v + '">' + escapeHtml(o.label) + '</option>'; }).join('') +
         '</select></div>' +
+        '<div class="tx-type-row"><label>Затемнение фото</label><select class="form-control" id="tx-card-darken">' +
+          CARD_DARKEN_OPTIONS.map(function (o) { return '<option value="' + o.v + '">' + escapeHtml(o.label) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<p class="cab-muted" style="margin-top:6px;">Затемнение фото на плашках направлений главной страницы («Обучение») — если текст сливается с картинкой, увеличьте.</p>' +
         '<div class="tx-actions">' +
           '<button class="btn btn-primary btn-sm" id="tx-type-save">Сохранить</button>' +
           '<button class="btn btn-outline btn-sm" id="tx-type-reset">Сбросить к умолчаниям</button>' +
@@ -4068,10 +4081,11 @@
 
     SUPA.texts.getAll().then(function (map) {
       map = map || {};
-      var hSel = $('#tx-font-heading'), bSel = $('#tx-font-body'), sSel = $('#tx-font-scale');
+      var hSel = $('#tx-font-heading'), bSel = $('#tx-font-body'), sSel = $('#tx-font-scale'), dSel = $('#tx-card-darken');
       if (hSel) hSel.value = map['style.fontHeading'] || 'Playfair Display';
       if (bSel) bSel.value = map['style.fontBody'] || 'Inter';
       if (sSel) sSel.value = map['style.fontScale'] || '100';
+      if (dSel) dSel.value = map['style.cardDarken'] || '80';
       var typeStatus = $('#tx-type-status');
       function setTypeStatus(msg, ok) { if (typeStatus) { typeStatus.textContent = msg; typeStatus.className = 'tx-status ' + (ok ? 'tx-ok' : 'tx-err'); } }
       var saveBtn = $('#tx-type-save');
@@ -4080,7 +4094,8 @@
         Promise.all([
           SUPA.texts.set('style.fontHeading', hSel.value),
           SUPA.texts.set('style.fontBody', bSel.value),
-          SUPA.texts.set('style.fontScale', sSel.value)
+          SUPA.texts.set('style.fontScale', sSel.value),
+          SUPA.texts.set('style.cardDarken', dSel.value)
         ]).then(function () { setTypeStatus('Сохранено ✓', true); }, function (ex) { setTypeStatus('Ошибка: ' + ex.message, false); });
       });
       var resetBtn = $('#tx-type-reset');
@@ -4089,9 +4104,10 @@
         Promise.all([
           SUPA.texts.remove('style.fontHeading'),
           SUPA.texts.remove('style.fontBody'),
-          SUPA.texts.remove('style.fontScale')
+          SUPA.texts.remove('style.fontScale'),
+          SUPA.texts.remove('style.cardDarken')
         ]).then(function () {
-          hSel.value = 'Playfair Display'; bSel.value = 'Inter'; sSel.value = '100';
+          hSel.value = 'Playfair Display'; bSel.value = 'Inter'; sSel.value = '100'; dSel.value = '80';
           setTypeStatus('Сброшено к умолчаниям', true);
         }, function (ex) { setTypeStatus('Ошибка: ' + ex.message, false); });
       });

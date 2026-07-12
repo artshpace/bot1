@@ -682,6 +682,20 @@ window.FONT_CHOICES = FONT_CHOICES; /* admin panel reuses this list for its drop
 const FONT_SCALES = { '90': '14.4px', '100': '16px', '110': '17.6px', '120': '19.2px' };
 window.FONT_SCALES = FONT_SCALES;
 
+/* Затемнение фото на плашках направлений (bento, .bcard-in.has-img) — та же
+   схема, что и шрифты: ключ style.cardDarken в site_texts, 4 готовых
+   пресета (не произвольный % — так гарантированно нет опечаток в rgba и
+   всегда читаемый контраст текста). Дефолт без ключа — «Сильное», он же
+   зашит в editorial.css напрямую (--bcard-overlay), чтобы карточки были
+   тёмными даже без Supabase. */
+const CARD_DARKEN_PRESETS = {
+  '40': 'linear-gradient(180deg, rgba(10,7,5,.08) 0%, rgba(10,7,5,.38) 55%, rgba(10,7,5,.72) 100%)',
+  '60': 'linear-gradient(180deg, rgba(10,7,5,.15) 0%, rgba(10,7,5,.52) 55%, rgba(10,7,5,.85) 100%)',
+  '80': 'linear-gradient(180deg, rgba(10,7,5,.24) 0%, rgba(10,7,5,.65) 55%, rgba(10,7,5,.93) 100%)',
+  '95': 'linear-gradient(180deg, rgba(10,7,5,.35) 0%, rgba(10,7,5,.78) 55%, rgba(10,7,5,.97) 100%)'
+};
+window.CARD_DARKEN_PRESETS = CARD_DARKEN_PRESETS;
+
 function loadGoogleFont(family) {
   const id = 'gf-' + family.replace(/\s+/g, '-').toLowerCase();
   if (document.getElementById(id)) return;
@@ -708,6 +722,10 @@ function applyStyleOverrides() {
     }
     if (scale && FONT_SCALES[scale]) {
       document.documentElement.style.setProperty('--font-size-base', FONT_SCALES[scale]);
+    }
+    const darken = map['style.cardDarken'];
+    if (darken && CARD_DARKEN_PRESETS[darken]) {
+      document.documentElement.style.setProperty('--bcard-overlay', CARD_DARKEN_PRESETS[darken]);
     }
   }).catch(() => {}); /* keep static defaults */
 }

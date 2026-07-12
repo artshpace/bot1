@@ -7,6 +7,18 @@
    сохраняя все JS-хуки (fade-up, data-target, modal-trial, faq и т.д.).
    ===================================================================== */
 
+  /* Затемнение фото на плашках направлений (bento) — регулируется из
+     кабинета (Тексты сайта → Типографика → «Затемнение фото», SUPA.texts
+     ключ style.cardDarken, применяется через applyStyleOverrides() в
+     main.js). Дефолт = уровень «Сильное». Живёт в :root (не в .editorial
+     на body), потому что JS переопределяет её на document.documentElement
+     (<html>) — как и --font-heading/--font-body в style.css: у CSS custom
+     properties «собственное» значение элемента (тут — .editorial на body)
+     всегда перекрывает унаследованное от предка, даже если оно новее, так
+     что дефолт и override обязаны жить на одном и том же элементе. */
+  :root{
+    --bcard-overlay:linear-gradient(180deg, rgba(10,7,5,.24) 0%, rgba(10,7,5,.65) 55%, rgba(10,7,5,.93) 100%);
+  }
   .editorial{
     --paper:#FBF8F2; --cream:#F4EEE2; --cream-2:#EDE4D3; --line:rgba(170,140,90,.24);
     --ink:#1A1512; --ink-soft:#4A433D;
@@ -197,7 +209,7 @@
   .editorial .bcard-in.has-img{ color:#fff; }
   .editorial .bcard-in.has-img::before{
     content:"";position:absolute;inset:0;z-index:0;
-    background:linear-gradient(180deg, rgba(15,10,8,.12) 0%, rgba(15,10,8,.5) 55%, rgba(15,10,8,.88) 100%);
+    background:var(--bcard-overlay);
   }
   .editorial .bcard-in.has-img .glyph,
   .editorial .bcard-in.has-img .bcard-body{ position:relative;z-index:1; }
