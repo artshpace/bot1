@@ -310,6 +310,11 @@
       max-height:var(--hero-max-height, 60vh);
       margin-inline:auto;
     }
+    /* На мобильном кнопка "Все направления" скрыта при загрузке, чтобы плеер
+       занимал максимум места. Показывается после того, как пользователь начнёт
+       скроллить (класс .hero-cta-visible добавляется JS). */
+    .editorial .hero-ed-cta{ opacity:0;transition:opacity .3s ease;pointer-events:none; }
+    .editorial .hero-ed-cta.hero-cta-visible{ opacity:1;pointer-events:auto; }
     .editorial .hero-ed-cta .btn,
     .editorial .hero-ed-cta-primary{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }

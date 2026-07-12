@@ -574,13 +574,16 @@ document.addEventListener('DOMContentLoaded', () => {
 /* Dynamically calculate hero video max-height based on actual viewport.
    Avoids full-bleed (100vw) issues and svh unit inconsistencies across browsers.
    On mobile (<768px), limit video height so "Все направления" button doesn't
-   get pushed too far below the fold. */
+   get pushed too far below the fold. Also hides button on initial load and shows
+   it after user scrolls. */
 function measureHeroVideoHeight() {
   const box = document.getElementById('hero-media');
   if (!box) return;
+  const ctaBtn = document.querySelector('.hero-ed-cta');
+  const isMobile = () => window.innerWidth <= 768;
+
   const update = () => {
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile) { document.documentElement.style.setProperty('--hero-max-height', '60vh'); return; }
+    if (!isMobile()) { document.documentElement.style.setProperty('--hero-max-height', '60vh'); return; }
     /* On mobile: reserve ~130px for eyebrow+title+lead (accounting for mobile font sizes),
        ~60px for hero-ed padding, ~44px for "Все направления" button to fit below.
        16:10 aspect ratio. Typical small phone (360px viewport): ~600px height.
@@ -592,7 +595,21 @@ function measureHeroVideoHeight() {
     const maxH = Math.max(200, Math.min(vh - reserved, vh * 0.5));
     document.documentElement.style.setProperty('--hero-max-height', maxH + 'px');
   };
+
+  /* Hide "Все направления" button on mobile load; show after scroll. */
+  const handleScroll = () => {
+    if (isMobile() && ctaBtn && window.scrollY > 20) {
+      ctaBtn.classList.add('hero-cta-visible');
+      window.removeEventListener('scroll', handleScroll, { passive: true });
+    }
+  };
+
   update();
+  if (isMobile() && ctaBtn) {
+    ctaBtn.classList.remove('hero-cta-visible'); /* ensure hidden on load */
+    window.addEventListener('scroll', handleScroll, { passive: true });
+  }
+
   window.addEventListener('resize', update, { passive: true });
 }
 
