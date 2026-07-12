@@ -7,17 +7,20 @@
    сохраняя все JS-хуки (fade-up, data-target, modal-trial, faq и т.д.).
    ===================================================================== */
 
-  /* Затемнение фото на плашках направлений (bento) — регулируется из
-     кабинета (Тексты сайта → Типографика → «Затемнение фото», SUPA.texts
-     ключ style.cardDarken, применяется через applyStyleOverrides() в
-     main.js). Дефолт = уровень «Сильное». Живёт в :root (не в .editorial
-     на body), потому что JS переопределяет её на document.documentElement
-     (<html>) — как и --font-heading/--font-body в style.css: у CSS custom
-     properties «собственное» значение элемента (тут — .editorial на body)
-     всегда перекрывает унаследованное от предка, даже если оно новее, так
-     что дефолт и override обязаны жить на одном и том же элементе. */
+  /* Токены дизайна, управляемые из кабинета (Тексты сайта → Дизайн):
+     затемнение фото на плашках, интенсивность теней, масштаб скругления
+     углов, масштаб размера плашек направлений. Всё это — в :root (не в
+     .editorial на body), потому что applyStyleOverrides() в main.js
+     переопределяет их на document.documentElement (<html>): у CSS custom
+     properties «собственное» значение элемента всегда перекрывает
+     унаследованное от предка, так что дефолт и override обязаны жить на
+     одном и том же элементе — иначе override молча игнорируется. */
   :root{
     --bcard-overlay:linear-gradient(180deg, rgba(10,7,5,.24) 0%, rgba(10,7,5,.65) 55%, rgba(10,7,5,.93) 100%);
+    --shadow-soft:0 20px 40px -24px rgba(60,40,20,.28);
+    --shadow-deep:0 34px 64px -32px rgba(60,40,20,.4);
+    --radius-scale:1;
+    --card-scale:1;
   }
   .editorial{
     --paper:#FBF8F2; --cream:#F4EEE2; --cream-2:#EDE4D3; --line:rgba(170,140,90,.24);
@@ -27,8 +30,6 @@
     --bg:#FBF8F2; --bg-alt:#F4EEE2; --bg-cream:#FFFFFF; --bg-3:#EDE4D3;
     --dark:#1A1512; --body:#4A433D; --muted:#7A716A;
     --border:rgba(120,90,50,.16); --gold-border:rgba(201,168,76,.32);
-    --shadow-soft:0 20px 40px -24px rgba(60,40,20,.28);
-    --shadow-deep:0 34px 64px -32px rgba(60,40,20,.4);
   }
   .editorial{ background:var(--paper); }
 
@@ -192,13 +193,17 @@
   .editorial .bento{ display:grid;grid-template-columns:repeat(6,1fr);gap:16px; }
   .editorial .bcard{
     background:rgba(244,238,226,.45);border:1px solid rgba(154,126,74,.22);
-    border-radius:22px;padding:6px;backdrop-filter:blur(2px);
+    border-radius:calc(22px * var(--radius-scale,1));padding:6px;backdrop-filter:blur(2px);
     transition:transform .4s cubic-bezier(.32,.72,0,1),box-shadow .4s,border-color .4s;
   }
   .editorial .bcard:hover{ transform:translateY(-3px);box-shadow:0 16px 28px -20px rgba(60,40,20,.3);border-color:rgba(154,126,74,.4); }
+  /* --card-scale масштабирует высоту/отступы плашек направлений (кабинет
+     → Дизайн → «Размер плашек направлений»), --radius-scale — скругление
+     углов всех карточек сайта (тот же раздел → «Скругление углов»). */
   .editorial .bcard-in{
-    position:relative;border-radius:18px;background:#fff;height:100%;min-height:300px;
-    padding:26px;display:flex;flex-direction:column;overflow:hidden;
+    position:relative;border-radius:calc(18px * var(--radius-scale,1));background:#fff;height:100%;
+    min-height:calc(300px * var(--card-scale,1));
+    padding:calc(26px * var(--card-scale,1));display:flex;flex-direction:column;overflow:hidden;
     background-size:cover;background-position:center;
   }
   /* Затемняющий градиент — отдельный слой поверх фото (не через
@@ -251,7 +256,7 @@
 
   /* ---------- TEACHERS ---------- */
   .editorial .teachers-grid .teacher-card{
-    background:var(--cream);border:1px solid var(--line);border-radius:26px;
+    background:var(--cream);border:1px solid var(--line);border-radius:calc(26px * var(--radius-scale,1));
     box-shadow:none;text-align:center;
   }
   .editorial .teachers-grid .teacher-card:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
@@ -270,7 +275,7 @@
 
   /* ---------- BENEFITS ---------- */
   .editorial .benefit-card{
-    background:var(--cream);border:1px solid var(--line);border-radius:24px;box-sizing:border-box;
+    background:var(--cream);border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));box-sizing:border-box;
   }
   .editorial .benefit-card:hover{ box-shadow:var(--shadow-soft);transform:translateY(-4px); }
   .editorial .benefit-card h4{ overflow-wrap:break-word; word-wrap:break-word; }
@@ -279,7 +284,7 @@
 
   /* ---------- REVIEWS ---------- */
   .editorial .review-card{
-    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+    background:var(--cream);border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));
   }
   .editorial .review-card:hover{ box-shadow:var(--shadow-soft); }
 
@@ -288,13 +293,13 @@
 
   /* ---------- EVENTS ---------- */
   .editorial .event-card{
-    background:var(--cream);border:1px solid var(--line);border-radius:24px;
+    background:var(--cream);border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));
   }
   .editorial .event-card:hover{ box-shadow:var(--shadow-soft); }
 
   /* ---------- PRICING ---------- */
   .editorial .pricing-card{
-    background:#fff;border:1px solid var(--line);border-radius:24px;
+    background:#fff;border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));
   }
   .editorial .pricing-card--featured{
     background:linear-gradient(155deg,var(--primary),#b90410);border-color:transparent;
@@ -315,7 +320,7 @@
   /* ---------- FAQ / CONTACTS refinement ---------- */
   .editorial .faq-question{ font-size:1.15rem; }
   .editorial .contact-icon{ border-radius:14px; }
-  .editorial .map-container{ border-radius:24px;border-color:var(--line); }
+  .editorial .map-container{ border-radius:calc(24px * var(--radius-scale,1));border-color:var(--line); }
   .editorial .schedule-row{ background:var(--cream);border:1px solid var(--line); }
 
   /* softer, springier reveal for this page */
@@ -402,7 +407,7 @@
   .editorial .page-hero::after{ background:radial-gradient(circle, rgba(201,168,76,.16), transparent 70%); }
 
   /* Карточки курсов */
-  .editorial .course-card{ background:var(--cream);border:1px solid var(--line);border-radius:24px;box-sizing:border-box; }
+  .editorial .course-card{ background:var(--cream);border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));box-sizing:border-box; }
   .editorial .course-card:hover{ box-shadow:var(--shadow-soft); }
   .editorial .course-card h3, .editorial .course-card h4{ overflow-wrap:break-word; word-wrap:break-word; }
   .editorial .course-card p{ overflow-wrap:break-word; word-wrap:break-word; }

@@ -48,8 +48,8 @@
     <div class="page-hero-inner">
       <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Расписание</span></div>
       <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Расписание</div>
-      <h1>Когда проходят занятия</h1>
-      <p class="lead">Выберите направление, преподавателя, возраст или удобный день — и найдите подходящее время. Первое занятие на любом направлении бесплатное.</p>
+      <h1 data-tx="schedule.hero.title">Когда проходят занятия</h1>
+      <p class="lead" data-tx="schedule.hero.lead">Выберите направление, преподавателя, возраст или удобный день — и найдите подходящее время. Первое занятие на любом направлении бесплатное.</p>
     </div>
   </div>
 </div>
@@ -91,7 +91,7 @@
 <section class="cta-banner">
   <div class="cta-banner-inner">
     <div class="free-badge">Первое занятие бесплатно</div>
-    <h2>Нашли удобное время?</h2>
+    <h2 data-tx="schedule.h2_1">Нашли удобное время?</h2>
     <p>Запишитесь на бесплатное пробное занятие — мы подтвердим время и ответим на все вопросы.</p>
     <div class="cta-banner-btns">
       <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться на пробное</a>
@@ -112,6 +112,9 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supa-config.js"></script>
+<script src="js/supa.js"></script>
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>

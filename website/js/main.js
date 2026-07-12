@@ -65,35 +65,29 @@ hamburger && hamburger.addEventListener('click', () => {
   document.body.style.overflow = mobileNav.classList.contains('open') ? 'hidden' : '';
 });
 
-document.querySelectorAll('.mobile-nav a').forEach(a => {
-  a.addEventListener('click', () => {
+/* Делегирование через document, а не querySelectorAll+forEach на конкретных
+   узлах: applyMenuOverride() (кабинет → «Тексты и дизайн» → редактор меню)
+   может перестроить .nav-links/.mobile-nav целиком после первой загрузки —
+   слушатели, навешанные на исходные узлы, для новых пропали бы. */
+document.addEventListener('click', e => {
+  if (e.target.closest('.mobile-nav a:not(.nav-dropdown-toggle)')) {
     hamburger && hamburger.classList.remove('open');
     mobileNav && mobileNav.classList.remove('open');
     document.body.style.overflow = '';
-  });
-});
-
-/* "О школе" dropdown — click toggle (hover handles desktop via CSS) */
-document.querySelectorAll('.nav-dropdown-toggle').forEach(btn => {
-  btn.addEventListener('click', e => {
-    e.stopPropagation();
-    const dd = btn.closest('.nav-dropdown');
-    const open = dd.classList.toggle('open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
-});
-document.addEventListener('click', e => {
-  // Закрываем только dropdown не в мобильном меню, или если клик не на ссылку
-  if (e.target.closest('.mobile-nav .nav-dropdown-menu a')) {
-    // Закрываем только dropdown при клике на ссылку, но оставляем мобильное меню открытым
-    const dd = e.target.closest('.mobile-nav .nav-dropdown');
-    if (dd) dd.classList.remove('open');
-  } else {
-    // Закрываем все открытые dropdown при клике вне
-    document.querySelectorAll('.nav-dropdown.open').forEach(dd => {
-      if (!dd.contains(e.target)) dd.classList.remove('open');
-    });
+    return;
   }
+  const toggle = e.target.closest('.nav-dropdown-toggle');
+  if (toggle) {
+    e.stopPropagation();
+    const dd = toggle.closest('.nav-dropdown');
+    const open = dd.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    return;
+  }
+  // Закрываем все открытые dropdown при клике вне
+  document.querySelectorAll('.nav-dropdown.open').forEach(dd => {
+    if (!dd.contains(e.target)) dd.classList.remove('open');
+  });
 });
 
 /* ===== SCROLL ANIMATIONS ===== */
@@ -567,10 +561,63 @@ document.addEventListener('DOMContentLoaded', () => {
   renderValues();
   applyTextOverrides();
   applyStyleOverrides();
+  applyMenuOverride();
   renderHeroVideo();
   initScheduleForm('modal-form');
   measureHeroVideoHeight();
 });
+
+/* ===== EDITABLE MENU (nav.menu) =====
+   Кабинет → «Тексты и дизайн» → «Меню» позволяет менять пункты навигации
+   (текст/ссылку/порядок), не трогая HTML. Хранится как один JSON-блок в
+   site_texts (ключ nav.menu). Пусто/недоступно → остаётся статичная
+   разметка страницы — тот же контракт graceful degradation, что и у
+   applyTextOverrides()/applyStyleOverrides().
+   Ссылки в JSON — «от корня сайта» (как на index.html, без ../): точный
+   относительный префикс для текущей страницы вычисляется из уже
+   существующей ссылки логотипа (.nav-logo), которая на каждой странице
+   правильно ведёт на index.html. */
+function applyMenuOverride() {
+  if (!window.SUPA || !SUPA.texts) return;
+  SUPA.texts.getAll().then((map) => {
+    const raw = map['nav.menu'];
+    if (!raw) return;
+    let menu;
+    try { menu = JSON.parse(raw); } catch (e) { return; }
+    if (!menu || !Array.isArray(menu.top)) return;
+    renderMenu(menu);
+  }).catch(() => {}); /* keep static markup */
+}
+
+function renderMenu(menu) {
+  const logo = document.querySelector('.nav-logo');
+  if (!logo) return;
+  const prefix = (logo.getAttribute('href') || '').replace(/index\.html(#.*)?$/, '');
+  const link = (it) => '<a href="' + escapeHtml(prefix + it.href) + '">' + escapeHtml(it.label) + '</a>';
+  const dropdownItems = (menu.dropdown && Array.isArray(menu.dropdown.items)) ? menu.dropdown.items : [];
+  const dropdownHtml = dropdownItems.length
+    ? '<div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">' +
+      escapeHtml((menu.dropdown && menu.dropdown.label) || 'О школе') +
+      ' <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>' +
+      '<div class="nav-dropdown-menu">' + dropdownItems.map(link).join('') + '</div></div>'
+    : '';
+  const topHtml = (menu.top || []).map(link).join('');
+  const tailHtml = (menu.tail || []).map(link).join('');
+  const middle = topHtml + dropdownHtml + tailHtml;
+
+  document.querySelectorAll('.nav-links').forEach((el) => {
+    const fixedTail = Array.from(el.children)
+      .filter((c) => c.classList.contains('nav-cta') || (c.tagName === 'A' && /account\/login\.html$/.test(c.getAttribute('href') || '')))
+      .map((c) => c.outerHTML).join('');
+    el.innerHTML = middle + fixedTail;
+  });
+  document.querySelectorAll('.mobile-nav').forEach((el) => {
+    const fixedTail = Array.from(el.children)
+      .filter((c) => c.classList.contains('mob-cta') || (c.tagName === 'A' && /account\/login\.html$/.test(c.getAttribute('href') || '')))
+      .map((c) => c.outerHTML).join('');
+    el.innerHTML = middle + fixedTail;
+  });
+}
 
 /* Dynamically calculate hero video max-height based on actual viewport.
    Avoids full-bleed (100vw) issues and svh unit inconsistencies across browsers.
@@ -696,6 +743,22 @@ const CARD_DARKEN_PRESETS = {
 };
 window.CARD_DARKEN_PRESETS = CARD_DARKEN_PRESETS;
 
+/* ===== DESIGN TOKENS: shadows / corner radius / card size =====
+   Кабинет → «Тексты сайта» → блок «Дизайн». Три независимых пресета,
+   каждый — CSS custom property на :root (editorial.css). Та же схема,
+   что и card-darken: фиксированные пресеты вместо свободного числа —
+   гарантированно не сломают вёрстку никаким значением. */
+const SHADOW_PRESETS = {
+  'flat':   { soft: '0 4px 10px -6px rgba(60,40,20,.12)',  deep: '0 10px 20px -12px rgba(60,40,20,.18)' },
+  'normal': { soft: '0 20px 40px -24px rgba(60,40,20,.28)', deep: '0 34px 64px -32px rgba(60,40,20,.4)' },
+  'bold':   { soft: '0 28px 54px -20px rgba(60,40,20,.42)', deep: '0 44px 80px -24px rgba(60,40,20,.55)' }
+};
+window.SHADOW_PRESETS = SHADOW_PRESETS;
+const RADIUS_PRESETS = { 'sharp': '0.5', 'normal': '1', 'round': '1.4', 'xround': '1.8' };
+window.RADIUS_PRESETS = RADIUS_PRESETS;
+const CARD_SIZE_PRESETS = { 'compact': '0.85', 'normal': '1', 'large': '1.15', 'xlarge': '1.3' };
+window.CARD_SIZE_PRESETS = CARD_SIZE_PRESETS;
+
 function loadGoogleFont(family) {
   const id = 'gf-' + family.replace(/\s+/g, '-').toLowerCase();
   if (document.getElementById(id)) return;
@@ -726,6 +789,19 @@ function applyStyleOverrides() {
     const darken = map['style.cardDarken'];
     if (darken && CARD_DARKEN_PRESETS[darken]) {
       document.documentElement.style.setProperty('--bcard-overlay', CARD_DARKEN_PRESETS[darken]);
+    }
+    const shadow = map['style.shadowIntensity'];
+    if (shadow && SHADOW_PRESETS[shadow]) {
+      document.documentElement.style.setProperty('--shadow-soft', SHADOW_PRESETS[shadow].soft);
+      document.documentElement.style.setProperty('--shadow-deep', SHADOW_PRESETS[shadow].deep);
+    }
+    const radius = map['style.cardRadius'];
+    if (radius && RADIUS_PRESETS[radius]) {
+      document.documentElement.style.setProperty('--radius-scale', RADIUS_PRESETS[radius]);
+    }
+    const cardSize = map['style.cardSize'];
+    if (cardSize && CARD_SIZE_PRESETS[cardSize]) {
+      document.documentElement.style.setProperty('--card-scale', CARD_SIZE_PRESETS[cardSize]);
     }
   }).catch(() => {}); /* keep static defaults */
 }

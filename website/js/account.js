@@ -270,7 +270,7 @@
     { href: 'admin-values.html',        label: 'Ценности студии',  icon: ICON.star      },
     { href: 'admin-achievements-public.html', label: 'Достижения студии', icon: ICON.star },
     { href: 'admin-media.html',         label: 'Медиацентр',       icon: ICON.image     },
-    { href: 'admin-texts.html',         label: 'Тексты сайта',     icon: ICON.note      },
+    { href: 'admin-texts.html',         label: 'Тексты и дизайн',  icon: ICON.note      },
     /* --- Финансы / Аналитика --- */
     { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
     { href: 'admin-orders.html',        label: 'Заказы',           icon: ICON.cart      },
@@ -432,7 +432,7 @@
     'admin-values.html':      { title: 'Ценности студии' },
     'admin-achievements-public.html': { title: 'Достижения студии' },
     'admin-media.html':       { title: 'Медиацентр' },
-    'admin-texts.html':       { title: 'Тексты сайта' },
+    'admin-texts.html':       { title: 'Тексты и дизайн' },
     'admin-payments.html':    { title: 'Платежи' },
     /* CRM v0.9 */
     'admin-leads.html':       { title: 'CRM Лиды' },
@@ -4010,6 +4010,79 @@
       { key: 'dir.dance.hero.lead',     label: 'Танцы — подзаголовок', def: '' },
       { key: 'dir.painting.hero.title', label: 'Живопись — заголовок', def: 'Живопись' },
       { key: 'dir.painting.hero.lead',  label: 'Живопись — подзаголовок', def: '' }
+    ] },
+    { group: 'Новые страницы — заголовки', items: [
+      { key: 'gallery.hero.title', label: 'Галерея — заголовок', def: 'Галерея' },
+      { key: 'gallery.hero.lead',  label: 'Галерея — подзаголовок', def: 'Концерты, выставки, спектакли и занятия — смотрите, как живёт наша студия.' },
+      { key: 'schedule.hero.title', label: 'Расписание — заголовок', def: 'Когда проходят занятия' },
+      { key: 'schedule.hero.lead',  label: 'Расписание — подзаголовок', def: 'Выберите направление, преподавателя, возраст или удобный день — и найдите подходящее время. Первое занятие на любом направлении бесплатное.' },
+      { key: 'courses.hero.title', label: 'Курсы — заголовок', def: 'Онлайн-курсы' },
+      { key: 'courses.hero.lead',  label: 'Курсы — подзаголовок', def: 'Учитесь у педагогов Shpigotskiy Art Space из любой точки. Видеоуроки, структурированные программы, результат в удобном темпе.' },
+      { key: 'events.hero.title', label: 'Мероприятия — заголовок', def: 'Мероприятия студии' },
+      { key: 'events.hero.lead',  label: 'Мероприятия — подзаголовок', def: 'Концерты, выставки, спектакли и мастер-классы. Наши ученики регулярно выступают — приходите поддержать их.' },
+      { key: 'store.hero.title', label: 'Магазин — заголовок', def: 'Магазин студии' },
+      { key: 'store.hero.lead',  label: 'Магазин — подзаголовок', def: 'Абонементы, онлайн-курсы, мастер-классы, мерч и подарочные сертификаты.' },
+      { key: 'materials.hero.title', label: 'Статьи — заголовок', def: 'Статьи и советы' },
+      { key: 'materials.hero.lead',  label: 'Статьи — подзаголовок', def: 'Полезные материалы для родителей и учеников, новости студии и советы по творческому развитию.' },
+      { key: 'portfolio.hero.title', label: 'Портфолио — заголовок', def: 'Портфолио учеников' },
+      { key: 'portfolio.hero.lead',  label: 'Портфолио — подзаголовок', def: 'Лучшие работы наших учеников — живопись, музыкальные записи, видео выступлений и творческие проекты.' }
+    ] },
+    { group: 'Разделы страниц («О школе»)', items: [
+      { key: 'mission.h2_1', label: 'Миссия — С чего всё начиналось', def: 'С чего всё начиналось' },
+      { key: 'mission.h2_2', label: 'Миссия — Что мы делаем и для кого', def: 'Что мы делаем и для кого' },
+      { key: 'mission.h2_3', label: 'Миссия — Три принципа, на которых всё держится', def: 'Три принципа, на которых всё держится' },
+      { key: 'mission.h2_4', label: 'Миссия — Как регулярные занятия творчеством меняю', def: 'Как регулярные занятия творчеством меняют ребёнка' },
+      { key: 'mission.h2_5', label: 'Миссия — Познакомьтесь со студией лично', def: 'Познакомьтесь со студией лично' },
+      { key: 'values.h2_1', label: 'Ценности — Что для нас важно', def: 'Что для нас важно' },
+      { key: 'values.h2_2', label: 'Ценности — Увидьте наши ценности на практике', def: 'Увидьте наши ценности на практике' },
+      { key: 'reviews.h2_1', label: 'Отзывы — Убедитесь сами', def: 'Убедитесь сами' },
+      { key: 'achievements.h2_1', label: 'Достижения — Станьте частью следующей истории', def: 'Станьте частью следующей истории' },
+      { key: 'parents.h2_1', label: 'Родителям — Что на самом деле формирует занятие раз ', def: 'Что на самом деле формирует занятие раз в несколько дней' },
+      { key: 'parents.h2_2', label: 'Родителям — Что получает ребёнок — и что получаете в', def: 'Что получает ребёнок — и что получаете вы' },
+      { key: 'parents.h2_3', label: 'Родителям — Путь от заявки до первого занятия', def: 'Путь от заявки до первого занятия' },
+      { key: 'parents.h2_4', label: 'Родителям — Что взять с собой', def: 'Что взять с собой' },
+      { key: 'parents.h2_5', label: 'Родителям — Ребёнок под надёжным присмотром', def: 'Ребёнок под надёжным присмотром' },
+      { key: 'parents.h2_6', label: 'Родителям — Как поддержать ребёнка между занятиями', def: 'Как поддержать ребёнка между занятиями' },
+      { key: 'parents.h2_7', label: 'Родителям — Отвечаем честно', def: 'Отвечаем честно' },
+      { key: 'parents.h2_8', label: 'Родителям — Подарите ребёнку любимое дело', def: 'Подарите ребёнку любимое дело' },
+      { key: 'contacts.h2_1', label: 'Контакты — Как с нами связаться', def: 'Как с нами связаться' },
+      { key: 'contacts.h2_2', label: 'Контакты — Запишитесь прямо сейчас', def: 'Запишитесь прямо сейчас' }
+    ] },
+    { group: 'Разделы страниц (Направления)', items: [
+      { key: 'directions.h2_1', label: 'Направления (обзор) — Музыка в твоих руках', def: 'Музыка в твоих руках' },
+      { key: 'directions.h2_2', label: 'Направления (обзор) — Голос — главный инструмент', def: 'Голос — главный инструмент' },
+      { key: 'directions.h2_3', label: 'Направления (обзор) — Мир цвета и форм', def: 'Мир цвета и форм' },
+      { key: 'directions.h2_4', label: 'Направления (обзор) — Сцена рядом', def: 'Сцена рядом' },
+      { key: 'directions.h2_5', label: 'Направления (обзор) — Тело как язык', def: 'Тело как язык' },
+      { key: 'directions.h2_6', label: 'Направления (обзор) — Не знаете, с чего начать?', def: 'Не знаете, с чего начать?' },
+      { key: 'dir.guitar.h2_1', label: 'Гитара — Почему гитара, укулеле и домбра — это не', def: 'Почему гитара, укулеле и домбра — это не только музыка' },
+      { key: 'dir.guitar.h2_2', label: 'Гитара — Что говорят родители — Гитара, укулеле, ', def: 'Что говорят родители — Гитара, укулеле, домбра' },
+      { key: 'dir.guitar.h2_3', label: 'Гитара — Запишитесь на бесплатное пробное', def: 'Запишитесь на бесплатное пробное' },
+      { key: 'dir.acting.h2_1', label: 'Актёрское — Что актёрское мастерство меняет в ребёнк', def: 'Что актёрское мастерство меняет в ребёнке' },
+      { key: 'dir.acting.h2_2', label: 'Актёрское — Что говорят родители — Актёрское мастерс', def: 'Что говорят родители — Актёрское мастерство' },
+      { key: 'dir.acting.h2_3', label: 'Актёрское — Запишитесь на бесплатное пробное', def: 'Запишитесь на бесплатное пробное' },
+      { key: 'dir.acting.h2_4', label: 'Актёрское — Приходите на сцену', def: 'Приходите на сцену' },
+      { key: 'dir.vocals.h2_1', label: 'Вокал — Что даёт эстрадный вокал ребёнку', def: 'Что даёт эстрадный вокал ребёнку' },
+      { key: 'dir.vocals.h2_2', label: 'Вокал — Что говорят родители — Вокал', def: 'Что говорят родители — Вокал' },
+      { key: 'dir.vocals.h2_3', label: 'Вокал — Запишитесь на бесплатное пробное', def: 'Запишитесь на бесплатное пробное' },
+      { key: 'dir.vocals.h2_4', label: 'Вокал — Начните петь сегодня', def: 'Начните петь сегодня' },
+      { key: 'dir.dance.h2_1', label: 'Танцы — Что танец развивает, кроме пластики', def: 'Что танец развивает, кроме пластики' },
+      { key: 'dir.dance.h2_2', label: 'Танцы — Что говорят родители — Современный танец', def: 'Что говорят родители — Современный танец' },
+      { key: 'dir.dance.h2_3', label: 'Танцы — Запишитесь на бесплатное пробное', def: 'Запишитесь на бесплатное пробное' },
+      { key: 'dir.dance.h2_4', label: 'Танцы — Начните двигаться', def: 'Начните двигаться' },
+      { key: 'dir.painting.h2_1', label: 'Живопись — Что рисование тренирует в ребёнке', def: 'Что рисование тренирует в ребёнке' },
+      { key: 'dir.painting.h2_2', label: 'Живопись — Что говорят родители — Живопись', def: 'Что говорят родители — Живопись' },
+      { key: 'dir.painting.h2_3', label: 'Живопись — Запишитесь на бесплатное пробное', def: 'Запишитесь на бесплатное пробное' },
+      { key: 'dir.painting.h2_4', label: 'Живопись — Откройте мир цвета', def: 'Откройте мир цвета' }
+    ] },
+    { group: 'Разделы страниц (Прочее)', items: [
+      { key: 'gallery.h2_1', label: 'Галерея — Выступления учеников', def: 'Выступления учеников' },
+      { key: 'gallery.h2_2', label: 'Галерея — Станьте частью истории', def: 'Станьте частью истории' },
+      { key: 'schedule.h2_1', label: 'Расписание — Нашли удобное время?', def: 'Нашли удобное время?' },
+      { key: 'events.h2_1', label: 'Мероприятия — Станьте частью наших событий', def: 'Станьте частью наших событий' },
+      { key: 'store.h2_1', label: 'Магазин — Не знаете, что выбрать?', def: 'Не знаете, что выбрать?' },
+      { key: 'portfolio.h2_1', label: 'Портфолио — Добавьте свою работу', def: 'Добавьте свою работу' },
+      { key: 'portfolio.h2_2', label: 'Портфолио — Создайте своё портфолио', def: 'Создайте своё портфолио' }
     ] }
   ];
 
@@ -4037,6 +4110,58 @@
     { v: '80', label: 'Сильное (по умолчанию)' },
     { v: '95', label: 'Максимальное' }
   ];
+  /* Тени, скругление углов, размер плашек — тоже готовые пресеты (не
+     свободное число), значения должны совпадать с main.js SHADOW_PRESETS/
+     RADIUS_PRESETS/CARD_SIZE_PRESETS. */
+  var SHADOW_OPTIONS = [
+    { v: 'flat', label: 'Плоские (почти без теней)' },
+    { v: 'normal', label: 'Обычные (по умолчанию)' },
+    { v: 'bold', label: 'Выразительные' }
+  ];
+  var RADIUS_OPTIONS = [
+    { v: 'sharp', label: 'Острые углы' },
+    { v: 'normal', label: 'Обычные (по умолчанию)' },
+    { v: 'round', label: 'Скруглённые' },
+    { v: 'xround', label: 'Очень скруглённые' }
+  ];
+  var CARD_SIZE_OPTIONS = [
+    { v: 'compact', label: 'Компактные' },
+    { v: 'normal', label: 'Обычные (по умолчанию)' },
+    { v: 'large', label: 'Крупнее' },
+    { v: 'xlarge', label: 'Крупные' }
+  ];
+
+  /* Пункты меню по умолчанию — то же самое, что сейчас захардкожено в HTML
+     каждой страницы (main.js renderMenu() перестраивает шапку из этой же
+     формы, если найдёт override в site_texts['nav.menu']). Ссылки — «от
+     корня сайта», main.js сам подставляет ../ на вложенных страницах. */
+  var DEFAULT_MENU = {
+    top: [
+      { label: 'Направления', href: 'directions/index.html' },
+      { label: 'Расписание', href: 'schedule.html' },
+      { label: 'Курсы', href: 'courses.html' },
+      { label: 'Мероприятия', href: 'events.html' },
+      { label: 'Магазин', href: 'store.html' }
+    ],
+    dropdown: {
+      label: 'О школе',
+      items: [
+        { label: 'Миссия', href: 'mission.html' },
+        { label: 'Ценности', href: 'values.html' },
+        { label: 'Отзывы', href: 'reviews.html' },
+        { label: 'Достижения', href: 'achievements.html' },
+        { label: 'Преподаватели', href: 'teachers.html' },
+        { label: 'Родителям', href: 'parents.html' },
+        { label: 'Галерея', href: 'gallery.html' },
+        { label: 'Статьи', href: 'materials.html' },
+        { label: 'Портфолио', href: 'portfolio.html' },
+        { label: 'Правовая информация', href: 'legal/index.html' }
+      ]
+    },
+    tail: [
+      { label: 'Контакты', href: 'contacts.html' }
+    ]
+  };
 
   var adminTexts = $('#admin-texts-root');
   if (adminTexts) loadAdminTexts();
@@ -4047,8 +4172,8 @@
     }
     adminTexts.innerHTML = '<div id="texts-banner"></div>' +
       '<div class="tx-group tx-typography">' +
-        '<h3>Типографика (весь сайт)</h3>' +
-        '<p class="cab-muted">Шрифт заголовков, шрифт текста и общий масштаб размера — применяются сразу на всех страницах публичного сайта.</p>' +
+        '<h3>Дизайн (весь сайт)</h3>' +
+        '<p class="cab-muted">Шрифты, размер текста, затемнение фото, тени, скругление углов и размер плашек направлений — применяются сразу на всех страницах публичного сайта.</p>' +
         '<div class="tx-type-row"><label>Шрифт заголовков</label><select class="form-control" id="tx-font-heading">' +
           FONT_CHOICES.heading.map(function (f) { return '<option value="' + escapeHtml(f) + '">' + escapeHtml(f) + '</option>'; }).join('') +
         '</select></div>' +
@@ -4061,11 +4186,44 @@
         '<div class="tx-type-row"><label>Затемнение фото</label><select class="form-control" id="tx-card-darken">' +
           CARD_DARKEN_OPTIONS.map(function (o) { return '<option value="' + o.v + '">' + escapeHtml(o.label) + '</option>'; }).join('') +
         '</select></div>' +
-        '<p class="cab-muted" style="margin-top:6px;">Затемнение фото на плашках направлений главной страницы («Обучение») — если текст сливается с картинкой, увеличьте.</p>' +
+        '<p class="cab-muted" style="margin-top:-6px;margin-bottom:2px;">Фото на плашках направлений главной страницы («Обучение») — если текст сливается с картинкой, увеличьте.</p>' +
+        '<div class="tx-type-row"><label>Тени карточек</label><select class="form-control" id="tx-shadow">' +
+          SHADOW_OPTIONS.map(function (o) { return '<option value="' + o.v + '">' + escapeHtml(o.label) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="tx-type-row"><label>Скругление углов</label><select class="form-control" id="tx-radius">' +
+          RADIUS_OPTIONS.map(function (o) { return '<option value="' + o.v + '">' + escapeHtml(o.label) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="tx-type-row"><label>Размер плашек направлений</label><select class="form-control" id="tx-card-size">' +
+          CARD_SIZE_OPTIONS.map(function (o) { return '<option value="' + o.v + '">' + escapeHtml(o.label) + '</option>'; }).join('') +
+        '</select></div>' +
         '<div class="tx-actions">' +
           '<button class="btn btn-primary btn-sm" id="tx-type-save">Сохранить</button>' +
           '<button class="btn btn-outline btn-sm" id="tx-type-reset">Сбросить к умолчаниям</button>' +
           '<span class="tx-status" id="tx-type-status"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tx-group tx-menu-editor">' +
+        '<h3>Меню сайта</h3>' +
+        '<p class="cab-muted">Пункты навигации в шапке и мобильном меню на всех страницах. «Кабинет» и кнопка «Записаться» — служебные, редактируются отдельно от контентных пунктов и остаются всегда.</p>' +
+        '<div class="menu-editor-section">' +
+          '<h4>Основные пункты</h4>' +
+          '<div id="menu-top-list"></div>' +
+          '<button type="button" class="btn btn-outline btn-sm" id="menu-top-add">+ Добавить пункт</button>' +
+        '</div>' +
+        '<div class="menu-editor-section">' +
+          '<div class="tx-type-row"><label>Название выпадающего меню</label><input class="form-control" id="menu-dropdown-label" placeholder="О школе"></div>' +
+          '<div id="menu-dropdown-list"></div>' +
+          '<button type="button" class="btn btn-outline btn-sm" id="menu-dropdown-add">+ Добавить пункт в меню</button>' +
+        '</div>' +
+        '<div class="menu-editor-section">' +
+          '<h4>Дополнительные пункты (после выпадающего меню)</h4>' +
+          '<div id="menu-tail-list"></div>' +
+          '<button type="button" class="btn btn-outline btn-sm" id="menu-tail-add">+ Добавить пункт</button>' +
+        '</div>' +
+        '<div class="tx-actions">' +
+          '<button class="btn btn-primary btn-sm" id="menu-save">Сохранить меню</button>' +
+          '<button class="btn btn-outline btn-sm" id="menu-reset">Сбросить к умолчаниям</button>' +
+          '<span class="tx-status" id="menu-status"></span>' +
         '</div>' +
       '</div>' +
       '<div id="texts-body"><p class="cab-muted">Загрузка…</p></div>';
@@ -4082,10 +4240,14 @@
     SUPA.texts.getAll().then(function (map) {
       map = map || {};
       var hSel = $('#tx-font-heading'), bSel = $('#tx-font-body'), sSel = $('#tx-font-scale'), dSel = $('#tx-card-darken');
+      var shSel = $('#tx-shadow'), rSel = $('#tx-radius'), csSel = $('#tx-card-size');
       if (hSel) hSel.value = map['style.fontHeading'] || 'Playfair Display';
       if (bSel) bSel.value = map['style.fontBody'] || 'Inter';
       if (sSel) sSel.value = map['style.fontScale'] || '100';
       if (dSel) dSel.value = map['style.cardDarken'] || '80';
+      if (shSel) shSel.value = map['style.shadowIntensity'] || 'normal';
+      if (rSel) rSel.value = map['style.cardRadius'] || 'normal';
+      if (csSel) csSel.value = map['style.cardSize'] || 'normal';
       var typeStatus = $('#tx-type-status');
       function setTypeStatus(msg, ok) { if (typeStatus) { typeStatus.textContent = msg; typeStatus.className = 'tx-status ' + (ok ? 'tx-ok' : 'tx-err'); } }
       var saveBtn = $('#tx-type-save');
@@ -4095,7 +4257,10 @@
           SUPA.texts.set('style.fontHeading', hSel.value),
           SUPA.texts.set('style.fontBody', bSel.value),
           SUPA.texts.set('style.fontScale', sSel.value),
-          SUPA.texts.set('style.cardDarken', dSel.value)
+          SUPA.texts.set('style.cardDarken', dSel.value),
+          SUPA.texts.set('style.shadowIntensity', shSel.value),
+          SUPA.texts.set('style.cardRadius', rSel.value),
+          SUPA.texts.set('style.cardSize', csSel.value)
         ]).then(function () { setTypeStatus('Сохранено ✓', true); }, function (ex) { setTypeStatus('Ошибка: ' + ex.message, false); });
       });
       var resetBtn = $('#tx-type-reset');
@@ -4105,12 +4270,106 @@
           SUPA.texts.remove('style.fontHeading'),
           SUPA.texts.remove('style.fontBody'),
           SUPA.texts.remove('style.fontScale'),
-          SUPA.texts.remove('style.cardDarken')
+          SUPA.texts.remove('style.cardDarken'),
+          SUPA.texts.remove('style.shadowIntensity'),
+          SUPA.texts.remove('style.cardRadius'),
+          SUPA.texts.remove('style.cardSize')
         ]).then(function () {
           hSel.value = 'Playfair Display'; bSel.value = 'Inter'; sSel.value = '100'; dSel.value = '80';
+          shSel.value = 'normal'; rSel.value = 'normal'; csSel.value = 'normal';
           setTypeStatus('Сброшено к умолчаниям', true);
         }, function (ex) { setTypeStatus('Ошибка: ' + ex.message, false); });
       });
+
+      /* ---------- Редактор меню (nav.menu) ---------- */
+      var menuState;
+      try { menuState = map['nav.menu'] ? JSON.parse(map['nav.menu']) : JSON.parse(JSON.stringify(DEFAULT_MENU)); }
+      catch (e) { menuState = JSON.parse(JSON.stringify(DEFAULT_MENU)); }
+      if (!menuState.top) menuState.top = [];
+      if (!menuState.dropdown) menuState.dropdown = { label: 'О школе', items: [] };
+      if (!menuState.dropdown.items) menuState.dropdown.items = [];
+      if (!menuState.tail) menuState.tail = [];
+
+      function menuRowHtml(group, idx, it) {
+        return '<div class="menu-row" data-group="' + group + '" data-idx="' + idx + '">' +
+          '<input class="form-control menu-row-label" data-field="label" value="' + escapeHtml(it.label || '') + '" placeholder="Текст пункта">' +
+          '<input class="form-control menu-row-href" data-field="href" value="' + escapeHtml(it.href || '') + '" placeholder="ссылка, напр. mission.html">' +
+          '<button type="button" class="menu-row-btn" data-act="up" title="Вверх">↑</button>' +
+          '<button type="button" class="menu-row-btn" data-act="down" title="Вниз">↓</button>' +
+          '<button type="button" class="menu-row-btn menu-row-del" data-act="del" title="Удалить">✕</button>' +
+        '</div>';
+      }
+      function renderMenuList(group) {
+        var list = group === 'dropdown' ? menuState.dropdown.items : menuState[group];
+        var elId = group === 'dropdown' ? 'menu-dropdown-list' : 'menu-' + group + '-list';
+        var el = $('#' + elId);
+        if (!el) return;
+        el.innerHTML = list.map(function (it, i) { return menuRowHtml(group, i, it); }).join('') ||
+          '<p class="cab-muted" style="margin:6px 0;">Пусто</p>';
+      }
+      function renderAllMenuLists() {
+        renderMenuList('top'); renderMenuList('dropdown'); renderMenuList('tail');
+        var dl = $('#menu-dropdown-label');
+        if (dl) dl.value = menuState.dropdown.label || '';
+      }
+      renderAllMenuLists();
+
+      var menuEditor = $('.tx-menu-editor');
+      var menuStatusEl = $('#menu-status');
+      function setMenuStatus(msg, ok) { if (menuStatusEl) { menuStatusEl.textContent = msg; menuStatusEl.className = 'tx-status ' + (ok ? 'tx-ok' : 'tx-err'); } }
+
+      if (menuEditor) {
+        menuEditor.addEventListener('input', function (e) {
+          var row = e.target.closest('.menu-row');
+          if (!row) {
+            if (e.target.id === 'menu-dropdown-label') menuState.dropdown.label = e.target.value;
+            return;
+          }
+          var group = row.getAttribute('data-group');
+          var idx = parseInt(row.getAttribute('data-idx'), 10);
+          var list = group === 'dropdown' ? menuState.dropdown.items : menuState[group];
+          var field = e.target.getAttribute('data-field');
+          if (list[idx] && field) list[idx][field] = e.target.value;
+        });
+        menuEditor.addEventListener('click', function (e) {
+          var addBtn = e.target.closest('[id$="-add"]');
+          if (addBtn) {
+            var g = addBtn.id.replace('menu-', '').replace('-add', '');
+            var list = g === 'dropdown' ? menuState.dropdown.items : menuState[g];
+            list.push({ label: '', href: '' });
+            renderMenuList(g);
+            return;
+          }
+          var rowBtn = e.target.closest('.menu-row-btn');
+          if (!rowBtn) return;
+          var row2 = rowBtn.closest('.menu-row');
+          var group2 = row2.getAttribute('data-group');
+          var idx2 = parseInt(row2.getAttribute('data-idx'), 10);
+          var list2 = group2 === 'dropdown' ? menuState.dropdown.items : menuState[group2];
+          var act = rowBtn.getAttribute('data-act');
+          if (act === 'del') list2.splice(idx2, 1);
+          else if (act === 'up' && idx2 > 0) { var tmp = list2[idx2 - 1]; list2[idx2 - 1] = list2[idx2]; list2[idx2] = tmp; }
+          else if (act === 'down' && idx2 < list2.length - 1) { var tmp2 = list2[idx2 + 1]; list2[idx2 + 1] = list2[idx2]; list2[idx2] = tmp2; }
+          renderMenuList(group2);
+        });
+      }
+      var menuSaveBtn = $('#menu-save');
+      if (menuSaveBtn) menuSaveBtn.addEventListener('click', function () {
+        setMenuStatus('Сохранение…', true);
+        SUPA.texts.set('nav.menu', JSON.stringify(menuState)).then(function () {
+          setMenuStatus('Сохранено ✓ — обновите публичные страницы, чтобы увидеть меню', true);
+        }, function (ex) { setMenuStatus('Ошибка: ' + ex.message, false); });
+      });
+      var menuResetBtn = $('#menu-reset');
+      if (menuResetBtn) menuResetBtn.addEventListener('click', function () {
+        setMenuStatus('Сброс…', true);
+        SUPA.texts.remove('nav.menu').then(function () {
+          menuState = JSON.parse(JSON.stringify(DEFAULT_MENU));
+          renderAllMenuLists();
+          setMenuStatus('Сброшено — меню по умолчанию', true);
+        }, function (ex) { setMenuStatus('Ошибка: ' + ex.message, false); });
+      });
+
       var body = $('#texts-body');
       body.innerHTML = TEXT_SLOTS.map(function (grp) {
         return '<div class="tx-group"><h3>' + escapeHtml(grp.group) + '</h3>' +

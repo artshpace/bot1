@@ -31,8 +31,8 @@
     <div class="page-hero-inner">
       <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Портфолио</span></div>
       <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Творчество</div>
-      <h1>Портфолио учеников</h1>
-      <p class="lead">Лучшие работы наших учеников — живопись, музыкальные записи, видео выступлений и творческие проекты.</p>
+      <h1 data-tx="portfolio.hero.title">Портфолио учеников</h1>
+      <p class="lead" data-tx="portfolio.hero.lead">Лучшие работы наших учеников — живопись, музыкальные записи, видео выступлений и творческие проекты.</p>
     </div>
   </div>
 </div>
@@ -170,7 +170,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;">
       <div>
         <div class="eyebrow">Для учеников</div>
-        <h2>Добавьте свою работу</h2>
+        <h2 data-tx="portfolio.h2_1">Добавьте свою работу</h2>
         <p style="color:var(--muted);margin-bottom:24px;">Ученики студии могут добавлять свои работы в цифровое портфолио через личный кабинет. Лучшие работы появляются на этой странице.</p>
         <ul style="list-style:none;padding:0;margin:0 0 32px;">
           <li style="display:flex;gap:12px;margin-bottom:16px;"><svg style="flex-shrink:0;width:20px;height:20px;color:var(--primary)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5 9-11"/></svg>Фотографии работ и диплома</li>
@@ -194,7 +194,7 @@
 <section class="cta-banner">
   <div class="cta-banner-inner">
     <div class="free-badge">Первое занятие бесплатно</div>
-    <h2>Создайте своё портфолио</h2>
+    <h2 data-tx="portfolio.h2_2">Создайте своё портфолио</h2>
     <p>Начните обучение сегодня — и уже через несколько месяцев у вас появятся первые работы, которыми можно гордиться.</p>
     <div class="cta-banner-btns">
       <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться</a>
@@ -215,6 +215,9 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supa-config.js"></script>
+<script src="js/supa.js"></script>
 <script src="js/api.js"></script>
 <script src="js/main.js"></script>
 <script>
