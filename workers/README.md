@@ -62,7 +62,7 @@ curl -X POST https://sas-lead-forwarder.ВАШ_АККАУНТ.workers.dev/submit
 ## Mini App = сам сайт
 
 Бот больше не показывает отдельные страницы-заглушки: кнопка **web_app**
-открывает живой сайт `https://artshpace.github.io/bot1/website/index.html`
+открывает живой сайт `https://artshpace.github.io/bot/website/index.html`
 как Telegram Mini App. За это отвечают:
 
 - `SITE_URL` в `lead-forwarder.js`;
@@ -77,7 +77,7 @@ curl -X POST https://sas-lead-forwarder.ВАШ_АККАУНТ.workers.dev/submit
 ```bash
 curl -X POST "https://api.telegram.org/bot<TOKEN>/setChatMenuButton" \
   -H "Content-Type: application/json" \
-  -d '{"menu_button":{"type":"web_app","text":"Приложение","web_app":{"url":"https://artshpace.github.io/bot1/website/index.html"}}}'
+  -d '{"menu_button":{"type":"web_app","text":"Приложение","web_app":{"url":"https://artshpace.github.io/bot/website/index.html"}}}'
 ```
 
 ## Напоминания о занятиях (24 ч и 1 ч)

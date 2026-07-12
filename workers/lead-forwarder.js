@@ -210,13 +210,14 @@ async function handleBotWebhook(request, env) {
   try { update = await request.json(); }
   catch { return ok(); }
 
+  let chatId;
   try {
     // Нажатие inline-кнопки (Да/Нет, выбор направления/группы, меню)
     if (update.callback_query) { await onCallback(env, update.callback_query); return ok(); }
 
     const msg = update.message || update.edited_message;
     if (!msg || !msg.chat) return ok();
-    const chatId = msg.chat.id;
+    chatId = msg.chat.id;
     const text = (msg.text || '').trim();
 
     // /start <код> — привязка аккаунта кабинета (как раньше)
@@ -252,6 +253,11 @@ async function handleBotWebhook(request, env) {
     return ok();
   } catch (e) {
     console.error('bot webhook error:', e && e.message);
+    // Раньше здесь молча возвращали ok() — пользователь не видел вообще
+    // никакого ответа на /start (тот самый баг «кнопка работает, а бот
+    // молчит»). Теперь, если известен chatId, шлём короткое сообщение —
+    // хотя бы понятно, что бот жив и что-то пошло не так, а не тишина.
+    if (chatId) { try { await sendText(env, chatId, '⚠️ Что-то пошло не так. Попробуйте /start ещё раз.'); } catch (_) {} }
     return ok();
   }
 }
@@ -647,7 +653,13 @@ const WD_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерство','Современный танец','Живопись'];
 
 // Живой сайт студии — он же Telegram Mini App (открывается кнопкой web_app).
-const SITE_URL = 'https://artshpace.github.io/bot1/website/index.html';
+// Канонический хост (см. CLAUDE.md, og:url/canonical на всех страницах
+// сайта) — artshpace.github.io/bot/, БЕЗ единицы. Раньше здесь было
+// .../bot1/ — Telegram грузил несуществующий путь под кнопкой (GitHub
+// Pages отдаёт 404, но для Web View это выглядит как «что-то открылось»,
+// не как явная ошибка — поэтому кнопка казалась «рабочей», хотя вела не
+// туда).
+const SITE_URL = 'https://artshpace.github.io/bot/website/index.html';
 
 // Группы — раньше были захардкожены здесь; теперь живут в таблице bot_groups
 // (миграция 0022_bot_groups_table.sql), правки не требуют деплоя воркера.
@@ -677,18 +689,29 @@ async function editText(env, chatId, msgId, text){ await tgApi(env,'editMessageT
 async function answerCb(env, id){ await tgApi(env,'answerCallbackQuery',{ callback_query_id:id }); }
 async function notifyOwner(env, text){ const chat = env.OWNER_CHAT_ID || env.TELEGRAM_CHAT_ID; if (chat) await sendText(env, chat, text); }
 
-/* ---------- Supabase (service-role) ---------- */
+/* ---------- Supabase (service-role) ----------
+   sbCfg() возвращает null, если SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY не
+   заданы в Worker (Settings → Variables and Secrets) — до этой правки
+   ensureParent()/getState()/... падали с TypeError на env.SUPABASE_URL.replace
+   ещё до того, как бот успевал ответить setMenuButton()/sendMenu(); внешний
+   try/catch в handleBotWebhook эту ошибку тихо глотал (console.error без
+   ответа пользователю) → бот вообще не отвечал на /start, хотя постоянная
+   кнопка-меню (setChatMenuButton, не зависит от бота) продолжала работать.
+   Теперь все sb*-хелперы при отсутствующем конфиге — безопасный no-op
+   (select → [], записи → ничего не делают), так что бот отвечает и без
+   Supabase; просто не сохраняет родителей/состояние для напоминаний. */
 function sbCfg(env){
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
   return {
     base: env.SUPABASE_URL.replace(/\/+$/, '') + '/rest/v1',
     h: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY, 'Content-Type':'application/json' }
   };
 }
-async function sbSelect(env, q){ const {base,h}=sbCfg(env); const r=await fetch(base+q,{headers:h}); return r.ok ? r.json() : []; }
-async function sbInsert(env, table, obj){ const {base,h}=sbCfg(env); return fetch(base+'/'+table,{method:'POST',headers:Object.assign({Prefer:'return=minimal'},h),body:JSON.stringify(obj)}); }
-async function sbUpsert(env, table, obj, conflict){ const {base,h}=sbCfg(env); return fetch(base+'/'+table+'?on_conflict='+conflict,{method:'POST',headers:Object.assign({Prefer:'resolution=merge-duplicates,return=minimal'},h),body:JSON.stringify(obj)}); }
-async function sbPatch(env, q, obj){ const {base,h}=sbCfg(env); return fetch(base+q,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},h),body:JSON.stringify(obj)}); }
-async function sbDelete(env, q){ const {base,h}=sbCfg(env); return fetch(base+q,{method:'DELETE',headers:h}); }
+async function sbSelect(env, q){ const cfg=sbCfg(env); if(!cfg) return []; const r=await fetch(cfg.base+q,{headers:cfg.h}); return r.ok ? r.json() : []; }
+async function sbInsert(env, table, obj){ const cfg=sbCfg(env); if(!cfg) return; return fetch(cfg.base+'/'+table,{method:'POST',headers:Object.assign({Prefer:'return=minimal'},cfg.h),body:JSON.stringify(obj)}); }
+async function sbUpsert(env, table, obj, conflict){ const cfg=sbCfg(env); if(!cfg) return; return fetch(cfg.base+'/'+table+'?on_conflict='+conflict,{method:'POST',headers:Object.assign({Prefer:'resolution=merge-duplicates,return=minimal'},cfg.h),body:JSON.stringify(obj)}); }
+async function sbPatch(env, q, obj){ const cfg=sbCfg(env); if(!cfg) return; return fetch(cfg.base+q,{method:'PATCH',headers:Object.assign({Prefer:'return=minimal'},cfg.h),body:JSON.stringify(obj)}); }
+async function sbDelete(env, q){ const cfg=sbCfg(env); if(!cfg) return; return fetch(cfg.base+q,{method:'DELETE',headers:cfg.h}); }
 const enc = encodeURIComponent;
 
 /* ---------- состояние диалога / родитель ---------- */
@@ -985,7 +1008,7 @@ async function sendCapiLead(env, body, request){
     event_name: 'Lead',
     event_time: Math.floor(Date.now() / 1000),
     action_source: 'website',
-    event_source_url: body.pageUrl || request.headers.get('Referer') || 'https://artshpace.github.io/bot1/website/',
+    event_source_url: body.pageUrl || request.headers.get('Referer') || 'https://artshpace.github.io/bot/website/',
     event_id: body.eventId || ('lead-' + Date.now()),
     user_data: ud,
     custom_data: { content_name: body.direction || 'Заявка' }
