@@ -4013,6 +4013,22 @@
     ] }
   ];
 
+  /* Тот же список шрифтов, что и на публичном сайте (main.js FONT_CHOICES) —
+     значения должны совпадать буква в букву: main.js подставляет их в
+     var(--font-heading)/var(--font-body) только если имя есть в его списке.
+     Дублируем здесь, а не грузим main.js в кабинете (он публичный, тянет
+     трекинг-скрипты и хуки главной страницы, тут не нужные). */
+  var FONT_CHOICES = {
+    heading: ['Playfair Display', 'Merriweather', 'Lora', 'Montserrat', 'Nunito'],
+    body: ['Inter', 'Nunito Sans', 'Roboto', 'Open Sans', 'Merriweather']
+  };
+  var FONT_SCALE_OPTIONS = [
+    { v: '90', label: 'Меньше (90%)' },
+    { v: '100', label: 'Обычный (100%)' },
+    { v: '110', label: 'Крупнее (110%)' },
+    { v: '120', label: 'Крупный (120%)' }
+  ];
+
   var adminTexts = $('#admin-texts-root');
   if (adminTexts) loadAdminTexts();
   function loadAdminTexts() {
@@ -4020,7 +4036,26 @@
       adminTexts.innerHTML = '<p class="cab-empty">Supabase не настроен — редактор текстов недоступен.</p>';
       return;
     }
-    adminTexts.innerHTML = '<div id="texts-banner"></div><div id="texts-body"><p class="cab-muted">Загрузка…</p></div>';
+    adminTexts.innerHTML = '<div id="texts-banner"></div>' +
+      '<div class="tx-group tx-typography">' +
+        '<h3>Типографика (весь сайт)</h3>' +
+        '<p class="cab-muted">Шрифт заголовков, шрифт текста и общий масштаб размера — применяются сразу на всех страницах публичного сайта.</p>' +
+        '<div class="tx-type-row"><label>Шрифт заголовков</label><select class="form-control" id="tx-font-heading">' +
+          FONT_CHOICES.heading.map(function (f) { return '<option value="' + escapeHtml(f) + '">' + escapeHtml(f) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="tx-type-row"><label>Шрифт текста</label><select class="form-control" id="tx-font-body">' +
+          FONT_CHOICES.body.map(function (f) { return '<option value="' + escapeHtml(f) + '">' + escapeHtml(f) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="tx-type-row"><label>Размер текста</label><select class="form-control" id="tx-font-scale">' +
+          FONT_SCALE_OPTIONS.map(function (o) { return '<option value="' + o.v + '">' + escapeHtml(o.label) + '</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="tx-actions">' +
+          '<button class="btn btn-primary btn-sm" id="tx-type-save">Сохранить</button>' +
+          '<button class="btn btn-outline btn-sm" id="tx-type-reset">Сбросить к умолчаниям</button>' +
+          '<span class="tx-status" id="tx-type-status"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div id="texts-body"><p class="cab-muted">Загрузка…</p></div>';
 
     // Предупреждаем в демо-режиме — запись требует реальной сессии админа.
     SUPA.storage.hasSession().then(function (has) {
@@ -4033,6 +4068,33 @@
 
     SUPA.texts.getAll().then(function (map) {
       map = map || {};
+      var hSel = $('#tx-font-heading'), bSel = $('#tx-font-body'), sSel = $('#tx-font-scale');
+      if (hSel) hSel.value = map['style.fontHeading'] || 'Playfair Display';
+      if (bSel) bSel.value = map['style.fontBody'] || 'Inter';
+      if (sSel) sSel.value = map['style.fontScale'] || '100';
+      var typeStatus = $('#tx-type-status');
+      function setTypeStatus(msg, ok) { if (typeStatus) { typeStatus.textContent = msg; typeStatus.className = 'tx-status ' + (ok ? 'tx-ok' : 'tx-err'); } }
+      var saveBtn = $('#tx-type-save');
+      if (saveBtn) saveBtn.addEventListener('click', function () {
+        setTypeStatus('Сохранение…', true);
+        Promise.all([
+          SUPA.texts.set('style.fontHeading', hSel.value),
+          SUPA.texts.set('style.fontBody', bSel.value),
+          SUPA.texts.set('style.fontScale', sSel.value)
+        ]).then(function () { setTypeStatus('Сохранено ✓', true); }, function (ex) { setTypeStatus('Ошибка: ' + ex.message, false); });
+      });
+      var resetBtn = $('#tx-type-reset');
+      if (resetBtn) resetBtn.addEventListener('click', function () {
+        setTypeStatus('Сброс…', true);
+        Promise.all([
+          SUPA.texts.remove('style.fontHeading'),
+          SUPA.texts.remove('style.fontBody'),
+          SUPA.texts.remove('style.fontScale')
+        ]).then(function () {
+          hSel.value = 'Playfair Display'; bSel.value = 'Inter'; sSel.value = '100';
+          setTypeStatus('Сброшено к умолчаниям', true);
+        }, function (ex) { setTypeStatus('Ошибка: ' + ex.message, false); });
+      });
       var body = $('#texts-body');
       body.innerHTML = TEXT_SLOTS.map(function (grp) {
         return '<div class="tx-group"><h3>' + escapeHtml(grp.group) + '</h3>' +

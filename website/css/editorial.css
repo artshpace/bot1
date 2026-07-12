@@ -8,7 +8,7 @@
    ===================================================================== */
 
   .editorial{
-    --paper:#FBF8F2; --cream:#F4EEE2; --cream-2:#EDE4D3; --line:#E2D8C6;
+    --paper:#FBF8F2; --cream:#F4EEE2; --cream-2:#EDE4D3; --line:rgba(170,140,90,.24);
     --ink:#1A1512; --ink-soft:#4A433D;
     /* переопределяем общие токены style.css под тёплую палитру — модалка,
        формы, FAQ и футер получают премиум-вид «бесплатно» */
@@ -119,11 +119,11 @@
       linear-gradient(155deg,#241a15,#3a231b);
   }
   .editorial .hero-ed-panel-in .k{
-    font-family:'Playfair Display',serif;font-size:.95rem;opacity:.85;margin-bottom:24px;
+    font-family:var(--font-heading);font-size:.95rem;opacity:.85;margin-bottom:24px;
   }
   .editorial .hero-ed-metrics{ display:grid;grid-template-columns:1fr 1fr;gap:24px 18px; }
   .editorial .hero-ed-metrics .n{
-    font-family:'Playfair Display',serif;font-size:2.6rem;font-weight:800;line-height:1;color:#fff;
+    font-family:var(--font-heading);font-size:2.6rem;font-weight:800;line-height:1;color:#fff;
   }
   .editorial .hero-ed-metrics .n span{ color:var(--gold); }
   .editorial .hero-ed-metrics .l{ font-size:.8rem;opacity:.82;margin-top:8px; }
@@ -168,40 +168,68 @@
   .editorial .hero-ed-sound svg{ width:20px;height:20px; }
   @media(hover:none){ .editorial .hero-ed-sound{ opacity:.82; } }
 
-  /* ---------- DIRECTIONS bento ---------- */
-  .editorial .bento{ display:grid;grid-template-columns:repeat(6,1fr);gap:18px; }
+  /* ---------- DIRECTIONS bento ----------
+     Плоские, полупрозрачные плашки (в духе современных мобильных ОС —
+     минимум тени, тонкая обводка). Карточки с фото (has-img) показывают
+     кадр с занятий, затемнённый градиентом снизу вверх, чтобы текст
+     оставался читаемым. Без фото — прежний тёплый фон-заглушка. */
+  .editorial .bento{ display:grid;grid-template-columns:repeat(6,1fr);gap:16px; }
   .editorial .bcard{
-    background:var(--cream);border:1px solid var(--line);border-radius:26px;padding:8px;
-    transition:transform .5s cubic-bezier(.32,.72,0,1),box-shadow .5s;
+    background:rgba(244,238,226,.45);border:1px solid rgba(154,126,74,.22);
+    border-radius:22px;padding:6px;backdrop-filter:blur(2px);
+    transition:transform .4s cubic-bezier(.32,.72,0,1),box-shadow .4s,border-color .4s;
   }
-  .editorial .bcard:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
+  .editorial .bcard:hover{ transform:translateY(-3px);box-shadow:0 16px 28px -20px rgba(60,40,20,.3);border-color:rgba(154,126,74,.4); }
   .editorial .bcard-in{
-    border-radius:20px;background:#fff;height:100%;padding:28px;display:flex;flex-direction:column;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+    position:relative;border-radius:18px;background:#fff;height:100%;min-height:300px;
+    padding:26px;display:flex;flex-direction:column;overflow:hidden;
+    background-size:cover;background-position:center;
   }
+  /* Затемняющий градиент — отдельный слой поверх фото (не через
+     background-image, чтобы не переопределять инлайновый url() карточки:
+     относительные пути в url() внутри var() резолвятся от editorial.css,
+     а не от index.html, поэтому фото задаётся инлайн-стилем прямо в HTML,
+     градиент же общий для всех — живёт в CSS через ::before). */
+  .editorial .bcard-in.has-img{ color:#fff; }
+  .editorial .bcard-in.has-img::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background:linear-gradient(180deg, rgba(15,10,8,.12) 0%, rgba(15,10,8,.5) 55%, rgba(15,10,8,.88) 100%);
+  }
+  .editorial .bcard-in.has-img .glyph,
+  .editorial .bcard-in.has-img .bcard-body{ position:relative;z-index:1; }
+  .editorial .bcard-body{ margin-top:auto; }
   .editorial .bcard .tag{
     font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9C7D2E;
   }
+  .editorial .bcard-in.has-img .tag{ color:var(--gold); }
   .editorial .bcard h3{ font-size:1.5rem;margin:14px 0 8px;color:var(--ink); }
-  .editorial .bcard p{ color:var(--muted);font-size:.92rem;flex:1;line-height:1.65; }
+  .editorial .bcard-in.has-img h3{ color:#fff; }
+  .editorial .bcard p{ color:var(--muted);font-size:.92rem;line-height:1.6; }
+  .editorial .bcard-in.has-img p{ color:rgba(255,255,255,.85); }
   .editorial .bcard .more{
-    margin-top:20px;color:var(--primary);font-weight:600;font-size:.9rem;
+    margin-top:16px;color:var(--primary);font-weight:600;font-size:.9rem;
     display:inline-flex;align-items:center;gap:6px;transition:gap .3s ease;
   }
+  .editorial .bcard-in.has-img .more{ color:#fff; }
   .editorial .bcard:hover .more{ gap:11px; }
   .editorial .bcard .glyph{
-    width:54px;height:54px;border-radius:16px;display:grid;place-items:center;
-    background:var(--cream-2);color:var(--ink);
+    width:50px;height:50px;border-radius:14px;display:grid;place-items:center;
+    background:rgba(154,126,74,.14);color:var(--ink);flex-shrink:0;position:relative;z-index:1;
   }
-  .editorial .bcard .glyph svg{ width:27px;height:27px;stroke:currentColor;stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round; }
+  .editorial .bcard-in.has-img .glyph{
+    background:rgba(255,255,255,.16);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    color:#fff;border:1px solid rgba(255,255,255,.2);
+  }
+  .editorial .bcard .glyph svg{ width:25px;height:25px;stroke:currentColor;stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round; }
   .editorial .col-3{ grid-column:span 3; }
   .editorial .col-2{ grid-column:span 2; }
-  .editorial .bcard.feat .bcard-in{ background:linear-gradient(155deg,#2a1c16,#43261c);color:#fff; }
-  .editorial .bcard.feat .tag{ color:var(--gold); }
-  .editorial .bcard.feat h3{ color:#fff; }
-  .editorial .bcard.feat p{ color:rgba(255,255,255,.75); }
-  .editorial .bcard.feat .glyph{ background:rgba(255,255,255,.1);color:var(--gold); }
-  .editorial .bcard.feat .more{ color:#fff; }
+  /* «feat» (гитара) без фото — прежний тёмный градиент как запасной вариант */
+  .editorial .bcard.feat .bcard-in:not(.has-img){ background:linear-gradient(155deg,#2a1c16,#43261c);color:#fff; }
+  .editorial .bcard.feat .bcard-in:not(.has-img) .tag{ color:var(--gold); }
+  .editorial .bcard.feat .bcard-in:not(.has-img) h3{ color:#fff; }
+  .editorial .bcard.feat .bcard-in:not(.has-img) p{ color:rgba(255,255,255,.75); }
+  .editorial .bcard.feat .bcard-in:not(.has-img) .glyph{ background:rgba(255,255,255,.1);color:var(--gold); }
+  .editorial .bcard.feat .bcard-in:not(.has-img) .more{ color:#fff; }
   @media(max-width:860px){ .editorial .bento{grid-template-columns:1fr 1fr}.editorial .col-3,.editorial .col-2{grid-column:span 1} }
   @media(max-width:560px){ .editorial .bento{grid-template-columns:1fr} }
 
@@ -211,13 +239,15 @@
     box-shadow:none;text-align:center;
   }
   .editorial .teachers-grid .teacher-card:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
-  /* Чуть меньше фото + кадрирование по лицу, чтобы все педагоги ровно
-     помещались в сетку одной страницей. */
-  .editorial .teacher-photo{ height:200px; }
-  .editorial .teacher-photo img{ object-fit:cover;object-position:center 22%; }
+  /* object-fit:contain — лицо педагога видно целиком, без обрезки сверху/
+     снизу. Фон под фото — тот же тёплый градиент, что и у заглушки без
+     фото (.teacher-mono), поэтому «доливка» по краям смотрится частью
+     дизайна, а не багом. */
+  .editorial .teacher-photo{ height:220px;background:linear-gradient(140deg,var(--bg-3),var(--bg-alt)); }
+  .editorial .teacher-photo img{ object-fit:contain;object-position:center center; }
   .editorial .teacher-mono{
     width:100%;height:100%;display:grid;place-items:center;
-    font-family:'Playfair Display',serif;font-size:3rem;font-weight:700;color:#fff;
+    font-family:var(--font-heading);font-size:3rem;font-weight:700;color:#fff;
     background:linear-gradient(140deg,var(--primary),var(--gold));
   }
   .editorial .teacher-card h3{ color:var(--ink); }
@@ -319,6 +349,10 @@
     .editorial .hero-ed-cta-primary{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
     .editorial h1, .editorial h2, .editorial h3, .editorial h4{ max-width:100%; }
+    /* Портретная рамка на мобильном; object-fit:contain (не cover) — лицо
+       никогда не обрезается, даже если пропорции фото не 3:4. */
+    .editorial .teacher-photo{ height:auto;aspect-ratio:3 / 4; }
+    .editorial .teacher-photo img{ object-fit:contain;object-position:center center; }
   }
 
   /* ============================================================
@@ -373,7 +407,7 @@
 
   .step-row { display:grid; grid-template-columns:56px 1fr; gap:20px; align-items:start; padding:22px 0; border-bottom:1px solid var(--border); }
   .step-row:last-child { border-bottom:none; }
-  .step-num { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--gold)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; }
+  .step-num { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--gold)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-size:1.4rem; font-weight:700; }
   .step-row h4 { margin-bottom:6px; font-size:1.1rem; }
   .step-row p { color:var(--muted); line-height:1.7; }
 

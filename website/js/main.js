@@ -566,6 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderReviews();
   renderValues();
   applyTextOverrides();
+  applyStyleOverrides();
   renderHeroVideo();
   initScheduleForm('modal-form');
   measureHeroVideoHeight();
@@ -574,8 +575,9 @@ document.addEventListener('DOMContentLoaded', () => {
 /* Dynamically calculate hero video max-height based on actual viewport.
    Avoids full-bleed (100vw) issues and svh unit inconsistencies across browsers.
    On mobile (<768px), limit video height so "Все направления" button doesn't
-   get pushed too far below the fold. Also hides button on initial load and shows
-   it after user scrolls. */
+   get pushed too far below the fold. Also keeps the button hidden near the top
+   and whenever the visitor scrolls back up (it only shows while scrolling down),
+   so it doesn't sit in view once they've seen it. */
 function measureHeroVideoHeight() {
   const box = document.getElementById('hero-media');
   if (!box) return;
@@ -596,12 +598,20 @@ function measureHeroVideoHeight() {
     document.documentElement.style.setProperty('--hero-max-height', maxH + 'px');
   };
 
-  /* Hide "Все направления" button on mobile load; show after scroll. */
+  /* "Все направления" on mobile: hidden at the very top and while scrolling
+     up (so it stops being an eyesore once seen), shown only while actively
+     scrolling down past a small threshold. A 2px dead zone avoids flicker
+     from momentum/bounce scrolling. */
+  let lastY = window.scrollY;
+  const SHOW_AT = 20;
   const handleScroll = () => {
-    if (isMobile() && ctaBtn && window.scrollY > 20) {
-      ctaBtn.classList.add('hero-cta-visible');
-      window.removeEventListener('scroll', handleScroll, { passive: true });
-    }
+    if (!isMobile() || !ctaBtn) return;
+    const y = window.scrollY;
+    const goingDown = y > lastY + 2;
+    const goingUp = y < lastY - 2;
+    if (y <= SHOW_AT || goingUp) ctaBtn.classList.remove('hero-cta-visible');
+    else if (goingDown) ctaBtn.classList.add('hero-cta-visible');
+    lastY = y;
   };
 
   update();
@@ -628,6 +638,65 @@ function applyTextOverrides() {
       const val = map[key];
       if (val != null && String(val).trim() !== '') el.innerHTML = val;
     });
+  }).catch(() => {}); /* keep static defaults */
+}
+
+/* ===== SITE TYPOGRAPHY (director-editable fonts/size) =====
+   Кабинет → «Тексты сайта» → блок «Типографика» позволяет сменить
+   заголовочный/основной шрифт и общий масштаб текста для всего сайта.
+   Хранится в той же таблице site_texts (ключи style.fontHeading/
+   style.fontBody/style.fontScale) — переиспользуем один KV-механизм
+   вместо отдельной таблицы. Разрешён только фиксированный список шрифтов
+   (защита от произвольной инъекции в CSS/URL и гарантия, что мы знаем,
+   какой Google Font подключать); пусто/недоступно → остаются дефолты
+   из style.css (Playfair Display / Inter), без сетевого запроса. */
+const FONT_CHOICES = {
+  heading: {
+    'Playfair Display': "'Playfair Display', Georgia, serif",
+    'Merriweather': "'Merriweather', Georgia, serif",
+    'Lora': "'Lora', Georgia, serif",
+    'Montserrat': "'Montserrat', -apple-system, sans-serif",
+    'Nunito': "'Nunito', -apple-system, sans-serif"
+  },
+  body: {
+    'Inter': "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    'Nunito Sans': "'Nunito Sans', -apple-system, sans-serif",
+    'Roboto': "'Roboto', -apple-system, sans-serif",
+    'Open Sans': "'Open Sans', -apple-system, sans-serif",
+    'Merriweather': "'Merriweather', Georgia, serif"
+  }
+};
+window.FONT_CHOICES = FONT_CHOICES; /* admin panel reuses this list for its dropdowns */
+const FONT_SCALES = { '90': '14.4px', '100': '16px', '110': '17.6px', '120': '19.2px' };
+window.FONT_SCALES = FONT_SCALES;
+
+function loadGoogleFont(family) {
+  const id = 'gf-' + family.replace(/\s+/g, '-').toLowerCase();
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id; link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=' + family.replace(/\s+/g, '+') + ':ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap';
+  document.head.appendChild(link);
+}
+
+function applyStyleOverrides() {
+  if (!window.SUPA || !SUPA.texts) return;
+  SUPA.texts.getAll().then((map) => {
+    if (!map) return;
+    const headingName = map['style.fontHeading'];
+    const bodyName = map['style.fontBody'];
+    const scale = map['style.fontScale'];
+    if (headingName && FONT_CHOICES.heading[headingName]) {
+      if (headingName !== 'Playfair Display') loadGoogleFont(headingName);
+      document.documentElement.style.setProperty('--font-heading', FONT_CHOICES.heading[headingName]);
+    }
+    if (bodyName && FONT_CHOICES.body[bodyName]) {
+      if (bodyName !== 'Inter') loadGoogleFont(bodyName);
+      document.documentElement.style.setProperty('--font-body', FONT_CHOICES.body[bodyName]);
+    }
+    if (scale && FONT_SCALES[scale]) {
+      document.documentElement.style.setProperty('--font-size-base', FONT_SCALES[scale]);
+    }
   }).catch(() => {}); /* keep static defaults */
 }
 
