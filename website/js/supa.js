@@ -388,6 +388,21 @@
         return client.from('reviews').insert(fields).select().maybeSingle()
           .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return r.data; });
       },
+      /* Public submission from reviews.html — always forced to status 'pending'
+         (migration 0029 lets anon insert only pending rows). No .select() here:
+         a pending row isn't readable by anon (RLS), so we just confirm success. */
+      submit: function (fields) {
+        if (!client) return Promise.reject(new Error('Supabase не настроен'));
+        var row = {
+          author_name: fields.author_name || '',
+          direction: fields.direction || null,
+          rating: fields.rating || 5,
+          body: fields.body || '',
+          status: 'pending'
+        };
+        return client.from('reviews').insert(row)
+          .then(function (r) { if (r.error) throw new Error(translate(r.error.message)); return { ok: true }; });
+      },
       update: function (id, fields) {
         if (!client) return Promise.reject(new Error('Supabase не настроен'));
         return client.from('reviews').update(fields).eq('id', id).select().maybeSingle()

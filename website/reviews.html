@@ -87,6 +87,53 @@
   </div>
 </section>
 
+<!-- ===== ОСТАВИТЬ ОТЗЫВ ===== -->
+<section class="section section-alt" id="leave-review">
+  <div class="container" style="max-width:640px;">
+    <div class="section-header">
+      <div class="eyebrow">Ваше мнение</div>
+      <h2 data-tx="reviews.h2_2">Оставьте свой отзыв</h2>
+      <p>Расскажите о вашем опыте — это помогает другим родителям сделать выбор. Отзыв появится на сайте после короткой проверки.</p>
+    </div>
+    <form id="review-form" class="review-form" style="background:var(--paper,#fff);border:1px solid var(--line);border-radius:20px;padding:28px;">
+      <div class="form-body">
+        <div class="form-group">
+          <label>Ваше имя</label>
+          <input class="form-control" id="rv-name" name="author_name" placeholder="Например: Айгуль К." required>
+        </div>
+        <div class="form-group">
+          <label>Направление <span style="color:var(--muted);font-weight:400;">(необязательно)</span></label>
+          <div class="form-chips" id="rv-dir">
+            <button type="button" class="form-chip" data-value="">Общий</button>
+            <button type="button" class="form-chip" data-value="guitar">Гитара</button>
+            <button type="button" class="form-chip" data-value="vocals">Вокал</button>
+            <button type="button" class="form-chip" data-value="painting">Живопись</button>
+            <button type="button" class="form-chip" data-value="acting">Актёрское</button>
+            <button type="button" class="form-chip" data-value="dance">Танцы</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Оценка</label>
+          <div id="rv-stars" style="display:flex;gap:6px;font-size:1.8rem;color:var(--gold,#C9A84C);cursor:pointer;user-select:none;">
+            <span data-star="1">★</span><span data-star="2">★</span><span data-star="3">★</span><span data-star="4">★</span><span data-star="5">★</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ваш отзыв</label>
+          <textarea class="form-control" id="rv-body" name="body" rows="4" placeholder="Что понравилось, как изменился ребёнок, что бы вы отметили…" required></textarea>
+        </div>
+        <div class="form-error" id="rv-error" style="display:none;color:var(--primary);margin-bottom:10px;">Заполните имя и текст отзыва.</div>
+        <button type="submit" class="btn btn-primary btn-full">Отправить отзыв</button>
+      </div>
+      <div class="form-success" id="rv-success" style="display:none;text-align:center;padding:20px 0;">
+        <div style="font-size:2.4rem;">🙏</div>
+        <h3 style="margin:10px 0 6px;">Спасибо за отзыв!</h3>
+        <p style="color:var(--muted);">Он появится на сайте после проверки модератором.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
 <section class="cta-banner">
   <div class="cta-banner-inner">
     <div class="free-badge">Первое занятие бесплатно</div>
@@ -126,6 +173,63 @@
           card.style.display = (dir === 'all' || cardDir === dir) ? '' : 'none';
         });
       });
+    });
+  });
+
+  // ===== Форма «Оставить отзыв» =====
+  document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('review-form');
+    if (!form) return;
+    var rating = 5;
+    var starsWrap = document.getElementById('rv-stars');
+    function paint(n) {
+      starsWrap.querySelectorAll('span').forEach(function (s) {
+        s.style.opacity = (parseInt(s.dataset.star, 10) <= n) ? '1' : '0.3';
+      });
+    }
+    paint(rating);
+    starsWrap.querySelectorAll('span').forEach(function (s) {
+      s.addEventListener('click', function () { rating = parseInt(s.dataset.star, 10); paint(rating); });
+    });
+    // Выбор направления (одиночный)
+    var dirWrap = document.getElementById('rv-dir');
+    var dirVal = '';
+    dirWrap.querySelectorAll('.form-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        dirWrap.querySelectorAll('.form-chip').forEach(function (c) { c.classList.remove('selected'); });
+        chip.classList.add('selected');
+        dirVal = chip.dataset.value || '';
+      });
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = (document.getElementById('rv-name').value || '').trim();
+      var body = (document.getElementById('rv-body').value || '').trim();
+      var err = document.getElementById('rv-error');
+      if (name.length < 2 || body.length < 5) { err.style.display = 'block'; return; }
+      err.style.display = 'none';
+      var btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true; btn.textContent = 'Отправляем…';
+
+      var done = function () {
+        document.querySelector('#review-form .form-body').style.display = 'none';
+        document.getElementById('rv-success').style.display = 'block';
+      };
+      var fail = function (msg) {
+        btn.disabled = false; btn.textContent = 'Отправить отзыв';
+        err.textContent = msg || 'Не удалось отправить. Попробуйте позже или напишите нам в WhatsApp.';
+        err.style.display = 'block';
+      };
+
+      if (window.SUPA && SUPA.reviews && SUPA.reviews.submit) {
+        SUPA.reviews.submit({ author_name: name, direction: dirVal || null, rating: rating, body: body })
+          .then(done)
+          .catch(function (e2) { fail(e2 && e2.message); });
+      } else {
+        // Supabase не сконфигурирован на странице — не теряем отзыв, ведём в WhatsApp.
+        fail('Отправка временно недоступна. Пожалуйста, напишите отзыв нам в WhatsApp: wa.me/77086366351');
+      }
     });
   });
 </script>
