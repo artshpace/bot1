@@ -402,9 +402,10 @@ const SCHEDULE = {
     }
   },
   /* Гитара — реальное расписание студии (совпадает с schedule.html и ботом).
-     Возраст «разный» (mix), поэтому слоты одни для детей и взрослых; группа
-     20:00–21:00 только для взрослых. Открывающий педагог — Георгий Захаров
-     (Вт/Чт/Сб 17:00–18:00), остальные слоты ведёт Виталий Жуков. */
+     Детские/подростковые слоты (mix) — 09:00–20:00. Взрослая группа 18+ —
+     ОТДЕЛЬНАЯ, только Пн/Ср/Пт 20:00–21:00, в детские слоты взрослые не идут.
+     Открывающий педагог — Георгий Захаров (Вт/Чт/Сб 17:00–18:00), остальные
+     слоты ведёт Виталий Жуков. */
   guitar: {
     groups: function (age) {
       var mix = [
@@ -419,7 +420,8 @@ const SCHEDULE = {
       var adult = [{ days: ['Понедельник', 'Среда', 'Пятница'], time: '20:00–21:00' }];
       var a = parseInt(age, 10);
       if (isNaN(a)) return mix.concat(adult);
-      return a >= 18 ? mix.concat(adult) : mix;
+      /* Взрослые (18+) — только своя группа 20:00–21:00, без детских слотов. */
+      return a >= 18 ? adult : mix;
     }
   },
   /* Современный танец — Дарья Клюк. */
@@ -853,11 +855,22 @@ function mountHeroVideo(box, url, kind, thumb) {
   box.innerHTML = '';
   box.classList.remove('is-playing');
 
-  // poster (instant, no black flash) — YouTube gives us a free thumbnail
-  const posterUrl = thumb || (yid ? 'https://img.youtube.com/vi/' + yid + '/maxresdefault.jpg' : '');
+  // poster (instant, no black flash) — YouTube gives us a free thumbnail.
+  // hqdefault.jpg exists for EVERY video (maxresdefault often 404s → blank box),
+  // so it's the safe default; if a custom thumb is given we try that first and
+  // fall back to hqdefault on load error.
+  const ytHq = yid ? 'https://img.youtube.com/vi/' + yid + '/hqdefault.jpg' : '';
+  const posterUrl = thumb || ytHq;
   const poster = document.createElement('div');
   poster.className = 'hero-ed-poster';
-  if (posterUrl) poster.style.backgroundImage = "url('" + posterUrl + "')";
+  if (posterUrl) {
+    poster.style.backgroundImage = "url('" + posterUrl + "')";
+    if (ytHq && posterUrl !== ytHq) {
+      const probe = new Image();
+      probe.onerror = () => { poster.style.backgroundImage = "url('" + ytHq + "')"; };
+      probe.src = posterUrl;
+    }
+  }
 
   const reveal = () => box.classList.add('is-playing');
 

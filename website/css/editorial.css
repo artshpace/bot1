@@ -89,9 +89,9 @@
   /* ---------- HERO (light editorial split) ---------- */
   .editorial .hero-ed{ position:relative;z-index:2;padding:128px 0 90px; }
   .editorial .hero-ed-grid{
-    display:grid;grid-template-columns:.9fr 1.3fr;
+    display:grid;grid-template-columns:.72fr 1.55fr;
     grid-template-areas:"copy panel" "cta panel";
-    column-gap:44px;row-gap:18px;align-items:center;
+    column-gap:40px;row-gap:18px;align-items:center;
   }
   .editorial .hero-ed-copy{ grid-area:copy;align-self:end; }
   .editorial .hero-ed-cta{ grid-area:cta;align-self:start; }
@@ -109,6 +109,18 @@
   .editorial .hero-ed h1 em{ font-style:italic;color:var(--primary); }
   .editorial .hero-ed .lead{
     font-size:1.12rem;color:var(--ink-soft);max-width:520px;margin:20px 0 30px;
+  }
+  /* Направления сразу в шапке: посетитель мгновенно видит, что предлагает
+     студия, без скролла. Кликабельные «таблетки» ведут на страницы направлений. */
+  .editorial .hero-ed-dirs{ display:flex;flex-wrap:wrap;gap:9px;margin:22px 0 4px; }
+  .editorial .hero-ed-dirs a{
+    font-size:.86rem;font-weight:600;color:var(--ink-soft);
+    background:var(--cream);border:1px solid var(--line);
+    padding:8px 15px;border-radius:999px;text-decoration:none;
+    transition:background .2s ease,color .2s ease,border-color .2s ease;
+  }
+  .editorial .hero-ed-dirs a:hover{
+    background:var(--primary);color:#fff;border-color:var(--primary);
   }
   .editorial .hero-ed-cta{ display:flex;gap:14px;flex-wrap:wrap; }
   /* Основная кнопка живёт в текстовом блоке (всегда видна над плеером),
