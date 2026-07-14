@@ -625,9 +625,17 @@ async function getGoogleAccessToken(env) {
 }
 
 async function importPkcs8(pem) {
-  const clean = pem.replace(/\\n/g, '\n')
-    .replace(/-----BEGIN PRIVATE KEY-----/, '').replace(/-----END PRIVATE KEY-----/, '').replace(/\s+/g, '');
-  const der = Uint8Array.from(atob(clean), c => c.charCodeAt(0));
+  // Tolerant PKCS8 loader: the service-account key is often mangled when pasted
+  // into a terminal (wrapping JSON quotes, literal \n escapes, real newlines,
+  // stray spaces). Normalise all of that down to pure base64 before decoding.
+  let s = String(pem || '').trim()
+    .replace(/^["']|["']$/g, '')                       // drop wrapping quotes if the JSON value was copied whole
+    .replace(/\\n/g, '\n')                             // literal \n → newline
+    .replace(/-----BEGIN [A-Z ]*PRIVATE KEY-----/, '') // strip PEM armor (PKCS8 or RSA)
+    .replace(/-----END [A-Z ]*PRIVATE KEY-----/, '')
+    .replace(/[^A-Za-z0-9+/=]/g, '');                  // keep only base64 chars
+  if (s.length < 100) throw new Error('private key looks truncated (' + s.length + ' base64 chars) — re-add GOOGLE_SA_PRIVATE_KEY from file so the whole multi-line key is captured');
+  const der = Uint8Array.from(atob(s), c => c.charCodeAt(0));
   return crypto.subtle.importKey('pkcs8', der.buffer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
 }
 
