@@ -203,7 +203,10 @@ async function handleBotWebhook(request, env) {
   // Only Telegram (knowing the secret) may post here.
   if (env.WEBHOOK_SECRET) {
     const got = request.headers.get('X-Telegram-Bot-Api-Secret-Token');
-    if (got !== env.WEBHOOK_SECRET) return new Response('Forbidden', { status: 403 });
+    if (got !== env.WEBHOOK_SECRET) {
+      console.error('webhook secret mismatch: got=' + JSON.stringify(got) + ' expected_len=' + env.WEBHOOK_SECRET.length);
+      return new Response('Forbidden', { status: 403 });
+    }
   }
 
   let update;
@@ -675,9 +678,14 @@ function botGroupLabel(g){ return g.age + ' · ' + g.days.map(d => WD_SHORT[d]).
 
 /* ---------- Telegram ---------- */
 async function tgApi(env, method, payload){
-  return fetch('https://api.telegram.org/bot' + env.TELEGRAM_BOT_TOKEN + '/' + method, {
+  const r = await fetch('https://api.telegram.org/bot' + env.TELEGRAM_BOT_TOKEN + '/' + method, {
     method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload)
   });
+  if (!r.ok) {
+    const errBody = await r.text().catch(() => '');
+    console.error('tgApi ' + method + ' failed: ' + r.status + ' ' + errBody);
+  }
+  return r;
 }
 function kb(rows){ return { inline_keyboard: rows }; }
 async function sendText(env, chatId, text, keyboard, parseMode){
