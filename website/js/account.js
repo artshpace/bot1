@@ -271,6 +271,7 @@
     { href: 'admin-achievements-public.html', label: 'Достижения студии', icon: ICON.star },
     { href: 'admin-media.html',         label: 'Медиацентр',       icon: ICON.image     },
     { href: 'admin-texts.html',         label: 'Тексты и дизайн',  icon: ICON.note      },
+    { href: 'admin-modules.html',       label: 'Разделы сайта',    icon: ICON.gear      },
     /* --- Финансы / Аналитика --- */
     { href: 'admin-payments.html',      label: 'Платежи',          icon: ICON.receipt   },
     { href: 'admin-orders.html',        label: 'Заказы',           icon: ICON.cart      },
@@ -433,6 +434,7 @@
     'admin-achievements-public.html': { title: 'Достижения студии' },
     'admin-media.html':       { title: 'Медиацентр' },
     'admin-texts.html':       { title: 'Тексты и дизайн' },
+    'admin-modules.html':     { title: 'Разделы сайта' },
     'admin-payments.html':    { title: 'Платежи' },
     /* CRM v0.9 */
     'admin-leads.html':       { title: 'CRM Лиды' },
@@ -4162,6 +4164,50 @@
       { label: 'Контакты', href: 'contacts.html' }
     ]
   };
+
+  var adminModules = $('#admin-modules-root');
+  if (adminModules) loadAdminModules();
+  function loadAdminModules() {
+    if (!window.SUPA || !SUPA.texts) {
+      adminModules.innerHTML = '<p class="cab-empty">Supabase не настроен — управление разделами недоступно. Войдите под реальным админ-аккаунтом.</p>';
+      return;
+    }
+    function mbanner(msg, kind) {
+      var b = document.getElementById('modules-banner'); if (!b) return;
+      b.innerHTML = '<p style="padding:10px 14px;border-radius:10px;margin-bottom:16px;background:' +
+        (kind === 'err' ? '#fdecea' : '#eafaf1') + ';color:' + (kind === 'err' ? '#c0392b' : '#1e824c') + ';">' + escapeHtml(msg) + '</p>';
+    }
+    function row(mod, label, note) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);">' +
+        '<div><div style="font-weight:600;">' + escapeHtml(label) + '</div><div class="cab-muted" style="font-size:.85rem;">' + escapeHtml(note) + '</div></div>' +
+        '<button type="button" class="btn btn-sm" data-mod-toggle="' + mod + '" data-state="off">Скрыт</button>' +
+        '</div>';
+    }
+    function setToggle(mod, on) {
+      var btn = adminModules.querySelector('[data-mod-toggle="' + mod + '"]'); if (!btn) return;
+      btn.setAttribute('data-state', on ? 'on' : 'off');
+      btn.textContent = on ? 'Показан ✓' : 'Скрыт';
+      btn.classList.toggle('btn-primary', on);
+    }
+    adminModules.innerHTML = '<div id="modules-banner"></div>' +
+      '<p class="cab-muted" style="margin-bottom:12px;">По умолчанию оба раздела скрыты от всех посетителей: ссылки в меню исчезают, а прямой заход на страницу уводит на главную. Нажмите на переключатель, чтобы показать раздел.</p>' +
+      row('shop', 'Магазин', 'Страница store.html и ссылки «Магазин» в меню и подвале.') +
+      row('courses', 'Онлайн-курсы', 'Страница courses.html и ссылки «Курсы» в меню и подвале.');
+    SUPA.texts.getAll().then(function (map) {
+      setToggle('shop', map['flags.shop'] === 'on');
+      setToggle('courses', map['flags.courses'] === 'on');
+    }).catch(function () {});
+    adminModules.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-mod-toggle]'); if (!btn) return;
+      var mod = btn.getAttribute('data-mod-toggle');
+      var turnOn = btn.getAttribute('data-state') !== 'on';
+      btn.disabled = true;
+      SUPA.texts.set('flags.' + mod, turnOn ? 'on' : 'off').then(function () {
+        setToggle(mod, turnOn); btn.disabled = false;
+        mbanner(turnOn ? 'Раздел включён и виден на сайте.' : 'Раздел скрыт от посетителей.', 'ok');
+      }).catch(function (err) { btn.disabled = false; mbanner((err && err.message) || 'Ошибка сохранения', 'err'); });
+    });
+  }
 
   var adminTexts = $('#admin-texts-root');
   if (adminTexts) loadAdminTexts();

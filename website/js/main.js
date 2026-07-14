@@ -575,6 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applyTextOverrides();
   applyStyleOverrides();
   applyMenuOverride();
+  applyModuleFlags();
   renderHeroVideo();
   initScheduleForm('modal-form');
   measureHeroVideoHeight();
@@ -700,6 +701,37 @@ function measureHeroVideoHeight() {
    panel (account/admin-texts.html → site_texts table). The HTML keeps a
    sensible default so the page never looks empty if Supabase is empty or
    unreachable — same graceful-degradation contract as renderReviews(). */
+/* ===== MODULE VISIBILITY (Магазин / Онлайн-курсы) =====
+   Директор включает/выключает эти разделы в кабинете (admin-modules.html →
+   site_texts ключи flags.shop / flags.courses). ПО УМОЛЧАНИЮ СКРЫТО: пока
+   директор явно не выставит значение 'on', раздел не показывается никому —
+   ссылки в меню/подвале прячутся, а прямой заход на store.html/courses.html
+   уводит на главную. Fail-safe: если Supabase недоступен, считаем «выкл». */
+function applyModuleFlags() {
+  const apply = (map) => {
+    hideModule('store.html', map && map['flags.shop'] === 'on');
+    hideModule('courses.html', map && map['flags.courses'] === 'on');
+  };
+  if (window.SUPA && SUPA.texts && SUPA.texts.getAll) {
+    SUPA.texts.getAll().then(apply).catch(() => apply({}));
+  } else {
+    apply({});
+  }
+}
+function hideModule(file, on) {
+  if (on) return; /* раздел включён — ничего не прячем */
+  /* Прячем через глобальное CSS-правило, а не inline display:none, чтобы оно
+     действовало и на ссылки, которые applyMenuOverride() пересоздаёт позже
+     (иначе перестроенное меню вернуло бы скрытый пункт). */
+  const s = document.createElement('style');
+  s.textContent = 'a[href$="' + file + '"]{display:none !important;}';
+  document.head.appendChild(s);
+  const path = location.pathname;
+  if (path.endsWith('/' + file) || path === file || path.endsWith(file)) {
+    location.replace('index.html');
+  }
+}
+
 function applyTextOverrides() {
   const nodes = document.querySelectorAll('[data-tx]');
   if (!nodes.length || !window.SUPA || !SUPA.texts) return;
