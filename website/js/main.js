@@ -1135,20 +1135,28 @@ function injectCalendarButtons(form) {
   else success.appendChild(wrap);
 }
 
-/* Floating navbar "Записаться" opens the trial modal directly. */
+/* Any "Записаться на пробное" button opens the trial modal directly instead
+   of just scrolling to the CTA banner. If the modal isn't on this page (e.g.
+   a direction page), fall back to navigating to index.html#trial — where the
+   load handler below opens the modal. Online-course purchase keeps its own
+   "оставить заявку" flow and is unaffected (its buttons don't point at #trial). */
 function openTrialModal() {
   if (document.getElementById('modal-trial')) openModal('modal-trial');
   else location.href = 'index.html#trial';
 }
 window.openTrialModal = openTrialModal;
-document.querySelectorAll('.nav-cta, .mob-cta').forEach(btn => {
-  const href = btn.getAttribute('href') || '';
-  if (href.endsWith('#trial')) {
-    btn.addEventListener('click', e => {
-      if (document.getElementById('modal-trial')) { e.preventDefault(); openTrialModal(); }
-    });
-  }
+/* Delegated so it survives nav rebuilds and covers every #trial link on the
+   page (hero, directions, pricing, floating navbar, mobile menu). */
+document.addEventListener('click', e => {
+  const link = e.target.closest('a[href$="#trial"]');
+  if (!link) return;
+  if (document.getElementById('modal-trial')) { e.preventDefault(); openTrialModal(); }
 });
+/* Landed on index with #trial in the URL (came from a direction page's CTA) →
+   open the modal instead of leaving the visitor at the banner. */
+if (location.hash === '#trial' && document.getElementById('modal-trial')) {
+  setTimeout(openTrialModal, 200);
+}
 
 /* ===== DIRECTOR-MANAGED CONTENT [v1.1] =====
    The public site reads content the director edits in admin-director.html.
