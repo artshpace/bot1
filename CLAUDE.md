@@ -19,7 +19,7 @@ Telegram: канала НЕТ; используем бота — https://t.me/ar
 Телефон: +7 708 636-63-51  
 2ГИС: https://2gis.kz/petropavlovsk/firm/70000001085367039  
 Яндекс Карты: https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/  
-GitHub Pages (текущий хост): https://artshpace.github.io/bot/
+GitHub Pages (текущий хост): https://artshpace.github.io/bot1/
 
 ## Бренд
 Красный: #E30613  
@@ -91,7 +91,7 @@ Supabase `bot_groups` (миграция `0022_bot_groups_table.sql` — напо
 
 ## Правила при работе с кодом
 1. Все контакты брать ТОЛЬКО из этого файла — никаких заглушек 77771234567 и т.д.
-2. Canonical и og:url — https://artshpace.github.io/bot/ (до покупки домена)
+2. Canonical и og:url — https://artshpace.github.io/bot1/ (до покупки домена)
 3. Кнопки WhatsApp: wa.me/77086366351?text=... с предзаполненным текстом
 4. При каждом изменении index.html — проверять что modal-form и trial-form консистентны
 5. Admin panel сохраняет данные в localStorage с префиксом sas_director_*

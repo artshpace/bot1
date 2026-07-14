@@ -40,10 +40,10 @@ Dashboard → **Project Settings → API**:
 
 ### 3. Настроить Auth
 Dashboard → **Authentication → URL Configuration**:
-- **Site URL**: `https://artshpace.github.io/bot/`
+- **Site URL**: `https://artshpace.github.io/bot1/`
 - **Redirect URLs** добавить:
-  - `https://artshpace.github.io/bot/website/account/login.html`
-  - `https://artshpace.github.io/bot/website/account/reset.html`
+  - `https://artshpace.github.io/bot1/website/account/login.html`
+  - `https://artshpace.github.io/bot1/website/account/reset.html`
 
 Dashboard → **Authentication → Providers → Email**:
 - Включить **Confirm email** (подтверждение по почте) — это закрывает пункт

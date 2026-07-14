@@ -15,7 +15,7 @@
 - [ ] Зарегистрировать Google Business Profile (Петропавловск, категория «Школа искусств» / «Центр детского развития»)
 - [ ] Зарегистрировать на 2GIS (бесплатная карточка организации)
 - [ ] Добавить сайт в Яндекс.Справочник
-- [ ] Отправить `sitemap.xml` в Google Search Console (URL: `https://artshpace.github.io/bot/website/sitemap.xml`)
+- [ ] Отправить `sitemap.xml` в Google Search Console (URL: `https://artshpace.github.io/bot1/website/sitemap.xml`)
 
 ## Контент
 

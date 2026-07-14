@@ -657,12 +657,12 @@ const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерс
 
 // Живой сайт студии — он же Telegram Mini App (открывается кнопкой web_app).
 // Канонический хост (см. CLAUDE.md, og:url/canonical на всех страницах
-// сайта) — artshpace.github.io/bot/, БЕЗ единицы. Раньше здесь было
+// сайта) — artshpace.github.io/bot1/, БЕЗ единицы. Раньше здесь было
 // .../bot1/ — Telegram грузил несуществующий путь под кнопкой (GitHub
 // Pages отдаёт 404, но для Web View это выглядит как «что-то открылось»,
 // не как явная ошибка — поэтому кнопка казалась «рабочей», хотя вела не
 // туда).
-const SITE_URL = 'https://artshpace.github.io/bot/website/index.html';
+const SITE_URL = 'https://artshpace.github.io/bot1/website/index.html';
 
 // Группы — раньше были захардкожены здесь; теперь живут в таблице bot_groups
 // (миграция 0022_bot_groups_table.sql), правки не требуют деплоя воркера.
@@ -742,8 +742,6 @@ async function sendMenu(env, chatId, greet){
   await sendText(env, chatId, head + 'Что хотите сделать?', kb([
     [{ text:'🌐 Открыть приложение (сайт)', web_app:{ url: SITE_URL } }],
     [{ text:'✍️ Записаться на пробное',      web_app:{ url: SITE_URL + '#trial' } }],
-    [{ text:'➕ Добавить ученика (для напоминаний)', callback_data:'reg:new' },
-     { text:'📋 Мои записи',       callback_data:'my:list' }],
     [{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77086366351?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }],
     [{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]
   ]), 'Markdown');
@@ -769,8 +767,6 @@ async function setMenuButton(env, chatId){
 async function setCommands(env){
   await tgApi(env, 'setMyCommands', { commands: [
     { command:'start',      description:'Меню бота' },
-    { command:'add',        description:'➕ Добавить ученика' },
-    { command:'children',   description:'📋 Мои записи' },
     { command:'admin',      description:'🔑 Админ-панель' }
   ]});
 }
@@ -1016,7 +1012,7 @@ async function sendCapiLead(env, body, request){
     event_name: 'Lead',
     event_time: Math.floor(Date.now() / 1000),
     action_source: 'website',
-    event_source_url: body.pageUrl || request.headers.get('Referer') || 'https://artshpace.github.io/bot/website/',
+    event_source_url: body.pageUrl || request.headers.get('Referer') || 'https://artshpace.github.io/bot1/website/',
     event_id: body.eventId || ('lead-' + Date.now()),
     user_data: ud,
     custom_data: { content_name: body.direction || 'Заявка' }
