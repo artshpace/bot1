@@ -139,6 +139,21 @@ async function handleLead(request, env) {
     }
   }
 
+  // Confirmation e-mail to the visitor (Задача: письмо клиенту). Best-effort,
+  // gated on RESEND_API_KEY + EMAIL_FROM. Never blocks the lead/Telegram.
+  if (body.email) {
+    if (env.RESEND_API_KEY && env.EMAIL_FROM) {
+      try {
+        await sendClientEmail(env, { to: body.email, name, direction, slot, slotDate: body.slotDate });
+        console.log('email: confirmation sent to ' + body.email);
+      } catch (e) {
+        console.error('email error: ' + (e && e.message ? e.message : e));
+      }
+    } else {
+      console.log('email: skipped — set RESEND_API_KEY + EMAIL_FROM to enable client confirmations');
+    }
+  }
+
   const text = [
     '🎨 *Новая заявка — Shpigotskiy Art Space*',
     '',
@@ -602,6 +617,40 @@ function handleIcs(request) {
 }
 
 // --- Service-account OAuth: signed JWT → access_token ---
+// Confirmation e-mail via Resend (https://resend.com). EMAIL_FROM must be an
+// address on a domain verified in Resend (e.g. "Shpigotskiy Art Space
+// <hello@your-domain.kz>"). Optional EMAIL_REPLY_TO lets replies go to the
+// studio inbox (e.g. artshpace@gmail.com).
+async function sendClientEmail(env, lead) {
+  const dir = lead.direction ? (' по направлению «' + lead.direction + '»') : '';
+  const when = [lead.slotDate, lead.slot].filter(Boolean).join(', ');
+  const whenLine = when ? ('<p>Предварительно: <b>' + when + '</b>. Точное время подтвердим по телефону.</p>') : '';
+  const html =
+    '<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1A1A1A;">' +
+    '<h2 style="color:#E30613;">Спасибо за заявку!</h2>' +
+    '<p>' + (lead.name ? (lead.name + ', з') : 'З') + 'дравствуйте! Мы получили вашу заявку на бесплатное пробное занятие' + dir + '.</p>' +
+    whenLine +
+    '<p>Наш администратор свяжется с вами в ближайшее время, чтобы подтвердить запись.</p>' +
+    '<p>Если удобнее — напишите нам сразу в WhatsApp: ' +
+    '<a href="https://wa.me/77086366351" style="color:#E30613;">+7 708 636-63-51</a>.</p>' +
+    '<hr style="border:none;border-top:1px solid #eee;margin:20px 0;">' +
+    '<p style="font-size:13px;color:#888;">Shpigotskiy Art Space · Петропавловск, ул. Интернациональная, 63, 5 этаж</p>' +
+    '</div>';
+  const payload = {
+    from: env.EMAIL_FROM,
+    to: [lead.to],
+    subject: 'Заявка получена — Shpigotskiy Art Space',
+    html: html
+  };
+  if (env.EMAIL_REPLY_TO) payload.reply_to = env.EMAIL_REPLY_TO;
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!r.ok) throw new Error('resend ' + r.status + ' ' + (await r.text()));
+}
+
 async function getGoogleAccessToken(env) {
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: 'RS256', typ: 'JWT' };
