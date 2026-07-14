@@ -87,11 +87,11 @@
   .editorial .eyebrow{ letter-spacing:.18em; }
 
   /* ---------- HERO (light editorial split) ---------- */
-  .editorial .hero-ed{ position:relative;z-index:2;padding:128px 0 90px; }
+  .editorial .hero-ed{ position:relative;z-index:2;padding:96px 0 72px; }
   .editorial .hero-ed-grid{
-    display:grid;grid-template-columns:.72fr 1.55fr;
+    display:grid;grid-template-columns:.82fr 1.42fr;
     grid-template-areas:"copy panel" "cta panel";
-    column-gap:40px;row-gap:18px;align-items:center;
+    column-gap:40px;row-gap:16px;align-items:center;
   }
   .editorial .hero-ed-copy{ grid-area:copy;align-self:end; }
   .editorial .hero-ed-cta{ grid-area:cta;align-self:start; }
@@ -103,16 +103,19 @@
   }
   .editorial .eyebrow-pill .pin{ width:7px;height:7px;border-radius:999px;background:var(--gold); }
   .editorial .hero-ed h1{
-    font-size:clamp(2.2rem,4.6vw,3.7rem);line-height:1.06;letter-spacing:-.015em;
-    color:var(--ink);margin:20px 0 0;
+    font-size:clamp(2.1rem,4vw,3.15rem);line-height:1.03;letter-spacing:-.015em;
+    color:var(--ink);margin:18px 0 0;text-wrap:balance;
   }
   .editorial .hero-ed h1 em{ font-style:italic;color:var(--primary); }
   .editorial .hero-ed .lead{
     font-size:1.12rem;color:var(--ink-soft);max-width:520px;margin:20px 0 30px;
   }
+  /* Короткая строка соц-доказательства под направлениями (заменяет длинный
+     подзаголовок — он дублировал плашки и опускал плеер слишком низко). */
+  .editorial .hero-ed-sub{ font-size:.95rem;color:var(--ink-soft);margin:14px 0 0;font-weight:500; }
   /* Направления сразу в шапке: посетитель мгновенно видит, что предлагает
      студия, без скролла. Кликабельные «таблетки» ведут на страницы направлений. */
-  .editorial .hero-ed-dirs{ display:flex;flex-wrap:wrap;gap:9px;margin:22px 0 4px; }
+  .editorial .hero-ed-dirs{ display:flex;flex-wrap:wrap;gap:9px;margin:20px 0 0; }
   .editorial .hero-ed-dirs a{
     font-size:.86rem;font-weight:600;color:var(--ink-soft);
     background:var(--cream);border:1px solid var(--line);
@@ -125,7 +128,7 @@
   .editorial .hero-ed-cta{ display:flex;gap:14px;flex-wrap:wrap; }
   /* Основная кнопка живёт в текстовом блоке (всегда видна над плеером),
      «Все направления» — в .hero-ed-cta (на мобильном уходит под плеер). */
-  .editorial .hero-ed-cta-primary{ margin-top:6px; }
+  .editorial .hero-ed-cta-primary{ margin-top:20px; }
   .editorial .hero-ed-trust{ display:flex;gap:10px;flex-wrap:wrap;margin-top:34px; }
   .editorial .hero-ed-trust span{
     font-size:.82rem;color:var(--ink-soft);background:var(--cream);border:1px solid var(--line);
@@ -350,17 +353,21 @@
     /* padding-top очищает «плавающую» шапку-пилюлю (~94px) + вырез экрана
        (safe-area, актуально в Telegram Mini App), чтобы плашка
        «Петропавловск» не залезала под шапку. */
-    .editorial .hero-ed{ padding:calc(112px + env(safe-area-inset-top, 0px)) 0 44px; }
+    .editorial .hero-ed{ padding:calc(100px + env(safe-area-inset-top, 0px)) 0 40px; }
     /* Плеер всегда целиком в экране: высота ограничена вьюпортом (svh),
        16:9 сохраняется — на невысоких экранах он сужается и центрируется. */
     .editorial .hero-ed-video{ max-width:calc(52svh * 16 / 9);margin-inline:auto; }
   }
   @media(max-width:768px){
     .editorial .section{ padding:72px 0; }
-    .editorial .hero-ed{ padding:calc(106px + env(safe-area-inset-top, 0px)) 0 40px; }
-    .editorial .hero-ed-grid{ row-gap:14px; }
-    .editorial .hero-ed h1{ font-size:1.9rem;line-height:1.08;margin-top:10px; }
+    .editorial .hero-ed{ padding:calc(96px + env(safe-area-inset-top, 0px)) 0 36px; }
+    .editorial .hero-ed-grid{ row-gap:12px; }
+    .editorial .hero-ed h1{ font-size:1.85rem;line-height:1.06;margin-top:8px; }
     .editorial .hero-ed .lead{ font-size:1rem;margin:10px 0 14px; }
+    .editorial .hero-ed-sub{ font-size:.9rem;margin-top:12px; }
+    .editorial .hero-ed-dirs{ margin:16px 0 0;gap:8px; }
+    .editorial .hero-ed-dirs a{ font-size:.82rem;padding:7px 13px; }
+    .editorial .hero-ed-cta-primary{ margin-top:16px; }
     .editorial .hero-ed-cta-primary.btn-lg{ padding:13px 22px;font-size:.95rem; }
     /* Плеер респонсивный, не выезжает за край экрана. Аспект-рацио 16:10
        вместо 16:9 — на телефоне смотрится живее. Высота ограничена JS-переменной
