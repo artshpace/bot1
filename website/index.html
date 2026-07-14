@@ -157,7 +157,7 @@
     </div>
     <div style="text-align:center;margin-top:44px;">
       <a href="#trial" class="btn btn-primary">
-        Не знаете, с чего начать? Приходите на бесплатное пробное
+        Записаться на пробный урок
         <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </a>
     </div>
@@ -169,8 +169,8 @@
   <div class="container">
     <div class="section-header">
       <div class="eyebrow">Команда</div>
-      <h2 data-tx="home.teachers.title">74% родителей выбирают студию из-за педагога</h2>
-      <p>Профессионалы с образованием и призванием — люди, к которым хочется идти.</p>
+      <h2 data-tx="home.teachers.title">Вашего ребёнка будут учить практикующие артисты</h2>
+      <p>Актёры драмтеатра, музыканты и хореографы с профильным образованием — те, кто сам выходит на сцену и влюбляет в творчество детей.</p>
     </div>
     <div class="teachers-grid">
       <div class="teacher-card fade-up">
@@ -220,7 +220,7 @@
         <div class="teacher-card-body">
           <h3>Дарья Клюк</h3>
           <div class="teacher-spec">Современный танец</div>
-          <div class="teacher-exp">14+ лет опыта · ансамбль Arabesque</div>
+          <div class="teacher-exp">Педагог современного танца</div>
         </div>
       </div>
       <div class="teacher-card fade-up">
@@ -288,10 +288,10 @@
       </div>
       <div class="benefit-card fade-up">
         <div class="benefit-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
         </div>
-        <h4>Небольшие группы</h4>
-        <p>Занятия в небольших группах — педагог видит каждого ученика, а дети быстрее прогрессируют и раскрепощаются рядом со сверстниками.</p>
+        <h4>Виден прогресс ребёнка</h4>
+        <p>Личный кабинет ученика: расписание, достижения, портфолио работ и обратная связь от педагога. Вы всегда знаете, чему научился ребёнок.</p>
       </div>
       <div class="benefit-card fade-up">
         <div class="benefit-icon">
@@ -755,8 +755,13 @@
         </div>
         <div class="form-group">
           <label>Телефон</label>
-          <input class="form-control" name="phone" type="tel" placeholder="+7 ..." required data-err="err-modal-phone">
+          <input class="form-control" name="phone" type="tel" inputmode="tel" value="+7 " placeholder="+7 ..." required data-err="err-modal-phone">
           <div class="form-error" id="err-modal-phone">Введите телефон</div>
+        </div>
+        <div class="form-group">
+          <label>E-mail <span style="color:var(--muted);font-weight:400;">(необязательно)</span></label>
+          <input class="form-control" name="email" type="email" inputmode="email" placeholder="you@example.com" data-err="err-modal-email">
+          <div class="form-error" id="err-modal-email">Проверьте адрес почты</div>
         </div>
         <div class="form-group">
           <label>Направление</label>

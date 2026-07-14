@@ -113,6 +113,8 @@ function openModal(id) {
   // If a form inside was already submitted (showing the success panel), reset
   // it so the visitor can book AGAIN — e.g. another child or another direction.
   m.querySelectorAll('form').forEach(resetPublicForm);
+  // Prefill the phone field with +7 so the visitor doesn't type the country code.
+  m.querySelectorAll('input[type="tel"]').forEach(i => { if (!i.value || !i.value.trim()) i.value = '+7 '; });
   m.classList.add('open');
   document.body.style.overflow = 'hidden';
   m.addEventListener('click', e => {
@@ -129,7 +131,7 @@ function resetPublicForm(form) {
   if (!success || !success.classList.contains('show')) return;
   success.classList.remove('show');
   if (body) body.style.display = '';
-  form.querySelectorAll('input, textarea').forEach(i => { if (i.type !== 'hidden') i.value = ''; });
+  form.querySelectorAll('input, textarea').forEach(i => { if (i.type !== 'hidden') i.value = (i.type === 'tel') ? '+7 ' : ''; });
   form.querySelectorAll('.form-chip.selected').forEach(c => c.classList.remove('selected'));
   form.querySelectorAll('.form-error').forEach(e => e.classList.remove('show'));
   form.querySelectorAll('.form-control').forEach(e => e.classList.remove('error'));
@@ -174,7 +176,8 @@ document.addEventListener('click', e => {
 });
 
 /* ===== TRIAL FORM ===== */
-function validatePhone(v) { return /[\d\s\-\+\(\)]{7,}/.test(v.trim()); }
+function validatePhone(v) { return (String(v).match(/\d/g) || []).length >= 10; }
+function validateEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v).trim()); }
 function validateName(v) { return v.trim().length >= 2; }
 /* Full name: at least two words (Фамилия + Имя). Отчество optional — so a
    Kazakh two-part name passes. Each word ≥2 letters (RU/KZ/Latin, hyphen ok). */
@@ -202,6 +205,14 @@ function setupForm(formId, onSuccess) {
       else if (input.dataset.fullname) ok = validateFullName(input.value);
       else ok = validateName(input.value);
       if (!ok) { valid = false; input.classList.add('error'); if (err) err.classList.add('show'); }
+      else { input.classList.remove('error'); if (err) err.classList.remove('show'); }
+    });
+    /* E-mail is optional — validate ONLY when the visitor actually typed one. */
+    form.querySelectorAll('input[type="email"]').forEach(input => {
+      if (!isVisible(input)) return;
+      const err = document.getElementById(input.dataset.err);
+      const v = (input.value || '').trim();
+      if (v && !validateEmail(v)) { valid = false; input.classList.add('error'); if (err) err.classList.add('show'); }
       else { input.classList.remove('error'); if (err) err.classList.remove('show'); }
     });
     /* "Кто будет заниматься?" — required when present (trial form). */
@@ -1147,6 +1158,20 @@ function injectCalendarButtons(form) {
   if (closeBtn) success.insertBefore(wrap, closeBtn);
   else success.appendChild(wrap);
 }
+
+/* Keep a "+7 " prefix on every phone field so the visitor never has to type
+   the country code and can't accidentally delete it. Delegated → works for
+   fields inside modals rebuilt at runtime. */
+document.addEventListener('focusin', e => {
+  const i = e.target;
+  if (i && i.tagName === 'INPUT' && i.type === 'tel' && (!i.value || !i.value.trim())) i.value = '+7 ';
+});
+document.addEventListener('input', e => {
+  const i = e.target;
+  if (i && i.tagName === 'INPUT' && i.type === 'tel' && !i.value.startsWith('+7')) i.value = '+7 ';
+});
+/* Prefill any phone fields already on the page (non-modal forms) at load. */
+document.querySelectorAll('input[type="tel"]').forEach(i => { if (!i.value || !i.value.trim()) i.value = '+7 '; });
 
 /* Any "Записаться на пробное" button opens the trial modal directly instead
    of just scrolling to the CTA banner. If the modal isn't on this page (e.g.

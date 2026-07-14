@@ -144,6 +144,7 @@ async function handleLead(request, env) {
     '',
     `👤 *Имя:* ${name || '—'}`,
     `📞 *Телефон:* ${phone || '—'}`,
+    body.email ? `📧 *E-mail:* ${body.email}` : null,
     age ? `🎂 *Возраст:* ${age}` : null,
     direction ? `🎸 *Направление:* ${direction}` : null,
     slot ? `🕐 *Слот:* ${slot}` : null,
