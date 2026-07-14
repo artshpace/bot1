@@ -678,6 +678,10 @@ function botGroupLabel(g){ return g.age + ' · ' + g.days.map(d => WD_SHORT[d]).
 
 /* ---------- Telegram ---------- */
 async function tgApi(env, method, payload){
+  if (!env.TELEGRAM_BOT_TOKEN) {
+    console.error('tgApi ' + method + ': TELEGRAM_BOT_TOKEN is NOT set on this deployment — re-add secrets via `wrangler secret put`');
+    return new Response(null, { status: 500 });
+  }
   const r = await fetch('https://api.telegram.org/bot' + env.TELEGRAM_BOT_TOKEN + '/' + method, {
     method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload)
   });
