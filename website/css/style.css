@@ -17,6 +17,10 @@ input, select, textarea { font-family: inherit; }
 
 /* ===== CSS VARIABLES ===== */
 :root {
+  /* Сайт светлый, но навигация умеет тёмную тему — объявляем обе схемы, чтобы
+     браузер (в т.ч. авто-затемнение Chrome на Android) не инвертировал меню
+     поверх наших стилей, а использовал наши правила prefers-color-scheme. */
+  color-scheme: light dark;
   /* Шрифты — переопределяются из кабинета руководителя (Тексты сайта →
      Типографика, SUPA.texts ключи style.fontHeading/style.fontBody/
      style.fontScale), applyStyleOverrides() в main.js. Полные стеки с
@@ -158,7 +162,8 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 }
 .mobile-nav a:hover { border-color: var(--primary); color: var(--primary); }
 .mobile-nav .nav-dropdown { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0; }
-.mobile-nav .nav-dropdown-toggle {
+.mobile-nav .nav-dropdown-toggle,
+.editorial .mobile-nav .nav-dropdown-toggle {
   display: flex; justify-content: space-between; align-items: center;
   width: 100%; padding: 14px 20px; background: none; border: none;
   font-family: inherit; font-size: 1.1rem; font-weight: 600; color: var(--dark); cursor: pointer;
@@ -851,3 +856,36 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 .pricing-desc { font-size: .92rem; color: var(--muted); line-height: 1.6; flex: 1; }
 .pricing-card--featured .pricing-desc { color: rgba(255,255,255,.85); }
 .pricing-card .btn { margin-top: auto; }
+
+/* ===== ТЁМНАЯ ТЕМА ДЛЯ НАВИГАЦИИ =====
+   Сайт светлый, но когда телефон/компьютер в тёмной теме, шапка-меню и
+   «гамбургер» подстраиваются: тёмный фон и светлые полоски/текст/границы,
+   чтобы всё оставалось читаемым (раньше тёмные полоски сливались с
+   авто-затемнённым фоном Chrome). */
+@media (prefers-color-scheme: dark) {
+  /* Полоски «гамбургера» — светлые и на тёмной подложке */
+  .nav-hamburger { background: rgba(255,255,255,.14); }
+  .nav-hamburger span { background: #f5efe6; }
+
+  /* Плавающая шапка-пилюля */
+  .editorial .nav-inner {
+    background: rgba(28,22,18,.86);
+    border-color: rgba(255,255,255,.14);
+  }
+  .editorial .nav-logo .name { color: #f7f2ea; }
+  .editorial .nav-links a,
+  .editorial .nav-dropdown-toggle { color: rgba(247,242,234,.82); }
+  .editorial .nav-links a:hover { color: #fff; }
+
+  /* Выпадающее мобильное меню */
+  .mobile-nav { background: #17120f; }
+  .mobile-nav a,
+  .mobile-nav .nav-dropdown-toggle,
+  .editorial .mobile-nav .nav-dropdown-toggle { color: #f5efe6; }
+  .mobile-nav a,
+  .mobile-nav .nav-dropdown { border-color: rgba(255,255,255,.16); }
+  .mobile-nav a:hover { border-color: var(--primary); color: var(--primary); }
+  .mobile-nav .nav-dropdown-menu { background: rgba(255,255,255,.05); }
+  .mobile-nav .nav-dropdown-menu a { border-bottom-color: rgba(255,255,255,.12); color: #f5efe6; }
+  .mobile-nav .nav-dropdown-menu a:hover { background: rgba(227,6,19,.14); }
+}
