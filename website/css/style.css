@@ -161,7 +161,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 .mobile-nav .nav-dropdown-toggle {
   display: flex; justify-content: space-between; align-items: center;
   width: 100%; padding: 14px 20px; background: none; border: none;
-  font-size: 1.1rem; font-weight: 600; color: var(--dark); cursor: pointer;
+  font-family: inherit; font-size: 1.1rem; font-weight: 600; color: var(--dark); cursor: pointer;
 }
 .mobile-nav .nav-dropdown-toggle svg {
   transition: transform .3s ease; flex-shrink: 0;
