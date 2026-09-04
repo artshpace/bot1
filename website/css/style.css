@@ -889,3 +889,12 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   .mobile-nav .nav-dropdown-menu a { border-bottom-color: rgba(255,255,255,.12); color: #f5efe6; }
   .mobile-nav .nav-dropdown-menu a:hover { background: rgba(227,6,19,.14); }
 }
+
+/* Ряды парных кнопок (герой/секции направлений используют инлайн
+   display:flex;gap:12px;flex-wrap:wrap) на узких экранах ставим в столбец и
+   растягиваем на всю ширину — чтобы кнопки были одинакового размера, а не
+   каждая по своей ширине. */
+@media (max-width: 560px) {
+  [style*="gap:12px;flex-wrap:wrap"] { flex-direction: column; align-items: stretch; }
+  [style*="gap:12px;flex-wrap:wrap"] .btn { width: 100%; }
+}
