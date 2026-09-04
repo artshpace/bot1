@@ -795,8 +795,21 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   .hero-btns .btn { width: 100%; text-align: center; white-space: normal; }
   .hero-btns .btn-lg { padding: 16px 20px; font-size: 1rem; white-space: normal; }
   .mobile-nav { overflow-y: auto; -webkit-overflow-scrolling: touch; }
-  .cta-banner-btns { flex-direction: column; align-items: stretch; }
-  .cta-banner-btns .btn { width: 100%; text-align: center; white-space: normal; }
+  .cta-banner-btns { flex-direction: column; align-items: stretch; gap: 12px; }
+  /* Обе кнопки баннера — одинаковой высоты, в одну строку, единый шрифт и
+     отступы, содержимое строго по центру. Селектор с .editorial, чтобы
+     перебить .editorial .btn{white-space:normal} из editorial.css. */
+  .editorial .cta-banner-btns .btn,
+  .cta-banner-btns .btn {
+    width: 100%; min-height: 58px; padding: 0 22px;
+    font-size: 1rem; white-space: nowrap; gap: 10px;
+    display: flex; align-items: center; justify-content: center;
+    overflow-wrap: normal; word-wrap: normal;
+  }
+  /* Декоративный кружок-стрелка ломает высоту и переносит текст — убираем его
+     в баннере на мобильном, чтобы кнопки были идентичны. */
+  .editorial .cta-banner-btns .btn .ic { display: none; }
+  .cta-banner-btns .btn svg { flex-shrink: 0; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .skills-grid { grid-template-columns: 1fr; }
   .modal { padding: 28px 20px; }
