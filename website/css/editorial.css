@@ -257,6 +257,9 @@
     color:#fff;border:1px solid rgba(255,255,255,.2);
   }
   .editorial .bcard .glyph svg{ width:25px;height:25px;stroke:currentColor;stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round; }
+  /* Эмодзи-иконки направлений: крупные, цветные, без плашки-фона (эмодзи сами
+     цветные и узнаваемые). */
+  .editorial .bcard .glyph.glyph-emoji{ background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;font-size:32px;line-height:1; }
   .editorial .col-3{ grid-column:span 3; }
   .editorial .col-2{ grid-column:span 2; }
   /* «feat» (гитара) без фото — прежний тёмный градиент как запасной вариант */
