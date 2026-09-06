@@ -98,13 +98,18 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
    поэтому дублирующий текст рядом скрываем: логотип виден целиком и никогда
    не обрезается. */
 .nav-logo {
-  display: flex; align-items: center; flex-shrink: 0; line-height: 1;
+  display: flex; align-items: center; gap: 11px; flex-shrink: 0; line-height: 1.2;
 }
 .nav-logo-mark {
-  width: auto; height: 50px; display: block; flex-shrink: 0;
+  width: auto; height: 46px; display: block; flex-shrink: 0;
 }
-.nav-logo .name,
-.nav-logo .tagline-small { display: none; }
+/* Имя студии — часть картинки логотипа (ART SPACE), поэтому дублирующий текст
+   скрываем, а рядом показываем описание «Студия творческого развития». */
+.nav-logo .name { display: none; }
+.nav-logo .tagline-small {
+  display: block; font-size: .78rem; font-weight: 600; color: var(--muted);
+  text-transform: none; letter-spacing: 0; max-width: 12em; line-height: 1.25;
+}
 .nav-links { display: flex; align-items: center; gap: 2px; }
 .nav-links a {
   padding: 8px 10px; border-radius: var(--radius-sm); font-size: .875rem; font-weight: 600;
@@ -748,7 +753,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .nav-inner { gap: 16px; }
-  .nav-logo .tagline-small { display: none; }
+  .nav-logo .tagline-small { display: block; }
   .nav-links a { padding: 6px 10px; font-size: .8rem; }
   .nav-links > a:nth-child(4), .nav-links > a:nth-child(5), .nav-links > a:nth-child(7) { display: none; }
   .nav-cta { padding: 8px 18px !important; font-size: .9rem; }
@@ -774,7 +779,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   /* Logo shrinks & truncates instead of disappearing */
   .nav-logo { display: flex; flex: 1 1 auto; min-width: 0; margin-right: auto; }
   .nav-logo .name { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .nav-logo .tagline-small { display: none; }
+  .nav-logo .tagline-small { display: block; font-size: .72rem; }
   /* Keep the nav bar visible but collapse it to ONLY the CTA button —
      the other links live in the hamburger menu. This keeps "Записаться"
      always on screen (it sits inside .nav-links in the markup). */
@@ -831,7 +836,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   .nav-inner { gap: 8px; padding: 0 12px; }
   .nav-logo { display: flex; flex: 1 1 auto; min-width: 0; margin-right: auto; }
   .nav-logo .name { font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .nav-logo .tagline-small { display: none; }
+  .nav-logo .tagline-small { display: block; font-size: .68rem; }
   .nav-logo-mark { height: 40px; width: auto; }
   .nav-cta { padding: 6px 11px !important; font-size: .76rem; flex-shrink: 0; white-space: nowrap; }
   .nav-hamburger { width: 40px; height: 40px; }
@@ -879,6 +884,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
     border-color: rgba(255,255,255,.14);
   }
   body.editorial .nav-logo .name { color: #f7f2ea; }
+  body.editorial .nav-logo .tagline-small { color: rgba(247,242,234,.72); }
   body.editorial .nav-links a,
   body.editorial .nav-dropdown-toggle { color: rgba(247,242,234,.82); }
   body.editorial .nav-links a:hover { color: #fff; }
