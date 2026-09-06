@@ -632,7 +632,7 @@ async function sendClientEmail(env, lead) {
     whenLine +
     '<p>Наш администратор свяжется с вами в ближайшее время, чтобы подтвердить запись.</p>' +
     '<p>Если удобнее — напишите нам сразу в WhatsApp: ' +
-    '<a href="https://wa.me/77086366351" style="color:#E30613;">+7 708 636-63-51</a>.</p>' +
+    '<a href="https://wa.me/77013980019" style="color:#E30613;">+7 701 398-00-19</a>.</p>' +
     '<hr style="border:none;border-top:1px solid #eee;margin:20px 0;">' +
     '<p style="font-size:13px;color:#888;">Shpigotskiy Art Space · Петропавловск, ул. Интернациональная, 63, 5 этаж</p>' +
     '</div>';
@@ -804,7 +804,7 @@ async function sendMenu(env, chatId, greet){
   await sendText(env, chatId, head + 'Что хотите сделать?', kb([
     [{ text:'🌐 Открыть приложение (сайт)', web_app:{ url: SITE_URL } }],
     [{ text:'✍️ Записаться на пробное',      web_app:{ url: SITE_URL + '#trial' } }],
-    [{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77086366351?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }],
+    [{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77013980019?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }],
     [{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]
   ]), 'Markdown');
 }

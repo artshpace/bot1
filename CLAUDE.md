@@ -8,15 +8,15 @@
 Главный канал привлечения: Instagram реклама (53% лидов)
 
 ## Реальные контакты (использовать ВЕЗДЕ — заглушки запрещены)
-WhatsApp (студия, основной): +77086366351  
-wa.me link: https://wa.me/77086366351  
+WhatsApp (студия, основной): +77013980019  
+wa.me link: https://wa.me/77013980019  
 Телефон руководителя (Антон Шпигоцкий): +77084322371  
 Телефон администратора: +77013980019  
 Instagram: @artshpace  
 Instagram URL: https://instagram.com/artshpace  
 Email: artshpace@gmail.com  
 Telegram: канала НЕТ; используем бота — https://t.me/artshpacebot (@artshpacebot)  
-Телефон: +7 708 636-63-51  
+Телефон: +7 701 398-00-19  
 2ГИС: https://2gis.kz/petropavlovsk/firm/70000001085367039  
 Яндекс Карты: https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/  
 GitHub Pages (текущий хост): https://artshpace.github.io/bot1/
@@ -92,7 +92,7 @@ Supabase `bot_groups` (миграция `0022_bot_groups_table.sql` — напо
 ## Правила при работе с кодом
 1. Все контакты брать ТОЛЬКО из этого файла — никаких заглушек 77771234567 и т.д.
 2. Canonical и og:url — https://artshpace.github.io/bot1/ (до покупки домена)
-3. Кнопки WhatsApp: wa.me/77086366351?text=... с предзаполненным текстом
+3. Кнопки WhatsApp: wa.me/77013980019?text=... с предзаполненным текстом
 4. При каждом изменении index.html — проверять что modal-form и trial-form консистентны
 5. Admin panel сохраняет данные в localStorage с префиксом sas_director_*
 6. /compact если контекст > 70%

@@ -99,7 +99,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   column-gap: 10px; line-height: 1.1; flex-shrink: 0;
 }
 .nav-logo-mark {
-  grid-row: 1 / span 2; width: 36px; height: 36px; border-radius: 8px;
+  grid-row: 1 / span 2; width: 30px; height: 30px; border-radius: 7px;
   display: block; flex-shrink: 0;
 }
 .nav-logo .name {
@@ -832,9 +832,10 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 @media (max-width: 480px) {
   .nav-inner { gap: 8px; padding: 0 12px; }
   .nav-logo { display: flex; flex: 1 1 auto; min-width: 0; margin-right: auto; }
-  .nav-logo .name { font-size: .82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .nav-logo .name { font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .nav-logo .tagline-small { display: none; }
-  .nav-cta { padding: 7px 12px !important; font-size: .8rem; flex-shrink: 0; white-space: nowrap; }
+  .nav-logo-mark { width: 26px; height: 26px; }
+  .nav-cta { padding: 6px 11px !important; font-size: .76rem; flex-shrink: 0; white-space: nowrap; }
   .nav-hamburger { width: 40px; height: 40px; }
   .teachers-grid { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: 1fr 1fr; }

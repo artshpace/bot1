@@ -54,7 +54,7 @@
 ```bash
 curl -X POST https://sas-lead-forwarder.ВАШ_АККАУНТ.workers.dev/submit-lead \
   -H "Content-Type: application/json" \
-  -d '{"name":"Тест","phone":"+77086366351","direction":"Гитара"}'
+  -d '{"name":"Тест","phone":"+77013980019","direction":"Гитара"}'
 ```
 
 Должно прийти сообщение в Telegram и вернуться `{"ok":true}`.

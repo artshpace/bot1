@@ -8,7 +8,7 @@
 ## Что сделано
 
 ### 1. Контакты-заглушки (sed по всем публичным `*.html`, кроме `account/`)
-- `77771234567` → `77086366351` (и форматированный `+7 777 …` → `+7 708 636-63-51`)
+- `77771234567` → `77013980019` (и форматированный `+7 777 …` → `+7 701 398-00-19`)
 - `instagram.com/shpigotskiy_art` → `instagram.com/artshpace`
 - canonical `shpigotskiy-art.kz` → `artshpace.github.io/bot` (email `info@…` **сохранён**)
 - Telegram `t.me/shpigotskiy_art` **оставлен как есть** — в промпте замены для Telegram не было.
@@ -18,7 +18,7 @@
 - Плавающие кнопки `.nav-cta` / `.mob-cta` «Записаться» открывают модалку (`openTrialModal()`).
 - После success-экрана форм типа `trial` (modal-form, trial-form) открывается WhatsApp (`window.open`).
 - **CRM-лид сохраняется как и раньше** (`API.leads.create`) — поведение не удалено, добавлен только WA-редирект.
-- Кнопка «Написать в WhatsApp» в cta-banner и карточки цен ведут на `wa.me/77086366351?text=…`.
+- Кнопка «Написать в WhatsApp» в cta-banner и карточки цен ведут на `wa.me/77013980019?text=…`.
 
 ### 3. Скрытие «Кабинет» из навигации
 - Во всех публичных страницах (вкл. `directions/*.html`) ссылки `account/login.html`

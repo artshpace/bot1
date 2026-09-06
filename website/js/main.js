@@ -1011,7 +1011,7 @@ function loadYouTubeAPI(cb) {
    The studio is lead-gen, not e-commerce: every booking funnels into WhatsApp.
    buildWhatsAppLink() makes a generic link; buildWhatsAppFromForm() pre-fills
    the parent's submitted details so the chat opens ready to send. */
-const WA_NUMBER = '77086366351';
+const WA_NUMBER = '77013980019';
 /* Cloudflare Worker (workers/lead-forwarder.js) → Telegram. */
 const WORKER_URL = 'https://sas-lead-forwarder.artshpace.workers.dev/submit-lead';
 
