@@ -94,19 +94,17 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 18px;
   padding: 0 24px; box-sizing: border-box; max-width: 100%;
 }
+/* Полный логотип-картинка (ART SPACE + SH) в шапке. Надпись — часть картинки,
+   поэтому дублирующий текст рядом скрываем: логотип виден целиком и никогда
+   не обрезается. */
 .nav-logo {
-  display: grid; grid-template-columns: auto auto; align-items: center;
-  column-gap: 10px; line-height: 1.1; flex-shrink: 0;
+  display: flex; align-items: center; flex-shrink: 0; line-height: 1;
 }
 .nav-logo-mark {
-  grid-row: 1 / span 2; width: 30px; height: 30px; border-radius: 7px;
-  display: block; flex-shrink: 0;
+  width: auto; height: 50px; display: block; flex-shrink: 0;
 }
-.nav-logo .name {
-  grid-column: 2; font-family: var(--font-heading); font-size: 1.15rem; font-weight: 800;
-  color: var(--dark); white-space: nowrap;
-}
-.nav-logo .tagline-small { grid-column: 2; font-size: .65rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.nav-logo .name,
+.nav-logo .tagline-small { display: none; }
 .nav-links { display: flex; align-items: center; gap: 2px; }
 .nav-links a {
   padding: 8px 10px; border-radius: var(--radius-sm); font-size: .875rem; font-weight: 600;
@@ -834,7 +832,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   .nav-logo { display: flex; flex: 1 1 auto; min-width: 0; margin-right: auto; }
   .nav-logo .name { font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .nav-logo .tagline-small { display: none; }
-  .nav-logo-mark { width: 26px; height: 26px; }
+  .nav-logo-mark { height: 40px; width: auto; }
   .nav-cta { padding: 6px 11px !important; font-size: .76rem; flex-shrink: 0; white-space: nowrap; }
   .nav-hamburger { width: 40px; height: 40px; }
   .teachers-grid { grid-template-columns: 1fr; }
@@ -884,7 +882,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   body.editorial .nav-links a,
   body.editorial .nav-dropdown-toggle { color: rgba(247,242,234,.82); }
   body.editorial .nav-links a:hover { color: #fff; }
-  .nav-logo-mark { box-shadow: 0 0 0 1px rgba(255,255,255,.16); }
+  .nav-logo-mark { box-shadow: none; }
 
   /* Выпадающее мобильное меню */
   .mobile-nav { background: #17120f; }
