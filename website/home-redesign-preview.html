@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#FBF9F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#17120f" media="(prefers-color-scheme: dark)">
+  <meta property="og:image" content="media/brand/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="media/brand/og.png">
+<meta name="robots" content="noindex">
+<title>Превью редизайна — Shpigotskiy Art Space</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#E30613; --red-deep:#B90410; --gold:#C9A84C; --gold-deep:#9C7D2E;
+    --ink:#1A1512; --ink-soft:#4A433D; --muted:#7A716A;
+    --paper:#FBF8F2; --cream:#F4EEE2; --cream-2:#EDE4D3; --line:#E2D8C6;
+    --shadow: 0 30px 60px -30px rgba(60,40,20,.35);
+    --shadow-soft: 0 20px 40px -24px rgba(60,40,20,.28);
+    --r:26px;
+    --serif:'Playfair Display', Georgia, serif;
+    --sans:'Inter', system-ui, -apple-system, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);color:var(--ink);background:var(--paper);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  /* тонкая «бумажная» зернистость */
+  body::before{content:"";position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.035;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;
+    background:rgba(227,6,19,.07);color:var(--red);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+  .eyebrow.gold{background:rgba(201,168,76,.14);color:var(--gold-deep)}
+  h1,h2,h3{font-family:var(--serif);font-weight:700;line-height:1.05;letter-spacing:-.01em}
+  .btn{display:inline-flex;align-items:center;gap:12px;padding:13px 14px 13px 26px;border-radius:999px;
+    font-weight:600;font-size:15px;text-decoration:none;border:none;cursor:pointer;
+    transition:transform .5s cubic-bezier(.32,.72,0,1), box-shadow .5s, background .3s}
+  .btn .ic{width:34px;height:34px;border-radius:999px;display:grid;place-items:center;transition:transform .5s cubic-bezier(.32,.72,0,1)}
+  .btn-primary{background:var(--red);color:#fff;box-shadow:0 14px 30px -12px rgba(227,6,19,.6)}
+  .btn-primary .ic{background:rgba(255,255,255,.18)}
+  .btn-primary:hover{transform:translateY(-2px)}
+  .btn-primary:hover .ic{transform:translate(3px,-1px)}
+  .btn-primary:active{transform:scale(.98)}
+  .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line);padding:13px 24px}
+  .btn-ghost:hover{background:var(--cream);border-color:var(--gold)}
+
+  /* ---------- floating nav ---------- */
+  header{position:fixed;top:0;left:0;right:0;z-index:40;padding:18px 0}
+  .nav{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;
+    padding:12px 14px 12px 24px;border-radius:999px;background:rgba(251,248,242,.72);
+    backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:1px solid rgba(226,216,198,.7);box-shadow:0 10px 30px -18px rgba(60,40,20,.4)}
+  .brand{font-family:var(--serif);font-weight:700;font-size:18px;letter-spacing:-.01em}
+  .brand small{display:block;font-family:var(--sans);font-weight:500;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:1px}
+  .nav-links{display:flex;gap:26px;align-items:center}
+  .nav-links a{color:var(--ink-soft);text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
+  .nav-links a:hover{color:var(--red)}
+  @media(max-width:820px){.nav-links{display:none}}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;padding:150px 0 90px;z-index:2}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
+  .hero h1{font-size:clamp(44px,6vw,78px)}
+  .hero h1 em{font-style:italic;color:var(--red)}
+  .hero .lead{font-size:19px;color:var(--ink-soft);max-width:520px;margin:26px 0 34px}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+  .trust{display:flex;gap:10px;flex-wrap:wrap;margin-top:34px}
+  .trust span{font-size:13px;color:var(--ink-soft);background:var(--cream);border:1px solid var(--line);padding:7px 14px;border-radius:999px;font-weight:500}
+  /* панель-«карточка» справа: двойной кант */
+  .hero-panel{background:var(--cream-2);border:1px solid var(--line);border-radius:34px;padding:9px;box-shadow:var(--shadow)}
+  .hero-panel-inner{border-radius:26px;padding:34px;color:#fff;position:relative;overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 80% 10%, rgba(201,168,76,.55), transparent 55%),
+      radial-gradient(120% 120% at 15% 100%, rgba(227,6,19,.65), transparent 55%),
+      linear-gradient(155deg,#241a15,#3a231b)}
+  .hero-panel-inner .k{font-family:var(--serif);font-size:15px;opacity:.85;margin-bottom:20px;letter-spacing:.02em}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:22px 18px}
+  .metric .n{font-family:var(--serif);font-size:40px;font-weight:800;line-height:1}
+  .metric .n b{color:var(--gold);font-weight:800}
+  .metric .l{font-size:12.5px;opacity:.8;margin-top:6px}
+  .hero-panel-inner .free{margin-top:26px;padding-top:20px;border-top:1px solid rgba(255,255,255,.15);
+    display:flex;align-items:center;gap:10px;font-size:14px}
+  .dot{width:9px;height:9px;border-radius:999px;background:var(--gold);box-shadow:0 0 0 4px rgba(201,168,76,.25)}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:40px}.hero{padding:130px 0 70px}}
+
+  /* ---------- section head ---------- */
+  .sec{padding:96px 0;position:relative;z-index:2}
+  .sec.alt{background:linear-gradient(180deg,var(--cream),var(--paper))}
+  .sec-head{max-width:620px;margin-bottom:52px}
+  .sec-head h2{font-size:clamp(32px,4vw,50px);margin:16px 0 14px}
+  .sec-head p{color:var(--muted);font-size:17px}
+
+  /* ---------- directions bento ---------- */
+  .bento{display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
+  .card{background:var(--cream);border:1px solid var(--line);border-radius:var(--r);padding:8px;
+    transition:transform .5s cubic-bezier(.32,.72,0,1), box-shadow .5s}
+  .card:hover{transform:translateY(-4px);box-shadow:var(--shadow-soft)}
+  .card-in{border-radius:20px;background:#fff;height:100%;padding:26px;display:flex;flex-direction:column;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
+  .card .tag{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep)}
+  .card h3{font-size:24px;margin:14px 0 8px}
+  .card p{color:var(--muted);font-size:14.5px;flex:1}
+  .card .more{margin-top:18px;color:var(--red);font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+  .glyph{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;background:var(--cream-2);color:var(--ink)}
+  .glyph svg{width:26px;height:26px;stroke:currentColor;stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .col-3{grid-column:span 3}.col-2{grid-column:span 2}.col-4{grid-column:span 4}
+  .card.feat .card-in{background:linear-gradient(155deg,#2a1c16,#43261c);color:#fff}
+  .card.feat .tag{color:var(--gold)}
+  .card.feat p{color:rgba(255,255,255,.75)}
+  .card.feat .glyph{background:rgba(255,255,255,.1);color:var(--gold)}
+  .card.feat .more{color:#fff}
+  @media(max-width:860px){.bento{grid-template-columns:1fr 1fr}.col-3,.col-2,.col-4{grid-column:span 1}}
+  @media(max-width:560px){.bento{grid-template-columns:1fr}}
+
+  /* ---------- teachers ---------- */
+  .teachers{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+  .tcard{text-align:center;padding:30px 18px;border-radius:var(--r);background:var(--cream);border:1px solid var(--line);transition:transform .5s cubic-bezier(.32,.72,0,1)}
+  .tcard:hover{transform:translateY(-4px)}
+  .ava{width:76px;height:76px;border-radius:999px;margin:0 auto 16px;display:grid;place-items:center;
+    font-family:var(--serif);font-size:30px;color:#fff;background:linear-gradient(140deg,var(--red),var(--gold))}
+  .tcard .nm{font-family:var(--serif);font-size:19px;font-weight:600}
+  .tcard .sp{color:var(--red);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin:4px 0}
+  .tcard .ex{color:var(--muted);font-size:13px}
+  @media(max-width:820px){.teachers{grid-template-columns:1fr 1fr}}
+
+  /* ---------- testimonial ---------- */
+  .quote{max-width:820px;margin:0 auto;text-align:center}
+  .quote .mark{font-family:var(--serif);font-size:90px;line-height:.5;color:var(--gold);opacity:.5}
+  .quote blockquote{font-family:var(--serif);font-size:clamp(24px,3.4vw,34px);font-style:italic;line-height:1.35;margin:10px 0 26px}
+  .quote .who{font-weight:600}.quote .role{color:var(--muted);font-size:14px}
+  .stars{color:var(--gold);letter-spacing:3px;margin-bottom:20px}
+
+  /* ---------- cta ---------- */
+  .cta{position:relative;z-index:2;padding:0 24px 100px}
+  .cta-box{max-width:1180px;margin:0 auto;border-radius:38px;padding:70px 40px;text-align:center;color:#fff;position:relative;overflow:hidden;
+    background:radial-gradient(120% 120% at 20% 0%, rgba(201,168,76,.5), transparent 55%),linear-gradient(150deg,#B90410,#7a0410)}
+  .cta-box h2{font-size:clamp(30px,4vw,46px);color:#fff;margin:16px 0 14px}
+  .cta-box p{color:rgba(255,255,255,.85);max-width:520px;margin:0 auto 30px;font-size:17px}
+  .cta-box .btn-primary{background:#fff;color:var(--red)}
+  .cta-box .btn-primary .ic{background:rgba(227,6,19,.12)}
+  .badge-free{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600}
+
+  footer{background:var(--ink);color:rgba(255,255,255,.7);padding:50px 0;position:relative;z-index:2}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;align-items:center}
+  footer .brand{color:#fff}
+
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  .note{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:60;background:var(--ink);color:#fff;
+    font-size:12.5px;padding:9px 18px;border-radius:999px;box-shadow:0 10px 30px -10px rgba(0,0,0,.5);opacity:.92}
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav wrap">
+    <div class="brand">Shpigotskiy Art Space<small>Студия творческого развития</small></div>
+    <div class="nav-links">
+      <a href="#dirs">Направления</a>
+      <a href="#teachers">Преподаватели</a>
+      <a href="#reviews">Отзывы</a>
+      <a href="#">Контакты</a>
+    </div>
+    <a href="#trial" class="btn btn-primary" style="padding:11px 12px 11px 22px">Записаться
+      <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal in">
+      <span class="eyebrow">● Петропавловск, Казахстан</span>
+      <h1>Помогаем детям <em>раскрепоститься</em> и выйти на сцену</h1>
+      <p class="lead">Студия для детей от 4 лет и взрослых. Гитара, вокал, живопись, актёрское мастерство и танцы — первое занятие бесплатно.</p>
+      <div class="hero-cta">
+        <a href="#trial" class="btn btn-primary">Записаться на пробное
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+        <a href="#dirs" class="btn btn-ghost">Все направления</a>
+      </div>
+      <div class="trust">
+        <span>⭐ NPS 9.7</span><span>160+ учеников</span><span>5 направлений</span><span>Пробное — бесплатно</span>
+      </div>
+    </div>
+    <div class="hero-panel reveal in">
+      <div class="hero-panel-inner">
+        <div class="k">Студия в цифрах</div>
+        <div class="metrics">
+          <div class="metric"><div class="n">160<b>+</b></div><div class="l">учеников сегодня</div></div>
+          <div class="metric"><div class="n">9.7</div><div class="l">индекс NPS</div></div>
+          <div class="metric"><div class="n">5</div><div class="l">направлений</div></div>
+          <div class="metric"><div class="n">3 <span style="font-size:20px">года</span></div><div class="l">на рынке</div></div>
+        </div>
+        <div class="free"><span class="dot"></span> Первое занятие — бесплатно и ни к чему не обязывает</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIRECTIONS -->
+<section class="sec alt" id="dirs">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow gold">Обучение</span>
+      <h2>Пять направлений, где раскрывается ребёнок</h2>
+      <p>От первых аккордов до сцены — программы для любого возраста и темперамента.</p>
+    </div>
+    <div class="bento">
+      <div class="card feat col-3 reveal">
+        <div class="card-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><circle cx="8" cy="16" r="5"/><path d="M13 12l7-8"/></svg></div>
+          <div class="tag" style="margin-top:16px">Фокус набора</div>
+          <h3>Гитара · Укулеле</h3>
+          <p>Классика и электрогитара, аккорды, чтение нот и живые выступления. Педагоги-мультиинструменталисты.</p>
+          <span class="more">Подробнее →</span>
+        </div>
+      </div>
+      <div class="card col-3 reveal">
+        <div class="card-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><path d="M12 3v10"/><circle cx="12" cy="16" r="4"/><path d="M9 6l6-2"/></svg></div>
+          <div class="tag">Высшая категория</div>
+          <h3>Вокал</h3>
+          <p>Постановка голоса, дыхание, сцена. Педагог с опытом 50+ лет и учениками в консерваториях.</p>
+          <span class="more">Подробнее →</span>
+        </div>
+      </div>
+      <div class="card col-2 reveal">
+        <div class="card-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><path d="M4 20l7-7"/><path d="M14 6l4 4"/><circle cx="17" cy="7" r="3"/></svg></div>
+          <div class="tag">С 4 лет</div>
+          <h3>Живопись</h3>
+          <p>Акварель, гуашь, композиция. Раскрываем тех, кто «не умеет рисовать».</p>
+        </div>
+      </div>
+      <div class="card col-2 reveal">
+        <div class="card-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><path d="M8 3v4M16 3v4"/><rect x="4" y="7" width="16" height="14" rx="2"/></svg></div>
+          <div class="tag">Против стеснительности</div>
+          <h3>Актёрское</h3>
+          <p>Сценречь, импровизация, уверенность. Ведёт актёр драмтеатра.</p>
+        </div>
+      </div>
+      <div class="card col-2 reveal">
+        <div class="card-in">
+          <div class="glyph"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v7l-4 6M12 14l4 6"/></svg></div>
+          <div class="tag">Contemporary</div>
+          <h3>Современный танец</h3>
+          <p>Пластика, хореография, отчётные концерты. 14+ лет опыта педагога.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEACHERS -->
+<section class="sec" id="teachers">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow gold">Команда</span>
+      <h2>74% родителей выбирают студию из-за педагога</h2>
+      <p>Профессионалы с образованием и призванием — люди, к которым хочется идти.</p>
+    </div>
+    <div class="teachers">
+      <div class="tcard reveal"><div class="ava">А</div><div class="nm">Антон Шпигоцкий</div><div class="sp">Актёрское · Основатель</div><div class="ex">ВТУ им. Щепкина</div></div>
+      <div class="tcard reveal"><div class="ava">Н</div><div class="nm">Наталья Ерзакова</div><div class="sp">Вокал</div><div class="ex">Высшая категория · 50+ лет</div></div>
+      <div class="tcard reveal"><div class="ava">В</div><div class="nm">Виталий Жуков</div><div class="sp">Гитара · Живопись</div><div class="ex">Художник · 100+ выставок</div></div>
+      <div class="tcard reveal"><div class="ava">Г</div><div class="nm">Георгий Захаров</div><div class="sp">Гитара · Укулеле</div><div class="ex">Мультиинструменталист</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="sec alt" id="reviews">
+  <div class="wrap quote reveal">
+    <div class="mark">“</div>
+    <div class="stars">★★★★★</div>
+    <blockquote>Записала ребёнка на актёрское. Раньше он был очень стеснительным — за один сезон поставили спектакль, и он выступил на сцене! Результат превзошёл ожидания.</blockquote>
+    <div class="who">Наталья В.</div>
+    <div class="role">мама ученика, 10 лет</div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta" id="trial">
+  <div class="cta-box reveal">
+    <span class="badge-free">🎁 Первое занятие бесплатно</span>
+    <h2>Подарите ребёнку любимое дело</h2>
+    <p>Запишитесь на бесплатное пробное занятие — и сами увидите, как загорятся глаза ребёнка.</p>
+    <a href="#" class="btn btn-primary">Записаться на пробное
+      <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">Shpigotskiy Art Space</div>
+    <div style="font-size:13px">ул. Интернациональная, 63, 5 этаж · +7 701 398-00-19 · @artshpace</div>
+  </div>
+</footer>
+
+<div class="note">✦ Превью нового дизайна — черновик для оценки</div>
+
+<script>
+  const io = new IntersectionObserver((es)=>es.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('in'); io.unobserve(e.target);} }), {threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>

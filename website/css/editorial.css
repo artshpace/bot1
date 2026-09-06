@@ -1,0 +1,499 @@
+/* =====================================================================
+   EDITORIAL-PREMIUM LAYER  (shared, applies to <body class="editorial">)
+   ---------------------------------------------------------------------
+   Слой поверх style.css: тёплая «бумажная» палитра, парящая nav-таблетка,
+   двойной кант карточек, мягкие тени, зерно, пилюльные кнопки.
+   Ничего не ломает: только переопределяет визуал существующих классов,
+   сохраняя все JS-хуки (fade-up, data-target, modal-trial, faq и т.д.).
+   ===================================================================== */
+
+  /* Токены дизайна, управляемые из кабинета (Тексты сайта → Дизайн):
+     затемнение фото на плашках, интенсивность теней, масштаб скругления
+     углов, масштаб размера плашек направлений. Всё это — в :root (не в
+     .editorial на body), потому что applyStyleOverrides() в main.js
+     переопределяет их на document.documentElement (<html>): у CSS custom
+     properties «собственное» значение элемента всегда перекрывает
+     унаследованное от предка, так что дефолт и override обязаны жить на
+     одном и том же элементе — иначе override молча игнорируется. */
+  :root{
+    --bcard-overlay:linear-gradient(180deg, rgba(10,7,5,.24) 0%, rgba(10,7,5,.65) 55%, rgba(10,7,5,.93) 100%);
+    --shadow-soft:0 20px 40px -24px rgba(60,40,20,.28);
+    --shadow-deep:0 34px 64px -32px rgba(60,40,20,.4);
+    --radius-scale:1;
+    --card-scale:1;
+  }
+  .editorial{
+    --paper:#FBF8F2; --cream:#F4EEE2; --cream-2:#EDE4D3; --line:rgba(170,140,90,.24);
+    --ink:#1A1512; --ink-soft:#4A433D;
+    /* переопределяем общие токены style.css под тёплую палитру — модалка,
+       формы, FAQ и футер получают премиум-вид «бесплатно» */
+    --bg:#FBF8F2; --bg-alt:#F4EEE2; --bg-cream:#FFFFFF; --bg-3:#EDE4D3;
+    --dark:#1A1512; --body:#4A433D; --muted:#7A716A;
+    --border:rgba(120,90,50,.16); --gold-border:rgba(201,168,76,.32);
+  }
+  .editorial{ background:var(--paper); }
+
+  /* тонкая «бумажная» зернистость поверх всей страницы */
+  .editorial::before{
+    content:"";position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ---------- floating glass nav pill ---------- */
+  .editorial .site-header{
+    background:transparent;border-bottom:none;height:auto;box-shadow:none;padding:16px 0;
+  }
+  .editorial .site-header.scrolled{ box-shadow:none; }
+  .editorial .nav-inner{
+    background:rgba(251,248,242,.74);
+    backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);
+    border:1px solid rgba(226,216,198,.75);border-radius:999px;
+    padding:10px 12px 10px 24px;box-shadow:0 14px 34px -22px rgba(60,40,20,.5);
+    transition:box-shadow .3s ease;
+  }
+  .editorial .site-header.scrolled .nav-inner{ box-shadow:0 18px 40px -20px rgba(60,40,20,.55); }
+  .editorial .nav-logo .name{ letter-spacing:-.01em; }
+  .editorial .nav-links a,
+  .editorial .nav-dropdown-toggle{ font-weight:500;color:var(--ink-soft); }
+  .editorial .nav-cta{
+    border-radius:999px !important;box-shadow:0 12px 26px -12px rgba(227,6,19,.55) !important;
+  }
+  .editorial .nav-dropdown-menu{
+    border-radius:20px;border-color:var(--line);background:#fff;
+    box-shadow:0 20px 44px -20px rgba(60,40,20,.4);
+  }
+
+  /* ---------- premium pill buttons ---------- */
+  .editorial .btn{ border-radius:999px;font-weight:600;letter-spacing:.01em; }
+  .editorial .btn-lg{ border-radius:999px; }
+  .editorial .btn-primary{ box-shadow:0 16px 32px -14px rgba(227,6,19,.6); }
+  .editorial .btn-primary:hover{ box-shadow:0 22px 40px -16px rgba(227,6,19,.65); }
+  .editorial .btn-white{ background:#fff;border:1px solid var(--line); }
+  .editorial .btn-outline{ border-radius:999px; }
+
+  /* arrow-in-circle affordance для главных кнопок */
+  .editorial .btn .ic{
+    width:32px;height:32px;border-radius:999px;display:inline-grid;place-items:center;
+    background:rgba(255,255,255,.2);margin-left:2px;
+    transition:transform .5s cubic-bezier(.32,.72,0,1);
+  }
+  .editorial .btn:hover .ic{ transform:translateX(3px); }
+  .editorial .btn-white .ic,
+  .editorial .cta-banner .btn-primary .ic{ background:rgba(227,6,19,.12); }
+
+  /* мягче общий ритм разделов + заголовки */
+  .editorial .section{ padding:104px 0; }
+  .editorial .section-alt{ background:linear-gradient(180deg,var(--cream),var(--paper)); }
+  .editorial .eyebrow{ letter-spacing:.18em; }
+
+  /* ---------- HERO (light editorial split) ---------- */
+  .editorial .hero-ed{ position:relative;z-index:2;padding:96px 0 72px; }
+  .editorial .hero-ed-grid{
+    display:grid;grid-template-columns:.82fr 1.42fr;
+    grid-template-areas:"copy panel" "cta panel";
+    column-gap:40px;row-gap:16px;align-items:center;
+  }
+  .editorial .hero-ed-copy{ grid-area:copy;align-self:end; }
+  .editorial .hero-ed-cta{ grid-area:cta;align-self:start; }
+  .editorial .hero-ed-panel{ grid-area:panel; }
+  .editorial .eyebrow-pill{
+    display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;
+    background:rgba(227,6,19,.07);color:var(--primary);
+    font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .editorial .eyebrow-pill .pin{ width:7px;height:7px;border-radius:999px;background:var(--gold); }
+  .editorial .hero-ed h1{
+    font-size:clamp(2.1rem,4vw,3.15rem);line-height:1.03;letter-spacing:-.015em;
+    color:var(--ink);margin:18px 0 0;text-wrap:balance;
+  }
+  .editorial .hero-ed h1 em{ font-style:italic;color:var(--primary); }
+  .editorial .hero-ed .lead{
+    font-size:1.12rem;color:var(--ink-soft);max-width:520px;margin:20px 0 30px;
+  }
+  /* Короткая строка соц-доказательства под направлениями (заменяет длинный
+     подзаголовок — он дублировал плашки и опускал плеер слишком низко). */
+  .editorial .hero-ed-sub{ font-size:.95rem;color:var(--ink-soft);margin:14px 0 0;font-weight:500; }
+  /* Направления сразу в шапке: посетитель мгновенно видит, что предлагает
+     студия, без скролла. Кликабельные «таблетки» ведут на страницы направлений. */
+  .editorial .hero-ed-dirs{ display:flex;flex-wrap:wrap;gap:9px;margin:20px 0 0; }
+  .editorial .hero-ed-dirs a{
+    font-size:.86rem;font-weight:600;color:var(--ink-soft);
+    background:var(--cream);border:1px solid var(--line);
+    padding:8px 15px;border-radius:999px;text-decoration:none;
+    transition:background .2s ease,color .2s ease,border-color .2s ease;
+  }
+  .editorial .hero-ed-dirs a:hover{
+    background:var(--primary);color:#fff;border-color:var(--primary);
+  }
+  .editorial .hero-ed-cta{ display:flex;gap:14px;flex-wrap:wrap; }
+  /* Основная кнопка живёт в текстовом блоке (всегда видна над плеером),
+     «Все направления» — в .hero-ed-cta (на мобильном уходит под плеер). */
+  .editorial .hero-ed-cta-primary{ margin-top:20px; }
+  .editorial .hero-ed-trust{ display:flex;gap:10px;flex-wrap:wrap;margin-top:34px; }
+  .editorial .hero-ed-trust span{
+    font-size:.82rem;color:var(--ink-soft);background:var(--cream);border:1px solid var(--line);
+    padding:8px 15px;border-radius:999px;font-weight:500;
+  }
+  /* правая панель-«карточка» с двойным кантом и метриками */
+  .editorial .hero-ed-panel{
+    background:var(--cream-2);border:1px solid var(--line);border-radius:34px;padding:9px;
+    box-shadow:var(--shadow-deep);
+  }
+  .editorial .hero-ed-panel-in{
+    border-radius:26px;padding:36px;color:#fff;position:relative;overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 80% 8%, rgba(201,168,76,.5), transparent 55%),
+      radial-gradient(120% 120% at 12% 100%, rgba(227,6,19,.6), transparent 55%),
+      linear-gradient(155deg,#241a15,#3a231b);
+  }
+  .editorial .hero-ed-panel-in .k{
+    font-family:var(--font-heading);font-size:.95rem;opacity:.85;margin-bottom:24px;
+  }
+  .editorial .hero-ed-metrics{ display:grid;grid-template-columns:1fr 1fr;gap:24px 18px; }
+  .editorial .hero-ed-metrics .n{
+    font-family:var(--font-heading);font-size:2.6rem;font-weight:800;line-height:1;color:#fff;
+  }
+  .editorial .hero-ed-metrics .n span{ color:var(--gold); }
+  .editorial .hero-ed-metrics .l{ font-size:.8rem;opacity:.82;margin-top:8px; }
+  .editorial .hero-ed-panel-in .free{
+    margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.16);
+    display:flex;align-items:center;gap:11px;font-size:.9rem;
+  }
+  .editorial .hero-ed-panel-in .free .dot{
+    width:9px;height:9px;border-radius:999px;background:var(--gold);
+    box-shadow:0 0 0 4px rgba(201,168,76,.25);flex-shrink:0;
+  }
+  /* видео в шапке героя — НЕ виджет-плеер, а часть страницы:
+     ни рамки, ни тени, ни скруглений, ни фона, ни отступов. Контейнер
+     полностью прозрачен и заподлицо с макетом. */
+  .editorial .hero-ed-panel--bare{ background:none;border:0;box-shadow:none;padding:0;margin:0;border-radius:0; }
+  .editorial .hero-ed-panel--bare .hero-ed-panel-video{ background:none;border:0;box-shadow:none;padding:0;margin:0;border-radius:0; }
+  .editorial .hero-ed-video{
+    position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;
+    border:0;outline:0;box-shadow:none;background:transparent;padding:0;margin:0;border-radius:0;
+  }
+  .editorial .hero-ed-video iframe,
+  .editorial .hero-ed-video video{
+    position:absolute;inset:0;width:100%;height:100%;border:0;outline:0;display:block;
+    object-fit:cover;background:transparent;
+  }
+  /* Постер поверх плеера: виден мгновенно (кадр видео), плавно исчезает,
+     когда видео реально пошло → никакого чёрного квадрата загрузки. */
+  .editorial .hero-ed-poster{
+    position:absolute;inset:0;z-index:2;background-size:cover;background-position:center;
+    background-color:var(--cream-2);transition:opacity .55s ease;
+  }
+  .editorial .hero-ed-video.is-playing .hero-ed-poster{ opacity:0;pointer-events:none; }
+  /* Ненавязчивый переключатель звука для нативного <video> (только для mp4).
+     Скрыт, проявляется при наведении/касании; сам ролик тоже кликабелен. */
+  .editorial .hero-ed-sound{
+    position:absolute;right:14px;bottom:14px;z-index:3;width:42px;height:42px;
+    border:0;border-radius:999px;cursor:pointer;color:#fff;
+    background:rgba(26,21,18,.40);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .25s ease;
+  }
+  .editorial .hero-ed-video:hover .hero-ed-sound{ opacity:1; }
+  .editorial .hero-ed-sound svg{ width:20px;height:20px; }
+  @media(hover:none){ .editorial .hero-ed-sound{ opacity:.82; } }
+  /* Подсказка «листайте вниз» — рисуется только на мобильном (мало контента
+     в первом экране, неочевидно, что делать дальше). Полупрозрачная,
+     мягко подпрыгивает; main.js гасит её, как только начался скролл. */
+  .editorial .hero-scroll-cue{ display:none; }
+
+  /* ---------- DIRECTIONS bento ----------
+     Плоские, полупрозрачные плашки (в духе современных мобильных ОС —
+     минимум тени, тонкая обводка). Карточки с фото (has-img) показывают
+     кадр с занятий, затемнённый градиентом снизу вверх, чтобы текст
+     оставался читаемым. Без фото — прежний тёплый фон-заглушка. */
+  .editorial .bento{ display:grid;grid-template-columns:repeat(6,1fr);gap:16px; }
+  .editorial .bcard{
+    background:rgba(244,238,226,.45);border:1px solid rgba(154,126,74,.22);
+    border-radius:calc(22px * var(--radius-scale,1));padding:6px;backdrop-filter:blur(2px);
+    transition:transform .4s cubic-bezier(.32,.72,0,1),box-shadow .4s,border-color .4s;
+  }
+  .editorial .bcard:hover{ transform:translateY(-3px);box-shadow:0 16px 28px -20px rgba(60,40,20,.3);border-color:rgba(154,126,74,.4); }
+  /* --card-scale масштабирует высоту/отступы плашек направлений (кабинет
+     → Дизайн → «Размер плашек направлений»), --radius-scale — скругление
+     углов всех карточек сайта (тот же раздел → «Скругление углов»). */
+  .editorial .bcard-in{
+    position:relative;border-radius:calc(18px * var(--radius-scale,1));background:#fff;height:100%;
+    min-height:calc(300px * var(--card-scale,1));
+    padding:calc(26px * var(--card-scale,1));display:flex;flex-direction:column;overflow:hidden;
+    background-size:cover;background-position:center;
+  }
+  /* Затемняющий градиент — отдельный слой поверх фото (не через
+     background-image, чтобы не переопределять инлайновый url() карточки:
+     относительные пути в url() внутри var() резолвятся от editorial.css,
+     а не от index.html, поэтому фото задаётся инлайн-стилем прямо в HTML,
+     градиент же общий для всех — живёт в CSS через ::before). */
+  .editorial .bcard-in.has-img{ color:#fff; }
+  .editorial .bcard-in.has-img::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background:var(--bcard-overlay);
+  }
+  .editorial .bcard-in.has-img .glyph,
+  .editorial .bcard-in.has-img .bcard-body{ position:relative;z-index:1; }
+  .editorial .bcard-body{ margin-top:auto; }
+  .editorial .bcard .tag{
+    font-size:.7rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#9C7D2E;
+  }
+  .editorial .bcard-in.has-img .tag{ color:var(--gold); }
+  .editorial .bcard h3{ font-size:1.5rem;margin:14px 0 8px;color:var(--ink); }
+  .editorial .bcard-in.has-img h3{ color:#fff; }
+  .editorial .bcard p{ color:var(--muted);font-size:.92rem;line-height:1.6; }
+  .editorial .bcard-in.has-img p{ color:rgba(255,255,255,.85); }
+  .editorial .bcard .more{
+    margin-top:16px;color:var(--primary);font-weight:600;font-size:.9rem;
+    display:inline-flex;align-items:center;gap:6px;transition:gap .3s ease;
+  }
+  .editorial .bcard-in.has-img .more{ color:#fff; }
+  .editorial .bcard:hover .more{ gap:11px; }
+  .editorial .bcard .glyph{
+    width:50px;height:50px;border-radius:14px;display:grid;place-items:center;
+    background:rgba(154,126,74,.14);color:var(--ink);flex-shrink:0;position:relative;z-index:1;
+  }
+  .editorial .bcard-in.has-img .glyph{
+    background:rgba(255,255,255,.16);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    color:#fff;border:1px solid rgba(255,255,255,.2);
+  }
+  .editorial .bcard .glyph svg{ width:25px;height:25px;stroke:currentColor;stroke-width:1.4;fill:none;stroke-linecap:round;stroke-linejoin:round; }
+  /* Эмодзи-иконки направлений: крупные, цветные, без плашки-фона (эмодзи сами
+     цветные и узнаваемые). */
+  .editorial .bcard .glyph.glyph-emoji{ background:none;border:0;backdrop-filter:none;-webkit-backdrop-filter:none;font-size:32px;line-height:1; }
+  .editorial .col-3{ grid-column:span 3; }
+  .editorial .col-2{ grid-column:span 2; }
+  /* «feat» (гитара) без фото — прежний тёмный градиент как запасной вариант */
+  .editorial .bcard.feat .bcard-in:not(.has-img){ background:linear-gradient(155deg,#2a1c16,#43261c);color:#fff; }
+  .editorial .bcard.feat .bcard-in:not(.has-img) .tag{ color:var(--gold); }
+  .editorial .bcard.feat .bcard-in:not(.has-img) h3{ color:#fff; }
+  .editorial .bcard.feat .bcard-in:not(.has-img) p{ color:rgba(255,255,255,.75); }
+  .editorial .bcard.feat .bcard-in:not(.has-img) .glyph{ background:rgba(255,255,255,.1);color:var(--gold); }
+  .editorial .bcard.feat .bcard-in:not(.has-img) .more{ color:#fff; }
+  @media(max-width:860px){ .editorial .bento{grid-template-columns:1fr 1fr}.editorial .col-3,.editorial .col-2{grid-column:span 1} }
+  @media(max-width:560px){ .editorial .bento{grid-template-columns:1fr} }
+
+  /* ---------- TEACHERS ---------- */
+  .editorial .teachers-grid .teacher-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:calc(26px * var(--radius-scale,1));
+    box-shadow:none;text-align:center;
+  }
+  .editorial .teachers-grid .teacher-card:hover{ transform:translateY(-5px);box-shadow:var(--shadow-soft); }
+  /* object-fit:contain — лицо педагога видно целиком, без обрезки сверху/
+     снизу. Фон под фото — тот же тёплый градиент, что и у заглушки без
+     фото (.teacher-mono), поэтому «доливка» по краям смотрится частью
+     дизайна, а не багом. */
+  .editorial .teacher-photo{ height:220px;background:linear-gradient(140deg,var(--bg-3),var(--bg-alt)); }
+  .editorial .teacher-photo img{ object-fit:contain;object-position:center center; }
+  .editorial .teacher-mono{
+    width:100%;height:100%;display:grid;place-items:center;
+    font-family:var(--font-heading);font-size:3rem;font-weight:700;color:#fff;
+    background:linear-gradient(140deg,var(--primary),var(--gold));
+  }
+  .editorial .teacher-card h3{ color:var(--ink); }
+
+  /* ---------- BENEFITS ---------- */
+  .editorial .benefit-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));box-sizing:border-box;
+  }
+  .editorial .benefit-card:hover{ box-shadow:var(--shadow-soft);transform:translateY(-4px); }
+  .editorial .benefit-card h4{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .benefit-card p{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .benefit-icon{ border-radius:16px; flex-shrink:0; }
+
+  /* ---------- REVIEWS ---------- */
+  .editorial .review-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));
+  }
+  .editorial .review-card:hover{ box-shadow:var(--shadow-soft); }
+
+  /* ---------- GALLERY ---------- */
+  .editorial .gallery-item{ border-radius:20px; }
+
+  /* ---------- EVENTS ---------- */
+  .editorial .event-card{
+    background:var(--cream);border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));
+  }
+  .editorial .event-card:hover{ box-shadow:var(--shadow-soft); }
+
+  /* ---------- PRICING ---------- */
+  .editorial .pricing-card{
+    background:#fff;border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));
+  }
+  .editorial .pricing-card--featured{
+    background:linear-gradient(155deg,var(--primary),#b90410);border-color:transparent;
+    box-shadow:0 24px 48px -24px rgba(227,6,19,.5);
+  }
+
+  /* ---------- CTA banner → warm rounded box ---------- */
+  .editorial .cta-banner{ background:transparent;padding:0 24px 104px; }
+  .editorial .cta-banner::before,.editorial .cta-banner::after{ display:none; }
+  .editorial .cta-banner-inner{
+    max-width:1180px;margin:0 auto;border-radius:38px;padding:78px 40px;
+    background:
+      radial-gradient(120% 120% at 18% 0%, rgba(201,168,76,.5), transparent 55%),
+      linear-gradient(150deg,#B90410,#7a0410);
+    box-shadow:var(--shadow-deep);
+  }
+
+  /* ---------- FAQ / CONTACTS refinement ---------- */
+  .editorial .faq-question{ font-size:1.15rem; }
+  .editorial .contact-icon{ border-radius:14px; }
+  .editorial .map-container{ border-radius:calc(24px * var(--radius-scale,1));border-color:var(--line); }
+  .editorial .schedule-row{ background:var(--cream);border:1px solid var(--line); }
+
+  /* softer, springier reveal for this page */
+  .editorial .fade-up{ transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1); }
+
+  @media(max-width:900px){
+    /* один столбец, порядок: текст → плеер → кнопки (кнопка «Все направления»
+       уходит под плеер, ниже сгиба — плеер получает больше места). */
+    .editorial .hero-ed-grid{
+      grid-template-columns:1fr;
+      grid-template-areas:"copy" "panel" "cta";
+      row-gap:18px;
+    }
+    .editorial .hero-ed-cta{ align-self:auto; }
+    /* padding-top очищает «плавающую» шапку-пилюлю (~94px) + вырез экрана
+       (safe-area, актуально в Telegram Mini App), чтобы плашка
+       «Петропавловск» не залезала под шапку. */
+    .editorial .hero-ed{ padding:calc(100px + env(safe-area-inset-top, 0px)) 0 40px; }
+    /* Плеер всегда целиком в экране: высота ограничена вьюпортом (svh),
+       16:9 сохраняется — на невысоких экранах он сужается и центрируется. */
+    .editorial .hero-ed-video{ max-width:calc(52svh * 16 / 9);margin-inline:auto; }
+  }
+  @media(max-width:768px){
+    .editorial .section{ padding:72px 0; }
+    .editorial .hero-ed{ padding:calc(96px + env(safe-area-inset-top, 0px)) 0 36px; }
+    .editorial .hero-ed-grid{ row-gap:12px; }
+    .editorial .hero-ed h1{ font-size:1.85rem;line-height:1.06;margin-top:8px; }
+    .editorial .hero-ed .lead{ font-size:1rem;margin:10px 0 14px; }
+    .editorial .hero-ed-sub{ font-size:.9rem;margin-top:12px; }
+    /* Направления — ровной сеткой 3 колонки (3+2), а не 4+1 «в разнобой» */
+    .editorial .hero-ed-dirs{ display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0 0; }
+    .editorial .hero-ed-dirs a{ font-size:.8rem;padding:8px 6px;text-align:center; }
+    .editorial .hero-ed-cta-primary{ margin-top:16px; }
+    .editorial .hero-ed-cta-primary.btn-lg{ padding:13px 22px;font-size:.95rem; }
+    /* Плеер респонсивный, не выезжает за край экрана. Аспект-рацио 16:10
+       вместо 16:9 — на телефоне смотрится живее. Высота ограничена JS-переменной
+       --hero-max-height, которая вычисляется в runtime на основе реального вьюпорта.
+       На невысоких экранах плеер сужается и центрируется. */
+    .editorial .hero-ed-panel{ width:100%; max-width:100%; }
+    .editorial .hero-ed-video{
+      aspect-ratio:16 / 10;
+      width:100%;
+      max-height:var(--hero-max-height, 60vh);
+      margin-inline:auto;
+    }
+    /* На мобильном кнопка "Все направления" скрыта при загрузке, чтобы плеер
+       занимал максимум места. Показывается после того, как пользователь начнёт
+       скроллить (класс .hero-cta-visible добавляется JS). */
+    .editorial .hero-ed-cta{ opacity:0;transition:opacity .3s ease;pointer-events:none; }
+    .editorial .hero-ed-cta.hero-cta-visible{ opacity:1;pointer-events:auto; }
+    .editorial .hero-ed-cta .btn,
+    .editorial .hero-ed-cta-primary{ width:100%;white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
+    .editorial .btn{ white-space:normal;overflow-wrap:break-word;word-wrap:break-word; }
+    .editorial h1, .editorial h2, .editorial h3, .editorial h4{ max-width:100%; }
+    /* Стрелка «вниз» поверх нижнего края плеера: подсказывает, что страница
+       не заканчивается на первом экране. Гаснет по scroll (main.js добавляет
+       .hero-cue-hidden), кнопка «Все направления» тем временем проявляется —
+       одно сменяет другое. */
+    .editorial .hero-ed-panel-in.hero-ed-panel-video{ position:relative; }
+    .editorial .hero-scroll-cue{
+      display:flex;align-items:center;justify-content:center;
+      position:absolute;left:50%;bottom:12px;z-index:4;
+      width:38px;height:38px;border-radius:999px;
+      background:rgba(26,21,18,.36);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+      color:#fff;border:0;cursor:pointer;opacity:.8;
+      animation:heroScrollCueBounce 1.8s ease-in-out infinite;
+      transition:opacity .3s ease;
+    }
+    .editorial .hero-scroll-cue.hero-cue-hidden{ opacity:0;pointer-events:none; }
+    .editorial .hero-scroll-cue svg{ width:20px;height:20px; }
+    @keyframes heroScrollCueBounce{
+      0%,100%{ transform:translateX(-50%) translateY(0); }
+      50%{ transform:translateX(-50%) translateY(6px); }
+    }
+    /* Портретная рамка на мобильном; object-fit:contain (не cover) — лицо
+       никогда не обрезается, даже если пропорции фото не 3:4. */
+    .editorial .teacher-photo{ height:auto;aspect-ratio:3 / 4; }
+    .editorial .teacher-photo img{ object-fit:contain;object-position:center center; }
+  }
+
+  /* ============================================================
+     Доп. компоненты внутренних страниц (не встречаются на главной)
+     ============================================================ */
+
+  /* Тёмные «шапки» страниц и направлений — тёплый уголь + мягкие блики */
+  .editorial .page-hero,
+  .editorial .dir-hero{ background:#1A1512; }
+  .editorial .page-hero::before{ background:radial-gradient(circle, rgba(227,6,19,.22), transparent 70%); }
+  .editorial .page-hero::after{ background:radial-gradient(circle, rgba(201,168,76,.16), transparent 70%); }
+
+  /* Карточки курсов */
+  .editorial .course-card{ background:var(--cream);border:1px solid var(--line);border-radius:calc(24px * var(--radius-scale,1));box-sizing:border-box; }
+  .editorial .course-card:hover{ box-shadow:var(--shadow-soft); }
+  .editorial .course-card h3, .editorial .course-card h4{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .course-card p{ overflow-wrap:break-word; word-wrap:break-word; }
+
+  /* Навыки / пункты списков на страницах направлений */
+  .editorial .skill-item{ background:#fff;border:1px solid var(--line);border-radius:16px;box-sizing:border-box; }
+  .editorial .skill-item h4{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .skill-item p{ overflow-wrap:break-word; word-wrap:break-word; }
+  .editorial .age-group{ border-radius:16px;border-color:var(--gold-border); }
+
+  /* Таблица расписания / карточки статей / галерея — общий тёплый тон */
+  .editorial .schedule-table,
+  .editorial .article-card,
+  .editorial .material-card{ border-radius:20px; }
+
+  /* Плитки/секции, использующие var(--bg-cream) как фон, становятся чуть теплее */
+  .editorial .section-dark{ background:#1A1512; }
+
+  /* Мягкая «пружина» появления и на внутренних страницах */
+  .editorial .fade-up{ transition:opacity .8s ease, transform .8s cubic-bezier(.32,.72,0,1); }
+
+  /* ---------- Внутри Telegram Mini App ---------- */
+  .tg-miniapp .site-header{ padding-top: max(16px, env(safe-area-inset-top)); }
+  .tg-miniapp{ padding-bottom: env(safe-area-inset-bottom); }
+
+  /* =====================================================================
+     ОБЩИЕ ПАТТЕРНЫ КОНТЕНТНЫХ СТРАНИЦ (был только в parents.html — вынесено
+     сюда, чтобы mission.html/values.html/achievements.html и т.д. не
+     копировали один и тот же <style> блок повторно).
+     ===================================================================== */
+  .par-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; }
+  .par-card { background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-xl); padding:32px; transition:all var(--transition); box-sizing:border-box; }
+  .par-card:hover { box-shadow:var(--shadow-md); border-color:var(--gold-border); }
+  .par-ico { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:rgba(227,6,19,.08); color:var(--primary); margin-bottom:18px; flex-shrink:0; }
+  .par-ico svg { width:26px; height:26px; }
+  .par-card h3 { margin-bottom:10px; font-size:1.2rem; overflow-wrap:break-word; word-wrap:break-word; }
+  .par-card p { color:var(--muted); line-height:1.75; font-size:.95rem; overflow-wrap:break-word; word-wrap:break-word; }
+
+  .step-row { display:grid; grid-template-columns:56px 1fr; gap:20px; align-items:start; padding:22px 0; border-bottom:1px solid var(--border); }
+  .step-row:last-child { border-bottom:none; }
+  .step-num { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--gold)); color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-heading); font-size:1.4rem; font-weight:700; }
+  .step-row h4 { margin-bottom:6px; font-size:1.1rem; }
+  .step-row p { color:var(--muted); line-height:1.7; }
+
+  /* ---------- Достижения студии (achievements.html) ---------- */
+  .ach-pub-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:24px; }
+  .ach-pub-card {
+    background:var(--bg-cream); border:1px solid var(--border); border-radius:var(--radius-lg);
+    overflow:hidden; transition:box-shadow .3s ease, transform .3s ease; box-sizing:border-box;
+  }
+  .ach-pub-card:hover { box-shadow:var(--shadow-md); transform:translateY(-4px); }
+  .ach-pub-thumb {
+    height:170px; background-size:cover; background-position:center;
+    background-image:linear-gradient(135deg,var(--primary),var(--gold));
+    position:relative;
+  }
+  .ach-pub-ribbon {
+    position:absolute; top:12px; left:12px; font-size:.7rem; font-weight:700;
+    letter-spacing:.06em; text-transform:uppercase; background:rgba(0,0,0,.55); color:#fff;
+    padding:4px 12px; border-radius:40px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .ach-pub-body { padding:20px; box-sizing:border-box; }
+  .ach-pub-body h3 { font-size:1.05rem; margin-bottom:6px; overflow-wrap:break-word; word-wrap:break-word; }
+  .ach-pub-body p { color:var(--muted); font-size:.88rem; line-height:1.6; margin-bottom:10px; overflow-wrap:break-word; word-wrap:break-word; }
+  .ach-pub-meta { display:flex; gap:10px; flex-wrap:wrap; font-size:.78rem; color:var(--muted); }
+  .ach-pub-meta a { color:var(--primary); font-weight:700; }
