@@ -369,8 +369,9 @@
     .editorial .hero-ed .lead{ font-size:1rem;margin:10px 0 14px; }
     .editorial .hero-ed-sub{ font-size:.9rem;margin-top:12px; }
     /* Направления — ровной сеткой 3 колонки (3+2), а не 4+1 «в разнобой» */
-    .editorial .hero-ed-dirs{ display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0; }
-    .editorial .hero-ed-dirs a{ font-size:.72rem;padding:5px 11px;border-radius:999px; }
+    /* Все 5 направлений в одну строку — компактные равные ячейки. */
+    .editorial .hero-ed-dirs{ display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:12px 0 0; }
+    .editorial .hero-ed-dirs a{ font-size:.6rem;padding:6px 2px;text-align:center;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
     .editorial .hero-ed-cta-primary{ margin-top:16px; }
     .editorial .hero-ed-cta-primary.btn-lg{ padding:13px 22px;font-size:.95rem; }
     /* Плеер респонсивный, не выезжает за край экрана. Аспект-рацио 16:10
