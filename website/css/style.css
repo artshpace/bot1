@@ -446,7 +446,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 .faq-question {
   width: 100%; display: flex; align-items: center; justify-content: space-between;
   gap: 16px; padding: 22px 0; background: none; border: none; cursor: pointer;
-  text-align: left; font-family: var(--font-heading); font-size: 1.1rem;
+  text-align: left; font-family: var(--font-body); font-size: 1.05rem;
   font-weight: 700; color: var(--dark); transition: color var(--transition);
 }
 .faq-question:hover { color: var(--primary); }
@@ -462,7 +462,7 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
 .faq-answer { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .38s cubic-bezier(.4,0,.2,1); }
 .faq-item.open .faq-answer { grid-template-rows: 1fr; }
 .faq-answer > div { overflow: hidden; }
-.faq-answer p { padding: 0 0 22px; color: var(--muted); font-size: .925rem; line-height: 1.75; }
+.faq-answer p { padding: 0 0 22px; color: var(--body); font-size: .95rem; line-height: 1.75; }
 
 /* ===== CTA BANNER ===== */
 .cta-banner {
@@ -531,9 +531,13 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   background: var(--bg-alt);
 }
 .social-link svg { width: 20px; height: 20px; }
-.social-link:hover { border-color: var(--primary); background: var(--primary); color: #fff; transform: translateY(-2px); }
-.social-link.wa:hover { background: #25D366; border-color: #25D366; }
-.social-link.tg:hover { background: #229ED9; border-color: #229ED9; }
+/* Всегда цветные бренд-иконки (белый значок на фирменном фоне) — хорошо видны
+   на тёмном футере. */
+.social-link { color: #fff; border-color: transparent; }
+.social-link.wa { background: #25D366; }
+.social-link.tg { background: #229ED9; }
+.social-link.ig { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+.social-link:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
 /* ===== FORMS ===== */
 .form-card {
