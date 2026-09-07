@@ -329,7 +329,7 @@ function submitLead(formId, form) {
   const extra = [];
   if (id.parentName) extra.push('Родитель: ' + id.parentName);
   if (id.who) extra.push(id.who === 'child' ? 'Ученик: ребёнок' : 'Ученик: взрослый');
-  const comment = [data.comment || data.message || '', extra.join(' · ')].filter(Boolean).join(' | ');
+  const comment = [data.comment || data.message || data.question || '', extra.join(' · ')].filter(Boolean).join(' | ');
 
   const utm = getUTM();
   const payload = {
