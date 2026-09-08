@@ -373,8 +373,9 @@ function submitLead(formId, form) {
       })
     }).catch(() => { /* silent — lead already saved locally */ });
   }
-  /* Mark a completed registration for the Pixel even if no real id is set. */
-  if (window.fbq) window.fbq('track', 'CompleteRegistration', { content_name: direction || 'Заявка' });
+  /* Событие Lead для пикселя (совпадает с серверным Conversions API — Meta
+     склеит браузерное и серверное событие по общему eventID). */
+  if (window.fbq) window.fbq('track', 'Lead', { content_name: direction || 'Заявка' }, { eventID: leadEventId });
 }
 
 /* ===== SCHEDULE-DRIVEN TRIAL FORM [v1.3] =====
