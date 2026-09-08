@@ -154,6 +154,41 @@ async function handleLead(request, env) {
     }
   }
 
+  // Подтверждение записи на пробное через Telegram-бота. Создаём запись
+  // bot_trials с одноразовым token (его прислал фронтенд). Если заявка
+  // отправлена ИЗ Telegram Mini App (пришли валидные tgInitData) — сразу
+  // привязываем chat_id и просим подтвердить. Иначе клиент привяжется сам,
+  // открыв ссылку t.me/<bot>?start=t_<token> (кнопка на экране «спасибо»).
+  // Best-effort: никогда не блокирует уведомление студии ниже.
+  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY && body.confirmToken && (name || phone)) {
+    try {
+      const when = parseSlot(slot, body.slotDate);
+      let boundChat = null;
+      if (body.tgInitData) {
+        const uid = await verifyTgInitData(env, body.tgInitData);
+        if (uid) boundChat = String(uid);
+      }
+      const row = {
+        token: String(body.confirmToken),
+        name: name || null, phone: phone || null,
+        direction: direction || null, slot: slot || null,
+        lesson_at: when ? when.startISO : null,
+        chat_id: boundChat,
+        status: boundChat ? 'linked' : 'pending'
+      };
+      if (boundChat) {
+        row.linked_at = new Date().toISOString();
+        // Если до занятия уже меньше окна — приветственное сообщение и есть
+        // «напоминание», помечаем соответствующий флаг, чтобы крон не дублировал.
+        const delta = when ? (new Date(when.startISO).getTime() - Date.now()) : -1;
+        row.r24_sent = !when || delta <= 24 * 3600000;
+        row.r5_sent  = !when || delta <= 5 * 3600000;
+      }
+      await sbInsert(env, 'bot_trials', row);
+      if (boundChat) await sendTrialConfirmAsk(env, boundChat, row, '📋 Спасибо за заявку! Подтвердите запись');
+    } catch (e) { console.error('bot_trials create error: ' + (e && e.message ? e.message : e)); }
+  }
+
   const text = [
     '🎨 *Новая заявка — Shpigotskiy Art Space*',
     '',
@@ -243,6 +278,7 @@ async function handleBotWebhook(request, env) {
     const m = /^\/start(?:@\w+)?(?:\s+(\S+))?/i.exec(text);
     if (m) {
       const code = (m[1] || '').trim();
+      if (code && /^t_/.test(code)) { await handleTrialStart(env, chatId, code.slice(2), msg.from); await setMenuButton(env, chatId); return ok(); }
       if (code) { await handleBind(env, chatId, code); await setMenuButton(env, chatId); return ok(); }
       await ensureParent(env, chatId, msg.from);
       await setMenuButton(env, chatId);
@@ -266,6 +302,7 @@ async function handleBotWebhook(request, env) {
     const st = await getState(env, chatId);
     if (st && st.step === 'reg_name')     { await onRegName(env, chatId, text); return ok(); }
     if (st && st.step === 'await_reason') { await onReason(env, chatId, text, st.data || {}); return ok(); }
+    if (st && st.step === 'trial_reason') { await onTrialReason(env, chatId, text, st.data || {}); return ok(); }
     if (st && st.step === 'admin_pin')    { await onAdminPin(env, chatId, text, st.data || {}); return ok(); }
 
     await sendText(env, chatId, 'Не понял 🙂 Нажмите /start, чтобы открыть меню.');
@@ -960,6 +997,7 @@ async function onCallback(env, cq){
     return;
   }
   if (parts[0]==='att'){ await onAttendance(env, chatId, msgId, parts); return; }
+  if (parts[0]==='tc'){ await onTrialConfirm(env, chatId, msgId, parts); return; }
 }
 async function onRegName(env, chatId, text){
   const name=(text||'').trim();
@@ -998,6 +1036,74 @@ async function onReason(env, chatId, text, data){
   await clearState(env, chatId);
   await sendText(env, chatId,'Спасибо, передал причину администратору. Хорошего дня! 🙌');
   await notifyOwner(env, '📝 ПРИЧИНА ПРОПУСКА\n👤 '+(data.child_name||'')+'\n📅 '+(data.when||data.lesson_date)+'\n💬 '+reason+'\n👪 '+(await parentName(env,chatId)));
+}
+
+/* ---------- подтверждение записи на ПРОБНОЕ ---------- */
+// Красивая дата занятия из lesson_at. PostgREST отдаёт timestamptz в UTC,
+// поэтому пересчитываем момент в стенные часы Almaty (+5), а не режем строку.
+function trialWhenLabel(t){
+  const iso = t && t.lesson_at; if (!iso) return '';
+  const ms = new Date(iso).getTime(); if (isNaN(ms)) return '';
+  const d = new Date(ms + BOT_TZ_OFFSET); // сдвиг → UTC-геттеры читают время Almaty
+  const p2 = n => String(n).padStart(2, '0');
+  return p2(d.getUTCDate()) + '.' + p2(d.getUTCMonth() + 1) + ' (' + WD_FULL[d.getUTCDay()] + ') в ' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes());
+}
+async function sendTrialConfirmAsk(env, chatId, t, head){
+  const when = trialWhenLabel(t);
+  await sendText(env, chatId,
+    (head || '📋 Подтверждение записи на пробное') + '\n\n' +
+    '👤 ' + (t.name || '—') + '\n' +
+    '🎯 Пробное занятие' + (t.direction ? (' — ' + t.direction) : '') + '\n' +
+    (when ? ('📅 ' + when + '\n') : '') +
+    '\nПодтвердите, пожалуйста, что придёте:',
+    kb([[{ text:'✅ Приду', callback_data:'tc:' + t.token + ':y' },
+         { text:'❌ Не смогу', callback_data:'tc:' + t.token + ':n' }]]));
+}
+// /start t_<token> — клиент открыл ссылку подтверждения с сайта.
+async function handleTrialStart(env, chatId, token, from){
+  await ensureParent(env, chatId, from);
+  const rows = await sbSelect(env, '/bot_trials?select=token,name,phone,direction,slot,lesson_at,status&token=eq.' + enc(token) + '&limit=1');
+  const t = rows[0];
+  if (!t){
+    await sendText(env, chatId, 'Заявку по этой ссылке не нашёл, но не переживайте — мы вас записали 🙌 Администратор скоро свяжется, чтобы подтвердить время.');
+    await notifyOwner(env, '⚠️ Открыли подтверждение по неизвестному токену: ' + token + ' (chat ' + chatId + ')');
+    return;
+  }
+  if (t.status === 'confirmed'){ await sendText(env, chatId, '✅ Ваша запись уже подтверждена. Ждём вас на занятии!'); return; }
+  const patch = { chat_id:String(chatId), status:'linked', linked_at:new Date().toISOString() };
+  if (t.lesson_at){
+    const delta = new Date(t.lesson_at).getTime() - Date.now();
+    patch.r24_sent = delta <= 24 * 3600000; // если уже в окне — это сообщение и есть напоминание
+    patch.r5_sent  = delta <= 5 * 3600000;
+  } else { patch.r24_sent = true; patch.r5_sent = true; } // нет времени → крон не шлёт
+  await sbPatch(env, '/bot_trials?token=eq.' + enc(token), patch);
+  await sendTrialConfirmAsk(env, chatId, Object.assign({}, t, patch), '📋 Спасибо! Осталось подтвердить запись');
+  await notifyOwner(env, '🔗 Клиент открыл подтверждение в Telegram\n👤 ' + (t.name || '—') + (t.direction ? (' — ' + t.direction) : '') + '\n📞 ' + (t.phone || '—'));
+}
+// Нажал ✅/❌ под сообщением-подтверждением.
+async function onTrialConfirm(env, chatId, msgId, parts){
+  const token = parts[1], resp = parts[2];
+  const rows = await sbSelect(env, '/bot_trials?select=token,name,phone,direction,lesson_at,status&token=eq.' + enc(token) + '&limit=1');
+  const t = rows[0];
+  if (!t){ if (msgId) await editText(env, chatId, msgId, 'Заявка не найдена.'); return; }
+  const when = trialWhenLabel(t);
+  if (resp === 'y'){
+    await sbPatch(env, '/bot_trials?token=eq.' + enc(token), { status:'confirmed', confirmed_at:new Date().toISOString() });
+    if (msgId) await editText(env, chatId, msgId, '✅ Спасибо! Запись подтверждена' + (when ? (' на ' + when) : '') + '. Ждём вас! 🎨');
+    await notifyOwner(env, '✅ ПОДТВЕРДИЛ ПРОБНОЕ\n👤 ' + (t.name || '—') + (t.direction ? (' — ' + t.direction) : '') + '\n📞 ' + (t.phone || '—') + (when ? ('\n📅 ' + when) : ''));
+  } else {
+    await sbPatch(env, '/bot_trials?token=eq.' + enc(token), { status:'declined' });
+    if (msgId) await editText(env, chatId, msgId, '❌ Записал, что не сможете прийти' + (when ? (' ' + when) : '') + '.\n\nЕсли не сложно — напишите причину одним сообщением, передам администратору.');
+    await setState(env, chatId, 'trial_reason', { token:token, name:t.name || '', when:when });
+    await notifyOwner(env, '❌ ОТКАЗ от пробного\n👤 ' + (t.name || '—') + (t.direction ? (' — ' + t.direction) : '') + '\n📞 ' + (t.phone || '—') + (when ? ('\n📅 ' + when) : '') + '\n⏳ причину уточняю…');
+  }
+}
+async function onTrialReason(env, chatId, text, data){
+  const reason = (text || '').trim();
+  await sbPatch(env, '/bot_trials?token=eq.' + enc(data.token), { reason: reason });
+  await clearState(env, chatId);
+  await sendText(env, chatId, 'Спасибо, передал администратору. Будем рады видеть вас в другой раз! 🙌');
+  await notifyOwner(env, '📝 ПРИЧИНА ОТКАЗА (пробное)\n👤 ' + (data.name || '—') + (data.when ? ('\n📅 ' + data.when) : '') + '\n💬 ' + reason);
 }
 
 /* ---------- планировщик (24ч и 1ч) ---------- */
@@ -1039,6 +1145,27 @@ async function runReminders(env){
       sent++;
     }
   }
+
+  // --- Подтверждение записи на ПРОБНОЕ: за 24ч и за 5ч, пока не подтвердит ---
+  const trials = await sbSelect(env,
+    '/bot_trials?select=token,chat_id,name,direction,lesson_at,r24_sent,r5_sent' +
+    '&status=eq.linked&chat_id=not.is.null&lesson_at=not.is.null&limit=300');
+  for (const t of trials){
+    const occ = new Date(t.lesson_at).getTime();
+    if (isNaN(occ)) continue;
+    const delta = occ - now;
+    if (delta <= 0) continue; // занятие уже прошло
+    if (delta <= 24 * 3600000 && delta > 5 * 3600000 && !t.r24_sent){
+      await sbPatch(env, '/bot_trials?token=eq.' + enc(t.token) + '&r24_sent=eq.false', { r24_sent:true });
+      await sendTrialConfirmAsk(env, t.chat_id, t, '🔔 Напоминание: завтра пробное занятие');
+      sent++;
+    } else if (delta <= 5 * 3600000 && delta > 0 && !t.r5_sent){
+      await sbPatch(env, '/bot_trials?token=eq.' + enc(t.token) + '&r5_sent=eq.false', { r5_sent:true });
+      await sendTrialConfirmAsk(env, t.chat_id, t, '🔔 Сегодня пробное занятие — подтвердите');
+      await notifyOwner(env, '⏳ НЕ ПОДТВЕРДИЛ (за 5ч до занятия)\n👤 ' + (t.name || '—') + (t.direction ? (' — ' + t.direction) : '') + '\n📅 ' + trialWhenLabel(t) + '\nСтоит позвонить.');
+      sent++;
+    }
+  }
   return sent;
 }
 
@@ -1052,6 +1179,33 @@ const META_PIXEL = '320219384379297';
 async function sha256hex(str){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Проверка подписи Telegram Mini App initData (HMAC-SHA256 по секрету бота).
+// Возвращает id пользователя, если подпись валидна, иначе null — чтобы нельзя
+// было подделать чужой chat_id и заставить бота писать постороннему человеку.
+async function hmacSha256(keyBytes, msgBytes){
+  const key = await crypto.subtle.importKey('raw', keyBytes, { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC', key, msgBytes));
+}
+async function verifyTgInitData(env, initData){
+  try {
+    if (!env.TELEGRAM_BOT_TOKEN) return null;
+    const te = new TextEncoder();
+    const params = new URLSearchParams(String(initData || ''));
+    const hash = params.get('hash'); if (!hash) return null;
+    params.delete('hash');
+    const pairs = []; for (const [k, v] of params) pairs.push(k + '=' + v);
+    pairs.sort();
+    const dcs = pairs.join('\n');
+    const secret = await hmacSha256(te.encode('WebAppData'), te.encode(env.TELEGRAM_BOT_TOKEN));
+    const sig = await hmacSha256(secret, te.encode(dcs));
+    const hex = Array.from(sig).map(b => b.toString(16).padStart(2, '0')).join('');
+    if (hex !== hash) return null;
+    const userStr = params.get('user'); if (!userStr) return null;
+    const user = JSON.parse(userStr);
+    return user && user.id ? user.id : null;
+  } catch (e) { console.error('verifyTgInitData: ' + (e && e.message ? e.message : e)); return null; }
 }
 function capiNormPhone(p){
   let d = String(p || '').replace(/\D/g, '');

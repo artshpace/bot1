@@ -290,3 +290,29 @@ create index if not exists idx_studio_ach_direction on public.studio_achievement
 - Подключено: **главная** (заголовок/подзаголовок героя + 10 заголовков разделов, ключи `home.*`); **О школе** — mission/values/reviews/achievements/teachers/parents/contacts (заголовок + lead страницы-героя); **Направления** — обзор + гитара/вокал/актёрское/танцы/живопись (`dir.*`). Всего 38 слотов, сгруппированы в редакторе. **Расширение:** повесить `data-tx="page.slot"` в HTML нужной страницы (+ подключить supabase-js/supa-config/supa перед api.js, если их там ещё нет) и добавить строку в `TEXT_SLOTS` — новые тексты сразу редактируемы.
 
 **Условия работы:** применить 0028 + войти под реальным админом Supabase (сохранение текстов и публикация видео). Просмотр/умолчания работают всегда.
+
+---
+
+## Phase 5 — Подтверждение записи на пробное через Telegram-бота
+
+**Миграция `0030_bot_trials.sql`** — таблица `bot_trials` (RLS включён, политик нет: доступ только у воркера по service_role). Применить: Supabase → SQL Editor → Run. ПОСЛЕ 0001 и 0019.
+
+### Зачем
+Снижает неявку на пробные: после заявки бот просит подтвердить, что клиент придёт, и напоминает **за 24 ч** и **за 5 ч** до занятия, пока не нажмёт «✅ Приду» (или «❌ Не смогу» → спрашивает причину → уведомляет владельца).
+
+### Ограничение Telegram
+Бот может писать только тому, кто хотя бы раз открыл бота. Поэтому:
+- **Заявка с сайта** → на экране «спасибо» кнопка **«✅ Подтвердить в Telegram»** (`injectTelegramConfirm()` в `js/main.js`) → открывает `t.me/artshpacebot?start=t_<token>` → бот привязывает `chat_id` к заявке и просит подтвердить.
+- **Заявка из Telegram Mini App** → фронтенд шлёт подписанные `tgInitData`; воркер их проверяет (`verifyTgInitData`, HMAC-SHA256 по токену бота) и привязывает `chat_id` сразу, без кнопки.
+
+### Как устроено (воркер `workers/lead-forwarder.js`)
+- `handleLead` создаёт `bot_trials` (token из фронтенда, `lesson_at` из `parseSlot`), статус `pending`; если Mini App — сразу `linked` + просьба подтвердить.
+- `/start t_<token>` → `handleTrialStart` привязывает `chat_id`, ставит `linked`, шлёт просьбу подтвердить.
+- Callback `tc:<token>:y|n` → `onTrialConfirm` (подтвердил/отказался); отказ → состояние `trial_reason` → `onTrialReason`.
+- Крон (`runReminders`, каждые 15 мин) для `status='linked'` шлёт напоминание при `delta≤24ч` (флаг `r24_sent`) и `delta≤5ч` (флаг `r5_sent`); за 5 ч без подтверждения — алерт владельцу «позвоните».
+- `token` (base36) — ключ во всех callback/патчах; `lesson_at` хранится timestamptz, метки времени пересчитываются в Asia/Almaty (`trialWhenLabel`).
+
+### Фронтенд (`js/main.js`)
+`submitLead` для пробных генерирует `confirmToken`, кладёт на `form.dataset`, шлёт воркеру (`confirmToken`, `tgInitData`). Кнопка Telegram добавляется на экран «спасибо» только вне Mini App. `resetPublicForm` чистит `.tg-confirm` и токен.
+
+**Условия работы:** применить 0030 + у воркера заданы `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY`/`TELEGRAM_BOT_TOKEN` (уже есть). Без Supabase — заявка и уведомление студии работают, подтверждений просто нет.

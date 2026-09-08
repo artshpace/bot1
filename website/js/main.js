@@ -137,6 +137,8 @@ function resetPublicForm(form) {
   form.querySelectorAll('.form-control').forEach(e => e.classList.remove('error'));
   const cal = success.querySelector('.cal-reminder'); if (cal) cal.remove();
   const acct = success.querySelector('.acct-offer'); if (acct) acct.remove();
+  const tgc = success.querySelector('.tg-confirm'); if (tgc) tgc.remove();
+  try { delete form.dataset.confirmToken; } catch (e) { /* ignore */ }
   const ds = document.getElementById('modal-day-section'); if (ds) ds.style.display = 'none';
   const ts = document.getElementById('modal-time-section'); if (ts) ts.style.display = 'none';
   // Reset the who/name conditional blocks back to the initial state.
@@ -244,6 +246,7 @@ function setupForm(formId, onSuccess) {
        with their details pre-filled, after the success screen is shown. */
     submitLead(formId, form);
     if (FORM_SOURCE[formId] === 'trial') {
+      injectTelegramConfirm(form);
       injectCalendarButtons(form);
       injectAccountOffer(form);
       window.open(buildWhatsAppFromForm(form), '_blank');
@@ -353,6 +356,20 @@ function submitLead(formId, form) {
   var leadEventId = 'lead-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   try { window.__sasLeadEventId = leadEventId; } catch (e) { /* ignore */ }
 
+  /* Токен подтверждения записи через Telegram-бота (только для пробных).
+     Разрешены символы deep-link Telegram: [A-Za-z0-9_-]. Сохраняем на форме,
+     чтобы экран «спасибо» построил ссылку t.me/<bot>?start=t_<token>. */
+  var isTrial = FORM_SOURCE[formId] === 'trial';
+  var confirmToken = '';
+  if (isTrial) {
+    confirmToken = (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).replace(/[^a-z0-9]/g, '');
+    try { form.dataset.confirmToken = confirmToken; } catch (e) { /* ignore */ }
+  }
+  /* Заявка отправлена из Telegram Mini App? Тогда бот привяжет клиента сам —
+     передаём подписанные initData (воркер их проверит перед привязкой). */
+  var tgInitData = '';
+  try { tgInitData = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || ''; } catch (e) { /* ignore */ }
+
   if (window.API && API.leads && payload.name && payload.phone) {
     API.leads.create(payload).catch(() => { /* keep the success UI; lead retried server-side */ });
   } else {
@@ -369,7 +386,9 @@ function submitLead(formId, form) {
         slotDate: payload.preferredDate,
         source: payload.source, comment: payload.comment,
         utm: payload.utm,
-        eventId: leadEventId, pageUrl: (typeof location !== 'undefined' ? location.href : '')
+        eventId: leadEventId, pageUrl: (typeof location !== 'undefined' ? location.href : ''),
+        confirmToken: confirmToken || undefined,
+        tgInitData: tgInitData || undefined
       })
     }).catch(() => { /* silent — lead already saved locally */ });
   }
@@ -1153,6 +1172,34 @@ function icsDataUri(title, date, r, details) {
     'END:VEVENT', 'END:VCALENDAR'
   ];
   return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(lines.join('\r\n'));
+}
+
+/* Кнопка «Подтвердить запись в Telegram» на экране «спасибо».
+   Открывает бота с одноразовым токеном: бот привязывает клиента и начинает
+   слать напоминания-подтверждения (за 24ч и 5ч), пока не нажмёт «Приду».
+   В самом Telegram Mini App клиент уже привязан по initData — кнопку не
+   показываем (открывать t.me изнутри Mini App неудобно). */
+function injectTelegramConfirm(form) {
+  const success = form.querySelector('.form-success');
+  if (!success || success.querySelector('.tg-confirm')) return;
+  const token = form.dataset ? form.dataset.confirmToken : '';
+  if (!token) return;
+  var inTelegram = false;
+  try { inTelegram = !!(window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData); } catch (e) { /* ignore */ }
+  if (inTelegram) return;
+
+  const url = 'https://t.me/artshpacebot?start=t_' + token;
+  const wrap = document.createElement('div');
+  wrap.className = 'tg-confirm';
+  wrap.style.cssText = 'margin-top:18px;padding-top:16px;border-top:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:8px;';
+  wrap.innerHTML =
+    '<p style="font-size:0.9rem;color:var(--body);margin:0;font-weight:700;">Подтвердите запись в Telegram</p>' +
+    '<p style="font-size:0.82rem;color:var(--muted);margin:0;">Нажмите — бот пришлёт напоминание перед занятием и попросит подтвердить, что вы придёте.</p>' +
+    '<a href="' + url + '" target="_blank" rel="noopener" class="btn btn-primary btn-full">✅ Подтвердить в Telegram</a>';
+
+  const closeBtn = success.querySelector('button');
+  if (closeBtn) success.insertBefore(wrap, closeBtn);
+  else success.appendChild(wrap);
 }
 
 /* Inject the two "Add to calendar" buttons into a trial form's success panel,
