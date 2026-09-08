@@ -370,7 +370,12 @@ function submitLead(formId, form) {
   var tgInitData = '';
   try { tgInitData = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) || ''; } catch (e) { /* ignore */ }
 
-  if (window.API && API.leads && payload.name && payload.phone) {
+  /* Когда API-слой на странице есть, именно он шлёт браузерное событие 'Lead'
+     в пиксель (API.leads.create → trackEvent('Lead', …, __sasLeadEventId)).
+     Чтобы не задваивать событие (см. Events Manager: «Дедуплицированные»),
+     собственный fbq('track','Lead') ниже делаем ТОЛЬКО когда API нет. */
+  var apiFiresLead = !!(window.API && API.leads && payload.name && payload.phone);
+  if (apiFiresLead) {
     API.leads.create(payload).catch(() => { /* keep the success UI; lead retried server-side */ });
   } else {
     console.log('Lead (no API on page):', formId, payload);
@@ -392,9 +397,9 @@ function submitLead(formId, form) {
       })
     }).catch(() => { /* silent — lead already saved locally */ });
   }
-  /* Событие Lead для пикселя (совпадает с серверным Conversions API — Meta
-     склеит браузерное и серверное событие по общему eventID). */
-  if (window.fbq) window.fbq('track', 'Lead', { content_name: direction || 'Заявка' }, { eventID: leadEventId });
+  /* Браузерное событие Lead — только если API-слой его не отправил (иначе
+     дубль). eventID общий с серверным Conversions API → Meta склеит их. */
+  if (!apiFiresLead && window.fbq) window.fbq('track', 'Lead', { content_name: direction || 'Заявка' }, { eventID: leadEventId });
 }
 
 /* ===== SCHEDULE-DRIVEN TRIAL FORM [v1.3] =====
