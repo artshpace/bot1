@@ -837,10 +837,12 @@ async function parentName(env, chatId){ const rows=await sbSelect(env,'/bot_pare
 // за то, чего сайт не может: пуш-напоминания о занятиях и быстрый ввод
 // ученика в базу для этих напоминаний.
 async function sendMenu(env, chatId, greet){
-  const head = greet ? '👋 Это бот студии *Shpigotskiy Art Space*.\nОткрывает сайт как приложение и присылает напоминания о занятиях.\n\n' : '';
+  const head = greet ? '👋 Это бот студии *Shpigotskiy Art Space*.\n\nОткрывает сайт как приложение и присылает напоминания: о пробном занятии и о каждом занятии в группе — с кнопками «придёт / не придёт».\n\n' : '';
   await sendText(env, chatId, head + 'Что хотите сделать?', kb([
     [{ text:'🌐 Открыть приложение (сайт)', web_app:{ url: SITE_URL } }],
     [{ text:'✍️ Записаться на пробное',      web_app:{ url: SITE_URL + '#trial' } }],
+    [{ text:'🔔 Подключить напоминания о занятиях', callback_data:'reg:new' }],
+    [{ text:'👨‍👩‍👧 Мои дети и напоминания', callback_data:'my:list' }],
     [{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77013980019?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }],
     [{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]
   ]), 'Markdown');
@@ -866,6 +868,7 @@ async function setMenuButton(env, chatId){
 async function setCommands(env){
   await tgApi(env, 'setMyCommands', { commands: [
     { command:'start',      description:'Меню бота' },
+    { command:'deti',       description:'🔔 Напоминания о занятиях' },
     { command:'admin',      description:'🔑 Админ-панель' }
   ]});
 }
@@ -986,7 +989,7 @@ async function onCallback(env, cq){
     for(let i=0;i<kids.length;i++){
       const k=kids[i]; const g=await botGroup(env, k.group_id);
       const rows=[[{text:'🗑 Удалить',callback_data:'my:del:'+k.id}]];
-      if (i === kids.length - 1) rows.push([{ text:'‹ В меню', callback_data:'nav:menu' }]);
+      if (i === kids.length - 1) rows.push([{ text:'➕ Добавить ещё ребёнка', callback_data:'reg:new' }], [{ text:'‹ В меню', callback_data:'nav:menu' }]);
       await sendText(env, chatId, '👤 '+k.child_name+'\n🎯 '+k.direction+(g?(' — '+botGroupLabel(g)):''), kb(rows));
     }
     return;
