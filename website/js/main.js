@@ -138,6 +138,7 @@ function resetPublicForm(form) {
   const cal = success.querySelector('.cal-reminder'); if (cal) cal.remove();
   const acct = success.querySelector('.acct-offer'); if (acct) acct.remove();
   const tgc = success.querySelector('.tg-confirm'); if (tgc) tgc.remove();
+  const bks = success.querySelector('.booking-summary'); if (bks) bks.remove();
   try { delete form.dataset.confirmToken; } catch (e) { /* ignore */ }
   const ds = document.getElementById('modal-day-section'); if (ds) ds.style.display = 'none';
   const ts = document.getElementById('modal-time-section'); if (ts) ts.style.display = 'none';
@@ -246,6 +247,7 @@ function setupForm(formId, onSuccess) {
        with their details pre-filled, after the success screen is shown. */
     submitLead(formId, form);
     if (FORM_SOURCE[formId] === 'trial') {
+      injectBookingSummary(form);
       injectTelegramConfirm(form);
       injectCalendarButtons(form);
       injectAccountOffer(form);
@@ -1177,6 +1179,37 @@ function icsDataUri(title, date, r, details) {
     'END:VEVENT', 'END:VCALENDAR'
   ];
   return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(lines.join('\r\n'));
+}
+
+/* Показывает на экране «спасибо» конкретную запись (направление + дата +
+   время), если человек выбрал день и слот — чтобы это читалось как реальная
+   бронь пробного, а не «заявка ушла». Без выбранного слота ничего не рисуем:
+   тогда работает обычный текст «позвоним, чтобы подтвердить время». */
+function injectBookingSummary(form) {
+  const success = form.querySelector('.form-success');
+  if (!success || success.querySelector('.booking-summary')) return;
+  const dayChip = form.querySelector('[data-chip-role="day"] .form-chip.selected');
+  const slotChip = form.querySelector('[data-chip-role="slot"] .form-chip.selected');
+  if (!dayChip || !slotChip) return;
+
+  const dirGroup = form.querySelector('[data-chip-role="direction"]');
+  const dirChip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
+  const direction = dirChip ? (CHIP_DIRECTION[dirChip.dataset.value] || dirChip.textContent.trim()) : '';
+  const iso = dayChip.getAttribute('data-date');
+  let dateLabel = dayChip.textContent.trim();
+  if (iso) { try { dateLabel = new Date(iso + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }); } catch (e) { /* keep chip text */ } }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'booking-summary';
+  wrap.style.cssText = 'margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(227,6,19,.06);border:1px solid rgba(227,6,19,.16);text-align:left;';
+  wrap.innerHTML =
+    '<div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Ваша запись на пробное</div>' +
+    (direction ? '<div style="font-weight:700;color:var(--body);">' + direction + '</div>' : '') +
+    '<div style="font-weight:700;color:var(--body);">' + dateLabel + ', ' + slotChip.textContent.trim() + '</div>';
+
+  const closeBtn = success.querySelector('button');
+  if (closeBtn) success.insertBefore(wrap, closeBtn);
+  else success.appendChild(wrap);
 }
 
 /* Кнопка «Подтвердить запись в Telegram» на экране «спасибо».
