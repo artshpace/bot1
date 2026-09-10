@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#FBF9F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#17120f" media="(prefers-color-scheme: dark)">
+  <meta property="og:image" content="media/brand/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="media/brand/og.png">
+  <title>Преподаватели — Shpigotskiy Art Space</title>
+  <meta name="description" content="Команда преподавателей Shpigotskiy Art Space — профессиональные артисты с высшим образованием и богатым сценическим опытом в Петропавловске.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,800;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/editorial.css">
+  <style>
+    .teacher-full {
+      display: grid; grid-template-columns: 280px 1fr; gap: 48px; align-items: start;
+      background: var(--bg-cream); border: 1px solid var(--border); border-radius: var(--radius-xl);
+      padding: 40px; margin-bottom: 32px; transition: all var(--transition);
+    }
+    .teacher-full:hover { box-shadow: var(--shadow-md); border-color: var(--gold-border); }
+    .teacher-full-photo {
+      width: 100%; aspect-ratio: 3/4; border-radius: var(--radius-lg); overflow: hidden;
+      background: var(--bg-3); border: 2px solid var(--gold-border);
+    }
+    .teacher-full-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .teacher-full-photo-placeholder {
+      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--bg-3), var(--bg-alt));
+    }
+    .teacher-full-photo-placeholder svg { width: 80px; height: 80px; color: var(--gold); opacity: .4; }
+    .teacher-spec-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 999px; font-size: .78rem; font-weight: 700;
+      background: rgba(227,6,19,.08); color: var(--primary); margin-bottom: 12px;
+    }
+    .inst-cloud { display: flex; flex-wrap: wrap; gap: 7px; margin: 4px 0 8px; }
+    .inst-cloud span {
+      display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: .8rem;
+      background: var(--bg-3, #f3efe6); color: var(--ink, #1a1a1a); border: 1px solid var(--border);
+    }
+    .inst-cloud span.key { background: rgba(227,6,19,.08); color: var(--primary); border-color: var(--gold-border); font-weight: 700; }
+    .edu-list { list-style: none; padding: 0; margin: 0; }
+    .edu-list li { position: relative; padding: 0 0 14px 22px; color: var(--muted); line-height: 1.6; border-left: 2px solid var(--gold-border); margin-left: 6px; }
+    .edu-list li:last-child { padding-bottom: 0; }
+    .edu-list li::before { content: ''; position: absolute; left: -7px; top: 4px; width: 12px; height: 12px; border-radius: 50%; background: var(--primary); }
+    .edu-list .yrs { font-weight: 700; color: var(--ink, #1a1a1a); }
+    .teacher-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 24px; }
+    .teacher-gallery a { display: block; aspect-ratio: 3/4; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border); }
+    .teacher-gallery img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--transition); }
+    .teacher-gallery a:hover img { transform: scale(1.05); }
+    @media (max-width: 768px) {
+      .teacher-full { grid-template-columns: 1fr; }
+      .teacher-full-photo { aspect-ratio: 1; max-width: 200px; margin: 0 auto; }
+      .teacher-gallery { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body class="editorial">
+<header class="site-header">
+  <div class="container">
+    <nav class="nav-inner">
+      <a href="index.html" class="nav-logo"><img class="nav-logo-mark" src="media/brand/logo-full.png" alt="Shpigotskiy Art Space" width="36" height="36"><span class="name">Shpigotskiy Art Space</span><span class="tagline-small">Студия творческого развития</span></a>
+      <div class="nav-links"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle active" aria-haspopup="true" aria-expanded="false">О школе <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="nav-dropdown-menu"><a href="mission.html">Миссия</a><a href="values.html">Ценности</a><a href="reviews.html">Отзывы</a><a href="achievements.html">Достижения</a><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="portfolio.html">Портфолио</a><a href="legal/index.html">Правовая информация</a></div></div><a href="contacts.html">Контакты</a><a href="account/login.html">Кабинет</a><a href="index.html#trial" class="nav-cta">Записаться</a></div>
+      <button class="nav-hamburger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </nav>
+  </div>
+</header>
+<nav class="mobile-nav"><a href="directions/index.html">Направления</a><a href="schedule.html">Расписание</a><a href="courses.html">Курсы</a><a href="events.html">Мероприятия</a><a href="store.html">Магазин</a><div class="nav-dropdown"><button type="button" class="nav-dropdown-toggle" aria-haspopup="true" aria-expanded="false">О школе <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="nav-dropdown-menu"><a href="mission.html">Миссия</a><a href="values.html">Ценности</a><a href="reviews.html">Отзывы</a><a href="achievements.html">Достижения</a><a href="teachers.html">Преподаватели</a><a href="parents.html">Родителям</a><a href="gallery.html">Галерея</a><a href="materials.html">Статьи</a><a href="portfolio.html">Портфолио</a><a href="legal/index.html">Правовая информация</a></div></div><a href="contacts.html">Контакты</a><a href="account/login.html">Личный кабинет</a><a href="index.html#trial" class="mob-cta">Записаться на пробное занятие</a></nav>
+
+<div class="page-hero">
+  <div class="container">
+    <div class="page-hero-inner">
+      <div class="breadcrumb"><a href="index.html">Главная</a><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><span>Преподаватели</span></div>
+      <div class="eyebrow" style="color:var(--gold);margin-top:24px;">Команда</div>
+      <h1 data-tx="teachers.hero.title">Наши преподаватели</h1>
+      <p class="lead" data-tx="teachers.hero.lead">Профессионалы с высшим образованием, действующие артисты, педагоги с призванием — люди, которые передают искусство с любовью.</p>
+    </div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+
+    <div class="teacher-full fade-up">
+      <div>
+        <div class="teacher-full-photo">
+          <img src="../media/teachers/shpigotskiy.jpg" alt="Антон Шпигоцкий">
+        </div>
+      </div>
+      <div>
+        <div class="teacher-spec-tag">Основатель · Педагог актёрского мастерства</div>
+        <h2 style="margin-bottom:4px;">Антон Шпигоцкий</h2>
+        <div style="color:var(--primary);font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;">Актёрское мастерство · Ораторское искусство · Руководитель студии</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+          <span class="tag tag-gold">ВТУ им. Щепкина (с отличием)</span>
+          <span class="tag">Малый театр, Москва</span>
+          <span class="tag">Актёр драмтеатра</span>
+          <span class="tag">Озвучание и дубляж</span>
+        </div>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Антон Шпигоцкий — основатель и руководитель студии Shpigotskiy Art Space, профессиональный актёр и педагог актёрского мастерства и ораторского искусства. Действующий актёр Областного русского драматического театра им. Николая Погодина.</p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:20px;">Прошёл путь от подготовительных курсов в театральных школах Санкт-Петербурга и Москвы до одного из ведущих театральных вузов страны, а сценический опыт получал на подмостках московского Малого театра. Помогает раскрыться и детям, и взрослым — ставит голос, речь и уверенность в себе, работает со стеснительностью и страхом сцены.</p>
+
+        <div style="font-weight:700;margin-bottom:12px;">Образование и путь в профессии</div>
+        <ul class="edu-list">
+          <li><span class="yrs">2015</span> — подготовительные курсы актёрского мастерства, СПбГАТИ (Санкт-Петербург)</li>
+          <li><span class="yrs">2016–2017</span> — Lyskov Acting Studio, Москва</li>
+          <li><span class="yrs">2017–2021</span> — Высшее ВТУ им. Щепкина, окончил с отличием</li>
+          <li><span class="yrs">2018–2021</span> — сценическая практика в Малом театре, Москва</li>
+          <li><span class="yrs">2021–2022</span> — мастер-классы по озвучанию и дубляжу у Всеволода Кузнецова</li>
+          <li><span class="yrs">с 2022</span> — актёр Областного русского драматического театра им. Николая Погодина</li>
+        </ul>
+
+        <div style="margin:24px 0;padding:22px 24px;background:var(--bg-alt);border:1px solid var(--gold-border);border-left:4px solid var(--primary);border-radius:var(--radius-lg);">
+          <div style="font-weight:700;margin-bottom:8px;">Как создавалась студия</div>
+          <p style="color:var(--muted);line-height:1.75;font-size:.95rem;margin:0;">Первая попытка открыть студию была в 2023 году — на базе студии эстрадного вокала, параллельно с работой в театральной студии при театре им. Николая Погодина. В марте 2024 года открылась театральная студия Shpigotskiy Art Space. Первые месяцы занимались только актёрским мастерством и, приглашая детей через школы, набрали около 45 учеников от 4 до 16 лет. Летом 2024 года открылись первые группы по гитаре и укулеле, живописи и современному танцу — так студия выросла до пяти направлений.</p>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+          <span class="tag tag-gold">★ 5 призовых мест — обл. конкурс по актёрскому мастерству (2025)</span>
+          <span class="tag tag-gold">★ 2 место — обл. конкурс по живописи «Навстречу звёздам» (2025)</span>
+        </div>
+
+        <div style="margin-top:28px;">
+          <a href="index.html#trial" class="btn btn-primary">Записаться на актёрское</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-full fade-up">
+      <div>
+        <div class="teacher-full-photo">
+          <div class="teacher-full-photo-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="teacher-spec-tag">Педагог по гитаре</div>
+        <h2 style="margin-bottom:4px;">Георгий Захаров</h2>
+        <div style="color:var(--primary);font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;">Гитара · Укулеле</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+          <span class="tag">Играет с 2014 года</span>
+          <span class="tag tag-gold">Любой уровень</span>
+          <span class="tag">Гитара</span>
+          <span class="tag">Укулеле</span>
+          
+        </div>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Георгий пришёл к музыке в 2014 году и прошёл весь путь освоения инструмента самостоятельно — от первых аккордов до уверенного владения разными техниками игры. Именно поэтому он как никто понимает каждого новичка: он точно знает, с чего начать, где обычно «застревают» и как двигаться дальше без скуки и зубрёжки.</p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">На занятиях Георгий делает обучение понятным, интересным и доступным для ученика любого возраста и уровня подготовки. Кроме гитары он обучает игре на укулеле, помогает разобрать любимые песни и постоянно расширяет музыкальный кругозор учеников.</p>
+        <p style="color:var(--muted);line-height:1.8;">Его главное убеждение: <strong>научиться играть на гитаре может каждый</strong> — нужны лишь правильный подход, регулярная практика и искренний интерес к музыке. И собственная история Георгия — лучшее тому доказательство.</p>
+        <div style="margin-top:28px;">
+          <a href="index.html#trial" class="btn btn-primary">Записаться на гитару</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-full fade-up">
+      <div>
+        <div class="teacher-full-photo">
+          <img src="../media/teachers/zhukov-portrait.jpg" alt="Виталий Жуков">
+        </div>
+      </div>
+      <div>
+        <div class="teacher-spec-tag">Мультиинструменталист · Художник</div>
+        <h2 style="margin-bottom:4px;">Виталий Жуков</h2>
+        <div style="color:var(--primary);font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;">Гитара · Укулеле · Живопись</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+          <span class="tag tag-gold">30+ инструментов</span>
+          <span class="tag">Художник · 100+ выставок</span>
+          <span class="tag">Скульптор</span>
+          <span class="tag">Искусствовед</span>
+        </div>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Виталий — редкий по широте музыкант, профессионально владеющий более чем тридцатью инструментами: от гитары, укулеле и фортепиано до экзотических варгана, ханга, колёсной лиры и сякухати. Многие из них он освоил самостоятельно — живое доказательство того, что музыке можно научиться в любом возрасте. Играл в различных музыкальных коллективах и группах.</p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Помимо музыки, Виталий — профессиональный художник и скульптор с академическим образованием. Его работы выставлялись более чем на <strong>ста выставках</strong> на территории Казахстана и ближнего зарубежья.</p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:20px;">В студии Виталий ведёт гитару и укулеле, увлекательно раскрывая ученикам огромный мир музыки и находя подход к любому возрасту и уровню.</p>
+
+        <div style="font-weight:700;margin-bottom:10px;">Инструменты, которыми владеет</div>
+        <div class="inst-cloud">
+          <span class="key">Гитара</span><span class="key">Укулеле</span><span>Фортепиано</span><span>Банджо</span><span>Мандолина</span><span>Балалайка</span><span>Жетыген</span><span>Гусли</span><span>Арфа</span><span>Дульцимер</span><span>Тальхарпа</span><span>Колёсная лира</span><span>Ситар</span><span>Сарод</span><span>Тампура</span><span>Чаранго</span><span>Аккордеон</span><span>Варган</span><span>Калимба</span><span>Беримбау</span><span>Ханг</span><span>Жалейка</span><span>Калюка</span><span>Фуяра</span><span>Вистл</span><span>Волынка</span><span>Бомбарда</span><span>Сякухати</span><span>Циттер</span><span>Тромбамарина</span><span>Равваст</span><span>Губная гармоника</span><span>и другие</span>
+        </div>
+
+        <div style="font-weight:700;margin:24px 0 12px;">Образование</div>
+        <ul class="edu-list">
+          <li><span class="yrs">2000–2004</span> — Школа одарённых детей (ШОД), специальность «Живопись»</li>
+          <li><span class="yrs">2004–2008</span> — Петропавловский колледж искусств, «Художник-преподаватель»</li>
+          <li><span class="yrs">2008–2014</span> — ОмГПУ, специальность «Скульптура»</li>
+          <li><span class="yrs">2012–2014</span> — ОмГПУ, магистратура «Искусствовед-критик»</li>
+        </ul>
+
+        <div class="teacher-gallery">
+          <a href="../media/teachers/zhukov-flute.jpg" target="_blank"><img src="../media/teachers/zhukov-flute.jpg" alt="Виталий Жуков играет на вистле" loading="lazy"></a>
+          <a href="../media/teachers/zhukov-handpan.jpg" target="_blank"><img src="../media/teachers/zhukov-handpan.jpg" alt="Виталий Жуков играет на ханге" loading="lazy"></a>
+          <a href="../media/teachers/zhukov-strings.jpg" target="_blank"><img src="../media/teachers/zhukov-strings.jpg" alt="Виталий Жуков со струнным инструментом" loading="lazy"></a>
+          <a href="../media/teachers/zhukov-painting.jpg" target="_blank"><img src="../media/teachers/zhukov-painting.jpg" alt="Виталий Жуков за написанием картины" loading="lazy"></a>
+          <a href="../media/teachers/zhukov-harmonica.jpg" target="_blank"><img src="../media/teachers/zhukov-harmonica.jpg" alt="Виталий Жуков играет на губной гармонике" loading="lazy"></a>
+        </div>
+
+        <div style="margin-top:28px;">
+          <a href="index.html#trial" class="btn btn-primary">Записаться к Виталию</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-full fade-up">
+      <div>
+        <div class="teacher-full-photo">
+          <div class="teacher-full-photo-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="teacher-spec-tag">Педагог высшей категории</div>
+        <h2 style="margin-bottom:4px;">Наталья Николаевна Ерзакова</h2>
+        <div style="color:var(--primary);font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;">Вокал · Постановка голоса · Сольфеджио</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+          <span class="tag tag-gold">Высшая категория</span>
+          <span class="tag">Опыт 50+ лет</span>
+          <span class="tag">Хоровое дирижирование</span>
+          <span class="tag">Постановка голоса</span>
+          <span class="tag">Сольфеджио</span>
+        </div>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Наталья Николаевна — педагог высшей квалификационной категории и наставник, посвятивший музыкальному образованию более полувека. Выпускница Казанского государственного института культуры по специальности «Хоровое дирижирование», она в совершенстве владеет методикой постановки голоса, развития музыкального слуха и подготовки юных артистов к сцене.</p>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:24px;">Автор методических пособий по развитию музыкальных способностей детей и обучению хоровому пению. Бережно и терпеливо раскрывает голос каждого ребёнка — даже самого стеснительного — и прививает любовь к музыке, которая остаётся с учениками на всю жизнь.</p>
+
+        <div style="margin-top:28px;">
+          <a href="index.html#trial" class="btn btn-primary">Записаться на вокал</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-full fade-up">
+      <div>
+        <div class="teacher-full-photo">
+          <div class="teacher-full-photo-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:4px;">Педагог живописи</h2>
+        <div style="color:var(--primary);font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;">Живопись · Рисунок</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+          <span class="tag">Опыт 6+ лет</span>
+          <span class="tag tag-gold">Художественное образование</span>
+          <span class="tag">Акварель</span>
+          <span class="tag">Масло</span>
+          <span class="tag">Акрил</span>
+        </div>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Художник и педагог с академическим образованием в области изобразительных искусств. Работает во всех основных техниках: карандаш, акварель, акрил, масло.</p>
+        <p style="color:var(--muted);line-height:1.8;">Особый талант — раскрыть творческий потенциал в детях, которые считают, что «не умеют рисовать». Ежегодно организует выставку работ учеников.</p>
+        <div style="margin-top:28px;">
+          <a href="index.html#trial" class="btn btn-primary">Записаться на живопись</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-full fade-up">
+      <div>
+        <div class="teacher-full-photo">
+          <div class="teacher-full-photo-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:4px;">Педагог актёрского мастерства</h2>
+        <div style="color:var(--primary);font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;">Актёрское мастерство · Режиссура</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+          <span class="tag">Опыт 7+ лет</span>
+          <span class="tag tag-gold">Театральное образование</span>
+          <span class="tag">Импровизация</span>
+          <span class="tag">Сценическая речь</span>
+        </div>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Профессиональный актёр и режиссёр с семилетним опытом работы с детскими театральными коллективами. Ставил спектакли на сценах областного театра и городских культурных центрах.</p>
+        <p style="color:var(--muted);line-height:1.8;">Специализируется на работе со стеснительными детьми — помогает раскрыться и почувствовать вкус к публичным выступлениям.</p>
+        <div style="margin-top:28px;">
+          <a href="index.html#trial" class="btn btn-primary">Записаться на актёрское</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="teacher-full fade-up">
+      <div>
+        <div class="teacher-full-photo">
+          <div class="teacher-full-photo-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:4px;">Педагог по танцам</h2>
+        <div style="color:var(--primary);font-weight:700;font-size:.9rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:20px;">Современный танец · Хореография</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+          <span class="tag">Опыт 5+ лет</span>
+          <span class="tag tag-gold">Хореографическое образование</span>
+          <span class="tag">Contemporary</span>
+          <span class="tag">Hip-hop</span>
+          <span class="tag">Jazz-modern</span>
+        </div>
+        <p style="color:var(--muted);line-height:1.8;margin-bottom:16px;">Профессиональный хореограф, участница городских и региональных танцевальных фестивалей. Обучалась на семинарах ведущих хореографов Казахстана и России.</p>
+        <p style="color:var(--muted);line-height:1.8;">Работает с детьми с 5 лет и взрослыми. Создаёт постановки для отчётных концертов и конкурсных выступлений студии.</p>
+        <div style="margin-top:28px;">
+          <a href="index.html#trial" class="btn btn-primary">Записаться на танцы</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="cta-banner">
+  <div class="cta-banner-inner">
+    <div class="free-badge">Первое занятие бесплатно</div>
+    <h2>Познакомьтесь с педагогом</h2>
+    <p>Запишитесь на бесплатное пробное занятие — и лично убедитесь в профессионализме нашей команды.</p>
+    <div class="cta-banner-btns">
+      <a href="index.html#trial" class="btn btn-primary btn-lg">Записаться</a>
+      <a href="contacts.html" class="btn btn-white btn-lg">Контакты</a>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand"><div class="name">Shpigotskiy Art Space</div><p>Студия творческого развития для детей, подростков и взрослых.</p></div>
+      <div class="footer-col"><h4>Направления</h4><ul><li><a href="directions/guitar.html">Гитара</a></li><li><a href="directions/vocals.html">Вокал</a></li><li><a href="directions/painting.html">Живопись</a></li><li><a href="directions/acting.html">Актёрское мастерство</a></li><li><a href="directions/dance.html">Современный танец</a></li></ul></div>
+      <div class="footer-col"><h4>Студия</h4><ul><li><a href="mission.html">Миссия</a></li><li><a href="values.html">Ценности</a></li><li><a href="reviews.html">Отзывы</a></li><li><a href="achievements.html">Достижения</a></li><li><a href="teachers.html">Преподаватели</a></li><li><a href="parents.html">Родителям</a></li><li><a href="schedule.html">Расписание</a></li><li><a href="events.html">Мероприятия</a></li><li><a href="courses.html">Онлайн-курсы</a></li><li><a href="contacts.html">Контакты</a></li></ul></div>
+      <div class="footer-col"><h4>Контакты</h4><ul><li><a href="tel:+77013980019">+7 701 398-00-19</a></li><li><a href="https://wa.me/77013980019" target="_blank">WhatsApp</a></li><li><a href="https://t.me/artshpacebot" target="_blank">Telegram</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><p>© 2024 Shpigotskiy Art Space · ИП «Шпигоцкий Антон Александрович»</p><a href="offer.html">Публичная оферта</a> · <a href="legal/index.html">Правовая информация</a></div>
+  </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supa-config.js"></script>
+<script src="js/supa.js"></script>
+<script src="js/api.js"></script>
+<script src="js/main.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="js/tg.js"></script>
+</body>
+</html>
