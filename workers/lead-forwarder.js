@@ -743,6 +743,11 @@ function b64urlBytes(bytes) {
    Хранилище — Supabase (migration 0019). Время — Asia/Almaty (+5).
    ============================================================================= */
 const BOT_TZ_OFFSET = 5 * 3600 * 1000;
+// Тихие часы (Almaty): в этом окне напоминания НЕ шлём и НЕ помечаем
+// отправленными — они уйдут первым прогоном крона после QUIET_END.
+const QUIET_START = 22, QUIET_END = 8;
+// За сколько часов до занятия эскалировать «нет ответа → позвонить» владельцу.
+const ESC_H = 3;
 const WD_FULL  = ['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const WD_SHORT = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 // Направления — используются только для шага "выбрать направление" при
@@ -842,10 +847,35 @@ async function sendMenu(env, chatId, greet){
     [{ text:'🌐 Открыть приложение (сайт)', web_app:{ url: SITE_URL } }],
     [{ text:'✍️ Записаться на пробное',      web_app:{ url: SITE_URL + '#trial' } }],
     [{ text:'🔔 Подключить напоминания о занятиях', callback_data:'reg:new' }],
+    [{ text:'📅 Моё расписание', callback_data:'my:sched' }],
     [{ text:'👨‍👩‍👧 Мои дети и напоминания', callback_data:'my:list' }],
     [{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77013980019?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }],
     [{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]
   ]), 'Markdown');
+}
+
+// «Моё расписание» — дни/время/преподаватель группы каждого ребёнка родителя
+// + ближайшее занятие. Данные из bot_students × bot_groups.
+async function sendMySchedule(env, chatId){
+  const kids = await sbSelect(env,'/bot_students?select=child_name,direction,group_id&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
+  if(!kids.length){
+    await sendText(env, chatId, 'Пока нет добавленных детей. Подключите напоминания — и здесь появится расписание с подтверждением занятий.',
+      kb([[{ text:'🔔 Подключить напоминания', callback_data:'reg:new' }], [{ text:'‹ В меню', callback_data:'nav:menu' }]]));
+    return;
+  }
+  const now=Date.now(); const lines=['📅 Расписание ваших детей',''];
+  for(const k of kids){
+    const g=await botGroup(env, k.group_id);
+    lines.push('👤 '+k.child_name+' — '+k.direction);
+    if(g){
+      lines.push('   '+g.age+' · '+g.days.map(d=>WD_FULL[d]).join(', ')+' в '+g.time);
+      lines.push('   👨‍🏫 '+g.teacher);
+      const next=occurrencesWithin(g, now, 8*86400000)[0];
+      if(next) lines.push('   ближайшее: '+occDdMm(next)+' ('+WD_FULL[almatyParts(next).dow]+') в '+g.time);
+    }
+    lines.push('');
+  }
+  await sendText(env, chatId, lines.join('\n'), kb([[{ text:'🌐 Открыть приложение', web_app:{ url: SITE_URL } }], [{ text:'‹ В меню', callback_data:'nav:menu' }]]));
 }
 
 // Раньше эти команды показывали расписание/направления/цены/контакты прямо
@@ -983,6 +1013,7 @@ async function onCallback(env, cq){
     await sendMenu(env, chatId, false);
     return;
   }
+  if (data === 'my:sched'){ await sendMySchedule(env, chatId); return; }
   if (data === 'my:list'){
     const kids = await sbSelect(env,'/bot_students?select=id,child_name,direction,group_id&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
     if(!kids.length){ await sendText(env, chatId,'Пока нет добавленных учеников.', kb([[{text:'➕ Добавить ученика',callback_data:'reg:new'}]])); return; }
@@ -1125,29 +1156,49 @@ function occurrencesWithin(g, now, horizon){
   return out;
 }
 async function runReminders(env){
-  const now=Date.now(); const H=25*3600000; let sent=0;
+  const now=Date.now();
+  // Тихие часы: ночью не тревожим и ничего не помечаем отправленным —
+  // всё уйдёт первым же прогоном после QUIET_END (обычно 08:00).
+  const hr=new Date(now+BOT_TZ_OFFSET).getUTCHours();
+  if(hr>=QUIET_START || hr<QUIET_END) return 0;
+
+  const H=25*3600000; let sent=0;
   const kids = await sbSelect(env,'/bot_students?select=id,chat_id,child_name,direction,group_id&active=eq.true');
+  const escList=[];
   for(const k of kids){
     const g=await botGroup(env, k.group_id); if(!g) continue;
     for(const occ of occurrencesWithin(g, now, H)){
-      const delta=occ-now;
+      const delta=occ-now; if(delta<=0) continue;
+      const lessonDate=occYmd(occ);
+      // Все записи по этому занятию сразу: и дедуп напоминаний, и статус ответа.
+      const rows=await sbSelect(env,'/bot_attendance?select=kind,response&student_id=eq.'+enc(k.id)+'&lesson_date=eq.'+enc(lessonDate)+'&group_id=eq.'+enc(g.id));
+      const has=kn=>rows.some(r=>r.kind===kn);
+      const answered=rows.some(r=>r.response);
+
       let kind=null;
       if(delta>3600000 && delta<=24*3600000) kind='24h';
-      else if(delta>0 && delta<=3600000)     kind='1h';
-      if(!kind) continue;
-      const lessonDate=occYmd(occ);
-      const dup=await sbSelect(env,'/bot_attendance?select=id&student_id=eq.'+enc(k.id)+'&lesson_date=eq.'+enc(lessonDate)+'&group_id=eq.'+enc(g.id)+'&kind=eq.'+kind+'&limit=1');
-      if(dup.length) continue;
-      const ins=await sbInsert(env,'bot_attendance',{student_id:k.id,lesson_date:lessonDate,lesson_time:g.time,group_id:g.id,kind:kind});
-      if(!ins.ok) continue; // 409 = уже отправлено (гонка)
-      const head = kind==='24h' ? '🔔 Напоминание о занятии (за сутки)' : '🔔 Скоро занятие (примерно через час)';
-      await sendText(env, k.chat_id,
-        head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n\nПридёт ли ученик на занятие?',
-        kb([[{text:'✅ Да', callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':y'},
-             {text:'❌ Нет',callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':n'}]]));
-      sent++;
+      else if(delta<=3600000)                kind='1h';
+      if(kind && !has(kind)){
+        const ins=await sbInsert(env,'bot_attendance',{student_id:k.id,lesson_date:lessonDate,lesson_time:g.time,group_id:g.id,kind:kind});
+        if(ins.ok){ // 409 = уже отправлено (гонка)
+          const head = kind==='24h' ? '🔔 Напоминание о занятии (за сутки)' : '🔔 Скоро занятие (примерно через час)';
+          await sendText(env, k.chat_id,
+            head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n\nПридёт ли ученик на занятие?',
+            kb([[{text:'✅ Да', callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':y'},
+                 {text:'❌ Нет',callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':n'}]]));
+          sent++;
+        }
+      }
+
+      // Эскалация: за ESC_H часов ответа нет, а напоминание уже слали →
+      // владельцу список «позвонить». kind='esc' — разовый флаг (уникальность).
+      if(delta<=ESC_H*3600000 && !answered && (has('24h')||has('1h')) && !has('esc')){
+        const ins=await sbInsert(env,'bot_attendance',{student_id:k.id,lesson_date:lessonDate,lesson_time:g.time,group_id:g.id,kind:'esc'});
+        if(ins.ok) escList.push('• '+k.child_name+' — '+g.dir+' '+g.age+' · '+occDdMm(occ)+' в '+g.time+' · род.: '+(await parentName(env,k.chat_id)));
+      }
     }
   }
+  if(escList.length) await notifyOwner(env, '📞 Не подтвердили — стоит позвонить:\n\n'+escList.join('\n'));
 
   // --- Подтверждение записи на ПРОБНОЕ: за 24ч и за 5ч, пока не подтвердит ---
   const trials = await sbSelect(env,
