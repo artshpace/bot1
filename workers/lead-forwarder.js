@@ -300,7 +300,7 @@ async function handleBotWebhook(request, env) {
 
     // Иначе — по состоянию диалога
     const st = await getState(env, chatId);
-    if (st && st.step === 'reg_name')     { await onRegName(env, chatId, text); return ok(); }
+    if (st && st.step === 'reg_name')     { await onRegName(env, chatId, text, st.data || {}); return ok(); }
     if (st && st.step === 'await_reason') { await onReason(env, chatId, text, st.data || {}); return ok(); }
     if (st && st.step === 'trial_reason') { await onTrialReason(env, chatId, text, st.data || {}); return ok(); }
     if (st && st.step === 'admin_pin')    { await onAdminPin(env, chatId, text, st.data || {}); return ok(); }
@@ -857,16 +857,16 @@ async function sendMenu(env, chatId, greet){
 // «Моё расписание» — дни/время/преподаватель группы каждого ребёнка родителя
 // + ближайшее занятие. Данные из bot_students × bot_groups.
 async function sendMySchedule(env, chatId){
-  const kids = await sbSelect(env,'/bot_students?select=child_name,direction,group_id&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
+  const kids = await sbSelect(env,'/bot_students?select=child_name,direction,group_id,who&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
   if(!kids.length){
-    await sendText(env, chatId, 'Пока нет добавленных детей. Подключите напоминания — и здесь появится расписание с подтверждением занятий.',
+    await sendText(env, chatId, 'Пока нет добавленных учеников. Подключите напоминания — и здесь появится расписание с подтверждением занятий.',
       kb([[{ text:'🔔 Подключить напоминания', callback_data:'reg:new' }], [{ text:'‹ В меню', callback_data:'nav:menu' }]]));
     return;
   }
   const now=Date.now(); const lines=['📅 Расписание ваших детей',''];
   for(const k of kids){
     const g=await botGroup(env, k.group_id);
-    lines.push('👤 '+k.child_name+' — '+k.direction);
+    lines.push('👤 '+k.child_name+(k.who==='self'?' (вы)':' (ребёнок)')+' — '+k.direction);
     if(g){
       lines.push('   '+g.age+' · '+g.days.map(d=>WD_FULL[d]).join(', ')+' в '+g.time);
       lines.push('   👨‍🏫 '+g.teacher);
@@ -949,12 +949,12 @@ async function sendAdminPanel(env, chatId){
   ]), 'Markdown');
 }
 async function sendAdminStudents(env, chatId){
-  const kids = await sbSelect(env, '/bot_students?select=id,child_name,direction,group_id&active=eq.true&order=created_at.desc&limit=30');
+  const kids = await sbSelect(env, '/bot_students?select=id,child_name,direction,group_id,who&active=eq.true&order=created_at.desc&limit=30');
   if (!kids.length) { await sendText(env, chatId, 'Учеников пока нет.', kb([[{ text: '‹ Панель', callback_data: 'adm:panel' }]])); return; }
   const lines = [];
   for (let i = 0; i < kids.length; i++) {
     const k = kids[i]; const g = await botGroup(env, k.group_id);
-    lines.push((i + 1) + '. ' + k.child_name + ' — ' + k.direction + (g ? (' · ' + botGroupLabel(g)) : ''));
+    lines.push((i + 1) + '. ' + k.child_name + (k.who==='self'?' (сам)':' (ребёнок)') + ' — ' + k.direction + (g ? (' · ' + botGroupLabel(g)) : ''));
   }
   const rows = kids.map(k => [{ text: '🗑 ' + k.child_name, callback_data: 'adm:stu:del:' + k.id }]);
   rows.push([{ text: '‹ Панель', callback_data: 'adm:panel' }]);
@@ -982,9 +982,20 @@ async function onCallback(env, cq){
 
   if (data === 'reg:new'){
     await ensureParent(env, chatId, cq.from);
-    await setState(env, chatId, 'reg_name', {});
-    await sendText(env, chatId, 'Введите, пожалуйста, ФИО ученика — ребёнка или взрослого — одним сообщением.',
-      kb([[{ text: '‹ Отмена', callback_data: 'reg:cancel' }]]));
+    await setState(env, chatId, 'reg_who', {});
+    await sendText(env, chatId, 'Кто будет заниматься?',
+      kb([[{ text: '🧒 Мой ребёнок', callback_data: 'reg:who:child' }],
+          [{ text: '🧑 Я сам(а) — взрослый / студент', callback_data: 'reg:who:self' }],
+          [{ text: '‹ Отмена', callback_data: 'reg:cancel' }]]));
+    return;
+  }
+  if (parts[0]==='reg' && parts[1]==='who'){
+    const who = parts[2]==='self' ? 'self' : 'child';
+    await setState(env, chatId, 'reg_name', { who: who });
+    const ask = who==='self'
+      ? 'Введите, пожалуйста, ваше ФИО одним сообщением (например: Иванов Иван).'
+      : 'Введите, пожалуйста, ФИО ребёнка одним сообщением (например: Иванов Иван).';
+    await sendText(env, chatId, ask, kb([[{ text: '‹ Отмена', callback_data: 'reg:cancel' }]]));
     return;
   }
   if (data === 'reg:cancel'){
@@ -1004,24 +1015,31 @@ async function onCallback(env, cq){
   if (parts[0]==='reg' && parts[1]==='grp'){
     const g = await botGroup(env, parts[2]); if(!g) return;
     const st = await getState(env, chatId); const d=(st&&st.data)||{};
-    const child = d.child_name || 'Ребёнок';
-    const ins = await sbInsert(env,'bot_students',{chat_id:String(chatId),child_name:child,direction:g.dir,group_id:g.id});
+    const who = d.who==='self' ? 'self' : 'child';
+    const name = d.child_name || (who==='self' ? 'Ученик' : 'Ребёнок');
+    const ins = await sbInsert(env,'bot_students',{chat_id:String(chatId),child_name:name,direction:g.dir,group_id:g.id,who:who});
     await clearState(env, chatId);
     if(!ins.ok){ await sendText(env, chatId,'⚠️ Не удалось сохранить. Попробуйте ещё раз: /start'); return; }
-    await sendText(env, chatId, '✅ Добавлено:\n👤 '+child+'\n🎯 '+g.dir+' — '+g.age+'\n📅 '+g.days.map(x=>WD_SHORT[x]).join('/')+' '+g.time+'\n\nЯ пришлю напоминание за сутки и за час до занятия.');
-    await notifyOwner(env, '🆕 Новый ребёнок в боте\n👤 '+child+'\n🎯 '+g.dir+' · '+botGroupLabel(g)+'\n👪 Родитель: '+(await parentName(env,chatId)));
+    const selfTag = who==='self' ? ' (вы)' : ' (ребёнок)';
+    await sendText(env, chatId, '✅ Добавлено:\n👤 '+name+selfTag+'\n🎯 '+g.dir+' — '+g.age+'\n📅 '+g.days.map(x=>WD_SHORT[x]).join('/')+' '+g.time+'\n\nЯ пришлю напоминание за сутки и за час до занятия.');
+    if(who==='self'){
+      await notifyOwner(env, '🆕 Новый ученик в боте (записался сам)\n🧑 '+name+'\n🎯 '+g.dir+' · '+botGroupLabel(g)+'\n💬 аккаунт: '+(await parentName(env,chatId)));
+    } else {
+      await notifyOwner(env, '🆕 Новый ученик в боте\n🧒 Ребёнок: '+name+'\n🎯 '+g.dir+' · '+botGroupLabel(g)+'\n👪 Родитель: '+(await parentName(env,chatId)));
+    }
     await sendMenu(env, chatId, false);
     return;
   }
   if (data === 'my:sched'){ await sendMySchedule(env, chatId); return; }
   if (data === 'my:list'){
-    const kids = await sbSelect(env,'/bot_students?select=id,child_name,direction,group_id&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
-    if(!kids.length){ await sendText(env, chatId,'Пока нет добавленных учеников.', kb([[{text:'➕ Добавить ученика',callback_data:'reg:new'}]])); return; }
+    const kids = await sbSelect(env,'/bot_students?select=id,child_name,direction,group_id,who&chat_id=eq.'+enc(String(chatId))+'&active=eq.true&order=created_at');
+    if(!kids.length){ await sendText(env, chatId,'Пока нет добавленных учеников.', kb([[{text:'➕ Добавить',callback_data:'reg:new'}]])); return; }
     for(let i=0;i<kids.length;i++){
       const k=kids[i]; const g=await botGroup(env, k.group_id);
+      const tag = k.who==='self' ? ' (вы)' : ' (ребёнок)';
       const rows=[[{text:'🗑 Удалить',callback_data:'my:del:'+k.id}]];
-      if (i === kids.length - 1) rows.push([{ text:'➕ Добавить ещё ребёнка', callback_data:'reg:new' }], [{ text:'‹ В меню', callback_data:'nav:menu' }]);
-      await sendText(env, chatId, '👤 '+k.child_name+'\n🎯 '+k.direction+(g?(' — '+botGroupLabel(g)):''), kb(rows));
+      if (i === kids.length - 1) rows.push([{ text:'➕ Добавить ещё', callback_data:'reg:new' }], [{ text:'‹ В меню', callback_data:'nav:menu' }]);
+      await sendText(env, chatId, '👤 '+k.child_name+tag+'\n🎯 '+k.direction+(g?(' — '+botGroupLabel(g)):''), kb(rows));
     }
     return;
   }
@@ -1033,10 +1051,11 @@ async function onCallback(env, cq){
   if (parts[0]==='att'){ await onAttendance(env, chatId, msgId, parts); return; }
   if (parts[0]==='tc'){ await onTrialConfirm(env, chatId, msgId, parts); return; }
 }
-async function onRegName(env, chatId, text){
+async function onRegName(env, chatId, text, data){
   const name=(text||'').trim();
-  if(name.length<3 || !/[А-Яа-яЁёA-Za-z]/.test(name)){ await sendText(env, chatId,'Пожалуйста, введите ФИО ученика текстом (например: Иванов Иван).'); return; }
-  await setState(env, chatId,'reg_pick',{child_name:name});
+  if(name.length<3 || !/[А-Яа-яЁёA-Za-z]/.test(name)){ await sendText(env, chatId,'Пожалуйста, введите ФИО текстом (например: Иванов Иван).'); return; }
+  const who = (data && data.who==='self') ? 'self' : 'child';
+  await setState(env, chatId,'reg_pick',{child_name:name, who:who});
   await sendText(env, chatId,'Выберите направление, на котором занимается '+name+':',
     kb(BOT_DIRS.map((d,i)=>[{text:d,callback_data:'reg:dir:'+i}]).concat([[{ text:'‹ Отмена', callback_data:'reg:cancel' }]])));
 }
@@ -1046,21 +1065,26 @@ async function onAttendance(env, chatId, msgId, parts){
   const sid=parts[1], dateC=parts[2], gid=parts[3], resp=parts[4];
   const lessonDate = dateC.slice(0,4)+'-'+dateC.slice(4,6)+'-'+dateC.slice(6,8);
   const g = await botGroup(env, gid);
-  const kids = await sbSelect(env,'/bot_students?select=child_name,direction&id=eq.'+enc(sid)+'&limit=1');
-  const child = (kids[0]&&kids[0].child_name)||'Ребёнок';
-  const who = await parentName(env, chatId);
+  const kids = await sbSelect(env,'/bot_students?select=child_name,direction,who&id=eq.'+enc(sid)+'&limit=1');
+  const child = (kids[0]&&kids[0].child_name)||'Ученик';
+  const isSelf = (kids[0]&&kids[0].who)==='self';
+  // Строка «кто» для владельца: сам ученик — без «родителя»; иначе — родитель.
+  const acct = isSelf ? ('🧑 сам ученик · '+(await parentName(env,chatId))) : ('👪 Родитель: '+(await parentName(env,chatId)));
   const when = lessonDate.split('-').reverse().join('.')+(g?(' '+g.time):'');
+  // Обращение в чат ученика: «вы» для самозаписи, «ученик» для ребёнка.
+  const comeYes = isSelf ? ('Отметил, что вы придёте '+when) : ('Отметил, что '+child+' придёт '+when);
+  const comeNo  = isSelf ? ('Записал, что вы не придёте '+when) : ('Записал, что '+child+' не придёт '+when);
 
   await sbPatch(env,'/bot_attendance?student_id=eq.'+enc(sid)+'&lesson_date=eq.'+enc(lessonDate)+'&group_id=eq.'+enc(gid),
     { response: (resp==='y'?'yes':'no'), responded_at:new Date().toISOString() });
 
   if(resp==='y'){
-    if(msgId) await editText(env, chatId, msgId, '✅ Спасибо! Отметил, что '+child+' придёт '+when+'. Ждём!');
-    await notifyOwner(env, '✅ ПРИДЁТ\n👤 '+child+(g?(' — '+g.dir+' '+g.age):'')+'\n📅 '+when+'\n👪 '+who);
+    if(msgId) await editText(env, chatId, msgId, '✅ Спасибо! '+comeYes+'. Ждём!');
+    await notifyOwner(env, '✅ ПРИДЁТ\n👤 '+child+(g?(' — '+g.dir+' '+g.age):'')+'\n📅 '+when+'\n'+acct);
   } else {
-    if(msgId) await editText(env, chatId, msgId, '❌ Записал, что '+child+' не придёт '+when+'.\n\nНапишите, пожалуйста, причину пропуска одним сообщением.');
+    if(msgId) await editText(env, chatId, msgId, '❌ '+comeNo+'.\n\nНапишите, пожалуйста, причину пропуска одним сообщением.');
     await setState(env, chatId,'await_reason',{student_id:sid,lesson_date:lessonDate,group_id:gid,child_name:child,when:when});
-    await notifyOwner(env, '❌ НЕ ПРИДЁТ\n👤 '+child+(g?(' — '+g.dir+' '+g.age):'')+'\n📅 '+when+'\n👪 '+who+'\n⏳ причину уточняю…');
+    await notifyOwner(env, '❌ НЕ ПРИДЁТ\n👤 '+child+(g?(' — '+g.dir+' '+g.age):'')+'\n📅 '+when+'\n'+acct+'\n⏳ причину уточняю…');
   }
 }
 async function onReason(env, chatId, text, data){
@@ -1163,7 +1187,7 @@ async function runReminders(env){
   if(hr>=QUIET_START || hr<QUIET_END) return 0;
 
   const H=25*3600000; let sent=0;
-  const kids = await sbSelect(env,'/bot_students?select=id,chat_id,child_name,direction,group_id&active=eq.true');
+  const kids = await sbSelect(env,'/bot_students?select=id,chat_id,child_name,direction,group_id,who&active=eq.true');
   const escList=[];
   for(const k of kids){
     const g=await botGroup(env, k.group_id); if(!g) continue;
@@ -1182,8 +1206,9 @@ async function runReminders(env){
         const ins=await sbInsert(env,'bot_attendance',{student_id:k.id,lesson_date:lessonDate,lesson_time:g.time,group_id:g.id,kind:kind});
         if(ins.ok){ // 409 = уже отправлено (гонка)
           const head = kind==='24h' ? '🔔 Напоминание о занятии (за сутки)' : '🔔 Скоро занятие (примерно через час)';
+          const question = k.who==='self' ? 'Придёте ли вы на занятие?' : 'Придёт ли ученик на занятие?';
           await sendText(env, k.chat_id,
-            head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n\nПридёт ли ученик на занятие?',
+            head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n\n'+question,
             kb([[{text:'✅ Да', callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':y'},
                  {text:'❌ Нет',callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':n'}]]));
           sent++;
@@ -1194,7 +1219,7 @@ async function runReminders(env){
       // владельцу список «позвонить». kind='esc' — разовый флаг (уникальность).
       if(delta<=ESC_H*3600000 && !answered && (has('24h')||has('1h')) && !has('esc')){
         const ins=await sbInsert(env,'bot_attendance',{student_id:k.id,lesson_date:lessonDate,lesson_time:g.time,group_id:g.id,kind:'esc'});
-        if(ins.ok) escList.push('• '+k.child_name+' — '+g.dir+' '+g.age+' · '+occDdMm(occ)+' в '+g.time+' · род.: '+(await parentName(env,k.chat_id)));
+        if(ins.ok){ const c=await parentName(env,k.chat_id); escList.push('• '+k.child_name+' — '+g.dir+' '+g.age+' · '+occDdMm(occ)+' в '+g.time+' · '+(k.who==='self'?'сам: ':'род.: ')+c); }
       }
     }
   }
