@@ -64,6 +64,15 @@ export default {
   }
 };
 
+/* Разрешённые источники для CORS: новый домен, www и старый github.io (чтобы
+   в переходный период формы работали с обоих адресов). Возвращаем сам Origin
+   запроса, если он в списке, иначе — основной домен. */
+const ALLOWED_ORIGINS = ['https://artshpace.kz', 'https://www.artshpace.kz', 'https://artshpace.github.io'];
+function allowOrigin(request) {
+  const o = request && request.headers ? request.headers.get('Origin') : null;
+  return (o && ALLOWED_ORIGINS.indexOf(o) !== -1) ? o : 'https://artshpace.kz';
+}
+
 /* =============================================================================
    LEADS  — site form → Telegram chat of the studio
    ============================================================================= */
@@ -71,7 +80,7 @@ async function handleLead(request, env) {
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        'Access-Control-Allow-Origin': 'https://artshpace.github.io',
+        'Access-Control-Allow-Origin': allowOrigin(request),
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       }
@@ -231,7 +240,7 @@ async function handleLead(request, env) {
   );
 
   const headers = {
-    'Access-Control-Allow-Origin': 'https://artshpace.github.io',
+    'Access-Control-Allow-Origin': allowOrigin(request),
     'Content-Type': 'application/json',
   };
 
@@ -345,7 +354,7 @@ function ok() { return new Response('OK', { status: 200 }); }
    ============================================================================= */
 async function handleNotifyTest(request, env) {
   const cors = {
-    'Access-Control-Allow-Origin': 'https://artshpace.github.io',
+    'Access-Control-Allow-Origin': allowOrigin(request),
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
@@ -397,7 +406,7 @@ function jsonRes(obj, status, cors) {
    ============================================================================= */
 async function handleNotify(request, env) {
   const cors = {
-    'Access-Control-Allow-Origin': 'https://artshpace.github.io',
+    'Access-Control-Allow-Origin': allowOrigin(request),
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
@@ -762,7 +771,7 @@ const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерс
 // Pages отдаёт 404, но для Web View это выглядит как «что-то открылось»,
 // не как явная ошибка — поэтому кнопка казалась «рабочей», хотя вела не
 // туда).
-const SITE_URL = 'https://artshpace.github.io/bot1/website/index.html';
+const SITE_URL = 'https://artshpace.kz/';
 
 // Группы — раньше были захардкожены здесь; теперь живут в таблице bot_groups
 // (миграция 0022_bot_groups_table.sql), правки не требуют деплоя воркера.
@@ -1307,7 +1316,7 @@ async function sendCapiLead(env, body, request){
     event_name: 'Lead',
     event_time: Math.floor(Date.now() / 1000),
     action_source: 'website',
-    event_source_url: body.pageUrl || request.headers.get('Referer') || 'https://artshpace.github.io/bot1/website/',
+    event_source_url: body.pageUrl || request.headers.get('Referer') || 'https://artshpace.kz/',
     event_id: body.eventId || ('lead-' + Date.now()),
     user_data: ud,
     custom_data: { content_name: body.direction || 'Заявка' }

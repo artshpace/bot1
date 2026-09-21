@@ -19,7 +19,8 @@ Telegram: канала НЕТ; используем бота — https://t.me/ar
 Телефон: +7 701 398-00-19  
 2ГИС: https://2gis.kz/petropavlovsk/firm/70000001085367039  
 Яндекс Карты: https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/  
-GitHub Pages (текущий хост): https://artshpace.github.io/bot1/
+Домен (основной): https://artshpace.kz/ (куплен в idhost.telecom.kz; сайт публикуется из папки website/ через GitHub Actions — см. Phase 7)
+GitHub Pages (старый адрес): https://artshpace.github.io/bot1/
 
 ## Бренд
 Красный: #E30613  
@@ -91,7 +92,7 @@ Supabase `bot_groups` (миграция `0022_bot_groups_table.sql` — напо
 
 ## Правила при работе с кодом
 1. Все контакты брать ТОЛЬКО из этого файла — никаких заглушек 77771234567 и т.д.
-2. Canonical и og:url — https://artshpace.github.io/bot1/ (до покупки домена)
+2. Canonical и og:url — https://artshpace.kz/ (домен куплен; сайт = корень)
 3. Кнопки WhatsApp: wa.me/77013980019?text=... с предзаполненным текстом
 4. При каждом изменении index.html — проверять что modal-form и trial-form консистентны
 5. Admin panel сохраняет данные в localStorage с префиксом sas_director_*
@@ -334,3 +335,20 @@ create index if not exists idx_studio_ach_direction on public.studio_achievement
 ### Различение «сам ученик» / «ребёнок» (миграция 0031)
 **Миграция `0031_bot_students_who.sql`** — колонка `who` в `bot_students` ('child'|'self', по умолчанию 'child'). Применить: Supabase → SQL Editor → Run. ПОСЛЕ 0019.
 Регистрация в боте (`reg:new`) теперь сначала спрашивает «Кто будет заниматься?» → 🧒 Мой ребёнок / 🧑 Я сам(а). `who` несётся через состояние в `bot_students`. Подписи различаются везде: уведомление владельцу («записался сам» без «Родитель» vs «Ребёнок … Родитель: …»), текст напоминания («Придёте ли вы» vs «Придёт ли ученик»), эскалация, списки «Мои дети»/«Моё расписание»/админ-ученики. Взрослый в 18+ и подросток, записывающийся сам, выбирают «Я сам(а)».
+
+---
+
+## Phase 7 — Свой домен artshpace.kz + публикация папки website/ на корень
+
+Домен `artshpace.kz` куплен в idhost.telecom.kz. DNS (зона на ns3/ns4.hosting.ismet.kz):
+`artshpace.kz` A → 185.199.108.153 (GitHub Pages), `www` CNAME → artshpace.github.io.
+(Панель idhost дописывает зону к имени и не принимает пустое имя/@ — остальные 3 A-записи GitHub не добавлены; одной достаточно.)
+
+**Публикация:** `.github/workflows/deploy-pages.yml` публикует ТОЛЬКО папку `website/` как артефакт Pages (Actions) — так на домене оказывается настоящий сайт, а не старый `/index.html` из корня, и внутренности репо (workers/, supabase/, спеки) в веб не выкладываются. `website/CNAME` = artshpace.kz. **Условие:** Settings → Pages → Source = «GitHub Actions». Старый способ (Deploy from branch) с этим воркфлоу больше не используется.
+
+**Правки под домен:**
+- Все `canonical`/`og:url`/`og:image` и `sitemap.xml`: `artshpace.github.io/bot1/…` → `https://artshpace.kz/…` (сайт = корень, папка website больше не в пути).
+- Воркер `workers/lead-forwarder.js`: CORS через `allowOrigin(request)` + `ALLOWED_ORIGINS` (artshpace.kz, www, github.io — оба адреса в переходный период); `SITE_URL` → `https://artshpace.kz/`; fallback пикселя → artshpace.kz.
+- Сайт полностью на относительных путях, поэтому рендерится на любом адресе; менялись только метаданные и воркер.
+
+**Порядок финального переключения:** (1) Settings → Pages → Source = GitHub Actions → запустить воркфлоу; (2) убедиться, что custom domain = artshpace.kz и включить Enforce HTTPS (после выпуска сертификата); (3) передеплоить воркер (новый CORS/SITE_URL). До этого старый сайт на github.io продолжает работать.
