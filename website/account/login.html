@@ -60,7 +60,7 @@
 
       <p class="auth-alt">Нет аккаунта? <a href="register.html">Зарегистрироваться</a></p>
 
-      <div class="auth-demo">
+      <div class="auth-demo" id="auth-demo" style="display:none;">
         <strong>Демо-доступ для ознакомления:</strong>
         <ul class="auth-demo-list">
           <li>Ученик — <strong>demo@shpigotskiy.art</strong> · <strong>demo1234</strong></li>
@@ -73,6 +73,22 @@
   </main>
 </div>
 
+<script>
+  /* Демо-логины скрыты для всех посетителей. Владелец включает их для себя
+     ссылкой login.html?demo=1 (флаг сохраняется в этом браузере); выключает —
+     login.html?demo=0. Обычные пользователи плашку не видят никогда. */
+  (function () {
+    try {
+      var p = new URLSearchParams(location.search);
+      if (p.get('demo') === '1') localStorage.setItem('sas_show_demo', '1');
+      if (p.get('demo') === '0') localStorage.removeItem('sas_show_demo');
+      if (localStorage.getItem('sas_show_demo') === '1') {
+        var el = document.getElementById('auth-demo');
+        if (el) el.style.display = '';
+      }
+    } catch (e) { /* ignore */ }
+  })();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="../js/supa-config.js"></script>
 <script src="../js/supa.js"></script>
