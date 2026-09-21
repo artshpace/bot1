@@ -894,6 +894,13 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
   body.editorial .nav-links a:hover { color: #fff; }
   .nav-logo-mark { box-shadow: none; }
 
+  /* Десктопное выпадающее меню «О школе»: фон захардкожен белым (#fff), а
+     пункты в тёмной теме становятся светлыми (наследуют цвет .nav-links a) —
+     светлое на белом не видно. Делаем фон тёмным под светлый текст. */
+  body.editorial .nav-dropdown-menu { background: #1c1612; border-color: rgba(255,255,255,.14); }
+  body.editorial .nav-dropdown-menu a { color: rgba(247,242,234,.9); }
+  body.editorial .nav-dropdown-menu a:hover { color: #fff; background: rgba(227,6,19,.2); }
+
   /* Выпадающее мобильное меню */
   .mobile-nav { background: #17120f; }
   .mobile-nav a,

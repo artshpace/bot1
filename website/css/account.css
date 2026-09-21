@@ -374,7 +374,7 @@
 .menu-row-href { flex: 1 1 200px; min-width: 0; color: var(--muted); font-size: .85rem; }
 .menu-row-btn {
   flex-shrink: 0; width: 30px; height: 30px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); background: #fff; cursor: pointer; font-size: .9rem;
+  border: 1px solid var(--border); background: #fff; color: #3D3A36; cursor: pointer; font-size: 1rem; font-weight: 700;
   display: flex; align-items: center; justify-content: center; transition: all var(--transition);
 }
 .menu-row-btn:hover { border-color: var(--gold-border); background: var(--bg-alt); }
