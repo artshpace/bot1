@@ -139,6 +139,7 @@ function resetPublicForm(form) {
   const acct = success.querySelector('.acct-offer'); if (acct) acct.remove();
   const tgc = success.querySelector('.tg-confirm'); if (tgc) tgc.remove();
   const bks = success.querySelector('.booking-summary'); if (bks) bks.remove();
+  const brn = success.querySelector('.bring-note'); if (brn) brn.remove();
   try { delete form.dataset.confirmToken; } catch (e) { /* ignore */ }
   const ds = document.getElementById('modal-day-section'); if (ds) ds.style.display = 'none';
   const ts = document.getElementById('modal-time-section'); if (ts) ts.style.display = 'none';
@@ -248,6 +249,7 @@ function setupForm(formId, onSuccess) {
     submitLead(formId, form);
     if (FORM_SOURCE[formId] === 'trial') {
       injectBookingSummary(form);
+      injectWhatToBring(form);
       injectTelegramConfirm(form);
       injectCalendarButtons(form);
       injectAccountOffer(form);
@@ -1207,6 +1209,30 @@ function injectBookingSummary(form) {
     (direction ? '<div style="font-weight:700;color:var(--body);">' + direction + '</div>' : '') +
     '<div style="font-weight:700;color:var(--body);">' + dateLabel + ', ' + slotChip.textContent.trim() + '</div>';
 
+  const closeBtn = success.querySelector('button');
+  if (closeBtn) success.insertBefore(wrap, closeBtn);
+  else success.appendChild(wrap);
+}
+
+/* Памятка «что взять с собой» на экране «спасибо» — зависит от направления.
+   Гитара/укулеле — полный список + инструмент (или выдадим); остальное — обувь. */
+function injectWhatToBring(form) {
+  const success = form.querySelector('.form-success');
+  if (!success || success.querySelector('.bring-note')) return;
+  const dirGroup = form.querySelector('[data-chip-role="direction"]');
+  const dirChip = dirGroup ? dirGroup.querySelector('.form-chip.selected') : null;
+  const direction = dirChip ? (CHIP_DIRECTION[dirChip.dataset.value] || dirChip.textContent.trim()) : '';
+  const d = (direction || '').toLowerCase();
+  const text = (d.indexOf('гитар') !== -1 || d.indexOf('укулеле') !== -1)
+    ? 'Возьмите сменную обувь, тетрадь, ручку, линейку и, если есть, — гитару или укулеле. Если инструмента пока нет — на пробное занятие выдадим.'
+    : 'Возьмите с собой сменную обувь.';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'bring-note';
+  wrap.style.cssText = 'margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.32);text-align:left;';
+  wrap.innerHTML =
+    '<div style="font-size:0.8rem;font-weight:700;color:var(--body);margin-bottom:4px;">🎒 Что взять с собой</div>' +
+    '<div style="font-size:0.85rem;color:var(--muted);line-height:1.5;">' + text + '</div>';
   const closeBtn = success.querySelector('button');
   if (closeBtn) success.insertBefore(wrap, closeBtn);
   else success.appendChild(wrap);

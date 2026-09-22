@@ -780,6 +780,15 @@ const STUDIO_ADDR = 'ул. Интернациональная, 63, 5 этаж, �
 const MAP_2GIS = 'https://2gis.kz/petropavlovsk/firm/70000001085367039';
 const MAP_YANDEX = 'https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/';
 function mapButtonsRow(){ return [{ text:'🗺 2ГИС', url: MAP_2GIS }, { text:'🧭 Яндекс Карты', url: MAP_YANDEX }]; }
+// Что взять с собой — зависит от направления. Гитара/укулеле/домбра — полный
+// список + инструмент (или выдадим на пробном); остальное — сменная обувь.
+function whatToBring(direction){
+  const d = String(direction || '').toLowerCase();
+  if (d.indexOf('гитар') !== -1 || d.indexOf('укулеле') !== -1 || d.indexOf('домбр') !== -1) {
+    return '🎒 С собой: сменную обувь, тетрадь, ручку, линейку и, если есть, — инструмент (гитару/укулеле). Если инструмента пока нет — на пробное занятие выдадим.';
+  }
+  return '🎒 С собой: сменную обувь.';
+}
 
 // Группы — раньше были захардкожены здесь; теперь живут в таблице bot_groups
 // (миграция 0022_bot_groups_table.sql), правки не требуют деплоя воркера.
@@ -814,7 +823,7 @@ async function sendText(env, chatId, text, keyboard, parseMode){
   if (parseMode) p.parse_mode = parseMode;
   await tgApi(env, 'sendMessage', p);
 }
-async function editText(env, chatId, msgId, text){ await tgApi(env,'editMessageText',{ chat_id:chatId, message_id:msgId, text }); }
+async function editText(env, chatId, msgId, text, keyboard){ const p={ chat_id:chatId, message_id:msgId, text }; if(keyboard) p.reply_markup=keyboard; await tgApi(env,'editMessageText',p); }
 async function answerCb(env, id){ await tgApi(env,'answerCallbackQuery',{ callback_query_id:id }); }
 async function notifyOwner(env, text){ const chat = env.OWNER_CHAT_ID || env.TELEGRAM_CHAT_ID; if (chat) await sendText(env, chat, text); }
 
@@ -1044,7 +1053,7 @@ async function onCallback(env, cq){
     await clearState(env, chatId);
     if(!ins.ok){ await sendText(env, chatId,'⚠️ Не удалось сохранить. Попробуйте ещё раз: /start'); return; }
     const selfTag = who==='self' ? ' (вы)' : ' (ребёнок)';
-    await sendText(env, chatId, '✅ Добавлено:\n👤 '+name+selfTag+'\n🎯 '+g.dir+' — '+g.age+'\n📅 '+g.days.map(x=>WD_SHORT[x]).join('/')+' '+g.time+'\n\nЯ пришлю напоминание за сутки и за час до занятия.');
+    await sendText(env, chatId, '✅ Добавлено:\n👤 '+name+selfTag+'\n🎯 '+g.dir+' — '+g.age+'\n📅 '+g.days.map(x=>WD_SHORT[x]).join('/')+' '+g.time+'\n📍 '+STUDIO_ADDR+'\n'+whatToBring(g.dir)+'\n\nЯ пришлю напоминание за сутки и за час до занятия.', kb([mapButtonsRow()]));
     if(who==='self'){
       await notifyOwner(env, '🆕 Новый ученик в боте (записался сам)\n🧑 '+name+'\n🎯 '+g.dir+' · '+botGroupLabel(g)+'\n💬 аккаунт: '+(await parentName(env,chatId)));
     } else {
@@ -1102,7 +1111,7 @@ async function onAttendance(env, chatId, msgId, parts){
     { response: (resp==='y'?'yes':'no'), responded_at:new Date().toISOString() });
 
   if(resp==='y'){
-    if(msgId) await editText(env, chatId, msgId, '✅ Спасибо! '+comeYes+'. Ждём!');
+    if(msgId) await editText(env, chatId, msgId, '✅ Спасибо! '+comeYes+'.\n📍 '+STUDIO_ADDR+'\n'+whatToBring(g&&g.dir)+'\nЖдём!', kb([mapButtonsRow()]));
     await notifyOwner(env, '✅ ПРИДЁТ\n👤 '+child+(g?(' — '+g.dir+' '+g.age):'')+'\n📅 '+when+'\n'+acct);
   } else {
     if(msgId) await editText(env, chatId, msgId, '❌ '+comeNo+'.\n\nНапишите, пожалуйста, причину пропуска одним сообщением.');
@@ -1137,6 +1146,7 @@ async function sendTrialConfirmAsk(env, chatId, t, head){
     '🎯 Пробное занятие' + (t.direction ? (' — ' + t.direction) : '') + '\n' +
     (when ? ('📅 ' + when + '\n') : '') +
     '📍 ' + STUDIO_ADDR + '\n' +
+    whatToBring(t.direction) + '\n' +
     '\nПодтвердите, пожалуйста, что придёте:',
     kb([[{ text:'✅ Приду', callback_data:'tc:' + t.token + ':y' },
          { text:'❌ Не смогу', callback_data:'tc:' + t.token + ':n' }],
@@ -1172,7 +1182,7 @@ async function onTrialConfirm(env, chatId, msgId, parts){
   const when = trialWhenLabel(t);
   if (resp === 'y'){
     await sbPatch(env, '/bot_trials?token=eq.' + enc(token), { status:'confirmed', confirmed_at:new Date().toISOString() });
-    if (msgId) await editText(env, chatId, msgId, '✅ Спасибо! Запись подтверждена' + (when ? (' на ' + when) : '') + '.\n📍 ' + STUDIO_ADDR + '\nЖдём вас! 🎨');
+    if (msgId) await editText(env, chatId, msgId, '✅ Спасибо! Запись подтверждена' + (when ? (' на ' + when) : '') + '.\n📍 ' + STUDIO_ADDR + '\n' + whatToBring(t.direction) + '\nЖдём вас! 🎨', kb([mapButtonsRow()]));
     await notifyOwner(env, '✅ ПОДТВЕРДИЛ ПРОБНОЕ\n👤 ' + (t.name || '—') + (t.direction ? (' — ' + t.direction) : '') + '\n📞 ' + (t.phone || '—') + (when ? ('\n📅 ' + when) : ''));
   } else {
     await sbPatch(env, '/bot_trials?token=eq.' + enc(token), { status:'declined' });
@@ -1233,9 +1243,10 @@ async function runReminders(env){
           const head = kind==='24h' ? '🔔 Напоминание о занятии (за сутки)' : '🔔 Скоро занятие (примерно через час)';
           const question = k.who==='self' ? 'Придёте ли вы на занятие?' : 'Придёт ли ученик на занятие?';
           await sendText(env, k.chat_id,
-            head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n\n'+question,
+            head+'\n\n👤 '+k.child_name+'\n🎯 '+g.dir+' — '+g.age+'\n👨‍🏫 '+g.teacher+'\n📅 '+occDdMm(occ)+' ('+WD_FULL[almatyParts(occ).dow]+') в '+g.time+'\n📍 '+STUDIO_ADDR+'\n\n'+question,
             kb([[{text:'✅ Да', callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':y'},
-                 {text:'❌ Нет',callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':n'}]]));
+                 {text:'❌ Нет',callback_data:'att:'+k.id+':'+occCompact(occ)+':'+g.id+':n'}],
+                mapButtonsRow()]));
           sent++;
         }
       }
