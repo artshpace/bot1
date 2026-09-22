@@ -655,8 +655,11 @@ function handleIcs(request) {
   ].join('\r\n');
   return new Response(ics, {
     headers: {
+      // inline (не attachment): на iOS Safari открывает экран «Добавить в
+      // календарь» с напоминанием, а не качает файл и показывает пустую
+      // страницу; Android передаёт .ics в приложение календаря.
       'Content-Type': 'text/calendar; charset=utf-8',
-      'Content-Disposition': 'attachment; filename="probnoe.ics"',
+      'Content-Disposition': 'inline; filename="probnoe.ics"',
       'Access-Control-Allow-Origin': '*'
     }
   });
@@ -772,6 +775,11 @@ const BOT_DIRS = ['Гитара','Вокал','Актёрское мастерс
 // не как явная ошибка — поэтому кнопка казалась «рабочей», хотя вела не
 // туда).
 const SITE_URL = 'https://artshpace.kz/';
+// Адрес студии и карты — показываем в сообщениях с записью/занятием.
+const STUDIO_ADDR = 'ул. Интернациональная, 63, 5 этаж, Петропавловск';
+const MAP_2GIS = 'https://2gis.kz/petropavlovsk/firm/70000001085367039';
+const MAP_YANDEX = 'https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/';
+function mapButtonsRow(){ return [{ text:'🗺 2ГИС', url: MAP_2GIS }, { text:'🧭 Яндекс Карты', url: MAP_YANDEX }]; }
 
 // Группы — раньше были захардкожены здесь; теперь живут в таблице bot_groups
 // (миграция 0022_bot_groups_table.sql), правки не требуют деплоя воркера.
@@ -852,15 +860,21 @@ async function parentName(env, chatId){ const rows=await sbSelect(env,'/bot_pare
 // ученика в базу для этих напоминаний.
 async function sendMenu(env, chatId, greet){
   const head = greet ? '👋 Это бот студии *Shpigotskiy Art Space*.\n\nОткрывает сайт как приложение и присылает напоминания: о пробном занятии и о каждом занятии в группе — с кнопками «придёт / не придёт».\n\n' : '';
-  await sendText(env, chatId, head + 'Что хотите сделать?', kb([
+  const rows = [
     [{ text:'🌐 Открыть приложение (сайт)', web_app:{ url: SITE_URL } }],
     [{ text:'✍️ Записаться на пробное',      web_app:{ url: SITE_URL + '#trial' } }],
-    [{ text:'🔔 Подключить напоминания о занятиях', callback_data:'reg:new' }],
-    [{ text:'📅 Моё расписание', callback_data:'my:sched' }],
-    [{ text:'👨‍👩‍👧 Мои дети и напоминания', callback_data:'my:list' }],
-    [{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77013980019?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }],
-    [{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]
-  ]), 'Markdown');
+    [{ text:'🔔 Подключить напоминания о занятиях', callback_data:'reg:new' }]
+  ];
+  // «Моё расписание» и «Мои дети» показываем ТОЛЬКО тем, у кого уже есть записи
+  // в боте (подключил себя/ребёнка или занимается) — чтобы не было пустых кнопок.
+  const mine = await sbSelect(env, '/bot_students?select=id&chat_id=eq.' + enc(String(chatId)) + '&active=eq.true&limit=1');
+  if (mine.length) {
+    rows.push([{ text:'📅 Моё расписание', callback_data:'my:sched' }]);
+    rows.push([{ text:'👨‍👩‍👧 Мои дети и напоминания', callback_data:'my:list' }]);
+  }
+  rows.push([{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77013980019?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }]);
+  rows.push([{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]);
+  await sendText(env, chatId, head + 'Что хотите сделать?', kb(rows), 'Markdown');
 }
 
 // «Моё расписание» — дни/время/преподаватель группы каждого ребёнка родителя
@@ -1122,9 +1136,11 @@ async function sendTrialConfirmAsk(env, chatId, t, head){
     '👤 ' + (t.name || '—') + '\n' +
     '🎯 Пробное занятие' + (t.direction ? (' — ' + t.direction) : '') + '\n' +
     (when ? ('📅 ' + when + '\n') : '') +
+    '📍 ' + STUDIO_ADDR + '\n' +
     '\nПодтвердите, пожалуйста, что придёте:',
     kb([[{ text:'✅ Приду', callback_data:'tc:' + t.token + ':y' },
-         { text:'❌ Не смогу', callback_data:'tc:' + t.token + ':n' }]]));
+         { text:'❌ Не смогу', callback_data:'tc:' + t.token + ':n' }],
+        mapButtonsRow()]));
 }
 // /start t_<token> — клиент открыл ссылку подтверждения с сайта.
 async function handleTrialStart(env, chatId, token, from){
@@ -1156,7 +1172,7 @@ async function onTrialConfirm(env, chatId, msgId, parts){
   const when = trialWhenLabel(t);
   if (resp === 'y'){
     await sbPatch(env, '/bot_trials?token=eq.' + enc(token), { status:'confirmed', confirmed_at:new Date().toISOString() });
-    if (msgId) await editText(env, chatId, msgId, '✅ Спасибо! Запись подтверждена' + (when ? (' на ' + when) : '') + '. Ждём вас! 🎨');
+    if (msgId) await editText(env, chatId, msgId, '✅ Спасибо! Запись подтверждена' + (when ? (' на ' + when) : '') + '.\n📍 ' + STUDIO_ADDR + '\nЖдём вас! 🎨');
     await notifyOwner(env, '✅ ПОДТВЕРДИЛ ПРОБНОЕ\n👤 ' + (t.name || '—') + (t.direction ? (' — ' + t.direction) : '') + '\n📞 ' + (t.phone || '—') + (when ? ('\n📅 ' + when) : ''));
   } else {
     await sbPatch(env, '/bot_trials?token=eq.' + enc(token), { status:'declined' });

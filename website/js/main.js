@@ -1262,7 +1262,22 @@ function injectCalendarButtons(form) {
     'Если планы изменятся — напишите нам: https://wa.me/' + WA_NUMBER;
 
   const gUrl = googleCalUrl(title, date, range, details);
-  const ics = icsDataUri(title, date, range, details);
+  /* Ссылка на worker /ics (Content-Disposition: inline): на телефоне открывает
+     системный календарь с событием и напоминанием, а не качает пустой файл.
+     Fallback на data-URI, если WORKER_URL не задан на странице. */
+  var icsHref = '';
+  try {
+    if (typeof WORKER_URL === 'string' && WORKER_URL && WORKER_URL.indexOf('ТВОЙ_АККАУНТ') === -1) {
+      icsHref = new URL(WORKER_URL).origin + '/ics?' + new URLSearchParams({
+        t: title,
+        s: calStamp(date, range.sh, range.sm),
+        e: calStamp(date, range.eh, range.em),
+        d: details, l: STUDIO_ADDRESS
+      }).toString();
+    }
+  } catch (e) { /* ignore */ }
+  var icsIsFile = !icsHref;
+  if (icsIsFile) icsHref = icsDataUri(title, date, range, details);
 
   const wrap = document.createElement('div');
   wrap.className = 'cal-reminder';
@@ -1270,7 +1285,7 @@ function injectCalendarButtons(form) {
   wrap.innerHTML =
     '<p style="font-size:0.85rem;color:var(--muted);margin:0;">Добавьте занятие в календарь, чтобы не забыть:</p>' +
     '<a href="' + gUrl + '" target="_blank" rel="noopener" class="btn btn-white btn-full">📅 Google Календарь</a>' +
-    '<a href="' + ics + '" download="probnoe-zanyatie.ics" class="btn btn-white btn-full">📲 Скачать для телефона (.ics)</a>';
+    '<a href="' + icsHref + '"' + (icsIsFile ? ' download="probnoe-zanyatie.ics"' : ' target="_blank" rel="noopener"') + ' class="btn btn-white btn-full">📲 В календарь телефона</a>';
 
   const closeBtn = success.querySelector('button');
   if (closeBtn) success.insertBefore(wrap, closeBtn);

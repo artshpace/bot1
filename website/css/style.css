@@ -876,9 +876,12 @@ p { font-size: 1rem; line-height: 1.7; overflow-wrap: break-word; word-wrap: bre
    чтобы всё оставалось читаемым (раньше тёмные полоски сливались с
    авто-затемнённым фоном Chrome). */
 @media (prefers-color-scheme: dark) {
-  /* Полоски «гамбургера» — светлые и на тёмной подложке */
-  .nav-hamburger { background: rgba(255,255,255,.14); }
-  .nav-hamburger span { background: #f5efe6; }
+  /* Полоски «гамбургера» — белые на тёмной кнопке с тонкой обводкой, чтобы
+     их было чётко видно на тёмном фоне шапки (раньше светлые полоски терялись
+     на светло-сером фоне кнопки). Обводка через inset box-shadow — не сдвигает
+     раскладку. */
+  .nav-hamburger { background: rgba(0,0,0,.25); box-shadow: inset 0 0 0 1px rgba(255,255,255,.22); }
+  .nav-hamburger span { background: #fff; }
 
   /* Плавающая шапка-пилюля. Префикс body — чтобы перебить светлые правила
      .editorial .nav-inner из editorial.css (равная специфичность, грузится
