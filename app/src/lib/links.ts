@@ -11,6 +11,15 @@ export async function openLink(url: string) {
 export const openWhatsApp = (text?: string) =>
   openLink(STUDIO.whatsapp + (text ? "?text=" + encodeURIComponent(text) : ""));
 
+/** Номер: написать в WhatsApp или позвонить. */
+export function phoneMenu(title: string, phone: string, display: string) {
+  Alert.alert(title, display, [
+    { text: "Написать в WhatsApp", onPress: () => openLink("https://wa.me/" + phone.replace(/\D/g, "")) },
+    { text: "Позвонить", onPress: () => openLink("tel:" + phone) },
+    { text: "Отмена", style: "cancel" },
+  ]);
+}
+
 export function emailMenu() {
   Alert.alert("Написать на почту", STUDIO.email, [
     { text: "Написать письмо", onPress: () => openLink("mailto:" + STUDIO.email) },

@@ -1,6 +1,6 @@
 import { Card, Label, P, RowLink, Screen, Section } from "../components/ui";
 import { STUDIO } from "../data/content";
-import { emailMenu, openLink, openWhatsApp } from "../lib/links";
+import { emailMenu, openLink, phoneMenu } from "../lib/links";
 import { C } from "../theme";
 
 export default function About() {
@@ -13,7 +13,9 @@ export default function About() {
         <Card><P>Здесь будет история студии — как всё начиналось, как мы росли и каких результатов добились вместе с нашими учениками. Текст добавим позже.</P></Card>
         <Label icon="chat" style={{ marginTop: 22 }}>Контакты</Label>
         <RowLink icon="pin" title={STUDIO.address} onPress={() => openLink(STUDIO.map)} />
-        <RowLink icon="wa" iconColor={C.wa} title="WhatsApp" onPress={() => openWhatsApp()} />
+        {STUDIO.phones.map((p) => (
+          <RowLink key={p.phone} icon="wa" iconColor={C.wa} title={`${p.title}\n${p.display}`} onPress={() => phoneMenu(p.title, p.phone, p.display)} />
+        ))}
         <RowLink icon="cam" title="Instagram" onPress={() => openLink(STUDIO.instagram)} />
         <RowLink icon="mail" title={STUDIO.email} onPress={emailMenu} />
       </Section>

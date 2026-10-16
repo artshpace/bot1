@@ -17,6 +17,11 @@ export const STUDIO = {
   "address": "г. Петропавловск, ул. Интернациональная, 63, 5 этаж",
   "email": "artshpace@gmail.com",
   "whatsapp": "https://wa.me/77013980019",
+  /** Телефоны студии: оба работают в WhatsApp и для звонков. */
+  "phones": [
+    { "title": "Администратор студии", "phone": "+77013980019", "display": "+7 701 398-00-19" },
+    { "title": "Руководитель — Антон Шпигоцкий", "phone": "+77084322371", "display": "+7 708 432-23-71" }
+  ],
   "instagram": "https://www.instagram.com/artshpace",
   "map": "https://go.2gis.com/AuVfc"
 };
