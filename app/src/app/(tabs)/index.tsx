@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Hero } from "../../components/Hero";
 import { Icon } from "../../components/Icon";
 import { Label, RowLink, Section } from "../../components/ui";
+import { NextLessonCard } from "../../components/ScheduleBlocks";
 import { DATA, ORDER } from "../../data/content";
 import { levelOf, pointsOf, useProgress } from "../../lib/progress";
 import { C, F } from "../../theme";
@@ -38,6 +39,8 @@ export default function Home() {
         </View>
         <Icon name="chev" size={18} color="rgba(255,255,255,0.6)" />
       </Pressable>
+
+      <NextLessonCard />
 
       <Section>
         <Label icon="spark">Направления</Label>

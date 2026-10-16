@@ -3,6 +3,7 @@ import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 import { Chip, Field, Hint, Input, Label, PrimaryButton, ProgressBar, Screen, Section } from "../../components/ui";
 import { Icon } from "../../components/Icon";
+import { DailyQuests, MasteryCards } from "../../components/GameBlocks";
 import { COURSES, ONLINE } from "../../data/content";
 import { fioOk, normalizePhone, phoneOk, sendRequest } from "../../lib/links";
 import { useProgress } from "../../lib/progress";
@@ -44,6 +45,9 @@ export default function Learn() {
   return (
     <Screen back={false}>
       <Section style={{ paddingTop: 0 }}>
+        <MasteryCards />
+        <DailyQuests />
+        <View style={{ height: 22 }} />
         {myCourses.length > 0 && <>
           <Label icon="laptop">Мои курсы</Label>
           {myCourses.map((c) => {

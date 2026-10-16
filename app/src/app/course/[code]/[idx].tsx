@@ -6,6 +6,8 @@ import { Card, Field, Hint, Input, Label, P, PrimaryButton, RowLink, Screen, Sec
 import { COURSES } from "../../../data/content";
 import { openWhatsApp } from "../../../lib/links";
 import { POINTS, useProgress } from "../../../lib/progress";
+import { lessonXp, XP } from "../../../lib/game";
+import { Quiz } from "../../../components/Quiz";
 import { SITE_URL } from "../../../config";
 import { C, F } from "../../../theme";
 
@@ -24,7 +26,7 @@ function YouTube({ id }: { id: string }) {
 export default function LessonScreen() {
   const { code, idx: idxStr } = useLocalSearchParams<{ code: string; idx: string }>();
   const idx = Number(idxStr);
-  const { state, completeLesson, submitHomework } = useProgress();
+  const { state, completeLesson, submitHomework, answerQuiz } = useProgress();
   const course = COURSES[code];
   const les = course?.lessons[idx];
   const key = `${code}:${idx}`;
@@ -35,6 +37,10 @@ export default function LessonScreen() {
   const done = state.courses[code]?.done ?? 0;
   if (!course || !les || idx > done) return null; // закрытый урок не открываем
   const passed = idx < done;
+  const quizResult = state.quizzes[key];
+  const needQuiz = !!les.quiz?.length && !quizResult;
+  const needHw = !!les.boss && !saved;
+  const gain = Object.entries(lessonXp(code, idx));
 
   function sendHw() {
     if (!hw.trim()) return;
@@ -45,7 +51,13 @@ export default function LessonScreen() {
   return (
     <Screen>
       <Section style={{ paddingTop: 0 }}>
-        <Label icon="play">{les.title}</Label>
+        {les.boss && (
+          <View style={s.bossBanner}>
+            <Text style={s.bossEyebrow}>Финал главы</Text>
+            <Text style={s.bossText}>Испытание: выполните задание и сдайте отчёт — опыт за урок удваивается.</Text>
+          </View>
+        )}
+        <Label icon={les.boss ? "trophy" : "play"}>{les.title}</Label>
         {les.yt ? <YouTube id={les.yt} /> : <View style={[s.video, s.ph]}><Text style={s.phText}>Видео урока появится здесь</Text></View>}
         {les.desc ? <P style={{ fontSize: 14, marginTop: 14, marginHorizontal: 2 }}>{les.desc}</P> : null}
 
@@ -59,7 +71,7 @@ export default function LessonScreen() {
           <Field label="Мой отчёт о выполнении">
             <Input value={hw} onChangeText={setHw} multiline placeholder="Напишите, что сделали, что получилось, что было сложно…" style={{ minHeight: 96, textAlignVertical: "top" }} />
             <PrimaryButton title="Сдать задание" disabled={!hw.trim()} onPress={sendHw} color={C.black} style={{ marginTop: 10 }} />
-            <Hint>За первое сданное задание урока: +{POINTS.homework} баллов.</Hint>
+            <Hint>За первое сданное задание урока: +{POINTS.homework} баллов и +{XP.homework} опыта.</Hint>
           </Field>
         ) : (
           <Card style={{ borderColor: C.green }}>
@@ -71,12 +83,26 @@ export default function LessonScreen() {
         <RowLink icon="wa" iconColor={C.wa} title="Отправить видео/фото педагогу в WhatsApp"
           onPress={() => openWhatsApp(`Здравствуйте! Домашнее задание: ${course.title}, ${les.title}.${hw.trim() ? "\n" + hw.trim() : ""}`)} />
 
+        {les.quiz?.length ? <>
+          <Label icon="help" style={{ marginTop: 20 }}>Проверь себя</Label>
+          <Quiz questions={les.quiz} result={quizResult} onSubmit={(c) => answerQuiz(code, idx, c, les.quiz!.length)} />
+        </> : null}
+
+        {gain.length > 0 && (
+          <View style={s.reward}>
+            <Text style={s.rewardTitle}>Награда за урок</Text>
+            {gain.map(([k, v]) => <Text key={k} style={s.rewardLine}>+{v} опыта · {k.split("|")[1]}</Text>)}
+          </View>
+        )}
+
         {passed ? (
           <Hint center style={{ marginTop: 10 }}>Урок уже пройден.</Hint>
         ) : (
           <>
-            <PrimaryButton title="Выполнено" style={{ marginTop: 10 }} onPress={() => { completeLesson(code, idx); router.back(); }} />
-            <Hint center style={{ marginTop: 10 }}>Посмотрите видео, выполните задание и нажмите «Выполнено». +{POINTS.lesson} баллов</Hint>
+            <PrimaryButton title={les.boss ? "Пройти испытание" : "Выполнено"} disabled={needQuiz || needHw} style={{ marginTop: 10 }} onPress={() => { completeLesson(code, idx); router.back(); }} />
+            <Hint center style={{ marginTop: 10 }}>
+              {needQuiz ? "Сначала ответьте на вопросы теста." : needHw ? "Для финала главы нужно сдать отчёт о задании." : `Посмотрите видео, выполните задание и нажмите «${les.boss ? "Пройти испытание" : "Выполнено"}». +${POINTS.lesson} баллов`}
+            </Hint>
           </>
         )}
       </Section>
@@ -90,4 +116,10 @@ const s = StyleSheet.create({
   phText: { color: C.hint, fontSize: 13, fontFamily: F.sans },
   hwTitle: { fontFamily: F.bold, color: C.green, fontSize: 14, marginBottom: 6 },
   edit: { color: C.red, fontFamily: F.semi, fontSize: 13, marginTop: 8 },
+  bossBanner: { backgroundColor: C.black, borderRadius: 14, padding: 14, marginBottom: 18, borderWidth: 1, borderColor: C.gold },
+  bossEyebrow: { fontSize: 10.5, letterSpacing: 1.8, textTransform: "uppercase", color: C.gold, fontFamily: F.bold },
+  bossText: { color: "#fff", fontFamily: F.sans, fontSize: 13.5, marginTop: 4, lineHeight: 19 },
+  reward: { marginTop: 16, backgroundColor: C.paper, borderWidth: 1, borderColor: C.hair, borderRadius: 14, padding: 14 },
+  rewardTitle: { fontFamily: F.bold, fontSize: 11, letterSpacing: 1.4, textTransform: "uppercase", color: C.goldDark, marginBottom: 4 },
+  rewardLine: { fontFamily: F.semi, fontSize: 14, color: C.text, marginTop: 2 },
 });

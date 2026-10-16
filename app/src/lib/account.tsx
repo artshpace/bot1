@@ -8,11 +8,15 @@ export type Role = "student" | "parent" | "teacher" | "admin" | "director";
 export type AccountProfile = { id: string; name: string; phone: string; role: Role; email: string };
 
 export type AttendanceStatus = "present" | "absent" | "excused" | "sick";
+/** schedule — как в журнале сайта: день недели (0 = Вс, как Date.getDay), начало и конец */
+export type Group = { id: string; name: string; direction: string; schedule: { day: number; start: string; end?: string }[] };
 export type StudentReport = {
   id: string;
   name: string;
-  groups: { id: string; name: string; direction: string }[];
-  visits: { date: string; status: AttendanceStatus; topic: string | null; group: string }[];
+  groups: Group[];
+  visits: { date: string; status: AttendanceStatus; topic: string | null; group: string; direction: string }[];
+  /** отменённые занятия на ближайшие 2 недели: "groupId|YYYY-MM-DD" */
+  cancelled: string[];
   stats: Record<AttendanceStatus, number> & { total: number };
   skills: { direction: string; name: string; level: number }[];
   assessments: { id: string; date: string; score: number | null; comment: string | null }[];
@@ -82,18 +86,26 @@ async function fetchReport(s: { id: string; name: string }): Promise<StudentRepo
   const skillRows = rows<{ skill_id: string; level: number }>(sskills);
 
   const [groupsR, lessonsR, skillsR] = await Promise.all([
-    groupIds.length ? supabase.from("study_groups").select("id,name,direction").in("id", groupIds) : Promise.resolve({ data: [], error: null }),
+    groupIds.length ? supabase.from("study_groups").select("id,name,direction,schedule").in("id", groupIds) : Promise.resolve({ data: [], error: null }),
     attRows.length ? supabase.from("lessons").select("id,date,topic,group_id").in("id", attRows.map((a) => a.lesson_id)) : Promise.resolve({ data: [], error: null }),
     skillRows.length ? supabase.from("skills").select("id,name,direction,sort").in("id", skillRows.map((k) => k.skill_id)) : Promise.resolve({ data: [], error: null }),
   ]);
-  const groups = rows<{ id: string; name: string; direction: string }>(groupsR);
+  const groups = rows<Group>(groupsR).map((g) => ({ ...g, schedule: Array.isArray(g.schedule) ? g.schedule : [] }));
+  const ymd = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const today = new Date();
+  const soon = new Date(today.getTime() + 14 * 86400000);
+  const cancelledR = groupIds.length
+    ? await supabase.from("lessons").select("group_id,date").in("group_id", groupIds).eq("status", "cancelled").gte("date", ymd(today)).lte("date", ymd(soon))
+    : { data: [], error: null };
+  const cancelled = (cancelledR.error ? [] : (cancelledR.data ?? []) as { group_id: string; date: string }[]).map((l) => `${l.group_id}|${l.date}`);
   const lessons = rows<{ id: string; date: string; topic: string | null; group_id: string }>(lessonsR);
   const skills = rows<{ id: string; name: string; direction: string; sort: number }>(skillsR);
 
   // группы, где ученик был отмечен, но уже не состоит — тоже нужны для подписей
   const groupName = (id: string) => groups.find((g) => g.id === id)?.name ?? "";
+  const groupDir = (id: string) => groups.find((g) => g.id === id)?.direction ?? "";
   const visits = attRows
-    .map((a) => { const l = lessons.find((x) => x.id === a.lesson_id); return l && { date: l.date, status: a.status, topic: l.topic, group: groupName(l.group_id) }; })
+    .map((a) => { const l = lessons.find((x) => x.id === a.lesson_id); return l && { date: l.date, status: a.status, topic: l.topic, group: groupName(l.group_id), direction: groupDir(l.group_id) }; })
     .filter((v): v is NonNullable<typeof v> => !!v)
     .sort((a, b) => b.date.localeCompare(a.date));
 
@@ -101,7 +113,7 @@ async function fetchReport(s: { id: string; name: string }): Promise<StudentRepo
   visits.forEach((v) => { stats[v.status]++; });
 
   return {
-    id: s.id, name: s.name, groups, visits, stats,
+    id: s.id, name: s.name, groups, visits, stats, cancelled,
     skills: skillRows
       .map((k) => { const sk = skills.find((x) => x.id === k.skill_id); return sk && { direction: sk.direction, name: sk.name, level: k.level, sort: sk.sort }; })
       .filter((v): v is NonNullable<typeof v> => !!v)

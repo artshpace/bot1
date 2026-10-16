@@ -3,7 +3,7 @@
     "name": "Art Space",
     "slug": "artspace",
     "scheme": "artspace",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,7 +13,7 @@
     },
     "android": {
       "package": "kz.artshpace.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#111111",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -37,7 +37,13 @@
       ],
       "expo-image",
       "expo-video",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#E30613"
+        }
+      ]
     ]
   }
 }

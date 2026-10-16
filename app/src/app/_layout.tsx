@@ -14,6 +14,9 @@ import { ProgressProvider } from "../lib/progress";
 import { AccountProvider } from "../lib/account";
 import { SchoolSync } from "../components/SchoolSync";
 import { AwardModal } from "../components/AwardModal";
+import { XpToast } from "../components/XpToast";
+import { RemindersSync } from "../components/ScheduleBlocks";
+import { GameSync } from "../components/GameSync";
 import { C } from "../theme";
 
 SplashScreen.preventAutoHideAsync();
@@ -32,8 +35,11 @@ export default function RootLayout() {
       <ProgressProvider>
         <AccountProvider>
           <SchoolSync />
+          <RemindersSync />
+          <GameSync />
           <StatusBar style="dark" />
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: "slide_from_right" }} />
+          <XpToast />
           <AwardModal />
         </AccountProvider>
       </ProgressProvider>

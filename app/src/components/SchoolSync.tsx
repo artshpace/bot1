@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { useAccount } from "../lib/account";
+import { skillKey } from "../lib/game";
 import { useProgress } from "../lib/progress";
 
-/** Переносит данные журнала студии в баллы и награды приложения. */
+/** Переносит данные журнала студии в опыт, баллы и награды приложения. */
 export function SchoolSync() {
   const { session, reports, profile } = useAccount();
   const { ready, setSchool, state, setProfile } = useProgress();
@@ -16,12 +17,20 @@ export function SchoolSync() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!session) { setSchool({ linked: false, present: 0, maxSkill: 0 }); return; }
+    if (!session) { setSchool({ linked: false, present: 0, maxSkill: 0, visitsByDir: {}, teacherSkills: {} }); return; }
     if (!reports) return;
-    // если у родителя несколько детей — считаем по самому активному
-    const present = Math.max(0, ...reports.map((r) => r.stats.present));
-    const maxSkill = Math.max(0, ...reports.flatMap((r) => r.skills.map((k) => k.level)));
-    setSchool({ linked: true, present, maxSkill });
+    // если у родителя несколько детей — показываем самого активного
+    const r = [...reports].sort((a, b) => b.stats.present - a.stats.present)[0];
+    const visitsByDir: Record<string, number> = {};
+    r?.visits.forEach((v) => { if (v.status === "present" && v.direction) visitsByDir[v.direction] = (visitsByDir[v.direction] ?? 0) + 1; });
+    const teacherSkills: Record<string, number> = {};
+    r?.skills.forEach((k) => { teacherSkills[skillKey(k.direction, k.name)] = k.level; });
+    setSchool({
+      linked: true,
+      present: r?.stats.present ?? 0,
+      maxSkill: Math.max(0, ...(r?.skills.map((k) => k.level) ?? [])),
+      visitsByDir, teacherSkills,
+    });
   }, [ready, session?.user.id, reports]);
   return null;
 }

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Card, Field, Hint, Input, Label, P, PrimaryButton, ProgressBar, Screen, Section } from "../../components/ui";
 import { Icon } from "../../components/Icon";
 import { SchoolReport } from "../../components/SchoolReport";
+import { MySchedule } from "../../components/ScheduleBlocks";
 import { COURSES, DATA, type DirKey } from "../../data/content";
 import { fioOk, normalizePhone } from "../../lib/links";
 import { AWARDS, currentStreak, levelOf, POINTS, pointsOf, useProgress, type ActivityEvent } from "../../lib/progress";
@@ -20,6 +21,8 @@ function eventText(e: ActivityEvent): string {
     case "course": return `Курс пройден: ${COURSES[e.ref ?? ""]?.title ?? e.ref}`;
     case "booking": return `Запись на пробное: ${DATA[e.ref as DirKey]?.title ?? e.ref}`;
     case "online_request": return `Заявка на онлайн-курс: ${e.ref}`;
+    case "quiz": return `Тест к уроку: ${lesson ?? e.ref}`;
+    case "quest": return "Выполнено задание дня";
   }
 }
 
@@ -117,6 +120,11 @@ export default function ProfileTab() {
           })}
         </View>
         <Hint>Баллы: урок +{POINTS.lesson}, задание +{POINTS.homework}, курс +{POINTS.course}, пробное +{POINTS.booking}, посещение студии +{POINTS.visit}, награда +{POINTS.award}.</Hint>
+      </Section>
+
+      <Section>
+        <Label icon="cal">Моё расписание</Label>
+        <MySchedule />
       </Section>
 
       <Section>
