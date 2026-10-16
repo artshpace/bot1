@@ -3,8 +3,10 @@ import { StyleSheet, Text, View } from "react-native";
 import { Card, Field, Hint, Input, Label, P, PrimaryButton, ProgressBar, Screen, Section } from "../../components/ui";
 import { Icon } from "../../components/Icon";
 import { SchoolReport } from "../../components/SchoolReport";
+import { StudentAvatar } from "../../components/StudentAvatar";
 import { MySchedule } from "../../components/ScheduleBlocks";
-import { COURSES, DATA, type DirKey } from "../../data/content";
+import { DATA, type DirKey } from "../../data/content";
+import { getCourse } from "../../lib/courses";
 import { fioOk, normalizePhone } from "../../lib/links";
 import { AWARDS, currentStreak, levelOf, POINTS, pointsOf, useProgress, type ActivityEvent } from "../../lib/progress";
 import { C, F } from "../../theme";
@@ -14,11 +16,11 @@ const fmtDate = (iso: string) => { const d = new Date(iso); return `${d.getDate(
 
 function eventText(e: ActivityEvent): string {
   const [code, idx] = (e.ref ?? "").split(":");
-  const lesson = COURSES[code]?.lessons[Number(idx)]?.title;
+  const lesson = getCourse(code)?.lessons[Number(idx)]?.title;
   switch (e.type) {
     case "lesson": return `Пройден урок: ${lesson ?? e.ref}`;
     case "homework": return `Сдано задание: ${lesson ?? e.ref}`;
-    case "course": return `Курс пройден: ${COURSES[e.ref ?? ""]?.title ?? e.ref}`;
+    case "course": return `Курс пройден: ${getCourse(e.ref ?? "")?.title ?? e.ref}`;
     case "booking": return `Запись на пробное: ${DATA[e.ref as DirKey]?.title ?? e.ref}`;
     case "online_request": return `Заявка на онлайн-курс: ${e.ref}`;
     case "quiz": return `Тест к уроку: ${lesson ?? e.ref}`;
@@ -39,7 +41,7 @@ function ProfileForm({ onDone }: { onDone?: () => void }) {
       <Field label="Телефон">
         <Input value={phone} onChangeText={(v) => setPhone(normalizePhone(v))} keyboardType="phone-pad" />
       </Field>
-      <PrimaryButton title="Сохранить" onPress={() => { setTried(true); if (!fioOk(name)) return; setProfile({ name: name.trim(), phone: phone.trim() }); onDone?.(); }} />
+      <PrimaryButton title="Сохранить" onPress={() => { setTried(true); if (!fioOk(name)) return; setProfile({ ...state.profile, name: name.trim(), phone: phone.trim() }); onDone?.(); }} />
       <Hint>Имя и телефон подставятся в заявки автоматически.</Hint>
     </Card>
   );
@@ -63,7 +65,8 @@ export default function ProfileTab() {
           <ProfileForm onDone={() => setEditing(false)} />
         ) : (
           <View style={s.who}>
-            <View style={{ flex: 1 }}>
+            <StudentAvatar size={64} editable />
+            <View style={{ flex: 1, marginLeft: 14 }}>
               <Text style={s.name}>{state.profile.name}</Text>
               {state.profile.phone.replace(/\D/g, "").length > 1 && <Text style={s.phone}>{state.profile.phone}</Text>}
             </View>

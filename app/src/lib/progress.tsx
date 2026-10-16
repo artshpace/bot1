@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { COURSES, ORDER, type DirKey } from "../data/content";
+import { ORDER, type CourseAward, type DirKey } from "../data/content";
+import { allCourses, getCourse } from "./courses";
 import { dailyQuests, lessonXp, primarySkill, SKILLS, skillKey, skillView, todayKey, XP, type SkillView } from "./game";
 
 /* ═══════════ Прогресс ученика: баллы, опыт навыков, награды ═══════════
@@ -10,7 +11,8 @@ import { dailyQuests, lessonXp, primarySkill, SKILLS, skillKey, skillView, today
 export type EventType = "lesson" | "homework" | "course" | "booking" | "online_request" | "quiz" | "quest";
 export type ActivityEvent = { type: EventType; at: string; ref?: string };
 
-export type Profile = { name: string; phone: string };
+/** photo — фото ученика (data-URI на телефоне или ссылка из кабинета студии) */
+export type Profile = { name: string; phone: string; photo?: string };
 
 export type State = {
   profile: Profile | null;
@@ -25,6 +27,14 @@ export type State = {
   xp: Record<string, number>;
   /** задания дня: дата → выполненные id */
   quests: Record<string, string[]>;
+  /** карточки: "курс:урок:карточка" → коробка Лейтнера (0…5) и дата следующего повтора */
+  cards: Record<string, { box: number; due: string }>;
+  /** опыт по дням (для дневной цели) */
+  xpDays: Record<string, number>;
+  /** опыт за карточки по дням (не больше CARD_XP_CAP в день) */
+  cardXpDays: Record<string, number>;
+  /** дневная цель по опыту */
+  dailyGoal: number;
   viewedDirs: string[];
   events: ActivityEvent[];
   /** id награды → когда получена */
@@ -42,6 +52,7 @@ export type State = {
 const EMPTY_SCHOOL: State["school"] = { linked: false, present: 0, maxSkill: 0, visitsByDir: {}, teacherSkills: {} };
 export const EMPTY: State = {
   profile: null, courses: {}, lastCourse: null, homework: {}, quizzes: {}, xp: {}, quests: {},
+  cards: {}, xpDays: {}, cardXpDays: {}, dailyGoal: 30,
   viewedDirs: [], events: [], awards: {}, school: EMPTY_SCHOOL,
 };
 const KEY = "artspace_state_v1";
@@ -64,7 +75,7 @@ export function myDirections(s: State): DirKey[] {
   const set = new Set<string>();
   Object.keys(s.school.visitsByDir).forEach((d) => set.add(d));
   Object.keys(s.school.teacherSkills).forEach((k) => set.add(k.split("|")[0]));
-  Object.keys(s.courses).forEach((c) => { const d = COURSES[c]?.direction; if (d) set.add(d); });
+  Object.keys(s.courses).forEach((c) => { const d = getCourse(c)?.direction; if (d) set.add(d); });
   Object.keys(s.xp).forEach((k) => set.add(k.split("|")[0]));
   return ORDER.filter((d) => set.has(d));
 }
@@ -79,7 +90,7 @@ const count = (s: State, t: EventType) => s.events.filter((e) => e.type === t).l
 const bossDone = (s: State) => s.events.some((e) => {
   if (e.type !== "lesson" || !e.ref) return false;
   const [c, i] = e.ref.split(":");
-  return !!COURSES[c]?.lessons[Number(i)]?.boss;
+  return !!getCourse(c)?.lessons[Number(i)]?.boss;
 });
 
 export const AWARDS: AwardDef[] = [
@@ -105,6 +116,84 @@ export const AWARDS: AwardDef[] = [
   { id: "fifty_visits", title: "Сердце студии", desc: "Посетить 50 занятий в студии", icon: "flame", check: (s) => s.school.present >= 50 },
   { id: "skill_max", title: "Мастерство", desc: "Получить от педагога высший уровень навыка (5 из 5)", icon: "star", check: (s) => s.school.maxSkill >= 5 },
 ];
+
+/* ── Награды и статистика курса ── */
+
+export const CARD_BOX_DAYS = [0, 1, 3, 7, 14, 30];
+export const CARD_LEARNED = 3;   // карточка «выучена» с 3-й коробки
+export const CARD_XP = 2;
+export const CARD_XP_CAP = 20;
+
+export type CourseStats = {
+  done: number; total: number; pct: number; complete: boolean;
+  quiz: { correct: number; total: number; tests: number; perfect: boolean };
+  homework: number; cardsLearned: number; cardsTotal: number; cardsDue: number;
+  bossDone: boolean;
+};
+
+export function courseStats(s: State, key: string): CourseStats {
+  const c = getCourse(key);
+  const lessons = c?.lessons ?? [];
+  const total = lessons.length || c?.outline.length || 0;
+  const done = Math.min(s.courses[key]?.done ?? 0, total);
+  let qc = 0, qt = 0, tests = 0, cardsTotal = 0;
+  lessons.forEach((l, i) => {
+    const r = s.quizzes[`${key}:${i}`];
+    if (l.quiz?.length) { tests++; if (r) { qc += r.correct; qt += r.total; } }
+    cardsTotal += l.cards?.length ?? 0;
+  });
+  const cardEntries = Object.entries(s.cards).filter(([k]) => k.startsWith(key + ":"));
+  return {
+    done, total, pct: total ? done / total : 0, complete: total > 0 && done >= total,
+    quiz: { correct: qc, total: qt, tests, perfect: tests > 0 && lessons.every((l, i) => !l.quiz?.length || (s.quizzes[`${key}:${i}`]?.correct === l.quiz.length)) },
+    homework: Object.keys(s.homework).filter((k) => k.startsWith(key + ":")).length,
+    cardsLearned: cardEntries.filter(([, v]) => v.box >= CARD_LEARNED).length,
+    cardsTotal,
+    cardsDue: cardsDueList(s, key).length,
+    bossDone: lessons.some((l, i) => l.boss && i < done),
+  };
+}
+
+/** Карточки к повторению: из пройденных и текущего урока, срок которых наступил. */
+export function cardsDueList(s: State, key: string): { id: string; front: string; back: string; box: number; lesson: number }[] {
+  const c = getCourse(key);
+  if (!c) return [];
+  const open = Math.min((s.courses[key]?.done ?? 0) + 1, c.lessons.length);
+  const now = Date.now();
+  const out: { id: string; front: string; back: string; box: number; lesson: number }[] = [];
+  c.lessons.slice(0, open).forEach((l, li) => (l.cards ?? []).forEach((card, ci) => {
+    const id = `${key}:${li}:${ci}`;
+    const st = s.cards[id];
+    if (!st || (st.box < 5 && new Date(st.due).getTime() <= now)) out.push({ ...card, id, box: st?.box ?? 0, lesson: li });
+  }));
+  return out;
+}
+
+function courseAwardMet(s: State, key: string, a: CourseAward): boolean {
+  const st = courseStats(s, key);
+  switch (a.rule.type) {
+    case "lessons": return st.done >= (a.rule.n ?? 1);
+    case "complete": return st.complete;
+    case "quiz_perfect": return st.quiz.perfect;
+    case "boss": return st.bossDone;
+    case "homework": return st.homework >= (a.rule.n ?? 1);
+    case "cards": return st.cardsLearned >= (a.rule.n ?? 1);
+    default: return false;
+  }
+}
+
+export const courseAwardId = (key: string, id: string) => `c:${key}:${id}`;
+
+/** Описание любой награды по id (общей или награды курса). */
+export function awardDef(id: string): (AwardDef & { course?: string }) | undefined {
+  const g = AWARDS.find((a) => a.id === id);
+  if (g) return g;
+  const m = id.match(/^c:(.+):([^:]+)$/);
+  if (!m) return undefined;
+  const c = getCourse(m[1]);
+  const a = c?.awards?.find((x) => x.id === m[2]);
+  return a && { id, title: a.title, desc: a.desc, icon: a.icon, check: () => false, course: c!.title };
+}
 
 /* ── Баллы и общий уровень ── */
 
@@ -175,6 +264,13 @@ function grantAwards(s: State): [State, string[]] {
   const awards = { ...s.awards };
   const now = new Date().toISOString();
   for (const a of AWARDS) if (!awards[a.id] && a.check(s)) { awards[a.id] = now; fresh.push(a.id); }
+  for (const c of allCourses()) {
+    if (!s.courses[c.key] || !c.awards?.length) continue;
+    for (const a of c.awards.filter((x) => x.title)) {
+      const id = courseAwardId(c.key, a.id);
+      if (!awards[id] && courseAwardMet(s, c.key, a)) { awards[id] = now; fresh.push(id); }
+    }
+  }
   return [fresh.length ? { ...s, awards } : s, fresh];
 }
 
@@ -201,6 +297,9 @@ export function mergeStates(a: State, b: Partial<State>): State {
     profile: a.profile ?? b.profile ?? null,
     courses, quests, events, awards,
     xp: maxRec(a.xp, b.xp),
+    xpDays: maxRec(a.xpDays, b.xpDays),
+    cardXpDays: maxRec(a.cardXpDays, b.cardXpDays),
+    cards: { ...(b.cards ?? {}), ...a.cards },
     homework: { ...(b.homework ?? {}), ...a.homework },
     quizzes: { ...(b.quizzes ?? {}), ...a.quizzes },
     viewedDirs: [...new Set([...a.viewedDirs, ...(b.viewedDirs ?? [])])],
@@ -226,6 +325,8 @@ type Ctx = {
   submitHomework: (code: string, idx: number, text: string) => void;
   answerQuiz: (code: string, idx: number, correct: number, total: number) => void;
   completeQuest: (id: string) => void;
+  reviewCard: (id: string, known: boolean, courseKey: string, lesson: number) => void;
+  setDailyGoal: (xp: number) => void;
   viewDirection: (key: string) => void;
   setSchool: (school: State["school"]) => void;
   mergeRemote: (remote: Partial<State>) => void;
@@ -256,7 +357,11 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
   /** Применить изменение, начислить награды, показать полученный опыт. */
   const update = useCallback((fn: (s: State) => State) => {
     setState((prev) => {
-      const changed = fn(prev);
+      let changed = fn(prev);
+      if (changed.xp !== prev.xp) {
+        const gain = Object.keys(changed.xp).reduce((a, k) => a + Math.max(0, (changed.xp[k] ?? 0) - (prev.xp[k] ?? 0)), 0);
+        if (gain) { const d = todayKey(); changed = { ...changed, xpDays: { ...changed.xpDays, [d]: (changed.xpDays[d] ?? 0) + gain } }; }
+      }
       const [next, fresh] = grantAwards(changed);
       if (fresh.length) setPending((p) => [...p, ...fresh.filter((id) => !p.includes(id))]);
       if (changed.xp !== prev.xp) {
@@ -277,9 +382,9 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
     completeLesson: (code, idx) => update((s) => {
       const done = s.courses[code]?.done ?? 0;
       if (idx !== done) return s; // уроки открываются строго по очереди
-      const les = COURSES[code]?.lessons[idx];
+      const les = getCourse(code)?.lessons[idx];
       if (les?.boss && !s.homework[`${code}:${idx}`]) return s; // финал главы — только со сданным заданием
-      const total = COURSES[code]?.lessons.length ?? 0;
+      const total = getCourse(code)?.lessons.length ?? 0;
       const events = [...s.events, ev("lesson", `${code}:${idx}`)];
       if (idx + 1 === total) events.push(ev("course", code));
       return { ...s, courses: { ...s.courses, [code]: { done: idx + 1 } }, events, xp: addXp(s.xp, lessonXp(code, idx)) };
@@ -318,6 +423,22 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         xp: addXp(s.xp, { [skillKey(q.dir, q.skill)]: XP.quest }),
       };
     }),
+    reviewCard: (id, known, courseKey, lesson) => update((s) => {
+      const cur = s.cards[id]?.box ?? 0;
+      const box = known ? Math.min(5, cur + 1) : 0;
+      const due = new Date(Date.now() + CARD_BOX_DAYS[box] * 86400000).toISOString();
+      const today = todayKey();
+      const got = s.cardXpDays[today] ?? 0;
+      const skill = primarySkill(courseKey, lesson);
+      const give = known && skill && got < CARD_XP_CAP ? CARD_XP : 0;
+      return {
+        ...s,
+        cards: { ...s.cards, [id]: { box, due } },
+        cardXpDays: give ? { ...s.cardXpDays, [today]: got + give } : s.cardXpDays,
+        xp: give && skill ? addXp(s.xp, { [skill]: give }) : s.xp,
+      };
+    }),
+    setDailyGoal: (dailyGoal) => update((s) => ({ ...s, dailyGoal })),
     setSchool: (school) => update((s) => (JSON.stringify(s.school) === JSON.stringify(school) ? s : { ...s, school })),
     mergeRemote: (remote) => update((s) => mergeStates(s, remote)),
     viewDirection: (key) => update((s) => (s.viewedDirs.includes(key) ? s : { ...s, viewedDirs: [...s.viewedDirs, key] })),

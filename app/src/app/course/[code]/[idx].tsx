@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { WebView } from "react-native-webview";
 import { Card, Field, Hint, Input, Label, P, PrimaryButton, RowLink, Screen, Section } from "../../../components/ui";
-import { COURSES } from "../../../data/content";
+import { getCourse } from "../../../lib/courses";
 import { openWhatsApp } from "../../../lib/links";
 import { POINTS, useProgress } from "../../../lib/progress";
 import { lessonXp, XP } from "../../../lib/game";
@@ -27,7 +27,7 @@ export default function LessonScreen() {
   const { code, idx: idxStr } = useLocalSearchParams<{ code: string; idx: string }>();
   const idx = Number(idxStr);
   const { state, completeLesson, submitHomework, answerQuiz } = useProgress();
-  const course = COURSES[code];
+  const course = getCourse(code);
   const les = course?.lessons[idx];
   const key = `${code}:${idx}`;
   const saved = state.homework[key];
@@ -63,6 +63,19 @@ export default function LessonScreen() {
 
         <Label icon="info" style={{ marginTop: 20 }}>Теория</Label>
         <Card><P>{les.theory || "Теория появится здесь."}</P></Card>
+
+        {les.cards?.length ? <>
+          <Label icon="spark" style={{ marginTop: 20 }}>Ключевые понятия</Label>
+          <Card>
+            {les.cards.map((k, i) => (
+              <View key={i} style={{ marginBottom: i < les.cards!.length - 1 ? 10 : 0 }}>
+                <Text style={s.term}>{k.front}</Text>
+                <P>{k.back}</P>
+              </View>
+            ))}
+          </Card>
+          <Hint style={{ marginTop: -4 }}>Они попадут в тренировку карточками на странице курса.</Hint>
+        </> : null}
 
         <Label icon="doc" style={{ marginTop: 20 }}>Практика и домашнее задание</Label>
         <Card><P>{les.practice || "Задание появится здесь."}</P></Card>
@@ -116,6 +129,7 @@ const s = StyleSheet.create({
   phText: { color: C.hint, fontSize: 13, fontFamily: F.sans },
   hwTitle: { fontFamily: F.bold, color: C.green, fontSize: 14, marginBottom: 6 },
   edit: { color: C.red, fontFamily: F.semi, fontSize: 13, marginTop: 8 },
+  term: { fontFamily: F.bold, fontSize: 14.5, color: C.text, marginBottom: 2 },
   bossBanner: { backgroundColor: C.black, borderRadius: 14, padding: 14, marginBottom: 18, borderWidth: 1, borderColor: C.gold },
   bossEyebrow: { fontSize: 10.5, letterSpacing: 1.8, textTransform: "uppercase", color: C.gold, fontFamily: F.bold },
   bossText: { color: "#fff", fontFamily: F.sans, fontSize: 13.5, marginTop: 4, lineHeight: 19 },

@@ -12,6 +12,7 @@ import { PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display/700
 import { PlayfairDisplay_800ExtraBold } from "@expo-google-fonts/playfair-display/800ExtraBold";
 import { ProgressProvider } from "../lib/progress";
 import { AccountProvider } from "../lib/account";
+import { CoursesProvider } from "../lib/courses";
 import { SchoolSync } from "../components/SchoolSync";
 import { AwardModal } from "../components/AwardModal";
 import { XpToast } from "../components/XpToast";
@@ -34,13 +35,15 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ProgressProvider>
         <AccountProvider>
-          <SchoolSync />
-          <RemindersSync />
-          <GameSync />
-          <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: "slide_from_right" }} />
-          <XpToast />
-          <AwardModal />
+          <CoursesProvider>
+            <SchoolSync />
+            <RemindersSync />
+            <GameSync />
+            <StatusBar style="dark" />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: "slide_from_right" }} />
+            <XpToast />
+            <AwardModal />
+          </CoursesProvider>
         </AccountProvider>
       </ProgressProvider>
     </SafeAreaProvider>

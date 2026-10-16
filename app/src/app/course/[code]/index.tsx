@@ -2,9 +2,12 @@ import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Svg, { Path } from "react-native-svg";
-import { Hint, Label, ProgressBar, Screen, Section } from "../../../components/ui";
+import { Hint, Label, Screen, Section } from "../../../components/ui";
+import { CourseProgress } from "../../../components/CourseProgress";
+import { useCourses } from "../../../lib/courses";
 import { Icon } from "../../../components/Icon";
-import { COURSES, DATA } from "../../../data/content";
+import { DATA } from "../../../data/content";
+import { getCourse } from "../../../lib/courses";
 import { lessonXp } from "../../../lib/game";
 import { useProgress } from "../../../lib/progress";
 import { C, F } from "../../../theme";
@@ -17,7 +20,8 @@ const X = [0.5, 0.78, 0.5, 0.22]; // змейка: центр → право →
 /** Курс как карта-квест: уроки — точки на пути, в конце главы — «босс». */
 export default function CourseScreen() {
   const { code } = useLocalSearchParams<{ code: string }>();
-  const course = COURSES[code];
+  useCourses(); // перерисовать после загрузки курсов
+  const course = getCourse(code);
   const { state } = useProgress();
   const [w, setW] = useState(0);
   if (!course) return null;
@@ -40,8 +44,9 @@ export default function CourseScreen() {
     <Screen>
       <Section style={{ paddingTop: 0 }}>
         <Label icon={course.direction ? DATA[course.direction].icon : "laptop"}>{course.title}</Label>
-        <ProgressBar value={done / total} />
-        <Hint style={{ marginBottom: 18 }}>Пройдено {done} из {total}{done >= total ? " · глава завершена!" : ""}</Hint>
+        <CourseProgress code={code} />
+        <Text style={s.mapTitle}>Карта курса</Text>
+        {!course.enrolled && <Hint style={{ marginTop: -6, marginBottom: 12 }}>Открыт пробный урок. Остальные откроются после оплаты курса.</Hint>}
 
         <View style={{ height: (total - 1) * ROW + BOSS + 40 }} onLayout={(e) => setW(e.nativeEvent.layout.width)}>
           {w > 0 && (
@@ -89,6 +94,7 @@ export default function CourseScreen() {
 }
 
 const s = StyleSheet.create({
+  mapTitle: { fontFamily: F.serif, fontSize: 17, color: C.text, marginTop: 14, marginBottom: 14 },
   node: { position: "absolute", top: 0, alignItems: "center", justifyContent: "center", backgroundColor: C.bg3, borderWidth: 3, borderColor: C.bg },
   nodeDone: { backgroundColor: C.green },
   nodeNow: { backgroundColor: C.red, borderColor: "rgba(227,6,19,0.25)", borderWidth: 6, shadowColor: C.red, shadowOpacity: 0.4, shadowRadius: 10, elevation: 6 },

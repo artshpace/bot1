@@ -1,4 +1,5 @@
-import { COURSES, ORDER, type DirKey } from "../data/content";
+import { ORDER, type DirKey } from "../data/content";
+import { getCourse } from "./courses";
 
 /* ═══════════ Игровая прокачка навыков ═══════════
    Навыки те же, что в «Карте навыков» сайта (таблица skills, миграция 0013),
@@ -61,20 +62,21 @@ export function mastery(skills: SkillView[]) {
 
 /** Опыт за урок: по разметке урока или по умолчанию в первый навык направления. */
 export function lessonXp(code: string, idx: number): Record<string, number> {
-  const course = COURSES[code];
+  const course = getCourse(code);
   const les = course?.lessons[idx];
   if (!course?.direction || !les) return {};
-  const base = les.skills ?? { [SKILLS[course.direction][0]]: XP.defaultLesson };
+  const has = les.skills && Object.values(les.skills).some((v) => v > 0);
+  const base = has ? les.skills! : { [SKILLS[course.direction][0]]: XP.defaultLesson };
   const mult = les.boss ? 2 : 1;
   return Object.fromEntries(Object.entries(base).map(([k, v]) => [skillKey(course.direction!, k), v * mult]));
 }
 
 /** Главный навык урока — сюда идёт опыт за тест и задание. */
 export function primarySkill(code: string, idx: number): string | null {
-  const course = COURSES[code];
+  const course = getCourse(code);
   if (!course?.direction) return null;
   const les = course.lessons[idx];
-  const first = les?.skills ? Object.keys(les.skills)[0] : SKILLS[course.direction][0];
+  const first = les?.skills && Object.keys(les.skills).length ? Object.keys(les.skills)[0] : SKILLS[course.direction][0];
   return skillKey(course.direction, first);
 }
 
@@ -131,6 +133,13 @@ export function dailyQuests(dirs: DirKey[], date = new Date()): Quest[] {
   }
   return out;
 }
+
+/** 1 урок, 2 урока, 5 уроков */
+export function plural(n: number, one: string, few: string, many: string) {
+  const m10 = n % 10, m100 = n % 100;
+  return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many;
+}
+export const lessonsWord = (n: number) => `${n} ${plural(n, "урок", "урока", "уроков")}`;
 
 export const todayKey = (d = new Date()) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 

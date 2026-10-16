@@ -5,7 +5,7 @@ import { supabase } from "./supabase";
 /* ═══════════ Личный кабинет студии (тот же аккаунт, что на artshpace.kz) ═══════════ */
 
 export type Role = "student" | "parent" | "teacher" | "admin" | "director";
-export type AccountProfile = { id: string; name: string; phone: string; role: Role; email: string };
+export type AccountProfile = { id: string; name: string; phone: string; role: Role; email: string; avatarUrl: string | null };
 
 export type AttendanceStatus = "present" | "absent" | "excused" | "sick";
 /** schedule — как в журнале сайта: день недели (0 = Вс, как Date.getDay), начало и конец */
@@ -47,13 +47,15 @@ async function signIn(login: string, password: string) {
 async function fetchProfile(session: Session): Promise<AccountProfile> {
   const u = session.user;
   const meta = (u.user_metadata ?? {}) as Record<string, string>;
-  const { data } = await supabase.from("profiles").select("role,name,phone").eq("id", u.id).maybeSingle();
+  // select("*") — чтобы не упасть, если колонки avatar_url ещё нет (миграция 0033)
+  const { data } = await supabase.from("profiles").select("*").eq("id", u.id).maybeSingle();
   return {
     id: u.id,
     email: u.email ?? "",
     name: data?.name || meta.name || "",
     phone: data?.phone || meta.phone || "",
     role: (data?.role || meta.role || "student") as Role,
+    avatarUrl: (data?.avatar_url as string | undefined) ?? null,
   };
 }
 

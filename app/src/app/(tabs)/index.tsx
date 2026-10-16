@@ -4,6 +4,7 @@ import { Hero } from "../../components/Hero";
 import { Icon } from "../../components/Icon";
 import { Label, RowLink, Section } from "../../components/ui";
 import { NextLessonCard } from "../../components/ScheduleBlocks";
+import { StudentAvatar } from "../../components/StudentAvatar";
 import { DATA, ORDER } from "../../data/content";
 import { levelOf, pointsOf, useProgress } from "../../lib/progress";
 import { C, F } from "../../theme";
@@ -32,7 +33,7 @@ export default function Home() {
       </View>
 
       <Pressable style={({ pressed }) => [s.me, pressed && { opacity: 0.9 }]} onPress={() => router.navigate("/profile")}>
-        <Icon name="trophy" size={26} color={C.gold} />
+        {state.profile?.name ? <StudentAvatar size={44} /> : <Icon name="trophy" size={26} color={C.gold} />}
         <View style={{ flex: 1 }}>
           <Text style={s.meTitle}>{state.profile?.name ? state.profile.name.split(" ")[1] || state.profile.name : "Мой прогресс"}</Text>
           <Text style={s.meSub}>{lvl.title} · {points} баллов · наград: {awards}</Text>

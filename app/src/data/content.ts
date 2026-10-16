@@ -10,6 +10,10 @@ export type Direction = {
 };
 export type GalleryItem = { type: "img" | "video"; src: string; wide?: boolean };
 export type QuizQuestion = { q: string; options: string[]; correct: number };
+export type Flashcard = { front: string; back: string };
+/** Награда курса. rule.type: lessons — пройти n уроков; complete — весь курс; quiz_perfect — все тесты без ошибок;
+ *  boss — финал главы; homework — сдать n заданий; cards — выучить n карточек */
+export type CourseAward = { id: string; title: string; desc: string; icon: string; rule: { type: "lessons" | "complete" | "quiz_perfect" | "boss" | "homework" | "cards"; n?: number } };
 export type Lesson = {
   title: string; yt?: string; desc?: string; theory?: string; practice?: string;
   /** опыт за урок по навыкам направления курса: { "Сценическая речь": 20 } */
@@ -18,9 +22,19 @@ export type Lesson = {
   quiz?: QuizQuestion[];
   /** «босс» — итоговое испытание главы: нужно сдать задание, опыт ×2 */
   boss?: boolean;
+  /** карточки для тренировки с интервальным повторением */
+  cards?: Flashcard[];
+  /** id урока в базе (для курсов из базы) */
+  id?: string;
+  /** пробный урок — открыт без кода */
+  free?: boolean;
 };
 /** direction — к какому дереву навыков относится курс */
-export type Course = { title: string; direction?: DirKey; lessons: Lesson[] };
+export type Course = {
+  title: string; direction?: DirKey; lessons: Lesson[];
+  summary?: string; description?: string; outcomes?: string[]; cover?: string;
+  price?: number | null; payUrl?: string | null; awards?: CourseAward[];
+};
 export type OfferBlock = { t: "h" | "sub" | "p" | "li" | "section"; x: string };
 
 export const STUDIO = {
@@ -723,6 +737,16 @@ export const COURSES: Record<string, Course> = {
   DEMO: {
     title: "Демо-курс «Ораторское искусство»",
     direction: "acting",
+    summary: "Уверенная речь и выступления: дыхание, голос, работа с текстом.",
+    description: "Короткий бесплатный курс, чтобы попробовать онлайн-обучение студии: видео, теория, практика, тесты, карточки и финальное выступление.",
+    outcomes: ["Говорить спокойно и уверенно", "Управлять дыханием и голосом", "Выразительно читать текст с паузами"],
+    price: null,
+    awards: [
+      { id: "voice", title: "Поставленный голос", desc: "Пройти урок «Дыхание и голос»", icon: "spark", rule: { type: "lessons", n: 2 } },
+      { id: "sharp", title: "Острый ум", desc: "Все тесты курса без ошибок", icon: "check", rule: { type: "quiz_perfect" } },
+      { id: "memory", title: "Словарь оратора", desc: "Выучить 6 карточек курса", icon: "doc", rule: { type: "cards", n: 6 } },
+      { id: "speaker", title: "Оратор", desc: "Пройти курс целиком", icon: "trophy", rule: { type: "complete" } },
+    ],
     lessons: [
       {
         title: "Урок 1. Знакомство и цель",
@@ -731,6 +755,10 @@ export const COURSES: Record<string, Course> = {
         theory: "Публичная речь — это навык, а не талант. Любой навык развивается через регулярную практику и обратную связь.",
         practice: "Запишите видео-приветствие на 30 секунд и пришлите педагогу.",
         skills: { "Раскрепощённость": 20, "Сценическая речь": 10 },
+        cards: [
+          { front: "Публичная речь", back: "Навык, который развивается практикой и обратной связью" },
+          { front: "Цель обучения", back: "Конкретный результат, к которому вы идёте: «выступить на концерте без страха»" },
+        ],
         quiz: [
           { q: "Публичная речь — это…", options: ["Врождённый талант", "Навык, который развивается практикой", "Удача"], correct: 1 },
           { q: "Что быстрее всего помогает расти?", options: ["Регулярная практика и обратная связь", "Ждать вдохновения", "Читать про ораторов"], correct: 0 },
@@ -743,6 +771,10 @@ export const COURSES: Record<string, Course> = {
         theory: "Опора на диафрагму даёт голосу силу и устойчивость, убирает дрожь от волнения.",
         practice: "Сделайте дыхательную гимнастику 3 дня подряд по 5 минут.",
         skills: { "Сценическая речь": 25 },
+        cards: [
+          { front: "Диафрагма", back: "Главная дыхательная мышца — опора сильного и спокойного голоса" },
+          { front: "Опора дыхания", back: "Ровный выдох «от живота», на котором держится звук" },
+        ],
         quiz: [
           { q: "На что опирается сильный голос?", options: ["На горло", "На диафрагму", "На громкость"], correct: 1 },
           { q: "Что убирает дрожь в голосе от волнения?", options: ["Говорить быстрее", "Задержать дыхание", "Спокойное глубокое дыхание"], correct: 2 },
@@ -756,6 +788,10 @@ export const COURSES: Record<string, Course> = {
         theory: "Логические паузы и ударения управляют вниманием слушателя сильнее громкости.",
         practice: "Подготовьте выразительное чтение короткого стихотворения.",
         skills: { "Работа с текстом": 25, "Сценическая речь": 10 },
+        cards: [
+          { front: "Логическая пауза", back: "Остановка в речи, которая отделяет смысловые части и держит внимание" },
+          { front: "Логическое ударение", back: "Выделение голосом главного слова во фразе" },
+        ],
         quiz: [
           { q: "Что сильнее всего управляет вниманием слушателя?", options: ["Громкость", "Логические паузы и ударения", "Скорость речи"], correct: 1 },
           { q: "Логическое ударение выделяет…", options: ["Главное слово во фразе", "Последнее слово", "Каждое слово"], correct: 0 },
