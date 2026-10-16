@@ -11,6 +11,8 @@ import { Inter_700Bold } from "@expo-google-fonts/inter/700Bold";
 import { PlayfairDisplay_700Bold } from "@expo-google-fonts/playfair-display/700Bold";
 import { PlayfairDisplay_800ExtraBold } from "@expo-google-fonts/playfair-display/800ExtraBold";
 import { ProgressProvider } from "../lib/progress";
+import { AccountProvider } from "../lib/account";
+import { SchoolSync } from "../components/SchoolSync";
 import { AwardModal } from "../components/AwardModal";
 import { C } from "../theme";
 
@@ -28,9 +30,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ProgressProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: "slide_from_right" }} />
-        <AwardModal />
+        <AccountProvider>
+          <SchoolSync />
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg }, animation: "slide_from_right" }} />
+          <AwardModal />
+        </AccountProvider>
       </ProgressProvider>
     </SafeAreaProvider>
   );

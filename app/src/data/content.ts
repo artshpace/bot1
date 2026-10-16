@@ -16,7 +16,7 @@ export type OfferBlock = { t: "h" | "sub" | "p" | "li" | "section"; x: string };
 export const STUDIO = {
   "address": "г. Петропавловск, ул. Интернациональная, 63, 5 этаж",
   "email": "artshpace@gmail.com",
-  "whatsapp": "https://wa.me/+77086366351",
+  "whatsapp": "https://wa.me/77013980019",
   "instagram": "https://www.instagram.com/artshpace",
   "map": "https://go.2gis.com/AuVfc"
 };
@@ -50,9 +50,14 @@ export const DATA: Record<DirKey, Direction> = {
         "name": "Жуков Виталий Александрович",
         "role": "Гитара, укулеле",
         "icon": "d-guitar",
-        "photo": "media/teachers/zhukov.jpg",
+        "photo": "media/teachers/zhukov-portrait.jpg",
         "photos": [
-          "media/teachers/zhukov.jpg"
+          "media/teachers/zhukov-portrait.jpg",
+          "media/teachers/zhukov-strings.jpg",
+          "media/teachers/zhukov-flute.jpg",
+          "media/teachers/zhukov-handpan.jpg",
+          "media/teachers/zhukov-harmonica.jpg",
+          "media/teachers/zhukov-painting.jpg"
         ],
         "video": "media/teachers/guitar/welcome/vecna.mp4",
         "bio": "Играет на всех существующих музыкальных инструментах, пишет музыку и преподаёт. С ним ребёнок берёт инструмент в руки с первого занятия."
@@ -500,7 +505,7 @@ export const DATA: Record<DirKey, Direction> = {
     ],
     "teachers": [
       {
-        "name": "Педагог уточняется",
+        "name": "Андрюшенко Мария",
         "role": "Преподаватель живописи",
         "icon": "d-painting",
         "photo": "media/teachers/painting.jpg",
@@ -552,7 +557,7 @@ export const GALLERY: Record<DirKey, GalleryItem[]> = {
   "guitar": [
     {
       "type": "img",
-      "src": "media/guitar/photo_2026-06-17_09-38-10.jpg",
+      "src": "media/guitar/1.jpg",
       "wide": true
     },
     {

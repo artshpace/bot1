@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Card, Field, Hint, Input, Label, P, PrimaryButton, ProgressBar, Screen, Section } from "../../components/ui";
 import { Icon } from "../../components/Icon";
+import { SchoolReport } from "../../components/SchoolReport";
 import { COURSES, DATA, type DirKey } from "../../data/content";
 import { fioOk, normalizePhone } from "../../lib/links";
 import { AWARDS, currentStreak, levelOf, POINTS, pointsOf, useProgress, type ActivityEvent } from "../../lib/progress";
@@ -115,14 +116,12 @@ export default function ProfileTab() {
             );
           })}
         </View>
-        <Hint>Баллы: урок +{POINTS.lesson}, задание +{POINTS.homework}, курс +{POINTS.course}, пробное +{POINTS.booking}, награда +{POINTS.award}.</Hint>
+        <Hint>Баллы: урок +{POINTS.lesson}, задание +{POINTS.homework}, курс +{POINTS.course}, пробное +{POINTS.booking}, посещение студии +{POINTS.visit}, награда +{POINTS.award}.</Hint>
       </Section>
 
       <Section>
-        <Label icon="star">Оценки и посещаемость</Label>
-        <Card>
-          <P>Здесь появятся оценки, посещения и комментарии педагогов с очных занятий — после подключения студии к серверу. Онлайн-прогресс и награды уже работают.</P>
-        </Card>
+        <Label icon="star">Успеваемость в студии</Label>
+        <SchoolReport />
       </Section>
 
       <Section>

@@ -59,6 +59,7 @@ export default function Home() {
         <RowLink icon="price" title="Прайс" onPress={() => router.push("/prices")} />
         <RowLink icon="person" title="Преподаватели" onPress={() => router.push("/teachers")} />
         <RowLink icon="image" title="Выступления и работы" onPress={() => router.push("/gallery")} />
+        <RowLink icon="trophy" title="Достижения студии" onPress={() => router.push("/achievements")} />
         <RowLink icon="laptop" title="Онлайн-курсы" onPress={() => router.navigate("/learn")} />
         <RowLink icon="info" title="О студии и контакты" onPress={() => router.push("/about")} />
         <RowLink icon="help" title="Правила и FAQ" onPress={() => router.push("/faq")} />

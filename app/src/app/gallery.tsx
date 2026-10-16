@@ -6,6 +6,7 @@ import { useEventListener } from "expo";
 import { Hint, Label, Panel, Screen, Section } from "../components/ui";
 import { DATA, GALLERY, ORDER, type GalleryItem } from "../data/content";
 import { mediaSource, mediaUrl } from "../lib/media";
+import { useGalleryItems } from "../lib/live";
 import { C } from "../theme";
 
 // Файлы берутся с сайта (media/gallery/<направление>/...). Нет файла — ячейка скрывается.
@@ -37,11 +38,24 @@ function DirGallery({ items }: { items: GalleryItem[] }) {
   );
 }
 
+/** Свежие фото и видео, которые администратор загружает в «Медиацентр» сайта. */
+function LiveGallery() {
+  const { data } = useGalleryItems();
+  if (!data?.length) return null;
+  const items: GalleryItem[] = data.map((m, i) => ({ type: m.kind === "video" ? "video" : "img", src: m.url, wide: i === 0 }));
+  return (
+    <Panel icon="spark" title="Новое от студии" initiallyOpen>
+      <DirGallery items={items} />
+    </Panel>
+  );
+}
+
 export default function Gallery() {
   return (
     <Screen>
       <Section style={{ paddingTop: 0 }}>
         <Label icon="image">Выступления и работы</Label>
+        <LiveGallery />
         {ORDER.map((k, i) => (
           <Panel key={k} icon={DATA[k].icon} title={DATA[k].title} initiallyOpen={i === 0}>
             <DirGallery items={GALLERY[k] ?? []} />

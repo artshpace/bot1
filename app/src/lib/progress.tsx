@@ -22,9 +22,11 @@ export type State = {
   events: ActivityEvent[];
   /** id награды → когда получена */
   awards: Record<string, string>;
+  /** Сводка с очных занятий из кабинета студии (журнал педагога). */
+  school: { linked: boolean; present: number; maxSkill: number };
 };
 
-const EMPTY: State = { profile: null, courses: {}, lastCourse: null, homework: {}, viewedDirs: [], events: [], awards: {} };
+const EMPTY: State = { profile: null, courses: {}, lastCourse: null, homework: {}, viewedDirs: [], events: [], awards: {}, school: { linked: false, present: 0, maxSkill: 0 } };
 const KEY = "artspace_state_v1";
 
 export type AwardDef = { id: string; title: string; desc: string; icon: string; check: (s: State) => boolean };
@@ -42,9 +44,15 @@ export const AWARDS: AwardDef[] = [
   { id: "homework_five", title: "Отличник", desc: "Сдать 5 домашних заданий", icon: "check", check: (s) => count(s, "homework") >= 5 },
   { id: "streak3", title: "Три дня подряд", desc: "Заниматься 3 дня подряд", icon: "flame", check: (s) => bestStreak(s) >= 3 },
   { id: "course_done", title: "Выпускник", desc: "Полностью пройти онлайн-курс", icon: "trophy", check: (s) => count(s, "course") >= 1 },
+  // ── за очные занятия: данные из журнала педагога на artshpace.kz ──
+  { id: "account", title: "Свой человек", desc: "Войти в личный кабинет студии", icon: "person", check: (s) => s.school.linked },
+  { id: "first_visit", title: "На сцене!", desc: "Прийти на первое занятие в студии", icon: "cal", check: (s) => s.school.present >= 1 },
+  { id: "ten_visits", title: "Постоянство", desc: "Посетить 10 занятий в студии", icon: "check", check: (s) => s.school.present >= 10 },
+  { id: "fifty_visits", title: "Сердце студии", desc: "Посетить 50 занятий в студии", icon: "flame", check: (s) => s.school.present >= 50 },
+  { id: "skill_max", title: "Мастерство", desc: "Получить от педагога высший уровень навыка (5 из 5)", icon: "star", check: (s) => s.school.maxSkill >= 5 },
 ];
 
-export const POINTS = { lesson: 10, homework: 5, course: 50, booking: 10, online_request: 0, award: 20 };
+export const POINTS = { lesson: 10, homework: 5, course: 50, booking: 10, online_request: 0, award: 20, visit: 10 };
 
 export const LEVELS = [
   { min: 0, title: "Новичок" },
@@ -57,7 +65,7 @@ export const LEVELS = [
 export function pointsOf(s: State): number {
   let p = 0;
   for (const e of s.events) p += POINTS[e.type];
-  return p + Object.keys(s.awards).length * POINTS.award;
+  return p + Object.keys(s.awards).length * POINTS.award + s.school.present * POINTS.visit;
 }
 
 export function levelOf(points: number) {
@@ -123,6 +131,7 @@ type Ctx = {
   completeLesson: (code: string, idx: number) => void;
   submitHomework: (code: string, idx: number, text: string) => void;
   viewDirection: (key: string) => void;
+  setSchool: (school: State["school"]) => void;
   logEvent: (type: EventType, ref?: string) => void;
   reset: () => void;
 };
@@ -137,7 +146,7 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     AsyncStorage.getItem(KEY)
-      .then((raw) => { if (raw) setState({ ...EMPTY, ...JSON.parse(raw) }); })
+      .then((raw) => { if (raw) { const saved = JSON.parse(raw); setState({ ...EMPTY, ...saved, school: { ...EMPTY.school, ...saved.school } }); } })
       .catch(() => {})
       .finally(() => { loaded.current = true; setReady(true); });
   }, []);
@@ -179,6 +188,9 @@ export function ProgressProvider({ children }: { children: ReactNode }) {
         events: first ? [...s.events, ev("homework", key)] : s.events,
       };
     }),
+    setSchool: (school) => update((s) => (
+      s.school.linked === school.linked && s.school.present === school.present && s.school.maxSkill === school.maxSkill ? s : { ...s, school }
+    )),
     viewDirection: (key) => update((s) => (s.viewedDirs.includes(key) ? s : { ...s, viewedDirs: [...s.viewedDirs, key] })),
     logEvent: (type, ref) => update((s) => ({ ...s, events: [...s.events, ev(type, ref)] })),
     reset: () => { setPending([]); setState(EMPTY); },
