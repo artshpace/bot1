@@ -61,7 +61,9 @@ type Ctx = {
 const CoursesContext = createContext<Ctx | null>(null);
 
 export function CoursesProvider({ children }: { children: ReactNode }) {
-  const { session } = useAccount();
+  const { session, profile } = useAccount();
+  // администратор видит черновики и все уроки (для предпросмотра)
+  const isAdmin = profile?.role === "admin" || profile?.role === "director";
   const [version, setVersion] = useState(0);
   const [loading, setLoading] = useState(false);
   const [unavailable, setUnavailable] = useState(false);
@@ -96,7 +98,7 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
       const lessons = (lr.data ?? []) as DbLesson[];
       const outlines = await Promise.all(courses.map((c) =>
         supabase.rpc("course_outline", { p_course: c.id }).then((r) => ((r.data ?? []) as { title: string; free: boolean }[]))));
-      const list = courses.map((c, i) => toCourse(c, lessons.filter((l) => l.course_id === c.id), enrolled.has(c.id), outlines[i]));
+      const list = courses.map((c, i) => toCourse(c, lessons.filter((l) => l.course_id === c.id), enrolled.has(c.id) || isAdmin, outlines[i]));
       apply(list);
       AsyncStorage.setItem(CACHE, JSON.stringify(list)).catch(() => {});
     } catch {
@@ -104,7 +106,7 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [uid, apply]);
+  }, [uid, isAdmin, apply]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -119,9 +121,9 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
   }, [uid, refresh]);
 
   const value = useMemo<Ctx>(() => ({
-    catalog: Object.values(registry).filter((c) => c.source === "local" || c.published),
+    catalog: Object.values(registry).filter((c) => c.source === "local" || c.published || isAdmin),
     loading, unavailable, refresh, redeem,
-  }), [version, loading, unavailable, refresh, redeem]);
+  }), [version, loading, unavailable, refresh, redeem, isAdmin]);
 
   return <CoursesContext.Provider value={value}>{children}</CoursesContext.Provider>;
 }

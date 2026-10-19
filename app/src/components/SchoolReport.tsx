@@ -111,6 +111,9 @@ export function SchoolReport() {
         <Card>
           <P>Журнал, отметки и оценки педагоги и администраторы ведут в кабинете на сайте.</P>
           <RowLink icon="doc" title="Открыть журнал на сайте" onPress={() => openLink(SITE_URL + "account/journal.html")} />
+          {(profile?.role === "admin" || profile?.role === "director") && (
+            <RowLink icon="laptop" title="Редактор онлайн-курсов" onPress={() => router.push("/admin")} />
+          )}
         </Card>
       ) : reports && reports.length === 0 ? (
         <Card>

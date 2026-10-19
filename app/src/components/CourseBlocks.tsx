@@ -64,6 +64,7 @@ export function CourseCard({ c }: { c: CourseInfo }) {
         {c.cover ? <Image source={{ uri: c.cover }} contentFit="cover" style={StyleSheet.absoluteFill} /> : (
           <View style={s.coverPh}><Icon name={c.direction ? DATA[c.direction].icon : "laptop"} size={40} /></View>
         )}
+        {c.source === "db" && !c.published && <View style={[s.badge, { left: 10, right: undefined, backgroundColor: C.hint }]}><Text style={[s.badgeText, { color: "#fff" }]}>Черновик — видите только вы</Text></View>}
         {st.complete && <View style={s.badge}><Icon name="trophy" size={14} color={C.black} /><Text style={s.badgeText}>Пройден</Text></View>}
       </View>
       <View style={{ padding: 14 }}>

@@ -1,28 +1,24 @@
 import { useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { router } from "expo-router";
-import { Field, Hint, Input, Label, PrimaryButton, RowLink, Screen, Section } from "../../components/ui";
+import { Card, Field, Hint, Input, Label, P, PrimaryButton, RowLink, Screen, Section } from "../../components/ui";
 import { DailyQuests, MasteryCards } from "../../components/GameBlocks";
 import { CourseCard, DailyGoal } from "../../components/CourseBlocks";
-import { ONLINE } from "../../data/content";
 import { useAccount } from "../../lib/account";
 import { useCourses } from "../../lib/courses";
-import { openWhatsApp } from "../../lib/links";
 import { useProgress } from "../../lib/progress";
 import { C } from "../../theme";
 
 export default function Learn() {
   const { state, openCourse } = useProgress();
-  const { catalog, redeem, loading } = useCourses();
-  const { profile } = useAccount();
+  const { catalog, redeem, loading, unavailable } = useCourses();
+  const { profile, session } = useAccount();
   const [code, setCode] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const mine = catalog.filter((c) => c.enrolled && (state.courses[c.key] || c.source === "db"));
   const others = catalog.filter((c) => !mine.includes(c));
-  // направления из сайта, по которым курса в каталоге ещё нет — «скоро»
-  const soon = ONLINE.filter((o) => !catalog.some((c) => c.title.toLowerCase().includes(o.title.toLowerCase())));
   const isAdmin = profile?.role === "admin" || profile?.role === "director";
 
   async function open() {
@@ -55,10 +51,6 @@ export default function Learn() {
         <Label icon="spark">Каталог курсов</Label>
         {loading && !catalog.length && <ActivityIndicator color={C.red} />}
         {others.map((c) => <CourseCard key={c.key} c={c} />)}
-        {soon.map((o) => (
-          <RowLink key={o.title} icon="laptop" title={`«${o.title}» — скоро. Оставить заявку`}
-            onPress={() => openWhatsApp(`Здравствуйте! Хочу на онлайн-курс «${o.title}».${profile?.name ? `\nФИО: ${profile.name}` : ""}${profile?.phone ? `\nТелефон: ${profile.phone}` : ""}`)} />
-        ))}
 
         <Label icon="lock" style={{ marginTop: 22 }}>Уже оплатили?</Label>
         <Field label="Код доступа к курсу" error={err ?? ""} showError={!!err}>
@@ -67,8 +59,16 @@ export default function Learn() {
         <PrimaryButton title={busy ? "Проверяем…" : "Открыть курс"} disabled={busy} onPress={open} />
         <Hint center style={{ marginTop: 10 }}>Попробуйте демо-курс: код DEMO</Hint>
 
+        {!session && (
+          <Hint center style={{ marginTop: 18 }}>Администратор студии? Войдите в кабинет (Профиль → «Войти в кабинет студии»), чтобы открыть редактор курсов.</Hint>
+        )}
         {isAdmin && (
           <View style={{ marginTop: 22 }}>
+            {unavailable && (
+              <Card style={{ borderColor: C.red }}>
+                <P>База курсов не подключена: примените в Supabase файлы 0032, 0033 и 0034 (см. TODO_APPLY.md). После этого здесь появятся курсы и редактор заработает.</P>
+              </Card>
+            )}
             <RowLink icon="doc" title="Редактор курсов (администратор)" onPress={() => router.push("/admin")} />
           </View>
         )}

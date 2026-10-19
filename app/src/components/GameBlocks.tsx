@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
-import { DATA, ORDER } from "../data/content";
+import { DATA } from "../data/content";
 import { dailyQuests, mastery, todayKey, XP } from "../lib/game";
 import { currentStreak, myDirections, skillsOf, useProgress } from "../lib/progress";
 import { C, F } from "../theme";
@@ -15,7 +15,7 @@ export function MasteryCards() {
     <View>
       <Label icon="star">Моё мастерство</Label>
       {dirs.length === 0 && <Hint style={{ marginTop: -8, marginBottom: 10 }}>Пройдите онлайн-урок или войдите в кабинет студии — и здесь начнётся прокачка навыков.</Hint>}
-      {(dirs.length ? dirs : ORDER.slice(0, 2)).map((d) => {
+      {dirs.map((d) => {
         const skills = skillsOf(state, d);
         const m = mastery(skills);
         return (
