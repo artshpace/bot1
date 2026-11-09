@@ -171,6 +171,7 @@
       <select id="s-provider">
         <option value="anthropic">Claude (Anthropic)</option>
         <option value="openai">Другой сервис (OpenAI-совместимый API)</option>
+        <option value="offline">Без нейросети — ответы из моих текстов</option>
       </select>
 
       <div id="p-anthropic">
@@ -192,6 +193,10 @@
           <option value="medium">Средняя</option>
           <option value="high">Высокая — продуманный сюжет, медленнее и дороже</option>
         </select>
+      </div>
+
+      <div id="p-offline">
+        <div class="help" style="margin-top:10px">Персонажи отвечают фрагментами из текстов, которые вы загрузите в карточку персонажа (поле «Тексты для ответов»). Интернет и ключи не нужны, ничего никуда не отправляется. Приложение не понимает смысл фраз, а подбирает подходящий фрагмент по совпадению слов или продолжает текст по порядку.</div>
       </div>
 
       <div id="p-openai">
@@ -350,6 +355,23 @@ const sampleCharacter = () => ({
   scenario: "Поздний вечер, за окном ливень. {{user}} заходит в лавку за минуту до закрытия, принося с собой странные карманные часы, которые идут в обратную сторону.",
   greeting: "*Колокольчик над дверью звякает, и Вэл, не поднимая глаз от разобранного механизма, тяжело вздыхает.* «Мы закрываемся через минуту. Если вы пришли переждать дождь — зонты в углу, по сто монет.» *Она наконец поднимает взгляд, и её брови чуть приподнимаются при виде того, что у вас в руке.* `Это же… нет, не может быть.`",
   examples: "",
+  library: `# привет, здравствуй, добрый, вечер
+*Вэл откладывает отвёртку и смеряет {{user}} взглядом поверх очков.* «Добрый, если вы не налоговый инспектор.»
+
+«А, это снова вы.» *Уголок её губ едва заметно дёргается.* \`Пришёл всё-таки.\`
+
+# часы, механизм, стрелки
+*Она осторожно берёт часы двумя пальцами, будто они могут укусить.* «Стрелки идут назад… Такие делал только один мастер. И он умер сто лет назад.»
+
+*Вэл подносит часы к уху и замирает.* «Слышите? Они тикают не в такт. Будто считают что-то своё.»
+
+# чай, пить
+«Чай — это единственное, что в этой лавке точно работает.» *Она ставит перед {{user}} щербатую чашку.*
+
+# *
+*Вэл молча изучает {{user}}, постукивая пальцами по прилавку.*
+
+«Хм.» *Она возвращается к механизму, но краем глаза продолжает следить за вами.*`,
 });
 
 async function load(){
@@ -518,7 +540,7 @@ $("#btn-import-char").onclick = async () => {
     const c = { id: uid(), name: d.name || d.char_name || "Без имени", avatar: d.avatar?.startsWith?.("data:") ? d.avatar : "",
       color: randColor(), description: d.description || d.char_persona || "", personality: d.personality || "",
       scenario: d.scenario || d.world_scenario || "", greeting: d.first_mes || d.char_greeting || d.greeting || "",
-      examples: d.mes_example || d.example_dialogue || d.examples || "" };
+      examples: d.mes_example || d.example_dialogue || d.examples || "", library: d.extensions?.library || d.library || "" };
     S.characters.push(c); save(); renderCharList(); toast(`Импортирован: ${c.name}`);
   } catch { toast("Не удалось прочитать файл карточки"); }
 };
@@ -539,7 +561,23 @@ function editCharacter(id){
     ${field("personality", "Характер", "Черты характера, манера речи, привычки")}
     ${field("scenario", "Сценарий (начальная ситуация)", "Где и как начинается история. {{user}} — это вы, {{char}} — персонаж")}
     ${field("greeting", "Первое сообщение", "С чего персонаж начнёт чат", 4)}
-    ${field("examples", "Примеры диалогов (необязательно)", "{{user}}: …\n{{char}}: …", 3)}`;
+    ${field("examples", "Примеры диалогов (необязательно)", "{{user}}: …\n{{char}}: …", 3)}
+    <label>Тексты для ответов (режим без нейросети)</label>
+    <textarea data-k="library" id="ce-lib" rows="8" placeholder="Вставьте или загрузите свои тексты. Подробности — ниже.">${esc(c.library || "")}</textarea>
+    <div class="row" style="margin-top:8px"><button class="btn" id="ce-lib-load">Загрузить .txt</button><span class="help" id="ce-lib-count"></span></div>
+    <details class="box"><summary>Как оформлять тексты</summary><div class="help" style="font-size:13.5px;line-height:1.6">
+      <p><b>Просто текст.</b> Вставьте рассказ или набор реплик, абзацы разделяйте пустой строкой. На каждое ваше сообщение персонаж ответит абзацем, в котором больше всего общих с ним слов. Если совпадений нет или вы отправили пустое сообщение, история продолжится со следующего абзаца.</p>
+      <p style="margin-top:8px"><b>Ответы на ключевые слова.</b> Строка, начинающаяся с <code>#</code>, задаёт слова через запятую. Ниже идут варианты ответа, разделённые пустой строкой:</p>
+      <pre style="white-space:pre-wrap;background:var(--panel-2);padding:8px;border-radius:8px;margin-top:6px">
+# привет, здравствуй, добрый вечер
+*Поднимает взгляд* «О, это ты.»
+
+«Явился наконец.» *улыбается*
+
+# *
+*Молча смотрит на {{user}}*</pre>
+      <p style="margin-top:8px"><code># *</code> — ответы на случай, когда ничего не подошло. {{user}} заменяется вашим именем. Можно сочетать: сначала просто текст, потом блоки с <code>#</code>.</p>
+    </div></details>`;
   const buttons = [
     { text: "Отмена", onClick: closeModal },
     { text: "Сохранить", cls: "primary", onClick: () => {
@@ -556,15 +594,24 @@ function editCharacter(id){
       S.characters = S.characters.filter((x) => x.id !== id); save(); closeModal(); renderCharList();
     } });
     buttons.splice(1, 0, { text: "Экспорт", onClick: () => download(`${c.name}.json`, { spec: "chara_card_v2", spec_version: "2.0", data: {
-      name: c.name, description: c.description, personality: c.personality, scenario: c.scenario, first_mes: c.greeting, mes_example: c.examples, avatar: c.avatar } }) });
+      name: c.name, description: c.description, personality: c.personality, scenario: c.scenario, first_mes: c.greeting, mes_example: c.examples, avatar: c.avatar, extensions: { library: c.library || "" } } }) });
   }
   openModal(id ? "Редактировать персонажа" : "Новый персонаж", body, buttons);
+  const libCount = () => { const t = $("#ce-lib").value; $("#ce-lib-count").textContent = t ? `${t.length.toLocaleString("ru")} символов` : ""; };
+  libCount(); $("#ce-lib").addEventListener("input", libCount);
+  $("#ce-lib-load").onclick = async () => {
+    const f = await pickFile(".txt,text/plain"); if (!f) return;
+    const t = (await readText(f)).replace(/\r\n?/g, "\n").trim();
+    const ta = $("#ce-lib"); ta.value = ta.value.trim() ? ta.value.trim() + "\n\n" + t : t; libCount();
+    toast(`Добавлено: ${f.name}`);
+  };
   $("#ce-upload").onclick = async () => {
     const f = await pickFile("image/*"); if (!f) return;
     try { c.avatar = await resizeImage(f); $("#ce-av").innerHTML = avatarHTML(c); } catch { toast("Не удалось загрузить изображение"); }
   };
   $("#ce-rm") && ($("#ce-rm").onclick = () => { c.avatar = ""; $("#ce-av").innerHTML = avatarHTML(c); });
   $("#ce-gen").onclick = async () => {
+    if (S.settings.provider === "offline") return toast("Генерация работает только с нейросетью — выберите её в настройках");
     const idea = $("#ce-idea").value.trim(); if (!idea) return toast("Опишите идею персонажа");
     const btn = $("#ce-gen"); btn.disabled = true; btn.textContent = "Создаю…";
     try {
@@ -580,7 +627,7 @@ function editCharacter(id){
 const SET_FIELDS = [["s-provider", "provider"], ["s-key", "apiKey"], ["s-model", "model"], ["s-effort", "effort"],
   ["s-obase", "openaiBase"], ["s-okey", "openaiKey"], ["s-omodel", "openaiModel"],
   ["s-maxtok", "maxTokens", Number], ["s-ctx", "contextMessages", Number], ["s-user", "userName"], ["s-persona", "userPersona"], ["s-theme", "theme"]];
-function showProvider(){ $("#p-anthropic").style.display = S.settings.provider === "openai" ? "none" : ""; $("#p-openai").style.display = S.settings.provider === "openai" ? "" : "none"; }
+function showProvider(){ const p = S.settings.provider; $("#p-anthropic").style.display = p === "anthropic" ? "" : "none"; $("#p-openai").style.display = p === "openai" ? "" : "none"; $("#p-offline").style.display = p === "offline" ? "" : "none"; }
 function fillSettings(){ for (const [id, k] of SET_FIELDS) $("#" + id).value = S.settings[k] ?? ""; $("#s-adult").checked = !!S.settings.adult; showProvider(); }
 for (const [id, k, cast] of SET_FIELDS) $("#" + id).addEventListener("change", (e) => {
   let v = e.target.value; if (cast) v = Math.max(1, cast(v) || DEFAULT_SETTINGS[k]);
@@ -880,7 +927,9 @@ function buildMessages(chat, history, speaker){
 const FALLBACK_MODELS = new Set(["claude-opus-5-5", "claude-sonnet-5-5", "claude-fable-5-1"]);
 const isOpenAI = () => S.settings.provider === "openai";
 
+const isOffline = () => S.settings.provider === "offline";
 function checkConfig(){
+  if (isOffline()) return;
   if (isOpenAI()) {
     if (!S.settings.openaiBase) throw new Error("NO_BASE");
     if (!S.settings.openaiModel) throw new Error("NO_MODEL");
@@ -1004,7 +1053,7 @@ async function generate({ regenerate }){
 
   const ctrl = new AbortController();
   generating = { chatId: chat.id, abort: () => ctrl.abort() }; updateSendBtn();
-  if (!regenerate) await updateMemory(chat);
+  if (!regenerate && !isOffline()) await updateMemory(chat);
 
   const history = regenerate ? chat.messages.slice(0, chat.messages.indexOf(regenerate)) : chat.messages;
   const speaker = regenerate ? (charById(regenerate.charId) || pickSpeaker(chat, history)) : pickSpeaker(chat, history);
@@ -1014,6 +1063,11 @@ async function generate({ regenerate }){
 
   const histForApi = regenerate ? history : chat.messages.slice(0, -1);
   try {
+    if (isOffline()) {
+      await new Promise((r, j) => { const t = setTimeout(r, 500 + Math.random() * 700); ctrl.signal.addEventListener("abort", () => { clearTimeout(t); j(Object.assign(new Error(), { name: "AbortError" })); }); });
+      target.swipes[target.sel] = offlineReply(chat, histForApi, speaker, regenerate);
+      return;
+    }
     let acc = "";
     const res = await llm({
       maxTokens: S.settings.maxTokens, effort: S.settings.effort, signal: ctrl.signal,
@@ -1070,6 +1124,110 @@ async function generateCharacter(idea){
   const m = res.text.match(/\{[\s\S]*\}/);
   if (!m) throw new Error("модель вернула ответ не в том формате, попробуйте ещё раз");
   return JSON.parse(m[0]);
+}
+
+/* ───────────── режим без нейросети ───────────── */
+// Простейшая «основа слова»: нижний регистр, ё→е, отрезаем типичное русское окончание, не длиннее 6 букв.
+const STOP = new Set("это как так что все она они его её ему ей мне меня тебя тебе тебе вот где когда тоже только уже ещё еще или если чтобы потом очень есть был была были будет надо нет даже себя свой своя свои".split(" "));
+const ENDING = /(иями|ями|ами|ого|его|ому|ему|ыми|ими|ешь|ишь|ете|ите|ых|их|ой|ей|ий|ый|ая|яя|ое|ее|ую|юю|ом|ем|ам|ям|ах|ях|ов|ев|ет|ит|ут|ют|ат|ят|ть|ся|сь|а|я|о|е|у|ю|ы|и|й|ь)$/;
+function stem(w){
+  w = w.toLowerCase().replace(/ё/g, "е");
+  if (/[а-я]/.test(w)) { const m = w.match(ENDING); if (m && w.length - m[0].length >= 2) w = w.slice(0, -m[0].length); }
+  return w.slice(0, 6);
+}
+const stems = (t) => [...new Set((String(t).toLowerCase().match(/[a-zа-яё0-9]+/gi) || []).filter((w) => w.length >= 3 && !STOP.has(w.toLowerCase())).map(stem))];
+// совпадение основ: равны, или одна — начало другой (не короче 4 букв): «прив»/«привет», «стрел»/«стрелк»
+const sameStem = (a, b) => a === b || (Math.min(a.length, b.length) >= 4 && (a.startsWith(b) || b.startsWith(a)));
+const hit = (q, s) => q.some((x) => sameStem(x, s));
+const libCache = new Map();
+function parseLibrary(src){
+  if (libCache.has(src)) return libCache.get(src);
+  const lib = { paras: [], rules: [], fallback: [] };
+  let cur = null; // текущее правило; null — свободный текст
+  const blocks = String(src || "").replace(/\r\n?/g, "\n").split(/\n\s*\n/);
+  for (let block of blocks) {
+    const lines = block.split("\n");
+    // заголовки # могут стоять и внутри блока (без пустой строки перед ними)
+    let buf = [];
+    const flush = () => {
+      const t = buf.join("\n").trim(); buf = [];
+      if (!t) return;
+      if (!cur) lib.paras.push({ text: t, st: stems(t) });
+      else cur.replies.push(t);
+    };
+    for (const line of lines) {
+      const m = line.match(/^\s*#\s*(.*)$/);
+      if (m) {
+        flush();
+        const keys = m[1].trim();
+        if (keys === "*" || keys === "") cur = { keys: [], replies: lib.fallback, fallback: true };
+        else { cur = { keys: keys.split(/[,;]/).map((k) => stems(k)).filter((k) => k.length), replies: [] }; lib.rules.push(cur); }
+      } else buf.push(line);
+    }
+    flush();
+  }
+  // idf для свободных абзацев
+  const df = new Map();
+  for (const p of lib.paras) for (const s of p.st) df.set(s, (df.get(s) || 0) + 1);
+  lib.idf = (s) => Math.log(1 + lib.paras.length / (df.get(s) || 1));
+  if (libCache.size > 20) libCache.clear();
+  libCache.set(src, lib); return lib;
+}
+
+function offlineReply(chat, history, speaker, regenerate){
+  const lib = parseLibrary(speaker.library);
+  const mine = history.filter((m) => m.role === "char" && m.charId === speaker.id);
+  const recent = new Set(mine.slice(-40).flatMap((m) => m.swipes));
+  const veryRecent = new Set(mine.slice(-1).flatMap((m) => m.swipes)); // для абзацев: не повторять только предыдущий ответ
+  const current = new Set(regenerate ? regenerate.swipes : []);
+  for (const t of current) { recent.add(t); veryRecent.add(t); }
+  const lastMsg = history[history.length - 1];
+  const userText = lastMsg?.role === "user" ? msgText(lastMsg) : "";
+  const q = stems(userText);
+  const fresh = (arr) => {
+    const f = arr.filter((t) => !recent.has(fillU(t))); if (f.length) return f;
+    const g = arr.filter((t) => !current.has(fillU(t))); return g.length ? g : arr;
+  };
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const fillU = (t) => fill(t, chat, speaker);
+
+  if (!lib.paras.length && !lib.rules.length && !lib.fallback.length)
+    return `((У персонажа ${speaker.name} нет текстов для ответов. Откройте его карточку и заполните поле «Тексты для ответов».))`;
+
+  // 1) правила с ключевыми словами
+  if (q.length && lib.rules.length) {
+    let best = null, bestScore = 0;
+    for (const r of lib.rules) {
+      const score = r.keys.filter((k) => k.every((s) => hit(q, s))).reduce((a, k) => a + k.length, 0);
+      if (score > bestScore && r.replies.length) { best = r; bestScore = score; }
+    }
+    if (best) return fillU(pick(fresh(best.replies)));
+  }
+  // 2) свободный текст: самый похожий абзац
+  if (lib.paras.length) {
+    if (q.length) {
+      let best = -1, bestScore = 0;
+      lib.paras.forEach((p, i) => {
+        if (veryRecent.has(fillU(p.text))) return;
+        const score = p.st.reduce((a, s) => a + (hit(q, s) ? lib.idf(s) : 0), 0);
+        if (score > bestScore) { best = i; bestScore = score; }
+      });
+      if (best >= 0) return fillU(lib.paras[best].text);
+    }
+    // 3) продолжение по порядку: следующий абзац после последнего использованного
+    const lastText = [...mine].reverse().map((m) => msgText(m)).find((t) => lib.paras.some((p) => fillU(p.text) === t));
+    let i = lastText ? lib.paras.findIndex((p) => fillU(p.text) === lastText) + 1 : 0;
+    if (!q.length || !lib.fallback.length) {
+      for (let k = 0; k < lib.paras.length; k++) {
+        const p = lib.paras[(i + k) % lib.paras.length];
+        if (!current.has(fillU(p.text))) return fillU(p.text);
+      }
+    }
+  }
+  // 4) ответы по умолчанию
+  if (lib.fallback.length) return fillU(pick(fresh(lib.fallback)));
+  if (lib.paras.length) return fillU(pick(lib.paras).text);
+  return fillU(pick(fresh(lib.rules.flatMap((r) => r.replies))));
 }
 
 /* ───────────── Android ───────────── */
