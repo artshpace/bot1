@@ -18,7 +18,7 @@
   <meta property="og:description" content="Гитара, вокал, живопись, актёрское мастерство и танцы для детей и взрослых в Петропавловске.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://artshpace.kz/">
-  <meta property="og:image" content="media/brand/og.png">
+  <meta property="og:image" content="https://artshpace.kz/media/brand/og.png">
   <link rel="canonical" href="https://artshpace.kz/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -74,9 +74,14 @@
              плеер поверх постера и убирает постер только когда видео реально
              пошло — чёрного квадрата загрузки посетитель не видит. Постер ниже
              показывается мгновенно ещё до JS. -->
+        <!-- Видео временно отключено (ролики ещё не готовы) — показываем
+             статичное фото студии. Чтобы вернуть видео: убрать data-hero-image
+             ниже и гард в main.js (renderHeroVideo) — вернётся плеер из
+             data-hero-default / Медиацентра. -->
         <div class="hero-ed-video" id="hero-media"
+             data-hero-image="media/guitar/1.jpg"
              data-hero-default="https://www.youtube.com/watch?v=lBqztlaWOsM">
-          <div class="hero-ed-poster" style="background-image:url('https://img.youtube.com/vi/lBqztlaWOsM/hqdefault.jpg')"></div>
+          <div class="hero-ed-poster" style="background-image:url('media/guitar/1.jpg')"></div>
         </div>
         <!-- Подсказка «листайте вниз» — только на телефоне, пока мало контента
              в зоне видимости и непонятно, что делать дальше. Полупрозрачная,

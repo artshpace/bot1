@@ -896,6 +896,11 @@ const SND_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 function renderHeroVideo() {
   const box = document.getElementById('hero-media');
   if (!box) return;
+  // Видео временно отключено: если задан data-hero-image — показываем статичное
+  // фото и не поднимаем плеер (и не ходим в Supabase за роликом). Чтобы вернуть
+  // видео, убрать атрибут data-hero-image в index.html.
+  const still = box.getAttribute('data-hero-image');
+  if (still) { mountHeroVideo(box, still, 'image', ''); return; }
   const def = box.getAttribute('data-hero-default') || '';
   const go = (url, kind, thumb) => mountHeroVideo(box, url, kind, thumb);
   if (window.SUPA && SUPA.media) {
