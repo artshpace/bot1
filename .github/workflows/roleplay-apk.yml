@@ -1,0 +1,79 @@
+# Сборка APK ролевого чата (roleplay/ + roleplay-android/).
+# Готовый файл: Releases → «Ролевой чат — Android» (тег roleplay-latest), оттуда удобно скачать прямо на телефон.
+name: Roleplay APK
+
+on:
+  push:
+    paths:
+      - "roleplay/**"
+      - "roleplay-android/**"
+      - ".github/workflows/roleplay-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: roleplay-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: roleplay-android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: roleplay-android/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Установка зависимостей
+        run: npm ci
+
+      - name: Копирование веб-приложения в Android-проект
+        run: npx cap sync android
+
+      - name: Сборка APK
+        working-directory: roleplay-android/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Имя файла
+        id: apk
+        run: |
+          NAME="RoleplayChat-1.0.${GITHUB_RUN_NUMBER}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "$NAME"
+          cp "$NAME" RoleplayChat.apk
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.apk.outputs.name }}
+          path: roleplay-android/${{ steps.apk.outputs.name }}
+
+      - name: Релиз для скачивания на телефон
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: roleplay-latest
+          target_commitish: ${{ github.sha }}
+          name: Ролевой чат — Android (последняя сборка)
+          prerelease: true
+          make_latest: false
+          body: |
+            Последняя сборка из ветки `${{ github.ref_name }}` (коммит ${{ github.sha }}).
+            Скачайте RoleplayChat.apk на телефон и откройте. Android попросит разрешить установку из этого источника.
+            Новые версии ставятся поверх старой — чаты и персонажи сохраняются.
+          files: roleplay-android/RoleplayChat.apk
+          overwrite_files: true

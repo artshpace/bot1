@@ -1,0 +1,7 @@
+{
+  "appId": "com.artshpace.roleplay",
+  "appName": "Ролевой чат",
+  "webDir": "../roleplay",
+  "android": { "allowMixedContent": true },
+  "server": { "androidScheme": "https" }
+}

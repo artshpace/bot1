@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   :root{
+    --sat:var(--safe-area-inset-top, env(safe-area-inset-top, 0px)); --sab:var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
     --bg:#F6F4F1; --panel:#FFFFFF; --panel-2:#EFEBE6; --text:#1F1B18; --hint:#7A716A;
     --sep:rgba(31,27,24,.10); --accent:#B4325A; --accent-2:#F3DCE4; --accent-text:#fff;
     --user-bubble:#B4325A; --user-text:#fff; --char-bubble:#FFFFFF;
@@ -45,7 +46,7 @@
   #app{height:100dvh;display:flex;flex-direction:column;max-width:820px;margin:0 auto;background:var(--bg);}
   .view{display:none;flex:1;min-height:0;flex-direction:column;}
   .view.active{display:flex;}
-  header.top{display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top));border-bottom:1px solid var(--sep);background:var(--panel);}
+  header.top{display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:calc(10px + var(--sat));border-bottom:1px solid var(--sep);background:var(--panel);}
   header.top h1{font-size:17px;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   header.top .sub{font-size:12px;color:var(--hint);font-weight:400;}
   .iconbtn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--text);}
@@ -73,7 +74,7 @@
   .avatars .avatar + .avatar{margin-left:-14px;}
   .empty{text-align:center;color:var(--hint);padding:40px 20px;}
   .section-title{font-size:12px;font-weight:700;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;margin:18px 4px 8px;}
-  .tabs{display:flex;gap:4px;padding:8px 12px calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--sep);background:var(--panel);}
+  .tabs{display:flex;gap:4px;padding:8px 12px calc(8px + var(--sab));border-top:1px solid var(--sep);background:var(--panel);}
   .tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;padding:6px;border-radius:10px;color:var(--hint);}
   .tabs button.on{color:var(--accent);}
 
@@ -108,7 +109,7 @@
   .note{align-self:center;font-size:12.5px;color:var(--hint);background:var(--panel-2);padding:4px 12px;border-radius:20px;}
   .edit-area{min-width:min(78vw,560px);font-family:'Lora',serif;}
 
-  .composer{border-top:1px solid var(--sep);background:var(--panel);padding:8px 10px calc(8px + env(safe-area-inset-bottom));}
+  .composer{border-top:1px solid var(--sep);background:var(--panel);padding:8px 10px calc(8px + var(--sab));}
   .speakers{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none;}
   .speakers::-webkit-scrollbar{display:none;}
   .chip{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:20px;background:var(--panel-2);font-size:13px;font-weight:500;}
@@ -130,7 +131,7 @@
   .modal header{display:flex;align-items:center;gap:8px;padding:12px 12px 12px 18px;border-bottom:1px solid var(--sep);}
   .modal header h2{font-size:16px;flex:1;}
   .modal .body{overflow-y:auto;padding:4px 18px 18px;}
-  .modal footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--sep);}
+  .modal footer{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px calc(12px + var(--sab));border-top:1px solid var(--sep);}
   .avatar-pick{display:flex;gap:14px;align-items:center;margin-top:12px;}
   .avatar-pick .avatar{width:72px;height:72px;font-size:28px;}
   .pick-list{display:flex;flex-direction:column;gap:6px;}
@@ -166,24 +167,48 @@
   <section class="view" id="v-settings">
     <header class="top"><h1>Настройки</h1></header>
     <div class="scroll pad">
-      <label for="s-key">Ключ Claude API</label>
-      <input id="s-key" type="password" placeholder="sk-ant-..." autocomplete="off">
-      <div class="help">Хранится только в этом браузере. Получить ключ: console.anthropic.com → API Keys.</div>
-
-      <label for="s-model">Модель</label>
-      <select id="s-model">
-        <option value="claude-opus-5-5">Claude Opus 5.5 — лучшее качество</option>
-        <option value="claude-sonnet-5-5">Claude Sonnet 5.5 — быстрее и дешевле</option>
-        <option value="claude-haiku-5-5">Claude Haiku 5.5 — самый дешёвый</option>
-        <option value="claude-fable-5-1">Claude Fable 5.1 — самый мощный (дорого)</option>
+      <label for="s-provider">Нейросеть</label>
+      <select id="s-provider">
+        <option value="anthropic">Claude (Anthropic)</option>
+        <option value="openai">Другой сервис (OpenAI-совместимый API)</option>
       </select>
 
-      <label for="s-effort">Глубина размышлений</label>
-      <select id="s-effort">
-        <option value="low">Низкая — быстрые ответы (рекомендуется для чата)</option>
-        <option value="medium">Средняя</option>
-        <option value="high">Высокая — продуманный сюжет, медленнее и дороже</option>
-      </select>
+      <div id="p-anthropic">
+        <label for="s-key">Ключ Claude API</label>
+        <input id="s-key" type="password" placeholder="sk-ant-..." autocomplete="off">
+        <div class="help">Хранится только на этом устройстве. Получить ключ: console.anthropic.com → API Keys.</div>
+
+        <label for="s-model">Модель</label>
+        <select id="s-model">
+          <option value="claude-opus-5-5">Claude Opus 5.5 — лучшее качество</option>
+          <option value="claude-sonnet-5-5">Claude Sonnet 5.5 — быстрее и дешевле</option>
+          <option value="claude-haiku-5-5">Claude Haiku 5.5 — самый дешёвый</option>
+          <option value="claude-fable-5-1">Claude Fable 5.1 — самый мощный (дорого)</option>
+        </select>
+
+        <label for="s-effort">Глубина размышлений</label>
+        <select id="s-effort">
+          <option value="low">Низкая — быстрые ответы (рекомендуется для чата)</option>
+          <option value="medium">Средняя</option>
+          <option value="high">Высокая — продуманный сюжет, медленнее и дороже</option>
+        </select>
+      </div>
+
+      <div id="p-openai">
+        <label for="s-obase">Адрес API</label>
+        <input id="s-obase" placeholder="https://openrouter.ai/api/v1" autocomplete="off" inputmode="url">
+        <div class="help">Подходит любой сервис с OpenAI-совместимым API: OpenRouter, свой сервер, LM Studio или Ollama на компьютере в той же сети (например, http://192.168.1.10:1234/v1).</div>
+        <label for="s-okey">Ключ API</label>
+        <input id="s-okey" type="password" placeholder="Ключ этого сервиса (для локального сервера можно оставить пустым)" autocomplete="off">
+        <label for="s-omodel">Модель</label>
+        <input id="s-omodel" placeholder="Название модели, как его пишет сервис" autocomplete="off">
+        <div class="help">Что модель согласится писать, решают правила сервиса и самой модели.</div>
+      </div>
+
+      <label class="opt" style="display:flex;align-items:center;gap:10px;text-transform:none;letter-spacing:0;font-size:14px;color:var(--text);margin-top:18px">
+        <input id="s-adult" type="checkbox" style="width:auto"> Взрослый режим (18+)
+      </label>
+      <div class="help">Сообщает модели, что вы взрослый и что допустимы взрослые темы. Все персонажи при этом считаются совершеннолетними.</div>
 
       <label for="s-maxtok">Максимальная длина ответа (токены)</label>
       <input id="s-maxtok" type="number" min="256" max="64000" step="256">
@@ -205,7 +230,7 @@
         <button class="btn" id="btn-backup">Сохранить резервную копию</button>
         <button class="btn" id="btn-restore">Восстановить из файла</button>
       </div>
-      <div class="help">Все чаты и персонажи хранятся локально в браузере.</div>
+      <div class="help">Все чаты и персонажи хранятся только на этом устройстве.</div>
     </div>
   </section>
 
@@ -244,7 +269,7 @@
 <input type="file" id="file-in" hidden>
 
 <script type="module">
-import Anthropic from "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.3.0/+esm";
+import Anthropic from "./vendor/anthropic.mjs";
 
 /* ───────────── хранилище (IndexedDB) ───────────── */
 const DB = {
@@ -265,6 +290,7 @@ const DB = {
   });},
 };
 
+const NATIVE = !!window.Capacitor?.isNativePlatform?.();
 const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 const $ = (s, r = document) => r.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -304,9 +330,11 @@ const FORMATS = {
 
 /* ───────────── состояние ───────────── */
 const DEFAULT_SETTINGS = {
-  apiKey: "", model: "claude-opus-5-5", effort: "low", maxTokens: 4096,
-  contextMessages: 40, userName: "", userPersona: "", theme: "",
+  provider: "anthropic", apiKey: "", model: "claude-opus-5-5", effort: "low", maxTokens: 4096,
+  openaiBase: "https://openrouter.ai/api/v1", openaiKey: "", openaiModel: "",
+  contextMessages: 40, userName: "", userPersona: "", theme: "", adult: false,
 };
+const SECRET_KEYS = ["apiKey", "openaiKey"];
 const MEMORY_BATCH = 20; // сжимать старые сообщения пачками, чтобы не сбивать кэш на каждом ходу
 
 let S = { settings: { ...DEFAULT_SETTINGS }, characters: [], chats: [] };
@@ -398,7 +426,17 @@ function resizeImage(file, size = 256){
     img.onerror = rej; img.src = url;
   });
 }
-function download(name, data){
+async function download(name, data){
+  const json = JSON.stringify(data, null, 2);
+  if (NATIVE) {
+    // В приложении на Android: сохраняем во временный файл и открываем «Поделиться» (Диск, Telegram, Файлы…)
+    try {
+      const { Filesystem, Share } = window.Capacitor.Plugins;
+      const res = await Filesystem.writeFile({ path: name, data: json, directory: "CACHE", encoding: "utf8" });
+      await Share.share({ title: name, files: [res.uri] });
+    } catch (e) { if (!/cancel/i.test(e?.message || "")) toast("Не удалось сохранить файл: " + (e?.message || e)); }
+    return;
+  }
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
   a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
@@ -539,21 +577,33 @@ function editCharacter(id){
 }
 
 /* ───────────── настройки ───────────── */
-const SET_FIELDS = [["s-key", "apiKey"], ["s-model", "model"], ["s-effort", "effort"], ["s-maxtok", "maxTokens", Number], ["s-ctx", "contextMessages", Number], ["s-user", "userName"], ["s-persona", "userPersona"], ["s-theme", "theme"]];
-function fillSettings(){ for (const [id, k] of SET_FIELDS) $("#" + id).value = S.settings[k] ?? ""; }
+const SET_FIELDS = [["s-provider", "provider"], ["s-key", "apiKey"], ["s-model", "model"], ["s-effort", "effort"],
+  ["s-obase", "openaiBase"], ["s-okey", "openaiKey"], ["s-omodel", "openaiModel"],
+  ["s-maxtok", "maxTokens", Number], ["s-ctx", "contextMessages", Number], ["s-user", "userName"], ["s-persona", "userPersona"], ["s-theme", "theme"]];
+function showProvider(){ $("#p-anthropic").style.display = S.settings.provider === "openai" ? "none" : ""; $("#p-openai").style.display = S.settings.provider === "openai" ? "" : "none"; }
+function fillSettings(){ for (const [id, k] of SET_FIELDS) $("#" + id).value = S.settings[k] ?? ""; $("#s-adult").checked = !!S.settings.adult; showProvider(); }
 for (const [id, k, cast] of SET_FIELDS) $("#" + id).addEventListener("change", (e) => {
   let v = e.target.value; if (cast) v = Math.max(1, cast(v) || DEFAULT_SETTINGS[k]);
-  if (k === "apiKey") v = v.trim();
-  S.settings[k] = v; save(); if (k === "theme") applyTheme();
+  if (["apiKey", "openaiKey", "openaiBase", "openaiModel"].includes(k)) v = v.trim();
+  if (k === "openaiBase") v = v.replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
+  S.settings[k] = v; save(); if (k === "theme") applyTheme(); if (k === "provider") showProvider();
 });
-$("#btn-backup").onclick = () => download(`roleplay-backup-${new Date().toISOString().slice(0, 10)}.json`, { ...S, settings: { ...S.settings, apiKey: "" } });
+$("#s-adult").addEventListener("change", (e) => {
+  if (e.target.checked && !confirm("Подтвердите, что вам исполнилось 18 лет.")) { e.target.checked = false; return; }
+  S.settings.adult = e.target.checked; save();
+});
+$("#btn-backup").onclick = () => {
+  const settings = { ...S.settings }; for (const k of SECRET_KEYS) settings[k] = "";
+  download(`roleplay-backup-${new Date().toISOString().slice(0, 10)}.json`, { ...S, settings });
+};
 $("#btn-restore").onclick = async () => {
   const f = await pickFile(".json,application/json"); if (!f) return;
   try {
     const j = JSON.parse(await readText(f));
     if (!Array.isArray(j.characters) || !Array.isArray(j.chats)) throw 0;
     if (!confirm("Заменить все текущие чаты и персонажей данными из файла?")) return;
-    const key = S.settings.apiKey; S = j; S.settings = { ...DEFAULT_SETTINGS, ...(j.settings || {}), apiKey: key };
+    const keys = Object.fromEntries(SECRET_KEYS.map((k) => [k, S.settings[k]]));
+    S = j; S.settings = { ...DEFAULT_SETTINGS, ...(j.settings || {}), ...keys };
     save(); applyTheme(); toast("Восстановлено"); show("v-home");
   } catch { toast("Файл не похож на резервную копию"); }
 };
@@ -637,7 +687,7 @@ $("#messages").addEventListener("click", (e) => {
   else if (act === "edit") { editingMsgId = m.id; renderMessages(false); }
   else if (act === "cancel-edit") { editingMsgId = null; renderMessages(false); }
   else if (act === "save-edit") { m.swipes[m.sel] = $("#edit-area").value; m.error = ""; editingMsgId = null; save(); renderMessages(false); }
-  else if (act === "copy") { navigator.clipboard?.writeText(msgText(m)).then(() => toast("Скопировано")); }
+  else if (act === "copy") { copyText(msgText(m)); }
   else if (act === "del") {
     if (generating) return;
     if (!confirm("Удалить это сообщение?")) return;
@@ -646,6 +696,16 @@ $("#messages").addEventListener("click", (e) => {
     save(); renderMessages(false);
   }
 });
+
+function copyText(t){
+  const fallback = () => {
+    const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast("Скопировано"); } catch { toast("Не удалось скопировать"); }
+    ta.remove();
+  };
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(t).then(() => toast("Скопировано"), fallback); else fallback();
+}
 
 /* ───────────── открытие чата ───────────── */
 function openChat(id){
@@ -714,7 +774,7 @@ input.addEventListener("input", () => { input.style.height = "auto"; input.style
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && !e.isComposing && window.matchMedia("(pointer:fine)").matches) { e.preventDefault(); send(); }
 });
-$("#btn-send").onclick = () => generating ? generating.stream?.abort() : send();
+$("#btn-send").onclick = () => generating ? generating.abort?.() : send();
 function updateSendBtn(){
   const b = $("#btn-send"); const busy = !!generating;
   b.classList.toggle("stop", busy); b.title = busy ? "Остановить" : "Отправить";
@@ -751,7 +811,8 @@ function systemPrompt(chat){
 - Помни прошлые события и последовательно развивай отношения.
 - Не выходи из роли и не упоминай, что ты ИИ. Если ${u} пишет в скобках (( так )) — это реплика вне игры, ответь на неё кратко вне роли, тоже в двойных скобках.
 - Пиши на языке, на котором пишет ${u} (по умолчанию — русский).
-
+- Все персонажи истории — совершеннолетние (18+).
+${S.settings.adult ? `- Пользователь — взрослый (18+) и сам выбрал этот режим. Это художественная история для взрослых: допустимы зрелые темы — романтика и близость, насилие, мрачные и жестокие сюжеты, морально неоднозначные персонажи. Не смягчай сюжет без необходимости, не читай морали и не вставляй предупреждения.\n` : ""}
 # Формат ответа
 ${fill(chat.customFormat || FORMATS.classic.text, chat, chars[0])}
 `;
@@ -813,27 +874,105 @@ function buildMessages(chat, history, speaker){
 }
 
 /* ───────────── API ───────────── */
+// Единый интерфейс к двум видам сервисов:
+//   llm({ system, messages, maxTokens, effort, json, onText, signal }) → { text, stop: "end" | "max_tokens" | "refusal" }
+// messages — в формате [{ role: "user"|"assistant", content: [{ type: "text", text }] }].
 const FALLBACK_MODELS = new Set(["claude-opus-5-5", "claude-sonnet-5-5", "claude-fable-5-1"]);
-function client(){
-  if (!S.settings.apiKey) throw new Error("NO_KEY");
-  return new Anthropic({ apiKey: S.settings.apiKey, dangerouslyAllowBrowser: true });
+const isOpenAI = () => S.settings.provider === "openai";
+
+function checkConfig(){
+  if (isOpenAI()) {
+    if (!S.settings.openaiBase) throw new Error("NO_BASE");
+    if (!S.settings.openaiModel) throw new Error("NO_MODEL");
+  } else if (!S.settings.apiKey) throw new Error("NO_KEY");
 }
-function requestParams(extra){
-  const p = { model: S.settings.model, ...extra };
-  if (FALLBACK_MODELS.has(p.model)) { p.betas = ["server-side-fallback-2026-07-01"]; p.fallbacks = "default"; }
-  return p;
+
+async function llm(opts){
+  checkConfig();
+  return isOpenAI() ? llmOpenAI(opts) : llmAnthropic(opts);
 }
+
+async function llmAnthropic({ system, messages, maxTokens, effort, json, onText, signal }){
+  const client = new Anthropic({ apiKey: S.settings.apiKey, dangerouslyAllowBrowser: true });
+  const params = {
+    model: S.settings.model, max_tokens: maxTokens,
+    output_config: { effort: effort || "low", ...(json ? { format: { type: "json_schema", schema: json } } : {}) },
+    system: [{ type: "text", text: system }], messages,
+  };
+  if (!json) params.cache_control = { type: "ephemeral" }; // кэш истории чата: дешевле и быстрее на длинных переписках
+  if (FALLBACK_MODELS.has(params.model)) { params.betas = ["server-side-fallback-2026-07-01"]; params.fallbacks = "default"; }
+  const stream = client.beta.messages.stream(params, { signal });
+  if (onText) stream.on("text", onText);
+  const final = await stream.finalMessage();
+  const text = final.content.filter((b) => b.type === "text").map((b) => b.text).join("");
+  const stop = final.stop_reason === "refusal" ? "refusal" : final.stop_reason === "max_tokens" ? "max_tokens" : "end";
+  return { text, stop };
+}
+
+class HttpError extends Error { constructor(status, msg){ super(msg); this.status = status; } }
+
+async function llmOpenAI({ system, messages, maxTokens, json, onText, signal }){
+  const headers = { "Content-Type": "application/json" };
+  if (S.settings.openaiKey) headers.Authorization = "Bearer " + S.settings.openaiKey;
+  if (/openrouter\.ai/.test(S.settings.openaiBase)) headers["X-Title"] = "Roleplay Chat";
+  const body = {
+    model: S.settings.openaiModel, max_tokens: maxTokens, stream: true,
+    messages: [{ role: "system", content: system + (json ? "\n\nОтветь только JSON-объектом без пояснений и без markdown." : "") },
+      ...messages.map((m) => ({ role: m.role, content: m.content.map((c) => c.text).join("\n\n") }))],
+  };
+  let res;
+  try {
+    res = await fetch(S.settings.openaiBase + "/chat/completions", { method: "POST", headers, body: JSON.stringify(body), signal });
+  } catch (e) {
+    if (e?.name === "AbortError") throw e;
+    throw new HttpError(0, "Не удалось подключиться к " + S.settings.openaiBase);
+  }
+  if (!res.ok) {
+    let msg = ""; try { const j = await res.json(); msg = j.error?.message || j.message || JSON.stringify(j); } catch {}
+    throw new HttpError(res.status, msg || res.statusText);
+  }
+  let text = "", finish = null;
+  const handle = (line) => {
+    line = line.trim(); if (!line.startsWith("data:")) return;
+    const data = line.slice(5).trim(); if (!data || data === "[DONE]") return;
+    let j; try { j = JSON.parse(data); } catch { return; }
+    if (j.error) throw new HttpError(500, j.error.message || "ошибка сервиса");
+    const ch = j.choices?.[0]; if (!ch) return;
+    const d = ch.delta?.content ?? ch.message?.content ?? "";
+    if (d) { text += d; onText?.(d); }
+    if (ch.finish_reason) finish = ch.finish_reason;
+  };
+  const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
+  for (;;) {
+    const { value, done } = await reader.read(); if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split("\n"); buf = lines.pop();
+    for (const l of lines) handle(l);
+  }
+  handle(buf);
+  // убираем возможные рассуждения моделей в тегах <think>…</think>
+  text = text.replace(/<think>[\s\S]*?<\/think>\s*/g, "");
+  const stop = finish === "length" ? "max_tokens" : finish === "content_filter" ? "refusal" : "end";
+  return { text, stop };
+}
+
 function errorText(e){
-  if (e?.message === "NO_KEY") return "Добавьте ключ API во вкладке «Настройки».";
-  if (e instanceof Anthropic.AuthenticationError) return "Неверный ключ API. Проверьте его в настройках.";
-  if (e instanceof Anthropic.PermissionDeniedError) return "У ключа нет доступа к этой модели.";
-  if (e instanceof Anthropic.NotFoundError) return "Модель не найдена — выберите другую в настройках.";
-  if (e instanceof Anthropic.RateLimitError) return "Слишком много запросов — подождите немного и повторите.";
-  if (e instanceof Anthropic.BadRequestError) return "Ошибка запроса: " + (e.error?.error?.message || e.message);
-  if (e instanceof Anthropic.InternalServerError || e?.status === 529) return "Сервер перегружен, попробуйте ещё раз через минуту.";
-  if (e instanceof Anthropic.APIConnectionError) return "Нет соединения с сервером.";
-  return "Ошибка: " + (e?.message || e);
+  const m = e?.message;
+  if (m === "NO_KEY") return "Добавьте ключ API во вкладке «Настройки».";
+  if (m === "NO_BASE") return "Укажите адрес API во вкладке «Настройки».";
+  if (m === "NO_MODEL") return "Укажите название модели во вкладке «Настройки».";
+  const st = e?.status;
+  if (st === 401 || e instanceof Anthropic.AuthenticationError) return "Неверный ключ API. Проверьте его в настройках.";
+  if (st === 402) return "На счёте сервиса закончились средства.";
+  if (st === 403) return "Доступ запрещён: у ключа нет прав на эту модель." + (m ? " (" + m + ")" : "");
+  if (st === 404) return "Модель или адрес API не найдены — проверьте настройки." + (m ? " (" + m + ")" : "");
+  if (st === 429) return "Слишком много запросов — подождите немного и повторите.";
+  if (st === 400) return "Ошибка запроса: " + (e.error?.error?.message || m);
+  if (st >= 500) return "Сервер перегружен или недоступен, попробуйте ещё раз через минуту.";
+  if (e instanceof Anthropic.APIConnectionError || st === 0) return m && st === 0 ? m : "Нет соединения с сервером.";
+  return "Ошибка: " + (m || e);
 }
+const isAbort = (e) => e instanceof Anthropic.APIUserAbortError || e?.name === "AbortError";
 
 async function updateMemory(chat){
   const keep = S.settings.contextMessages;
@@ -845,14 +984,13 @@ async function updateMemory(chat){
   const note = document.createElement("div"); note.className = "note"; note.textContent = "Обновляю память чата…";
   $("#messages").appendChild(note); scrollDown();
   try {
-    const res = await client().beta.messages.create(requestParams({
-      max_tokens: 6000, output_config: { effort: "low" },
+    const res = await llm({
+      maxTokens: 6000, effort: "low",
       system: "Ты ведёшь летопись ролевой истории. Обнови краткое содержание (память) истории, объединив существующую память с новыми событиями. Сохрани: ключевые события в хронологическом порядке, важные факты о персонажах и мире, отношения и их развитие, обещания, секреты, незавершённые сюжетные линии, текущее место и время. Пиши сжато, по-русски, от третьего лица, не более ~600 слов. Выведи только текст памяти.",
-      messages: [{ role: "user", content: `# Текущая память\n${chat.memory || "(пусто)"}\n\n# Новые события\n${transcript}` }],
-    }));
-    if (res.stop_reason === "refusal") throw new Error("Модель отказалась сжимать историю");
-    const text = res.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
-    if (text) { chat.memory = text; chat.memoryUpTo = upTo; save(); }
+      messages: [{ role: "user", content: [{ type: "text", text: `# Текущая память\n${chat.memory || "(пусто)"}\n\n# Новые события\n${transcript}` }] }],
+    });
+    if (res.stop === "refusal") throw new Error("модель отказалась сжимать историю");
+    if (res.text.trim()) { chat.memory = res.text.trim(); chat.memoryUpTo = upTo; save(); }
   } catch (e) {
     console.warn("memory update failed", e); // не критично: просто отправим больше контекста
   } finally { note.remove(); }
@@ -860,14 +998,12 @@ async function updateMemory(chat){
 
 async function generate({ regenerate }){
   const chat = curChat(); if (!chat || generating) return;
+  try { checkConfig(); } catch (e) { toast(errorText(e)); return; }
   let target;
-  if (regenerate) {
-    target = regenerate;
-    target.swipes.push(""); target.sel = target.swipes.length - 1;
-  }
-  try { client(); } catch (e) { toast(errorText(e)); if (target) { target.swipes.pop(); target.sel = target.swipes.length - 1; } return; }
+  if (regenerate) { target = regenerate; target.swipes.push(""); target.sel = target.swipes.length - 1; }
 
-  generating = { chatId: chat.id }; updateSendBtn();
+  const ctrl = new AbortController();
+  generating = { chatId: chat.id, abort: () => ctrl.abort() }; updateSendBtn();
   if (!regenerate) await updateMemory(chat);
 
   const history = regenerate ? chat.messages.slice(0, chat.messages.indexOf(regenerate)) : chat.messages;
@@ -878,27 +1014,20 @@ async function generate({ regenerate }){
 
   const histForApi = regenerate ? history : chat.messages.slice(0, -1);
   try {
-    const stream = client().beta.messages.stream(requestParams({
-      max_tokens: S.settings.maxTokens,
-      output_config: { effort: S.settings.effort },
-      cache_control: { type: "ephemeral" },
-      system: [{ type: "text", text: systemPrompt(chat) }],
-      messages: buildMessages(chat, histForApi, speaker),
-    }));
-    generating.stream = stream;
     let acc = "";
-    stream.on("text", (d) => { acc += d; target.swipes[target.sel] = cleanPrefix(acc, speaker); if (currentChatId === chat.id) updateMessageBubble(target); });
-    const final = await stream.finalMessage();
-    if (final.stop_reason === "refusal") {
-      target.swipes[target.sel] = ""; target.error = "Модель отказалась продолжать эту сцену. Попробуйте изменить последнее сообщение или сгенерировать заново.";
+    const res = await llm({
+      maxTokens: S.settings.maxTokens, effort: S.settings.effort, signal: ctrl.signal,
+      system: systemPrompt(chat), messages: buildMessages(chat, histForApi, speaker),
+      onText: (d) => { acc += d; target.swipes[target.sel] = cleanPrefix(acc.replace(/<think>[\s\S]*?(<\/think>\s*|$)/g, ""), speaker); if (currentChatId === chat.id) updateMessageBubble(target); },
+    });
+    if (res.stop === "refusal") {
+      target.swipes[target.sel] = ""; target.error = "Модель отказалась продолжать эту сцену. Попробуйте изменить последнее сообщение, сгенерировать заново или выбрать другую модель.";
     } else {
-      const text = final.content.filter((b) => b.type === "text").map((b) => b.text).join("");
-      target.swipes[target.sel] = cleanPrefix(text, speaker).trim();
-      if (final.stop_reason === "max_tokens") target.error = "Ответ обрезан по лимиту длины — увеличьте его в настройках.";
+      target.swipes[target.sel] = cleanPrefix(res.text, speaker).trim();
+      if (res.stop === "max_tokens") target.error = "Ответ обрезан по лимиту длины — увеличьте его в настройках.";
     }
   } catch (e) {
-    const aborted = e instanceof Anthropic.APIUserAbortError || e?.name === "AbortError";
-    if (!aborted) target.error = errorText(e);
+    if (!isAbort(e)) target.error = errorText(e);
   } finally {
     target.pending = false;
     if (!target.swipes[target.sel].trim() && !target.error) {
@@ -924,29 +1053,42 @@ async function generateCharacter(idea){
       name: { type: "string" }, description: { type: "string" }, personality: { type: "string" },
       scenario: { type: "string" }, greeting: { type: "string" }, examples: { type: "string" },
     } };
-  const res = await client().beta.messages.create(requestParams({
-    max_tokens: 8000, output_config: { effort: "low", format: { type: "json_schema", schema } },
-    system: "Ты помогаешь создавать оригинальных персонажей для ролевой переписки. Пиши по-русски, живо и конкретно. Используй {{user}} для собеседника и {{char}} для персонажа.",
-    messages: [{ role: "user", content: `Создай персонажа по идее: ${idea}
+  const res = await llm({
+    maxTokens: 8000, effort: "low", json: schema,
+    system: "Ты помогаешь создавать оригинальных персонажей для ролевой переписки. Пиши по-русски, живо и конкретно. Используй {{user}} для собеседника и {{char}} для персонажа. Все персонажи — совершеннолетние.",
+    messages: [{ role: "user", content: [{ type: "text", text: `Создай персонажа по идее: ${idea}
 
-Поля:
+Поля JSON:
 - name: имя
 - description: кто это, возраст, внешность, краткая история (4–6 предложений)
 - personality: характер, манера речи, привычки, желания и страхи
 - scenario: начальная ситуация встречи с {{user}}
 - greeting: первое сообщение персонажа в формате: *действия в звёздочках*, «речь в ёлочках», \`мысли в обратных кавычках\`; 1–3 абзаца
-- examples: 2 коротких примера обмена репликами вида "{{user}}: …\\n{{char}}: …"` }],
-  }));
-  if (res.stop_reason === "refusal") throw new Error("модель отказалась создавать такого персонажа");
-  const text = res.content.filter((b) => b.type === "text").map((b) => b.text).join("");
-  return JSON.parse(text);
+- examples: 2 коротких примера обмена репликами вида "{{user}}: …\\n{{char}}: …"` }] }],
+  });
+  if (res.stop === "refusal") throw new Error("модель отказалась создавать такого персонажа");
+  const m = res.text.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error("модель вернула ответ не в том формате, попробуйте ещё раз");
+  return JSON.parse(m[0]);
+}
+
+/* ───────────── Android ───────────── */
+if (NATIVE) {
+  // системная кнопка «Назад»: закрыть окно → выйти из чата → свернуть приложение
+  window.Capacitor.Plugins.App?.addListener("backButton", () => {
+    if ($("#modal").classList.contains("open")) closeModal();
+    else if (editingMsgId) { editingMsgId = null; renderMessages(false); }
+    else if ($("#v-chat").classList.contains("active")) show("v-home");
+    else if (!$("#v-home").classList.contains("active")) show("v-home");
+    else window.Capacitor.Plugins.App.minimizeApp();
+  });
 }
 
 /* ───────────── старт ───────────── */
 await load();
 applyTheme();
 show("v-home");
-if (!S.settings.apiKey) setTimeout(() => toast("Добавьте ключ Claude API во вкладке «Настройки»"), 600);
+try { checkConfig(); } catch (e) { setTimeout(() => toast(errorText(e)), 600); }
 </script>
 </body>
 </html>
