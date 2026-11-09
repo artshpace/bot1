@@ -1,0 +1,15 @@
+name = "sas-lead-forwarder"
+main = "lead-forwarder.js"
+compatibility_date = "2024-01-01"
+account_id = "391897c7b0560c7bbf9cdfb9986c3a6b"
+
+# Cron-триггер: каждые 15 минут проверяем расписание и шлём напоминания
+# за 24 ч и за 1 ч до занятия (дедуп через bot_attendance не даст дублей).
+# Cron Triggers доступны на бесплатном плане.
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+# Добавь секретные переменные через CLI или Dashboard (НЕ здесь):
+# wrangler secret put TELEGRAM_BOT_TOKEN
+# wrangler secret put TELEGRAM_CHAT_ID
