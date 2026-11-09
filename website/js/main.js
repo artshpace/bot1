@@ -295,7 +295,7 @@ function injectAccountOffer(form) {
    the CRM, so leads land with a meaningful direction. */
 const CHIP_DIRECTION = {
   guitar: 'Гитара', vocals: 'Вокал', painting: 'Живопись',
-  acting: 'Актёрское мастерство', dance: 'Современный танец', any: ''
+  acting: 'Актёрское мастерство', any: ''
 };
 /* Form id → lead source. */
 const FORM_SOURCE = {
@@ -464,20 +464,7 @@ const SCHEDULE = {
       return a >= 18 ? adult : mix;
     }
   },
-  /* Современный танец — Дарья Клюк. */
-  dance: {
-    groups: function (age) {
-      var a = parseInt(age, 10);
-      var d46  = [{ days: ['Понедельник', 'Среда', 'Пятница'], time: '18:30–19:30' }];
-      var d710 = [{ days: ['Суббота', 'Воскресенье'], time: '13:00–14:30' }];
-      var d11p = [{ days: ['Суббота', 'Воскресенье'], time: '11:30–13:00' }];
-      if (isNaN(a)) return d46.concat(d710, d11p);
-      if (a <= 6)  return d46;
-      if (a <= 10) return d710;
-      return d11p;
-    }
-  },
-  /* Живопись — Мария Андрюшенко. */
+  /* Живопись. */
   painting: {
     groups: function (age) {
       var a = parseInt(age, 10);
@@ -1045,7 +1032,7 @@ function loadYouTubeAPI(cb) {
    The studio is lead-gen, not e-commerce: every booking funnels into WhatsApp.
    buildWhatsAppLink() makes a generic link; buildWhatsAppFromForm() pre-fills
    the parent's submitted details so the chat opens ready to send. */
-const WA_NUMBER = '77013980019';
+const WA_NUMBER = '77086366351';
 /* Cloudflare Worker (workers/lead-forwarder.js) → Telegram. */
 const WORKER_URL = 'https://sas-lead-forwarder.artshpace.workers.dev/submit-lead';
 

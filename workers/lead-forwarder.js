@@ -681,7 +681,7 @@ async function sendClientEmail(env, lead) {
     whenLine +
     '<p>Наш администратор свяжется с вами в ближайшее время, чтобы подтвердить запись.</p>' +
     '<p>Если удобнее — напишите нам сразу в WhatsApp: ' +
-    '<a href="https://wa.me/77013980019" style="color:#E30613;">+7 701 398-00-19</a>.</p>' +
+    '<a href="https://wa.me/77086366351" style="color:#E30613;">+7 708 636-63-51</a>.</p>' +
     '<hr style="border:none;border-top:1px solid #eee;margin:20px 0;">' +
     '<p style="font-size:13px;color:#888;">Shpigotskiy Art Space · Петропавловск, ул. Интернациональная, 63, 5 этаж</p>' +
     '</div>';
@@ -780,11 +780,11 @@ const STUDIO_ADDR = 'ул. Интернациональная, 63, 5 этаж, �
 const MAP_2GIS = 'https://2gis.kz/petropavlovsk/firm/70000001085367039';
 const MAP_YANDEX = 'https://yandex.kz/maps/ru/org/shpigotskiy_art_space/106360488694/';
 function mapButtonsRow(){ return [{ text:'🗺 2ГИС', url: MAP_2GIS }, { text:'🧭 Яндекс Карты', url: MAP_YANDEX }]; }
-// Что взять с собой — зависит от направления. Гитара/укулеле/домбра — полный
+// Что взять с собой — зависит от направления. Гитара/укулеле — полный
 // список + инструмент (или выдадим на пробном); остальное — сменная обувь.
 function whatToBring(direction){
   const d = String(direction || '').toLowerCase();
-  if (d.indexOf('гитар') !== -1 || d.indexOf('укулеле') !== -1 || d.indexOf('домбр') !== -1) {
+  if (d.indexOf('гитар') !== -1 || d.indexOf('укулеле') !== -1) {
     return '🎒 С собой: сменную обувь, тетрадь, ручку, линейку и, если есть, — инструмент (гитару/укулеле). Если инструмента пока нет — на пробное занятие выдадим.';
   }
   return '🎒 С собой: сменную обувь.';
@@ -881,7 +881,7 @@ async function sendMenu(env, chatId, greet){
     rows.push([{ text:'📅 Моё расписание', callback_data:'my:sched' }]);
     rows.push([{ text:'👨‍👩‍👧 Мои дети и напоминания', callback_data:'my:list' }]);
   }
-  rows.push([{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77013980019?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }]);
+  rows.push([{ text:'💬 Написать в WhatsApp', url:'https://wa.me/77086366351?text=' + encodeURIComponent('Здравствуйте! Пишу из Telegram-бота Shpigotskiy Art Space.') }]);
   rows.push([{ text:'📸 Instagram', url:'https://instagram.com/artshpace' }]);
   await sendText(env, chatId, head + 'Что хотите сделать?', kb(rows), 'Markdown');
 }
